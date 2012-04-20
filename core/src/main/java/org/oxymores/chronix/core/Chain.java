@@ -41,4 +41,8 @@ public class Chain extends ActiveNodeBase {
 			state.chain = this;
 		}
 	}
+
+	public ArrayList<State> getStates() {
+		return states;
+	}
 }

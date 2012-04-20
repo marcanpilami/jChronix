@@ -22,6 +22,8 @@ package org.oxymores.chronix.wapi;
 
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
 public class ClientClient implements IServiceClient {
@@ -43,6 +45,15 @@ public class ClientClient implements IServiceClient {
 	@Override
 	public String sayHello() {
 		return proxy.sayHello();
+	}
+	
+	@Override
+	public Application getApplication() {
+		return proxy.getApplication();
+	}
+	@Override
+	public DTOChain getChain() {
+		return proxy.getChain();
 	}
 	
 

@@ -1,6 +1,10 @@
 package org.oxymores.chronix.core;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.UUID;
 
 public class MetaObject implements Serializable
@@ -9,11 +13,23 @@ public class MetaObject implements Serializable
 
 	public MetaObject()
 	{
-		id = UUID.randomUUID();
+		UUID temp = UUID.randomUUID();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+			dos.writeLong(temp.getMostSignificantBits());
+			dos.writeLong(temp.getLeastSignificantBits());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+		id = new BigInteger(1, baos.toByteArray());
+		
 	}
-	protected UUID id;
+	protected BigInteger id;
 
-	public UUID getId() {
+	public BigInteger getId() {
 		return id;
 	}
 	
@@ -28,5 +44,9 @@ public class MetaObject implements Serializable
 	public boolean validate()
 	{
 		return false;
+	}
+
+	public void setId(BigInteger id) {
+		this.id = id;
 	}
 }

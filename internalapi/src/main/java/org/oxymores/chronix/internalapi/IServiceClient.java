@@ -20,6 +20,11 @@
 
 package org.oxymores.chronix.internalapi;
 
+import org.oxymores.chronix.core.*;
+import org.oxymores.chronix.dto.DTOChain;
+
 public interface IServiceClient {
 	String sayHello();
+	Application getApplication();
+	DTOChain getChain();
 }

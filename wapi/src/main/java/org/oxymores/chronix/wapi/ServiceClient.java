@@ -20,6 +20,12 @@
 
 package org.oxymores.chronix.wapi;
 
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ConfigNodeBase;
+import org.oxymores.chronix.demo.DemoApplication;
+import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
 public class ServiceClient implements IServiceClient {
@@ -28,6 +34,27 @@ public class ServiceClient implements IServiceClient {
 	public String sayHello() {
 		
 		return "houba hop";
+	}
+
+	@Override
+	public Application getApplication() {
+		// TODO Auto-generated method stub
+		return DemoApplication.getNewDemoApplication();
+	}
+
+	@Override
+	public DTOChain getChain() {
+		Application a = DemoApplication.getNewDemoApplication();
+		Chain c = null;
+		for (ConfigNodeBase cnb : a.getElements())
+		{
+			if (cnb instanceof Chain)
+			{
+				c = (Chain)cnb;
+				break;
+			}
+		}
+		return Frontier.getChain(c);
 	}
 
 }

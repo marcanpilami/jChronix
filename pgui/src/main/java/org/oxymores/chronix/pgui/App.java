@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.pgui;
 
 /**
  * Hello world!

@@ -20,6 +20,8 @@
 
 package org.oxymores.chronix.wapi;
 
+import org.oxymores.chronix.dto.DTOChain;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -40,6 +42,26 @@ public class ServerBasicTests extends TestCase {
 		
 		// Check result
 		Assert.assertEquals("houba hop", res);
+		
+		// Stop server.
+		server.stop();
+	}
+	
+	public void testGetApp() throws InterruptedException
+	{
+		// Create server
+		JettyServer server = new JettyServer();
+		
+		// Start server
+		server.start();
+		Thread.sleep(2000);  // Starting a server is NOT immediate.
+		
+		// Call a "ping" service function
+		ClientClient client = new ClientClient();
+		DTOChain a = client.getChain();
+		
+		// Check result
+		Assert.assertEquals("chain1", a.name);
 		
 		// Stop server.
 		server.stop();
