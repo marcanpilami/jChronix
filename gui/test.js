@@ -27,15 +27,12 @@ function errorCallback(httpStatus, httpStatusText)
 
 function successCallback(responseObject) 
 {
-// the parameter is an object of the type declared for the
-// method.
-	alert(responseObject);
+	alert(responseObject.getReturn());
 }
 
 function pouet()
 {
 	var p = new internalapi_chronix_oxymores_org__IServiceClientPortType();
-	p.url = "/Hello";
 	p.sayHello(successCallback, errorCallback, "marsu", 12);
 }
 
