@@ -1,9 +1,5 @@
 package org.oxymores.chronix.wapi;
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     public static void main( String[] args )
