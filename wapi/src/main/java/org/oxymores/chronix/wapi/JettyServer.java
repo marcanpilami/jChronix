@@ -89,9 +89,9 @@ public class JettyServer implements IServer {
 			resourceHandler.setDirectoriesListed(true); 
 			
             resourceHandler.setWelcomeFiles(new String[] {"index.html"}); 
-            resourceHandler.setResourceBase(".");
-            resourceHandler.setResourceBase("C:\\Users\\user1\\jChronix\\gui\\");
-
+            //resourceHandler.setResourceBase(".");
+            resourceHandler.setResourceBase("..\\gui\\");  //TODO: for debug only.
+            
             // Add both handlers to server (static first)
             HandlerList handlerList = new HandlerList();
 			handlerList.addHandler(resourceHandler);
