@@ -40,6 +40,6 @@ $(document).ready(function() {
 	//alert("meuh");
 	draw();
 	$("#meuh").addClass("red");
-	
+	pouet();
 	//$("#marsu").load("http://localhost:9000/Hello")
 });
