@@ -34,12 +34,16 @@ public class DemoApplication {
 		n1.setDns("localhost");
 		n1.setOspassword("");
 		n1.setqPort(1789);
+		n1.setX(100);
+		n1.setY(100);
 		a.addNode(n1);
 
 		ExecutionNode n2 = new ExecutionNode();
 		n2.setDns("localhost");
 		n2.setOspassword("");
 		n2.setqPort(1400);
+		n2.setX(200);
+		n2.setY(200);
 		a.addNode(n2);
 
 		NodeLink l1 = new NodeLink();
@@ -164,6 +168,8 @@ public class DemoApplication {
 		s1.setChain(c1);
 		s1.setRunsOn(pg2);
 		s1.setRepresents(cs);
+		s1.setX(100);
+		s1.setY(100);
 		a.addElement(s1);
 
 		// End
@@ -171,6 +177,8 @@ public class DemoApplication {
 		s2.setChain(c1);
 		s2.setRunsOn(pg2);
 		s2.setRepresents(ce);
+		s2.setX(300);
+		s2.setY(200);
 		a.addElement(s2);
 
 		// Echo c1
@@ -178,6 +186,8 @@ public class DemoApplication {
 		s3.setChain(c1);
 		s3.setRunsOn(pg2);
 		s3.setRepresents(sc1);
+		s3.setX(300);
+		s3.setY(400);
 		a.addElement(s3);
 
 		// Transitions

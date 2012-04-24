@@ -19,6 +19,8 @@ public class Frontier {
 		{
 			DTOState t = new DTOState();
 			t.id = s.getId();
+			t.x = s.getX();
+			t.y = s.getY();
 			res.states.add(t);
 		}
 		
