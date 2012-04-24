@@ -1,6 +1,9 @@
 var canvas;
 var ctx;
 
+var states = new Array();
+var chain;
+
 function State()
 {
 	
@@ -30,16 +33,31 @@ function successCallback(responseObject)
 	alert(responseObject.getReturn());
 }
 
+function getChainOK(responseObject)
+{
+	states.push(responseObject);
+	chain = responseObject.getReturn();
+	
+	for ( var i = 0; i < array.length; i++) {
+		
+	}
+}
+
+function getChainKO(responseObject)
+{
+	alert("oooops");
+}
+
 function pouet()
 {
 	var p = new internalapi_chronix_oxymores_org__IServiceClientPortType();
 	p.sayHello(successCallback, errorCallback, "marsu", 12);
+	
+	p.getChain(getChainOK, getChainKO);
 }
 
 $(document).ready(function() {
-	//alert("meuh");
 	draw();
 	$("#meuh").addClass("red");
 	pouet();
-	//$("#marsu").load("http://localhost:9000/Hello")
 });

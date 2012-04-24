@@ -53,6 +53,8 @@ public class TestPersistence extends TestCase {
 			Assert.assertEquals(a1.getPlaces().size(), a2.getPlaces().size());
 			Assert.assertEquals(a1.getElements().size(), a2.getElements().size());
 			Assert.assertEquals(a1.getGroups().size(), a2.getGroups().size());
+			
+			Assert.assertEquals(a1.getGroups().get(0).getName(), a1.getGroups().get(0).getName());
 		}
 		catch (Exception e) {System.err.println("meuh" + e.getMessage() + e);}
 		
