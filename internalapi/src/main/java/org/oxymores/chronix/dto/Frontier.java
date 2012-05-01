@@ -1,10 +1,10 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.Transition;
 
 public class Frontier {
 
@@ -15,7 +15,7 @@ public class Frontier {
 		res.name = c.getName();
 		res.description = c.getDescription();
 		res.states = new ArrayList<DTOState>();
-		res.truc = UUID.randomUUID();
+		res.transitions = new ArrayList<DTOTransition>();
 		
 		for (State s : c.getStates())
 		{
@@ -24,6 +24,20 @@ public class Frontier {
 			t.x = s.getX();
 			t.y = s.getY();
 			res.states.add(t);
+		}
+		
+		for (Transition o : c.getTransitions())
+		{
+			DTOTransition d = new DTOTransition();
+			d.id = o.getId().toString();
+			d.from = o.getStateFrom().getId().toString();
+			d.to = o.getStateTo().getId().toString();
+			d.guard1 = o.getGuard1();
+			d.guard2 = o.getGuard2();
+			d.guard3 = o.getGuard3();
+			d.guard4 = (o.getGuard4() == null ? "": o.getGuard4().toString());
+			
+			res.transitions.add(d);
 		}
 		
 		return res;

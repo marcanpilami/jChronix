@@ -1,16 +1,14 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class DTOChain {
 	public String name;
 	public String description;
 	public String id;
-	
+
 	public ArrayList<DTOState> states;
-	
-	public UUID truc;
+	public ArrayList<DTOTransition> transitions;
 
 	public String getName() {
 		return name;
@@ -44,11 +42,11 @@ public class DTOChain {
 		this.states = states;
 	}
 
-	public UUID getTruc() {
-		return truc;
+	public ArrayList<DTOTransition> getTransitions() {
+		return transitions;
 	}
 
-	public void setTruc(UUID truc) {
-		this.truc = truc;
+	public void setTransitions(ArrayList<DTOTransition> transitions) {
+		this.transitions = transitions;
 	}
 }
