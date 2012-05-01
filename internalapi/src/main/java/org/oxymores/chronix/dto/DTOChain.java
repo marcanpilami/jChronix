@@ -2,6 +2,7 @@ package org.oxymores.chronix.dto;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class DTOChain {
 	public String name;
@@ -9,6 +10,8 @@ public class DTOChain {
 	public BigInteger id;
 	
 	public ArrayList<DTOState> states;
+	
+	public UUID truc;
 
 	public String getName() {
 		return name;
@@ -40,5 +43,13 @@ public class DTOChain {
 
 	public void setStates(ArrayList<DTOState> states) {
 		this.states = states;
+	}
+
+	public UUID getTruc() {
+		return truc;
+	}
+
+	public void setTruc(UUID truc) {
+		this.truc = truc;
 	}
 }

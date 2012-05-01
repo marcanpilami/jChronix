@@ -3,18 +3,53 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>New Web Project</title>
+		<link type="text/css" href="jquery-ui-1.8.19.custom/css/ui-lightness/jquery-ui-1.8.19.custom.css" rel="Stylesheet"/>
 		<script type="text/javascript" src="jquery-1.7.2.js"></script>
+		<script type="text/javascript" src="/jquery-ui-1.8.19.custom/js/jquery-ui-1.8.19.custom.min.js"></script>
+		<script type="text/javascript" src="raphael.js"></script>
+		<script type="text/javascript" src="uuid.js"></script>
 		<script type="text/javascript" src="test.js"></script>
 		<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
+		<link rel="stylesheet" type="text/css" media="screen" href="test.css" />
 	</head>
 	<body>
+		<div>
+			<div id='tabs'>
+				<ul>
+					<li>
+						<a href="#tab1">Chains</a>
+					</li>
+					<li>
+						<a href="#tab2">Physical Network</a>
+					</li>
+					<li>
+						<a href="#tab2">Logical Network</a>
+					</li>
+					<li>
+						<a href="#tab2">Schedules</a>
+					</li>
+					<li>
+						<a href="#tab2">Commands</a>
+					</li>
+				</ul>
+				<div id="tab2">
+					<p>
+						marsu
+					</p>
+				</div>
+				<div id="tab1">
+					<div id='greetings'></div>
+					<div id="raph"></div>
+				</div>
+			</div>
+		</div>
 		<div id="meuh">
-			<h1>New Web Project Page</h1>
+			<h1>Test page</h1>
 			<canvas id="cnMain" width="150" height="150"></canvas>
 		</div>
-		
 		<div id="marsu"></div>
-		
-		<button onclick="pouet();">MEUH</button>
+		<button onclick="pouet();">
+			MEUH
+		</button>
 	</body>
 </html>

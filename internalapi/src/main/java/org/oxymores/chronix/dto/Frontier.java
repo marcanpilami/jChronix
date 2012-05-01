@@ -1,6 +1,7 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.State;
@@ -14,6 +15,7 @@ public class Frontier {
 		res.name = c.getName();
 		res.description = c.getDescription();
 		res.states = new ArrayList<DTOState>();
+		res.truc = UUID.randomUUID();
 		
 		for (State s : c.getStates())
 		{
