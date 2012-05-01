@@ -11,7 +11,7 @@ public class Frontier {
 	public static DTOChain getChain(Chain c)
 	{
 		DTOChain res = new DTOChain();
-		res.id = c.getId();
+		res.id = c.getId().toString();
 		res.name = c.getName();
 		res.description = c.getDescription();
 		res.states = new ArrayList<DTOState>();
@@ -20,7 +20,7 @@ public class Frontier {
 		for (State s : c.getStates())
 		{
 			DTOState t = new DTOState();
-			t.id = s.getId();
+			t.id = s.getId().toString();
 			t.x = s.getX();
 			t.y = s.getY();
 			res.states.add(t);

@@ -1,9 +1,7 @@
 package org.oxymores.chronix.dto;
 
-import java.math.BigInteger;
-
 public class DTOState {
-	protected BigInteger id;
+	protected String id;
 	protected Integer x, y;
 	protected String label;
 	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
@@ -64,11 +62,11 @@ public class DTOState {
 		this.y = y;
 	}
 
-	public BigInteger getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(BigInteger id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 }

@@ -1,13 +1,12 @@
 package org.oxymores.chronix.dto;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.UUID;
 
 public class DTOChain {
 	public String name;
 	public String description;
-	public BigInteger id;
+	public String id;
 	
 	public ArrayList<DTOState> states;
 	
@@ -29,11 +28,11 @@ public class DTOChain {
 		this.description = description;
 	}
 
-	public BigInteger getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(BigInteger id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

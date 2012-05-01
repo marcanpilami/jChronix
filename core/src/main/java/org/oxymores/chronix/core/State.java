@@ -20,8 +20,8 @@
 
 package org.oxymores.chronix.core;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.oxymores.chronix.exceptions.ChronixInconsistentMetadataException;
 
@@ -49,7 +49,7 @@ public class State extends ConfigNodeBase {
 	protected ArrayList<State> exclusiveStates;
 	
 	// Runs on a group. Groups are defined in a separate graph, so get it by ID and not by reference. 
-	protected BigInteger placeGroupId;
+	protected UUID placeGroupId;
 	
 	public State()
 	{

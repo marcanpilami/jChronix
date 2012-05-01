@@ -1,6 +1,6 @@
 package org.oxymores.chronix.event;
-import java.math.BigInteger;
 import java.util.Date;
+import java.util.UUID;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.MetaObject;
@@ -9,33 +9,33 @@ public class TranscientBase extends MetaObject
 {
 	private static final long serialVersionUID = 8976655465578L;
 
-	protected BigInteger stateID;
-	protected BigInteger placeID;
+	protected UUID stateID;
+	protected UUID placeID;
 	
-	protected BigInteger appID;
+	protected UUID appID;
 	protected transient Application application;
 	
-	public BigInteger getStateID() {
+	public UUID getStateID() {
 		return stateID;
 	}
 
-	public void setStateID(BigInteger stateID) {
+	public void setStateID(UUID stateID) {
 		this.stateID = stateID;
 	}
 
-	public BigInteger getPlaceID() {
+	public UUID getPlaceID() {
 		return placeID;
 	}
 
-	public void setPlaceID(BigInteger placeID) {
+	public void setPlaceID(UUID placeID) {
 		this.placeID = placeID;
 	}
 
-	public BigInteger getAppID() {
+	public UUID getAppID() {
 		return appID;
 	}
 
-	public void setAppID(BigInteger appID) {
+	public void setAppID(UUID appID) {
 		this.appID = appID;
 	}
 
