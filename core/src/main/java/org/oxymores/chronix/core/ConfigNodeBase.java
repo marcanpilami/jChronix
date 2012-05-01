@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class ConfigNodeBase extends MetaObject {
 	private static final long serialVersionUID = 4288408733877784921L;
 	
-	protected Application Application;
+	protected Application application;
 	protected ArrayList<Parameter> parameters;
 	
 	public ConfigNodeBase()
@@ -36,11 +36,11 @@ public class ConfigNodeBase extends MetaObject {
 	
 	
 	public Application getApplication() {
-		return Application;
+		return application;
 	}
-	public void setApplication(Application application) {
-		Application = application;
-	}
+	protected void setApplication(Application application) {
+		this.application = application;
+	} // should only be done via the app itself.
 	
 	public ArrayList<Parameter> getParameters()
 	{

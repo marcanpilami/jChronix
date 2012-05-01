@@ -27,10 +27,12 @@ public class Chain extends ActiveNodeBase {
 	private static final long serialVersionUID = -5369294333404575011L;
 
 	protected ArrayList<State> states;
+	protected ArrayList<Transition> transitions;
 	
 	public Chain(){
 		super();
 		states = new ArrayList<State>();
+		transitions = new ArrayList<Transition>();
 	}
 	
 	public void addState(State state)
@@ -44,5 +46,18 @@ public class Chain extends ActiveNodeBase {
 
 	public ArrayList<State> getStates() {
 		return states;
+	}
+	
+	public void addTransition(Transition tr)
+	{
+		if (!this.transitions.contains(tr))
+		{
+			this.transitions.add(tr);
+			tr.chain = this;
+		}
+	}
+
+	public ArrayList<Transition> getTransitions() {
+		return transitions;
 	}
 }

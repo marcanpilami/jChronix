@@ -61,7 +61,7 @@ public class State extends ConfigNodeBase {
 	
 	public PlaceGroup getRunsOn() throws ChronixInconsistentMetadataException
 	{
-		for (PlaceGroup group : this.Application.getGroups())
+		for (PlaceGroup group : this.application.getGroups())
 		{
 			if (group.getId().equals(this.placeGroupId))
 				return group;
@@ -99,6 +99,8 @@ public class State extends ConfigNodeBase {
 		t.setStateFrom(this);
 		t.setStateTo(target);
 		t.setGuard1(0);
+		this.application.addElement(t);
+		this.chain.addTransition(t);
 		return t;
 	}
 	

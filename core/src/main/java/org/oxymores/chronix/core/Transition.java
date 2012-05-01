@@ -31,6 +31,8 @@ public class Transition extends ActiveNodeBase {
 	protected UUID guard4;
 
 	protected State stateFrom, stateTo;
+	
+	protected Chain chain;
 
 	public Integer getGuard1() {
 		return guard1;
@@ -85,4 +87,15 @@ public class Transition extends ActiveNodeBase {
 			stateTo.addTransitionReceivedHere(this);
 		}
 	}
+	
+	public Chain getChain() {
+		return chain;
+	}
+
+	public void setChain(Chain chain) {
+		this.chain = chain;
+		if (chain != null)
+			chain.addTransition(this);
+	}
+
 }
