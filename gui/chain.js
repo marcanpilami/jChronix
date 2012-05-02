@@ -29,24 +29,40 @@ function dragStateMove(dx, dy, x, y, event) {
 	this.modeldata._y = this.ys + dy;
 
 	// Drag transition ends
-	for(var i = 0; i < this.modeldata.trFromHere.length; i++) {
+	for ( var i = 0; i < this.modeldata.trFromHere.length; i++) {
 		var tr = this.modeldata.trFromHere[i];
-		var path = tr.attr("path");
-		path[0][1] = newx;
-		path[0][2] = newy;
-		tr.attr({
-			"path" : path
-		});
+		shiftArrow(tr);
 	}
-	for(var i = 0; i < this.modeldata.trReceivedHere.length; i++) {
+	for ( var i = 0; i < this.modeldata.trReceivedHere.length; i++) {
 		var tr = this.modeldata.trReceivedHere[i];
-		var path = tr.attr("path");
-		path[1][1] = newx;
-		path[1][2] = newy;
-		tr.attr({
-			"path" : path
+		shiftArrow(tr);
+	}
+
+	// Drag state contents (text, and so on)
+	for ( var e in this.contents) {
+		this.contents[e].attr({
+			x : newx,
+			y : newy
 		});
 	}
+}
+
+function shiftArrow(RaphaelArrow) {
+	var pc = "M" + RaphaelArrow.from._x + "," + RaphaelArrow.from._y + ",L"
+			+ RaphaelArrow.to._x + "," + RaphaelArrow.to._y;
+	var shifted1 = Raphael.getPointAtLength(pc, 50);
+	var shifted2 = Raphael
+			.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
+
+	var path = RaphaelArrow.attr("path");
+	path[0][1] = shifted1.x;
+	path[0][2] = shifted1.y;
+	path[1][1] = shifted2.x;
+	path[1][2] = shifted2.y;
+	RaphaelArrow.attr({
+		"path" : path
+	});
+
 }
 
 function dragStateEnd(event) {
@@ -77,7 +93,8 @@ function drawInit() {
 		stroke : 'darkorchid',
 		'stroke-width' : 5
 	});
-	//circle.animate({"fill": "#f00", "transform": 't100,100'}, 2000, 'linear', function() {});
+	// circle.animate({"fill": "#f00", "transform": 't100,100'}, 2000, 'linear',
+	// function() {});
 	circle.animate({
 		cx : 10,
 		cy : 10
@@ -89,7 +106,7 @@ function errorCallback(httpStatus, httpStatusText) {
 }
 
 function successCallback(responseObject) {
-	//alert(responseObject.getReturn());
+	// alert(responseObject.getReturn());
 	$("#greetings").html(responseObject.getReturn() + " - " + uuid.v4());
 }
 
@@ -98,19 +115,20 @@ function getChainOK(responseObject) {
 
 	// add chain states to the list and draw them
 	var ss = chain.getStates().getDTOState();
-	for(var i = 0; i < ss.length; i++) {
+	for ( var i = 0; i < ss.length; i++) {
 		addState(ss[i]);
 	}
 
 	// add transitions to the list and draw them
 	var trs = chain.getTransitions().getDTOTransition();
-	for(var i = 0; i < trs.length; i++) {
+	for ( var i = 0; i < trs.length; i++) {
 		addTransition(trs[i]);
 	}
 }
 
 function addState(DTOState) {
-	// Add state to list, both as member of the object (access by id) and to the list itself (enumerator access)
+	// Add state to list, both as member of the object (access by id) and to the
+	// list itself (enumerator access)
 	states[DTOState._id] = DTOState;
 	states.push(DTOState);
 
@@ -121,6 +139,10 @@ function addState(DTOState) {
 		stroke : 'darkorchid',
 		'stroke-width' : 2
 	});
+	var tx = paper.text(DTOState._x, DTOState._y, DTOState._label + "\n("
+			+ DTOState._runsOnName + ")");
+	circle.contents = new Object();
+	circle.contents["text"] = tx;
 
 	// Set reference between business model object and representation object
 	DTOState._drawing = circle;
@@ -130,7 +152,8 @@ function addState(DTOState) {
 	DTOState.trFromHere = new Array();
 	DTOState.trReceivedHere = new Array();
 
-	// Allow dragging with callback taking connections and business objects into account
+	// Allow dragging with callback taking connections and business objects into
+	// account
 	circle.drag(dragStateMove, dragStateStart, dragStateEnd);
 }
 
@@ -147,13 +170,26 @@ function addTransition(DTOTransition) {
 	var x2 = to._x;
 	var y2 = to._y;
 
-	var arrow = paper.path("M" + x1 + "," + y1 + ",L" + x2 + "," + y2);
+	// var arrow = paper.path("M" + x1 + "," + y1 + ",L" + x2 + "," + y2);// +
+	// "Z");
+	var pc = "M" + x1 + "," + y1 + ",L" + x2 + "," + y2;
+	var shifted1 = Raphael.getPointAtLength(pc, 50);
+	var shifted2 = Raphael
+			.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
+	var arrow = paper.path("M" + shifted1.x + "," + shifted1.y + ",L"
+			+ shifted2.x + "," + shifted2.y);// + "Z");
+	/*
+	 * arrow.attr({ x : shifted1.x });
+	 */
+
 	arrow.attr({
 		"arrow-end" : "classic-wide-long",
 		"stroke-width" : 5
 	});
+	// arrow.transform("s0.5,0.5");
 
-	// Set cross references to allow easy navigation between SVG and model elements
+	// Set cross references to allow easy navigation between SVG and model
+	// elements
 	from.trFromHere.push(arrow);
 	to.trReceivedHere.push(arrow);
 	arrow.from = from;
@@ -176,10 +212,9 @@ function pingServer() {
 	p.sayHello(successCallback, errorCallback, "marsu", 12);
 }
 
-
 $(document).ready(function() {
 	drawInit();
 	$("#tabs").tabs();
-	//	$("#meuh").addClass("red");  // red is a css class
+	// $("#meuh").addClass("red"); // red is a css class
 	loadChain();
 });
