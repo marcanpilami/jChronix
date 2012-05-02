@@ -1,11 +1,20 @@
 package org.oxymores.chronix.dto;
 
 public class DTOState {
-	protected String id;
+	protected String id, representsId, runsOnId;
 	protected Integer x, y;
-	protected String label;
-	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
-	
+	protected String label, runsOnName;
+	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime,
+			EventValidityMn;
+
+	public String getRunsOnName() {
+		return runsOnName;
+	}
+
+	public void setRunsOnName(String runsOnName) {
+		this.runsOnName = runsOnName;
+	}
+
 	public String getLabel() {
 		return label;
 	}
@@ -68,5 +77,21 @@ public class DTOState {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getRepresentsId() {
+		return representsId;
+	}
+
+	public void setRepresentsId(String representsId) {
+		this.representsId = representsId;
+	}
+
+	public String getRunsOnId() {
+		return runsOnId;
+	}
+
+	public void setRunsOnId(String runsOnId) {
+		this.runsOnId = runsOnId;
 	}
 }
