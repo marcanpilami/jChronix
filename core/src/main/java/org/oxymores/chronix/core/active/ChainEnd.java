@@ -6,4 +6,8 @@ public class ChainEnd extends ActiveNodeBase {
 
 	private static final long serialVersionUID = 4129809921422152571L;
 
+	public ChainEnd()
+	{
+		this.name = "Chain end";
+	}
 }
