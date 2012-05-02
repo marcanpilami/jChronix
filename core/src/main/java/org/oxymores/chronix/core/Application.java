@@ -29,7 +29,7 @@ import org.oxymores.chronix.core.active.*;
 public class Application extends MetaObject {
 	private static final long serialVersionUID = 338399439626386055L;
 
-	protected String name;
+	protected String name, description;
 
 	protected ArrayList<Place> places;
 	protected ArrayList<PlaceGroup> groups;
@@ -134,5 +134,13 @@ public class Application extends MetaObject {
 
 	public ArrayList<ConfigNodeBase> getElements() {
 		return elements;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }

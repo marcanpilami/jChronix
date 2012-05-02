@@ -16,6 +16,7 @@ public class Frontier {
 
 		res.id = a.getId().toString();
 		res.name = a.getName();
+		res.description = a.getDescription();
 
 		res.chains = new ArrayList<DTOChain>();
 		res.shells = new ArrayList<DTOShellCommand>();

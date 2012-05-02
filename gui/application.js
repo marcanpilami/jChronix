@@ -23,6 +23,8 @@ function getApplicationOK(responseObject) {
 		}
 	}
 	drawChain(first);
+	$("#appName").text(cxfApplication._name);
+	$("#appDescr").text(cxfApplication._description);
 }
 
 function addChain(c) {

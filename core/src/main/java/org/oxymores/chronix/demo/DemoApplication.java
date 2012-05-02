@@ -28,6 +28,7 @@ public class DemoApplication {
 	public static Application getNewDemoApplication() {
 		Application a = new Application();
 		a.setname("Demo");
+		a.setDescription("test application auto created");
 
 		// Physical network
 		ExecutionNode n1 = new ExecutionNode();

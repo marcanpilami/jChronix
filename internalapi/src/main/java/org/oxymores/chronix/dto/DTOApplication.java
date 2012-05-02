@@ -6,6 +6,7 @@ import java.util.UUID;
 public class DTOApplication {
 
 	public String name;
+	public String description;
 	public String id;
 
 	public ArrayList<DTOPlace> places;
@@ -78,5 +79,13 @@ public class DTOApplication {
 
 	public void setMarsu(UUID marsu) {
 		this.marsu = marsu;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }
