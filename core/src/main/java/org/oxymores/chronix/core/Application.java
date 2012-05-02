@@ -52,10 +52,6 @@ public class Application extends MetaObject {
 		this.elements.add(new ChainStart());
 	}
 
-	public String getname() {
-		return name;
-	}
-
 	public void setname(String name) {
 		this.name = name;
 	}
