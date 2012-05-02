@@ -66,8 +66,19 @@ public class ServiceClient implements IServiceClient {
 
 	@Override
 	public void stageApplication(DTOApplication app) {
-		// TODO Auto-generated method stub
+		// TODO Replace test code with true persistence and reboot engine context
 		
+		Application a = DemoApplication.getNewDemoApplication();
+		Chain c = null;
+		for (ConfigNodeBase cnb : a.getElements()) {
+			if (cnb instanceof Chain) {
+				c = (Chain) cnb;
+				break;
+			}
+		}
+		
+		System.out.println(app.chains.get(0).states.get(0).getX());
+		System.out.println(c.getStates().get(0).getX());
 	}
 
 	@Override

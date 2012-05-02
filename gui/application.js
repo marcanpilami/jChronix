@@ -30,3 +30,15 @@ function getApplicationOK(responseObject) {
 function addChain(c) {
 	cxfChains[c._id] = c;
 }
+
+function send() {
+	proxy.stageApplication(sendApplicationOK, sendApplicationKO, cxfApplication);
+}
+
+function sendApplicationOK(response) {
+	$("#alert").text("stored");
+}
+
+function sendApplicationKO(response) {
+	alert("oups");
+}
