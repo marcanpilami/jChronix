@@ -7,6 +7,10 @@ var chain;
 
 var paper = null;
 
+function initChainPanel() {
+	paper = new Raphael("raph", 1600, 600);
+}
+
 function dragStateStart(x, y, event) {
 	this.xs = this.attr("cx");
 	this.ys = this.attr("cy");
@@ -29,17 +33,17 @@ function dragStateMove(dx, dy, x, y, event) {
 	this.modeldata._y = this.ys + dy;
 
 	// Drag transition ends
-	for ( var i = 0; i < this.modeldata.trFromHere.length; i++) {
+	for(var i = 0; i < this.modeldata.trFromHere.length; i++) {
 		var tr = this.modeldata.trFromHere[i];
 		shiftArrow(tr);
 	}
-	for ( var i = 0; i < this.modeldata.trReceivedHere.length; i++) {
+	for(var i = 0; i < this.modeldata.trReceivedHere.length; i++) {
 		var tr = this.modeldata.trReceivedHere[i];
 		shiftArrow(tr);
 	}
 
 	// Drag state contents (text, and so on)
-	for ( var e in this.contents) {
+	for(var e in this.contents) {
 		this.contents[e].attr({
 			x : newx,
 			y : newy
@@ -48,11 +52,9 @@ function dragStateMove(dx, dy, x, y, event) {
 }
 
 function shiftArrow(RaphaelArrow) {
-	var pc = "M" + RaphaelArrow.from._x + "," + RaphaelArrow.from._y + ",L"
-			+ RaphaelArrow.to._x + "," + RaphaelArrow.to._y;
+	var pc = "M" + RaphaelArrow.from._x + "," + RaphaelArrow.from._y + ",L" + RaphaelArrow.to._x + "," + RaphaelArrow.to._y;
 	var shifted1 = Raphael.getPointAtLength(pc, 50);
-	var shifted2 = Raphael
-			.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
+	var shifted2 = Raphael.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
 
 	var path = RaphaelArrow.attr("path");
 	path[0][1] = shifted1.x;
@@ -69,61 +71,31 @@ function dragStateEnd(event) {
 
 }
 
-function drawDebug() {
-	canvas = document.getElementById("cnMain");
-	ctx = canvas.getContext("2d");
+function drawChain(cxfObject) {
+	// Reinitialize panel
+	paper.clear();
+	states = new Array();
+	transitions = new Array();
+	chain = null;
 
-	ctx.fillStyle = "rgb(200,0,0)";
-	ctx.fillRect(10, 10, 55, 50);
-
-	ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
-	ctx.fillRect(30, 30, 55, 50);
-
-	ctx.strokeText('Hello world!', 0, 50);
-}
-
-function drawInit() {
-	paper = new Raphael("raph", 1600, 600);
-
-	// Debug animation - don't remove till GUI nearing completion
-	var circle = paper.circle(200, 200, 50);
-	circle.attr("fill", "#f00");
-	circle.attr({
-		fill : 'firebrick',
-		stroke : 'darkorchid',
-		'stroke-width' : 5
-	});
-	// circle.animate({"fill": "#f00", "transform": 't100,100'}, 2000, 'linear',
-	// function() {});
-	circle.animate({
-		cx : 10,
-		cy : 10
-	}, 2000, 'linear');
-}
-
-function errorCallback(httpStatus, httpStatusText) {
-	alert('error ' + httpStatusText);
-}
-
-function successCallback(responseObject) {
-	// alert(responseObject.getReturn());
-	$("#greetings").html(responseObject.getReturn() + " - " + uuid.v4());
-}
-
-function getChainOK(responseObject) {
-	chain = responseObject.getReturn();
+	// Save poor little object
+	chain = cxfObject;
 
 	// add chain states to the list and draw them
 	var ss = chain.getStates().getDTOState();
-	for ( var i = 0; i < ss.length; i++) {
+	for(var i = 0; i < ss.length; i++) {
 		addState(ss[i]);
 	}
 
 	// add transitions to the list and draw them
 	var trs = chain.getTransitions().getDTOTransition();
-	for ( var i = 0; i < trs.length; i++) {
+	for(var i = 0; i < trs.length; i++) {
 		addTransition(trs[i]);
 	}
+}
+
+function getChainOK(responseObject) {
+	drawChain(responseObject.getReturn());
 }
 
 function addState(DTOState) {
@@ -139,8 +111,7 @@ function addState(DTOState) {
 		stroke : 'darkorchid',
 		'stroke-width' : 2
 	});
-	var tx = paper.text(DTOState._x, DTOState._y, DTOState._label + "\n("
-			+ DTOState._runsOnName + ")");
+	var tx = paper.text(DTOState._x, DTOState._y, DTOState._label + "\n(" + DTOState._runsOnName + ")");
 	circle.contents = new Object();
 	circle.contents["text"] = tx;
 
@@ -174,10 +145,9 @@ function addTransition(DTOTransition) {
 	// "Z");
 	var pc = "M" + x1 + "," + y1 + ",L" + x2 + "," + y2;
 	var shifted1 = Raphael.getPointAtLength(pc, 50);
-	var shifted2 = Raphael
-			.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
-	var arrow = paper.path("M" + shifted1.x + "," + shifted1.y + ",L"
-			+ shifted2.x + "," + shifted2.y);// + "Z");
+	var shifted2 = Raphael.getPointAtLength(pc, Raphael.getTotalLength(pc) - 50);
+	var arrow = paper.path("M" + shifted1.x + "," + shifted1.y + ",L" + shifted2.x + "," + shifted2.y);
+	// + "Z");
 	/*
 	 * arrow.attr({ x : shifted1.x });
 	 */
@@ -203,18 +173,5 @@ function getChainKO(responseObject) {
 }
 
 function loadChain() {
-	var p = new internalapi_chronix_oxymores_org__IServiceClientPortType();
-	p.getChain(getChainOK, getChainKO);
+	proxy.getChain(getChainOK, getChainKO);
 }
-
-function pingServer() {
-	var p = new internalapi_chronix_oxymores_org__IServiceClientPortType();
-	p.sayHello(successCallback, errorCallback, "marsu", 12);
-}
-
-$(document).ready(function() {
-	drawInit();
-	$("#tabs").tabs();
-	// $("#meuh").addClass("red"); // red is a css class
-	loadChain();
-});

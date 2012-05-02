@@ -26,7 +26,7 @@ import org.oxymores.chronix.dto.DTOChain;
 public interface IServiceClient {
 	String sayHello();
 	DTOApplication getApplication(String name);
-	DTOApplication getApplication(String uuid, Boolean byUuid);
+	//DTOApplication getApplication(String uuid, Boolean byUuid);
 	
 	void stageApplication(DTOApplication app);
 	void storeApplication(String uuid);

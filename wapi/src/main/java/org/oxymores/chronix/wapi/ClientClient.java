@@ -51,7 +51,7 @@ public class ClientClient implements IServiceClient {
 	public DTOApplication getApplication(String name) {
 		return null;
 	}
-	@Override
+	//@Override
 	public DTOApplication getApplication(String name, Boolean byUuid) {
 		return null;
 	}

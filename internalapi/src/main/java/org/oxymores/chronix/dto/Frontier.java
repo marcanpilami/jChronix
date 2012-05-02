@@ -2,11 +2,46 @@ package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
 
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ConfigNodeBase;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.ShellCommand;
 
 public class Frontier {
+
+	public static DTOApplication getApplication(Application a) {
+		DTOApplication res = new DTOApplication();
+
+		res.id = a.getId().toString();
+		res.name = a.getName();
+
+		res.chains = new ArrayList<DTOChain>();
+		res.shells = new ArrayList<DTOShellCommand>();
+		res.places = new ArrayList<DTOPlace>();
+		res.groups = new ArrayList<DTOPlaceGroup>();
+		res.parameters = new ArrayList<DTOParameter>();
+
+		for (ConfigNodeBase o : a.getElements()) {
+			if (o instanceof Chain) {
+				Chain c = (Chain) o;
+				res.chains.add(getChain(c));
+			}
+
+			if (o instanceof ShellCommand) {
+				ShellCommand s = (ShellCommand) o;
+				DTOShellCommand d = new DTOShellCommand();
+				d.id = s.getId().toString();
+				d.command = s.getCommand();
+				d.name = s.getName();
+				d.description = s.getDescription();
+				res.shells.add(d);
+			}
+		}
+
+		return res;
+	}
 
 	public static DTOChain getChain(Chain c) {
 		DTOChain res = new DTOChain();

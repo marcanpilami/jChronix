@@ -38,18 +38,21 @@ public class ServiceClient implements IServiceClient {
 
 	@Override
 	public DTOApplication getApplication(String name) {
-		// TODO Auto-generated method stub
-		return null;// DemoApplication.getNewDemoApplication();
+		System.err.println("oups1");
+		Application a = DemoApplication.getNewDemoApplication();  // TODO: really look for the application instead of test one
+		return Frontier.getApplication(a);
 	}
 
-	@Override
+	/*@Override
 	public DTOApplication getApplication(String name, Boolean byUuid) {
 		// TODO Auto-generated method stub
+		System.err.println("oups2");
 		return null;// DemoApplication.getNewDemoApplication();
-	}
+	}*/
 
 	@Override
 	public DTOChain getChain() {
+		System.out.println("oups3");
 		Application a = DemoApplication.getNewDemoApplication();
 		Chain c = null;
 		for (ConfigNodeBase cnb : a.getElements()) {
