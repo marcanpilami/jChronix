@@ -20,11 +20,17 @@
 
 package org.oxymores.chronix.internalapi;
 
-import org.oxymores.chronix.core.*;
+import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
 
 public interface IServiceClient {
 	String sayHello();
-	Application getApplication();
+	DTOApplication getApplication(String name);
+	DTOApplication getApplication(String uuid, Boolean byUuid);
+	
+	void stageApplication(DTOApplication app);
+	void storeApplication(String uuid);
+	void resetStage();
+	
 	DTOChain getChain();
 }

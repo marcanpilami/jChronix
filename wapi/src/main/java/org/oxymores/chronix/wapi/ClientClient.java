@@ -22,7 +22,7 @@ package org.oxymores.chronix.wapi;
 
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
-import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
@@ -48,12 +48,31 @@ public class ClientClient implements IServiceClient {
 	}
 	
 	@Override
-	public Application getApplication() {
-		return proxy.getApplication();
+	public DTOApplication getApplication(String name) {
+		return null;
+	}
+	@Override
+	public DTOApplication getApplication(String name, Boolean byUuid) {
+		return null;
 	}
 	@Override
 	public DTOChain getChain() {
 		return proxy.getChain();
+	}
+	@Override
+	public void stageApplication(DTOApplication app) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void storeApplication(String uuid) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void resetStage() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 

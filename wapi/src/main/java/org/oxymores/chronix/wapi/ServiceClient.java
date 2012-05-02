@@ -24,6 +24,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigNodeBase;
 import org.oxymores.chronix.demo.DemoApplication;
+import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.internalapi.IServiceClient;
@@ -32,29 +33,50 @@ public class ServiceClient implements IServiceClient {
 
 	@Override
 	public String sayHello() {
-		
 		return "houba hop";
 	}
 
 	@Override
-	public Application getApplication() {
+	public DTOApplication getApplication(String name) {
 		// TODO Auto-generated method stub
-		return DemoApplication.getNewDemoApplication();
+		return null;// DemoApplication.getNewDemoApplication();
+	}
+
+	@Override
+	public DTOApplication getApplication(String name, Boolean byUuid) {
+		// TODO Auto-generated method stub
+		return null;// DemoApplication.getNewDemoApplication();
 	}
 
 	@Override
 	public DTOChain getChain() {
 		Application a = DemoApplication.getNewDemoApplication();
 		Chain c = null;
-		for (ConfigNodeBase cnb : a.getElements())
-		{
-			if (cnb instanceof Chain)
-			{
-				c = (Chain)cnb;
+		for (ConfigNodeBase cnb : a.getElements()) {
+			if (cnb instanceof Chain) {
+				c = (Chain) cnb;
 				break;
 			}
 		}
 		return Frontier.getChain(c);
+	}
+
+	@Override
+	public void stageApplication(DTOApplication app) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void storeApplication(String uuid) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resetStage() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
