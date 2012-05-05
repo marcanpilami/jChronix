@@ -1,4 +1,26 @@
 @CHARSET "ISO-8859-1";
+
+#container1
+{
+	 position:relative;
+}
+
+#leftbar {
+	width:150px;
+	background:#c99;
+	/*float:left;*/
+	position:absolute; 
+	top:0; 
+	bottom:0; 
+	left:0;
+}
+
+#chaintabs
+{
+	margin-left: 160px;
+}
+
+
 /**********************************
 
 Use: Reset Styles for all browsers
