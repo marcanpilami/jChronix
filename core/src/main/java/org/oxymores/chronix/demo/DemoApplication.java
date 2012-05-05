@@ -195,6 +195,40 @@ public class DemoApplication {
 		s1.connectTo(s3);
 		s3.connectTo(s2);
 
+		// ////////////////////
+		// Chain 2 : simple S -> T2 -> E
+
+		// Start
+		State s21 = new State();
+		s21.setChain(c2);
+		s21.setRunsOn(pg2);
+		s21.setRepresents(cs);
+		s21.setX(60);
+		s21.setY(60);
+		a.addElement(s21);
+
+		// End
+		State s22 = new State();
+		s22.setChain(c2);
+		s22.setRunsOn(pg2);
+		s22.setRepresents(ce);
+		s22.setX(300);
+		s22.setY(400);
+		a.addElement(s22);
+
+		// Echo c1
+		State s23 = new State();
+		s23.setChain(c2);
+		s23.setRunsOn(pg2);
+		s23.setRepresents(sc2);
+		s23.setX(200);
+		s23.setY(250);
+		a.addElement(s23);
+
+		// Transitions
+		s21.connectTo(s23);
+		s23.connectTo(s22);
+
 		return a;
 	}
 }

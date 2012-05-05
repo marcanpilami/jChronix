@@ -22,13 +22,14 @@ function getApplicationOK(responseObject) {
 			first = aa[i];
 		}
 	}
-	drawChain(first);
+
 	$("#appName").text(cxfApplication._name);
 	$("#appDescr").text(cxfApplication._description);
 }
 
 function addChain(c) {
 	cxfChains[c._id] = c;
+	editChain(c);
 }
 
 function send() {
