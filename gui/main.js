@@ -6,7 +6,8 @@ $(document).ready(function() {
 	proxy = new internalapi_chronix_oxymores_org__IServiceClientPortType();
 	
 	initChainPanel();
-	//loadChain();
+	//initCommandPanel();
+	
 	loadApplication();
 });
 

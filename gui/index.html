@@ -4,14 +4,20 @@
 		<meta charset="utf-8" />
 		<title>New Web Project</title>
 		<link rel="stylesheet" type="text/css" media="screen" href="test.css" />
-		<link type="text/css" href="jquery-ui-1.8.19.custom/css/ui-lightness/jquery-ui-1.8.19.custom.css" rel="Stylesheet"/>
-		<script type="text/javascript" src="jquery-1.7.2.js"></script>
-		<script type="text/javascript" src="/jquery-ui-1.8.19.custom/js/jquery-ui-1.8.19.custom.min.js"></script>
-		<script type="text/javascript" src="raphael.js"></script>
+		<link type="text/css" href="lib/ui-lightness/jquery-ui-1.8.19.custom.css" rel="Stylesheet"/>
+		<link type="text/css" href="lib/slick.grid.css" rel="Stylesheet"/>
+		<script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
+		<script type="text/javascript" src="lib/jquery-ui-1.8.19.custom.min.js"></script>
+		<script type="text/javascript" src="lib/raphael.js"></script>
+		<script type="text/javascript" src="lib/jquery.event.drag-2.0.min.js"></script>
+		<script type="text/javascript" src="lib/slick.core.js"></script>
+		<script type="text/javascript" src="lib/slick.editors.js"></script>
+		<script type="text/javascript" src="lib/slick.grid.js"></script>
+		<script type="text/javascript" src="lib/uuid.js"></script>
 		<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
-		<script type="text/javascript" src="uuid.js"></script>
 		<script type="text/javascript" src="application.js"></script>
 		<script type="text/javascript" src="chain.js"></script>
+		<script type="text/javascript" src="commands.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</head>
 	<body>
@@ -25,7 +31,7 @@
 			<div id='tabs'>
 				<ul>
 					<li>
-						<a href="#tab1">Chains</a>
+						<a href="#tab-commands">Commands</a>
 					</li>
 					<li>
 						<a href="#tab2">Physical Network</a>
@@ -37,7 +43,7 @@
 						<a href="#tab2">Schedules</a>
 					</li>
 					<li>
-						<a href="#tab2">Commands</a>
+						<a href="#tab1">Chains</a>
 					</li>
 				</ul>
 				<div id="tab2">
@@ -49,6 +55,9 @@
 					<div id='chaintabs'>
 						<ul></ul>
 					</div>
+				</div>
+				<div id="tab-commands">
+					<div id="gridCommands"></div>
 				</div>
 			</div>
 		</div>

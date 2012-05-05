@@ -1,5 +1,5 @@
 var cxfApplication = null;
-var cxfShellCommands = new Object();
+var cxfShellCommands = new Array();
 var cxfChains = new Object();
 
 function loadApplication() {
@@ -23,8 +23,15 @@ function getApplicationOK(responseObject) {
 		}
 	}
 
+	var ss = cxfApplication.getShells().getDTOShellCommand();
+	for ( var i = 0; i < ss.length; i++) {
+		addShell(ss[i]);
+	}
+
 	$("#appName").text(cxfApplication._name);
 	$("#appDescr").text(cxfApplication._description);
+
+	initCommandPanel(cxfShellCommands);
 }
 
 function addChain(c) {
@@ -32,8 +39,14 @@ function addChain(c) {
 	editChain(c);
 }
 
+function addShell(s) {
+	cxfShellCommands.push(s);
+}
+
 function send() {
-	proxy.stageApplication(sendApplicationOK, sendApplicationKO, cxfApplication);
+	proxy
+			.stageApplication(sendApplicationOK, sendApplicationKO,
+					cxfApplication);
 }
 
 function sendApplicationOK(response) {
@@ -42,4 +55,8 @@ function sendApplicationOK(response) {
 
 function sendApplicationKO(response) {
 	alert("oups");
+}
+
+function addCommand(DTOShellCommand) {
+	
 }
