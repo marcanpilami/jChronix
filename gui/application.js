@@ -32,6 +32,7 @@ function getApplicationOK(responseObject) {
 	$("#appDescr").text(cxfApplication._description);
 
 	initCommandPanel(cxfShellCommands);
+	fillInPaletteData(cxfShellCommands);
 }
 
 function addChain(c) {

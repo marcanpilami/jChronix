@@ -7,15 +7,139 @@ var drawnChains = new Object();
 // Global parameters
 var nodeSize = 50;
 
+// Helpers
+var dtoDropped;
+
 function initChainPanel() {
 	// Create the tab panel with a template that will create a host for a Raphaël object
 	chaintabs = $("#chaintabs").tabs({
-		tabTemplate : "<li><a href='#{href}'>#{label}</a></li>",// <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
+		tabTemplate : "<li><a href='#{href}'>#{label}</a></li>", // <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
 		add : function(event, ui) {
 			var tab_content = "houba";
 			$(ui.panel).append("<div class='raph'></div>");
 		}
 	});
+}
+
+function fillInPaletteData(DTOShellCommandArray) {
+	// Palette: list of shell commands
+	var options = {
+		editable : false,
+		enableAddRow : false,
+		enableCellNavigation : true,
+		enableColumnReorder : false,
+		enableRowReordering : false,
+		asyncEditorLoading : true,
+		showHeaderRow : false, // Weird
+		multiSelect : false,
+		enableTextSelectionOnCells : false, // ???
+		rowHeight : 30,
+		autoHeight : true,
+		autoEdit : false,
+		forceFitColumns : true
+	};
+
+	var columns = [{
+		id : "name",
+		name : "Commands",
+		field : "_name",
+		width : 200,
+		cssClass : "cell-title"
+	}];
+	grid = new Slick.Grid("#dgChainPaletteCommands", cxfShellCommands, columns, options);
+	grid.setSelectionModel(new Slick.RowSelectionModel());
+
+	grid.onDragInit.subscribe(function(e, dd) {
+		// prevent the grid from canceling drag'n'drop by default
+		e.stopImmediatePropagation();
+	});
+
+	grid.onDragStart.subscribe(function(e, dd) {
+		var cell = grid.getCellFromEvent(e);
+		if(!cell) {
+			return;
+		}
+
+		// Store row ID
+		dd.row = cell.row;
+		dtoDropped = cxfShellCommands[dd.row];
+
+		if(Slick.GlobalEditorLock.isActive()) {// ?
+			return;
+		}
+
+		// prevent default canceling behaviour
+		e.stopImmediatePropagation();
+
+		var selectedRows = grid.getSelectedRows();
+		if(!selectedRows.length || $.inArray(dd.row, selectedRows) == -1) {
+			selectedRows = [dd.row];
+			grid.setSelectedRows(selectedRows);
+		}
+
+		dd.rows = selectedRows;
+		dd.count = selectedRows.length;
+
+		var proxy = $("<span></span>").css({
+			position : "absolute",
+			display : "inline-block",
+			padding : "4px 10px",
+			background : "#e0e0e0",
+			border : "1px solid gray",
+			"z-index" : 99999,
+			"-moz-border-radius" : "8px",
+			"-moz-box-shadow" : "2px 2px 6px silver"
+		}).text("Drag to drawing to create " + dd.count + " node(s)").appendTo("body");
+
+		dd.helper = proxy;
+
+		$(dd.available).css("background", "yellow");
+		return proxy;
+	});
+
+	grid.onDrag.subscribe(function(e, dd) {
+		e.stopImmediatePropagation();
+		dd.helper.css({
+			top : e.pageY + 5,
+			left : e.pageX + 5
+		});
+	});
+
+	grid.onDragEnd.subscribe(function(e, dd) {
+		e.stopImmediatePropagation();
+		dd.helper.remove();
+		$(dd.available).css("background", "beige");
+	});
+	// register drop event handlers on all SVG charts (including future ones thanks to delegation)
+	$.drop({
+		mode : "mouse"
+	});
+	$("#chaintabs").on("dropstart", ".raph", function(e, dd) {
+		alert("e");
+	})
+
+	$("#chaintabs").on("drop", ".raph", function(e, dd) {
+		var v = new dto_chronix_oxymores_org_DTOState();
+		v._id = uuid.v4();
+		v._representsId = dtoDropped._id;
+		v._x = e.screenX - $(this).offset().left;
+		v._y = e.screenY - $(this).offset().top;
+		;
+		v._label = dtoDropped._name;
+
+		// Get selected tab
+		var selected = chaintabs.tabs(chaintabs.tabs('option', 'selected'));
+		var paper = this.paper;
+		addState(v, paper);
+		var dtoChain = this.dtoChain;
+		dtoChain.getStates().getDTOState().push(v);
+
+		//alert("f");
+	})
+
+	$("#chaintabs").on("dropend", ".raph", function(e, dd) {
+		//alert("g");
+	})
 }
 
 // Function to call to add a tab displaying a given DTOChain
@@ -30,10 +154,12 @@ function editChain(cxfObject) {
 	// Create a new tab
 	var ta = chaintabs.tabs("add", "#chaintab-" + cxfObject._id, cxfObject._name);
 	var r = $("div.raph", $("#chaintab-" + cxfObject._id))[0];
-	var paper = new Raphael(r, 1600, 600);
-	paper.states = new Array();
-	paper.transitions = new Array();
-	drawChain(cxfObject, paper);
+	var rpaper = new Raphael(r, 1600, 600);
+	rpaper.states = new Array();
+	rpaper.transitions = new Array();
+	r.paper = rpaper;
+	r.dtoChain = cxfObject;
+	drawChain(cxfObject, rpaper);
 }
 
 function dragStateStart(x, y, event) {
