@@ -119,6 +119,11 @@ public class DemoApplication {
 		c2.setDescription("chain 2");
 		c2.setName("chain2");
 		a.addElement(c2);
+		
+		Chain c3 = new Chain();
+		c3.setDescription("chain 3");
+		c3.setName("chain3");
+		a.addElement(c3);
 
 		// ////////////////////
 		// Auto elements retrieval
@@ -228,6 +233,40 @@ public class DemoApplication {
 		// Transitions
 		s21.connectTo(s23);
 		s23.connectTo(s22);
+
+		// ////////////////////
+		// Chain 3 : simple S -> T3 -> E
+
+		// Start
+		State s31 = new State();
+		s31.setChain(c3);
+		s31.setRunsOn(pg2);
+		s31.setRepresents(cs);
+		s31.setX(60);
+		s31.setY(60);
+		a.addElement(s31);
+
+		// End
+		State s32 = new State();
+		s32.setChain(c3);
+		s32.setRunsOn(pg2);
+		s32.setRepresents(ce);
+		s32.setX(300);
+		s32.setY(400);
+		a.addElement(s32);
+
+		// Echo c1
+		State s33 = new State();
+		s33.setChain(c3);
+		s33.setRunsOn(pg2);
+		s33.setRepresents(sc3);
+		s33.setX(200);
+		s33.setY(250);
+		a.addElement(s33);
+
+		// Transitions
+		s31.connectTo(s33);
+		s33.connectTo(s32);
 
 		return a;
 	}
