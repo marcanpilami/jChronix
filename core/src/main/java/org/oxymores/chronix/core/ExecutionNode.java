@@ -2,7 +2,7 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class ExecutionNode extends MetaObject {
+public class ExecutionNode extends ApplicationObject {
 	private static final long serialVersionUID = 2115315700815310189L;
 	protected NodeType type;
 	protected String sshKeyFilePath;
@@ -14,9 +14,7 @@ public class ExecutionNode extends MetaObject {
 	protected ArrayList<NodeLink> canSendTo, canReceiveFrom;
 	protected ArrayList<Place> placesHosted;
 
-	protected Integer X, Y;
-
-	protected Application application;
+	protected Integer x, y;
 
 	public ExecutionNode() {
 		super();
@@ -124,19 +122,19 @@ public class ExecutionNode extends MetaObject {
 	}
 
 	public Integer getX() {
-		return X;
+		return x;
 	}
 
 	public void setX(Integer x) {
-		X = x;
+		this.x = x;
 	}
 
 	public Integer getY() {
-		return Y;
+		return y;
 	}
 
 	public void setY(Integer y) {
-		Y = y;
+		this.y = y;
 	}
 
 	public void addHostedPlace(Place place) {
@@ -144,13 +142,5 @@ public class ExecutionNode extends MetaObject {
 			this.placesHosted.add(place);
 			place.setNode(this);
 		}
-	}
-
-	public Application getApplication() {
-		return application;
-	}
-
-	public void setApplication(Application application) {
-		this.application = application;
 	}
 }

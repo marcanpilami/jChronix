@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.oxymores.chronix.core.active.*;
 
 @XmlRootElement
-public class Application extends MetaObject {
+public class Application extends ChronixObject {
 	private static final long serialVersionUID = 338399439626386055L;
 
 	protected String name, description;
@@ -34,7 +34,7 @@ public class Application extends MetaObject {
 	protected ArrayList<Place> places;
 	protected ArrayList<PlaceGroup> groups;
 	protected ArrayList<ExecutionNode> nodes;
-	protected ArrayList<ConfigNodeBase> elements;
+	protected ArrayList<ActiveNodeBase> activeElements;
 	protected ArrayList<Parameter> parameters;
 
 	public Application() {
@@ -42,14 +42,14 @@ public class Application extends MetaObject {
 		this.places = new ArrayList<Place>();
 		this.groups = new ArrayList<PlaceGroup>();
 		this.nodes = new ArrayList<ExecutionNode>();
-		this.elements = new ArrayList<ConfigNodeBase>();
+		this.activeElements = new ArrayList<ActiveNodeBase>();
 		this.parameters = new ArrayList<Parameter>();
-		
+
 		// Basic elements
-		this.elements.add(new And());
-		this.elements.add(new Or());
-		this.elements.add(new ChainEnd());
-		this.elements.add(new ChainStart());
+		this.activeElements.add(new And());
+		this.activeElements.add(new Or());
+		this.activeElements.add(new ChainEnd());
+		this.activeElements.add(new ChainStart());
 	}
 
 	public void setname(String name) {
@@ -92,18 +92,21 @@ public class Application extends MetaObject {
 		o.setApplication(null);
 	}
 
-	public void addElement(ConfigNodeBase o) {
-		if (!this.elements.contains(o)) {
-			this.elements.add(o);
+	public void addActiveElement(ActiveNodeBase o) {
+		if (!this.activeElements.contains(o)) {
+			this.activeElements.add(o);
 			o.setApplication(this);
 		}
 	}
 
-	public void removeElement(ConfigNodeBase o) {
-		this.elements.remove(o);
-		o.setApplication(null);
+	public void removeActiveElement(ConfigurableBase o) {
+		try {
+			this.activeElements.remove(o);
+		} finally {
+			o.setApplication(null);
+		}
 	}
-	
+
 	public void addParameter(Parameter o) {
 		if (!this.parameters.contains(o)) {
 			this.parameters.add(o);
@@ -132,8 +135,8 @@ public class Application extends MetaObject {
 		return nodes;
 	}
 
-	public ArrayList<ConfigNodeBase> getElements() {
-		return elements;
+	public ArrayList<ActiveNodeBase> getActiveElements() {
+		return activeElements;
 	}
 
 	public String getDescription() {

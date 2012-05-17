@@ -28,17 +28,15 @@ public class Chain extends ActiveNodeBase {
 
 	protected ArrayList<State> states;
 	protected ArrayList<Transition> transitions;
-	
-	public Chain(){
+
+	public Chain() {
 		super();
 		states = new ArrayList<State>();
 		transitions = new ArrayList<Transition>();
 	}
-	
-	public void addState(State state)
-	{
-		if (!this.states.contains(state))
-		{
+
+	public void addState(State state) {
+		if (!this.states.contains(state)) {
 			this.states.add(state);
 			state.chain = this;
 		}
@@ -47,11 +45,9 @@ public class Chain extends ActiveNodeBase {
 	public ArrayList<State> getStates() {
 		return states;
 	}
-	
-	public void addTransition(Transition tr)
-	{
-		if (!this.transitions.contains(tr))
-		{
+
+	public void addTransition(Transition tr) {
+		if (!this.transitions.contains(tr)) {
 			this.transitions.add(tr);
 			tr.chain = this;
 		}

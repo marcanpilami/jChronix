@@ -1,4 +1,4 @@
-package org.oxymores.chronix.event;
+package org.oxymores.chronix.core.transactional;
 
 import java.util.UUID;
 

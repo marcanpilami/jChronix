@@ -22,37 +22,37 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class ConfigNodeBase extends MetaObject {
+public class ConfigurableBase extends ApplicationObject {
 	private static final long serialVersionUID = 4288408733877784921L;
-	
-	protected Application application;
+
 	protected ArrayList<Parameter> parameters;
-	
-	public ConfigNodeBase()
-	{
+	protected ArrayList<EnvironmentParameter> envParams;
+
+	public ConfigurableBase() {
 		super();
 		parameters = new ArrayList<Parameter>();
+		envParams = new ArrayList<EnvironmentParameter>();
 	}
-	
-	
-	public Application getApplication() {
-		return application;
-	}
-	protected void setApplication(Application application) {
-		this.application = application;
-	} // should only be done via the app itself.
-	
-	public ArrayList<Parameter> getParameters()
-	{
+
+	public ArrayList<Parameter> getParameters() {
 		return this.parameters;
 	}
-	
-	public void addParameter(Parameter parameter)
-	{
-		if (! parameters.contains(parameter))
-		{
+
+	public void addParameter(Parameter parameter) {
+		if (!parameters.contains(parameter)) {
 			parameters.add(parameter);
 			parameter.addElement(this);
+		}
+	}
+
+	public void addEnvVar(String key, String value) {
+		this.envParams.add(new EnvironmentParameter(key, value));
+	}
+
+	public void removeEnvVar(String key) {
+		for (EnvironmentParameter p : envParams) {
+			if (p.key == key)
+				envParams.remove(p);
 		}
 	}
 }

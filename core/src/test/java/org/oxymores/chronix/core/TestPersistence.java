@@ -52,7 +52,7 @@ public class TestPersistence extends TestCase {
 			// Test
 			Assert.assertEquals(a1.getNodes().size(), a2.getNodes().size());
 			Assert.assertEquals(a1.getPlaces().size(), a2.getPlaces().size());
-			Assert.assertEquals(a1.getElements().size(), a2.getElements()
+			Assert.assertEquals(a1.getActiveElements().size(), a2.getActiveElements()
 					.size());
 			Assert.assertEquals(a1.getGroups().size(), a2.getGroups().size());
 
@@ -131,7 +131,7 @@ public class TestPersistence extends TestCase {
 		// Test
 		Assert.assertEquals(a1.getNodes().size(), a2.getNodes().size());
 		Assert.assertEquals(a1.getPlaces().size(), a2.getPlaces().size());
-		Assert.assertEquals(a1.getElements().size(), a2.getElements().size());
+		Assert.assertEquals(a1.getActiveElements().size(), a2.getActiveElements().size());
 		Assert.assertEquals(a1.getGroups().size(), a2.getGroups().size());
 
 		Assert.assertEquals(a1.getGroups().get(0).getName(), a1.getGroups()

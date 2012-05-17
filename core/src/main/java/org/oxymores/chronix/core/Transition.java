@@ -22,7 +22,7 @@ package org.oxymores.chronix.core;
 
 import java.util.UUID;
 
-public class Transition extends ActiveNodeBase {
+public class Transition extends ApplicationObject {
 
 	private static final long serialVersionUID = 1968186705525199010L;
 
@@ -31,7 +31,6 @@ public class Transition extends ActiveNodeBase {
 	protected UUID guard4;
 
 	protected State stateFrom, stateTo;
-	
 	protected Chain chain;
 
 	public Integer getGuard1() {
@@ -87,7 +86,7 @@ public class Transition extends ActiveNodeBase {
 			stateTo.addTransitionReceivedHere(this);
 		}
 	}
-	
+
 	public Chain getChain() {
 		return chain;
 	}

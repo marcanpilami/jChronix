@@ -2,14 +2,13 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class Place extends MetaObject {
+public class Place extends ApplicationObject {
 	private static final long serialVersionUID = 4736385443687921653L;
 	protected String name, description;
 	protected String property1, property2, property3, property4;
 
 	protected ExecutionNode node;
 	protected ArrayList<PlaceGroup> memberOfGroups;
-	protected Application application;
 
 	public Place() {
 		super();
@@ -75,22 +74,12 @@ public class Place extends MetaObject {
 		}
 	}
 
-	public Application getApplication() {
-		return application;
-	}
-
-	public void setApplication(Application application) {
-		this.application = application;
-	}
-
 	public ArrayList<PlaceGroup> getMemberOfGroups() {
 		return memberOfGroups;
 	}
 
-	public void addToGroup(PlaceGroup group)
-	{
-		if (!this.memberOfGroups.contains(group))
-		{
+	public void addToGroup(PlaceGroup group) {
+		if (!this.memberOfGroups.contains(group)) {
 			this.memberOfGroups.add(group);
 			group.addPlace(this);
 		}

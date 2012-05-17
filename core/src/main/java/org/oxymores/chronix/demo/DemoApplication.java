@@ -94,46 +94,46 @@ public class DemoApplication {
 		sc1.setCommand("echo c1");
 		sc1.setDescription("command 1");
 		sc1.setName("command 1");
-		a.addElement(sc1);
+		a.addActiveElement(sc1);
 
 		ShellCommand sc2 = new ShellCommand();
 		sc2.setCommand("echo c2");
 		sc2.setDescription("command 2");
 		sc2.setName("command 2");
-		a.addElement(sc2);
+		a.addActiveElement(sc2);
 
 		ShellCommand sc3 = new ShellCommand();
 		sc3.setCommand("echo c3");
 		sc3.setDescription("command 3");
 		sc3.setName("command 3");
-		a.addElement(sc3);
+		a.addActiveElement(sc3);
 
 		// ////////////////////
 		// Chains
 		Chain c1 = new Chain();
 		c1.setDescription("chain 1");
 		c1.setName("chain1");
-		a.addElement(c1);
+		a.addActiveElement(c1);
 
 		Chain c2 = new Chain();
 		c2.setDescription("chain 2");
 		c2.setName("chain2");
-		a.addElement(c2);
+		a.addActiveElement(c2);
 		
 		Chain c3 = new Chain();
 		c3.setDescription("chain 3");
 		c3.setName("chain3");
-		a.addElement(c3);
+		a.addActiveElement(c3);
 
 		// ////////////////////
 		// Auto elements retrieval
 		ChainStart cs = null;
-		for (ConfigNodeBase nb : a.getElements()) {
+		for (ConfigurableBase nb : a.getActiveElements()) {
 			if (nb instanceof ChainStart)
 				cs = (ChainStart) nb;
 		}
 		ChainEnd ce = null;
-		for (ConfigNodeBase nb : a.getElements()) {
+		for (ConfigurableBase nb : a.getActiveElements()) {
 			if (nb instanceof ChainEnd)
 				ce = (ChainEnd) nb;
 		}
@@ -176,7 +176,6 @@ public class DemoApplication {
 		s1.setRepresents(cs);
 		s1.setX(100);
 		s1.setY(100);
-		a.addElement(s1);
 
 		// End
 		State s2 = new State();
@@ -185,7 +184,6 @@ public class DemoApplication {
 		s2.setRepresents(ce);
 		s2.setX(300);
 		s2.setY(200);
-		a.addElement(s2);
 
 		// Echo c1
 		State s3 = new State();
@@ -194,7 +192,6 @@ public class DemoApplication {
 		s3.setRepresents(sc1);
 		s3.setX(300);
 		s3.setY(400);
-		a.addElement(s3);
 
 		// Transitions
 		s1.connectTo(s3);
@@ -210,7 +207,6 @@ public class DemoApplication {
 		s21.setRepresents(cs);
 		s21.setX(60);
 		s21.setY(60);
-		a.addElement(s21);
 
 		// End
 		State s22 = new State();
@@ -219,7 +215,6 @@ public class DemoApplication {
 		s22.setRepresents(ce);
 		s22.setX(300);
 		s22.setY(400);
-		a.addElement(s22);
 
 		// Echo c1
 		State s23 = new State();
@@ -228,7 +223,6 @@ public class DemoApplication {
 		s23.setRepresents(sc2);
 		s23.setX(200);
 		s23.setY(250);
-		a.addElement(s23);
 
 		// Transitions
 		s21.connectTo(s23);
@@ -244,7 +238,6 @@ public class DemoApplication {
 		s31.setRepresents(cs);
 		s31.setX(60);
 		s31.setY(60);
-		a.addElement(s31);
 
 		// End
 		State s32 = new State();
@@ -253,7 +246,6 @@ public class DemoApplication {
 		s32.setRepresents(ce);
 		s32.setX(300);
 		s32.setY(400);
-		a.addElement(s32);
 
 		// Echo c1
 		State s33 = new State();
@@ -262,7 +254,6 @@ public class DemoApplication {
 		s33.setRepresents(sc3);
 		s33.setX(200);
 		s33.setY(250);
-		a.addElement(s33);
 
 		// Transitions
 		s31.connectTo(s33);

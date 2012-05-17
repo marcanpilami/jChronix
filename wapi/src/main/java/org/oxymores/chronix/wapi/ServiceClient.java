@@ -22,7 +22,7 @@ package org.oxymores.chronix.wapi;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigNodeBase;
+import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
@@ -55,7 +55,7 @@ public class ServiceClient implements IServiceClient {
 		System.out.println("oups3");
 		Application a = DemoApplication.getNewDemoApplication();
 		Chain c = null;
-		for (ConfigNodeBase cnb : a.getElements()) {
+		for (ConfigurableBase cnb : a.getElements()) {
 			if (cnb instanceof Chain) {
 				c = (Chain) cnb;
 				break;
@@ -70,7 +70,7 @@ public class ServiceClient implements IServiceClient {
 		
 		Application a = DemoApplication.getNewDemoApplication();
 		Chain c = null;
-		for (ConfigNodeBase cnb : a.getElements()) {
+		for (ConfigurableBase cnb : a.getElements()) {
 			if (cnb instanceof Chain) {
 				c = (Chain) cnb;
 				break;

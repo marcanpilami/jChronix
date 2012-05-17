@@ -22,20 +22,19 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class Parameter extends MetaObject {
+public class Parameter extends ApplicationObject {
 
 	private static final long serialVersionUID = 8017529181151172909L;
 
 	protected String key, value, description;
 	protected Boolean reusable = false;
 	
-	protected Application application;
-	protected ArrayList<ConfigNodeBase> elements;
+	protected ArrayList<ConfigurableBase> elements;
 	
 	public Parameter()
 	{
 		super();
-		elements = new ArrayList<ConfigNodeBase>();
+		elements = new ArrayList<ConfigurableBase>();
 	}
 
 	public String getKey() {
@@ -70,19 +69,11 @@ public class Parameter extends MetaObject {
 		this.reusable = reusable;
 	}
 
-	public Application getApplication() {
-		return application;
-	}
-
-	public void setApplication(Application application) {
-		this.application = application;
-	}
-
-	public ArrayList<ConfigNodeBase> getElements() {
+	public ArrayList<ConfigurableBase> getElements() {
 		return elements;
 	}
 	
-	public void addElement(ConfigNodeBase element)
+	public void addElement(ConfigurableBase element)
 	{
 		if (!elements.contains(element))
 		{

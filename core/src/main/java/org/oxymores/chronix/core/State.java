@@ -21,90 +21,81 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
-import org.oxymores.chronix.exceptions.ChronixInconsistentMetadataException;
+public class State extends ConfigurableBase {
 
-public class State extends ConfigNodeBase {
 	private static final long serialVersionUID = -2640644872229489081L;
 
 	protected Boolean parallel;
-	
+
 	// GUI data
-	protected Integer X, Y;
-	
+	protected Integer x, y;
+
 	// Time limits
-	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
-	
+	protected Integer warnAfterMn, killAfterMn, maxPipeWaitTime,
+			eventValidityMn;
+
 	// The active element represented by this State
 	protected ActiveNodeBase represents;
-	
+
 	// The chain it belongs to
 	protected Chain chain;
-	
+
 	// Transitions
 	protected ArrayList<Transition> trFromHere, trReceivedHere;
-	
+
 	// Exclusive states
 	protected ArrayList<State> exclusiveStates;
-	
-	// Runs on a group. Groups are defined in a separate graph, so get it by ID and not by reference. 
-	protected UUID placeGroupId;
-	
-	public State()
-	{
+
+	// Runs on a group. Groups are defined in a separate graph, so get it by ID
+	// and not by reference.
+	protected PlaceGroup runsOn;
+
+	// Sequences
+	protected ArrayList<AutoSequence> sequences;
+	protected ArrayList<Calendar> calendars;
+
+	public State() {
 		super();
 		this.exclusiveStates = new ArrayList<State>();
 		this.trFromHere = new ArrayList<Transition>();
 		this.trReceivedHere = new ArrayList<Transition>();
+		this.sequences = new ArrayList<AutoSequence>();
+		this.calendars = new ArrayList<Calendar>();
 	}
-	
-	public PlaceGroup getRunsOn() throws ChronixInconsistentMetadataException
-	{
-		for (PlaceGroup group : this.application.getGroups())
-		{
-			if (group.getId().equals(this.placeGroupId))
-				return group;
-		}
-		throw new ChronixInconsistentMetadataException("A State references an inexistent PlaceGroup");
+
+	public PlaceGroup getRunsOn() {
+		return this.runsOn;
 	}
-	
-	public void setRunsOn(PlaceGroup group)
-	{
-		this.placeGroupId = group.getId();
+
+	public void setRunsOn(PlaceGroup group) {
+		this.runsOn = group;
 	}
-	
-	public void addTransitionFromHere(Transition tr)
-	{
-		if (! this.trFromHere.contains(tr))
-		{
+
+	public void addTransitionFromHere(Transition tr) {
+		if (!this.trFromHere.contains(tr)) {
 			this.trFromHere.add(tr);
 			tr.setStateFrom(this);
 		}
 	}
-	
-	public void addTransitionReceivedHere(Transition tr)
-	{
-		if (! this.trReceivedHere.contains(tr))
-		{
+
+	public void addTransitionReceivedHere(Transition tr) {
+		if (!this.trReceivedHere.contains(tr)) {
 			this.trReceivedHere.add(tr);
 			tr.setStateTo(this);
 		}
 	}
-	
-	public Transition connectTo(State target)
-	{
+
+	public Transition connectTo(State target) {
 		// Note: there can be multiple transitions between two states.
 		Transition t = new Transition();
 		t.setStateFrom(this);
 		t.setStateTo(target);
 		t.setGuard1(0);
-		this.application.addElement(t);
+		t.setApplication(this.application);
 		this.chain.addTransition(t);
 		return t;
 	}
-	
-	
 
 	public Boolean getParallel() {
 		return parallel;
@@ -115,51 +106,51 @@ public class State extends ConfigNodeBase {
 	}
 
 	public Integer getX() {
-		return X;
+		return x;
 	}
 
 	public void setX(Integer x) {
-		X = x;
+		this.x = x;
 	}
 
 	public Integer getY() {
-		return Y;
+		return y;
 	}
 
 	public void setY(Integer y) {
-		Y = y;
+		this.y = y;
 	}
 
 	public Integer getWarnAfterMn() {
-		return WarnAfterMn;
+		return warnAfterMn;
 	}
 
 	public void setWarnAfterMn(Integer warnAfterMn) {
-		WarnAfterMn = warnAfterMn;
+		this.warnAfterMn = warnAfterMn;
 	}
 
 	public Integer getKillAfterMn() {
-		return KillAfterMn;
+		return killAfterMn;
 	}
 
 	public void setKillAfterMn(Integer killAfterMn) {
-		KillAfterMn = killAfterMn;
+		this.killAfterMn = killAfterMn;
 	}
 
 	public Integer getMaxPipeWaitTime() {
-		return MaxPipeWaitTime;
+		return maxPipeWaitTime;
 	}
 
 	public void setMaxPipeWaitTime(Integer maxPipeWaitTime) {
-		MaxPipeWaitTime = maxPipeWaitTime;
+		this.maxPipeWaitTime = maxPipeWaitTime;
 	}
 
 	public Integer getEventValidityMn() {
-		return EventValidityMn;
+		return eventValidityMn;
 	}
 
 	public void setEventValidityMn(Integer eventValidityMn) {
-		EventValidityMn = eventValidityMn;
+		this.eventValidityMn = eventValidityMn;
 	}
 
 	public ActiveNodeBase getRepresents() {
@@ -182,5 +173,31 @@ public class State extends ConfigNodeBase {
 
 	public ArrayList<State> getExclusiveStates() {
 		return exclusiveStates;
+	}
+
+	public void addSequence(AutoSequence s) {
+		s.s_addStateUsing(this);
+		this.sequences.add(s);
+	}
+
+	public void removeSequence(AutoSequence s) {
+		try {
+			this.sequences.remove(s);
+		} finally {
+			s.s_removeStateUsing(this);
+		}
+	}
+
+	public void addCalendar(Calendar c) {
+		c.s_addStateUsing(this);
+		this.calendars.add(c);
+	}
+
+	public void removeCalendar(Calendar c) {
+		try {
+			this.calendars.remove(c);
+		} finally {
+			c.s_removeStateUsing(this);
+		}
 	}
 }

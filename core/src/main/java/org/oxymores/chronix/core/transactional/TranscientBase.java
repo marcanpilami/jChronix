@@ -1,11 +1,11 @@
-package org.oxymores.chronix.event;
+package org.oxymores.chronix.core.transactional;
 import java.util.Date;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.MetaObject;
+import org.oxymores.chronix.core.ChronixObject;
 
-public class TranscientBase extends MetaObject 
+public class TranscientBase extends ChronixObject 
 {
 	private static final long serialVersionUID = 8976655465578L;
 

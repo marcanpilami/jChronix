@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigNodeBase;
+import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -24,7 +24,7 @@ public class Frontier {
 		res.groups = new ArrayList<DTOPlaceGroup>();
 		res.parameters = new ArrayList<DTOParameter>();
 
-		for (ConfigNodeBase o : a.getElements()) {
+		for (ConfigurableBase o : a.getElements()) {
 			if (o instanceof Chain) {
 				Chain c = (Chain) o;
 				res.chains.add(getChain(c));

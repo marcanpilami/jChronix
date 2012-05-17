@@ -3,31 +3,28 @@ package org.oxymores.chronix.core;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class MetaObject implements Serializable
-{
+public class ChronixObject implements Serializable {
 	private static final long serialVersionUID = 1106120751950998543L;
 
-	public MetaObject()
-	{
+	public ChronixObject() {
 		id = UUID.randomUUID();
-		
+
 	}
+
 	protected UUID id;
 
 	public UUID getId() {
 		return id;
 	}
-	
+
 	@Override
-	public boolean equals(Object o)
-	{
-		if (! (o instanceof MetaObject))
+	public boolean equals(Object o) {
+		if (!(o instanceof ChronixObject))
 			return false;
-		return ((MetaObject)o).getId().equals(this.getId());
+		return ((ChronixObject) o).getId().equals(this.getId());
 	}
-	
-	public boolean validate()
-	{
+
+	public boolean validate() {
 		return false;
 	}
 
