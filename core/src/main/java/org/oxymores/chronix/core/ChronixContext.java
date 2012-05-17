@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.apache.log4j.Logger;
+
 public class ChronixContext {
+	private static Logger log = Logger.getLogger(ChronixContext.class);
 
 	public Date loaded;
 	public File configurationDirectory;
@@ -19,6 +22,10 @@ public class ChronixContext {
 	public Hashtable<String, Application> applicationsByName;
 
 	public static ChronixContext loadContext(String appConfDirectory) {
+		log.info(String.format(
+				"Creating a new context from configuration database %s",
+				appConfDirectory));
+		
 		ChronixContext ctx = new ChronixContext();
 		ctx.loaded = new Date();
 		ctx.configurationDirectory = new File(appConfDirectory);
@@ -78,6 +85,9 @@ public class ChronixContext {
 
 	public Application loadApplication(File dataFile, File networkFile)
 			throws FileNotFoundException, IOException, ClassNotFoundException {
+		log.info(String.format("Loading an application from file %s",
+				dataFile.getAbsolutePath()));
+
 		FileInputStream fis = new FileInputStream(dataFile);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 
@@ -105,6 +115,8 @@ public class ChronixContext {
 	@SuppressWarnings("unused")
 	public void saveApplication(Application a) throws FileNotFoundException,
 			IOException {
+		log.info(String.format("Saving application %s to temp file",
+				a.getName()));
 		String dataFilePath = configurationDirectory.getAbsolutePath()
 				+ "/app_data_" + a.getId() + "_WORKING_.crn";
 		String networkFilePath = configurationDirectory.getAbsolutePath()
@@ -118,6 +130,9 @@ public class ChronixContext {
 	// Does NOT refresh caches. Restart engine for that !
 	@SuppressWarnings("unused")
 	public void setWorkingAsCurrent(Application a) throws Exception {
+		log.info(String.format(
+				"Promoting temp file for application %s as the active file",
+				a.getName()));
 		String workingDataFilePath = configurationDirectory.getAbsolutePath()
 				+ "/app_data_" + a.getId() + "_WORKING_.crn";
 		String workingNetworkFilePath = configurationDirectory
@@ -147,7 +162,7 @@ public class ChronixContext {
 		for (int i = 0; i < fileList.length; i++) {
 			File f = fileList[i];
 			String fileName = f.getName();
-			if (fileName.startsWith("app-") && fileName.endsWith(".crn")
+			if (fileName.startsWith("app_") && fileName.endsWith(".crn")
 					&& fileName.contains(a.getId().toString())
 					&& !fileName.contains("CURRENT")
 					&& !fileName.contains("WORKING")
@@ -163,6 +178,9 @@ public class ChronixContext {
 			}
 		}
 		v++;
+		log.info(String
+				.format("Current state of application %s will be saved before switching as version %s",
+						a.getName(), v));
 
 		String nextArchiveDataFilePath = configurationDirectory
 				.getAbsolutePath()

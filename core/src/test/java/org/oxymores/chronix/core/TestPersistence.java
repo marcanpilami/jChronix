@@ -67,7 +67,13 @@ public class TestPersistence extends TestCase {
 	public void testContext() {
 		ChronixContext c1 = new ChronixContext();
 		c1.configurationDirectory = new File("C:\\TEMP\\db");
-
+		
+		// Clear test db directory
+		File[] fileList = c1.configurationDirectory.listFiles();
+		for (int i = 0; i < fileList.length; i++)
+			fileList[i].delete();
+		
+		// Create test application and save it inside context
 		Application a1 = org.oxymores.chronix.demo.DemoApplication
 				.getNewDemoApplication();
 
