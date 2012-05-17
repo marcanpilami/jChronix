@@ -31,12 +31,13 @@ public class Loader {
 
 	}
 
-	public static Application deSerialize(String filePath) throws FileNotFoundException, IOException, ClassNotFoundException {
+	public static Application deSerialize(String filePath)
+			throws FileNotFoundException, IOException, ClassNotFoundException {
 
 		FileInputStream fis = new FileInputStream(filePath);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 
-		return (Application)ois.readObject();
+		return (Application) ois.readObject();
 	}
 
 }
