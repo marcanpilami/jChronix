@@ -36,6 +36,7 @@ Thumbs.db
 # Temp files         #
 ######################
 generated.js
+core/target/*
 
 # Library archive    #
 ######################
