@@ -30,16 +30,18 @@ public class TestPersistence extends TestCase {
 	public void testApp() {
 		Application a1 = org.oxymores.chronix.demo.DemoApplication
 				.getNewDemoApplication();
-		Application a = a1; // Test object
 
 		// Test connections between objects
-		Assert.assertEquals(1, a.getNodes().get(0).getCanSendTo().size());
-		Assert.assertEquals(1, a.getNodes().get(1).getCanReceiveFrom().size());
-		Assert.assertEquals(2, a.getPlaces().get(0).getMemberOfGroups().size());
-		Assert.assertEquals(2, a.getPlaces().get(1).getMemberOfGroups().size());
-		Assert.assertEquals(2, a.getGroups().get(0).getPlaces().size());
-		Assert.assertEquals(1, a.getGroups().get(1).getPlaces().size());
-		Assert.assertEquals(1, a.getGroups().get(2).getPlaces().size());
+		Assert.assertEquals(1, a1.getNodesList().get(0).getCanSendTo().size());
+		Assert.assertEquals(1, a1.getNodesList().get(1).getCanReceiveFrom()
+				.size());
+		Assert.assertEquals(2, a1.getPlacesList().get(0).getMemberOfGroups()
+				.size());
+		Assert.assertEquals(2, a1.getPlacesList().get(1).getMemberOfGroups()
+				.size());
+		Assert.assertEquals(4, a1.getGroupsList().get(0).getPlaces().size()
+				+ a1.getGroupsList().get(1).getPlaces().size()
+				+ a1.getGroupsList().get(2).getPlaces().size());
 
 		// Serialization
 		try {
@@ -50,14 +52,16 @@ public class TestPersistence extends TestCase {
 			Application a2 = Loader.deSerialize("C:\\TEMP\\meuh.txt");
 
 			// Test
-			Assert.assertEquals(a1.getNodes().size(), a2.getNodes().size());
-			Assert.assertEquals(a1.getPlaces().size(), a2.getPlaces().size());
-			Assert.assertEquals(a1.getActiveElements().size(), a2.getActiveElements()
+			Assert.assertEquals(a1.getNodesList().size(), a2.getNodes().size());
+			Assert.assertEquals(a1.getPlacesList().size(), a2.getPlaces()
 					.size());
-			Assert.assertEquals(a1.getGroups().size(), a2.getGroups().size());
+			Assert.assertEquals(a1.getActiveElements().size(), a2
+					.getActiveElements().size());
+			Assert.assertEquals(a1.getGroupsList().size(), a2.getGroupsList()
+					.size());
 
-			Assert.assertEquals(a1.getGroups().get(0).getName(), a1.getGroups()
-					.get(0).getName());
+			Assert.assertEquals(a1.getGroupsList().get(0).getName(), a1
+					.getGroupsList().get(0).getName());
 		} catch (Exception e) {
 			System.err.println("meuh" + e.getMessage() + e);
 		}
@@ -67,12 +71,12 @@ public class TestPersistence extends TestCase {
 	public void testContext() {
 		ChronixContext c1 = new ChronixContext();
 		c1.configurationDirectory = new File("C:\\TEMP\\db");
-		
+
 		// Clear test db directory
 		File[] fileList = c1.configurationDirectory.listFiles();
 		for (int i = 0; i < fileList.length; i++)
 			fileList[i].delete();
-		
+
 		// Create test application and save it inside context
 		Application a1 = org.oxymores.chronix.demo.DemoApplication
 				.getNewDemoApplication();
@@ -131,11 +135,13 @@ public class TestPersistence extends TestCase {
 		// Test
 		Assert.assertEquals(a1.getNodes().size(), a2.getNodes().size());
 		Assert.assertEquals(a1.getPlaces().size(), a2.getPlaces().size());
-		Assert.assertEquals(a1.getActiveElements().size(), a2.getActiveElements().size());
+		Assert.assertEquals(a1.getActiveElements().size(), a2
+				.getActiveElements().size());
 		Assert.assertEquals(a1.getGroups().size(), a2.getGroups().size());
 
-		Assert.assertEquals(a1.getGroups().get(0).getName(), a1.getGroups()
-				.get(0).getName());
+		PlaceGroup pg_1 = a1.getGroupsList().get(0);
+		PlaceGroup pg_2 = a2.getPlaceGroup(pg_1.id);
+		Assert.assertEquals(pg_1.getName(),pg_2.getName());
 		// System.out.println(a2.getElements().size());
 	}
 }

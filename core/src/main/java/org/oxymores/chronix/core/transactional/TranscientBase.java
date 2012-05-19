@@ -1,89 +1,102 @@
 package org.oxymores.chronix.core.transactional;
+
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixObject;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
 
-public class TranscientBase extends ChronixObject 
-{
+public class TranscientBase implements Serializable {
 	private static final long serialVersionUID = 8976655465578L;
 
+	protected UUID id;
 	protected UUID stateID;
 	protected UUID placeID;
-	
 	protected UUID appID;
-	protected transient Application application;
-	
-	public UUID getStateID() {
+	protected Date createdAt;
+
+	protected ArrayList<EnvironmentValue> values;
+
+	public TranscientBase() {
+		id = UUID.randomUUID();
+		createdAt = new Date();
+		values = new ArrayList<EnvironmentValue>();
+	}
+
+	protected UUID getStateID() {
 		return stateID;
 	}
 
-	public void setStateID(UUID stateID) {
+	protected void setStateID(UUID stateID) {
 		this.stateID = stateID;
 	}
 
-	public UUID getPlaceID() {
+	public State getState(ChronixContext ctx) {
+		return this.getApplication(ctx).getState(this.stateID);
+	}
+
+	protected UUID getPlaceID() {
 		return placeID;
 	}
 
-	public void setPlaceID(UUID placeID) {
+	protected void setPlaceID(UUID placeID) {
 		this.placeID = placeID;
 	}
 
-	public UUID getAppID() {
+	public Place getPlace(ChronixContext ctx) {
+		return this.getApplication(ctx).getPlace(this.placeID);
+	}
+
+	protected UUID getAppID() {
 		return appID;
 	}
 
-	public void setAppID(UUID appID) {
+	protected void setAppID(UUID appID) {
 		this.appID = appID;
 	}
 
-	public Application getApplication() {
-		return application;
+	public Application getApplication(ChronixContext ctx) {
+		return ctx.applicationsById.get(this.appID);
 	}
 
 	public void setApplication(Application application) {
-		this.application = application;
 		if (application != null)
 			this.appID = application.getId();
 		else
 			this.appID = null;
 	}
 
-	public Date getCreated() {
-		return created;
+	public Date getCreatedAt() {
+		return createdAt;
 	}
 
-	public void setCreated(Date created) {
-		this.created = created;
+	@SuppressWarnings("unused")
+	private void setCreatedAt(Date created) {
+		this.createdAt = created;
 	}
 
-	public Date getEnqueued() {
-		return enqueued;
+	public UUID getId() {
+		return id;
 	}
 
-	public void setEnqueued(Date enqueued) {
-		this.enqueued = enqueued;
+	@SuppressWarnings("unused")
+	private void setId(UUID id) {
+		this.id = id;
 	}
 
-	public Date getQueueSlotEnd() {
-		return queueSlotEnd;
+	public ArrayList<EnvironmentValue> getValues() {
+		return values;
 	}
 
-	public void setQueueSlotEnd(Date queueSlotEnd) {
-		this.queueSlotEnd = queueSlotEnd;
+	protected void setValues(ArrayList<EnvironmentValue> values) {
+		this.values = values;
 	}
 
-	public Date getRunSlotEnd() {
-		return runSlotEnd;
+	public void addValue(String key, String value) {
+		this.values.add(new EnvironmentValue(key, value));
 	}
-
-	public void setRunSlotEnd(Date runSlotEnd) {
-		this.runSlotEnd = runSlotEnd;
-	}
-
-	protected Date created, enqueued, queueSlotEnd, runSlotEnd;
-	
-	
 }

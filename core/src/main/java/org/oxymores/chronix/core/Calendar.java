@@ -2,6 +2,8 @@ package org.oxymores.chronix.core;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.UUID;
 
 public class Calendar extends ApplicationObject {
 
@@ -12,12 +14,12 @@ public class Calendar extends ApplicationObject {
 	protected String description;
 
 	protected ArrayList<State> usedInStates;
-	protected ArrayList<CalendarDay> days;
+	protected Hashtable<UUID, CalendarDay> days;
 
 	public Calendar() {
 		super();
 		usedInStates = new ArrayList<State>();
-		days = new ArrayList<CalendarDay>();
+		days = new Hashtable<UUID, CalendarDay>();
 	}
 
 	// Only called from State.addSequence
@@ -33,20 +35,26 @@ public class Calendar extends ApplicationObject {
 		}
 	}
 
-	public void addDay(Date d)
-	{
+	public void addDay(Date d) {
 		addDay(new CalendarDay(d.getTime(), this));
 	}
-	
-	public void addDay(long d)
-	{
+
+	public void addDay(long d) {
 		addDay(new CalendarDay(d, this));
 	}
-	
+
 	public void addDay(CalendarDay d) {
 		if (!this.days.contains(d)) {
-			this.days.add(d);
+			this.days.put(d.id, d);
 			d.setCalendar(this);
 		}
+	}
+
+	public Hashtable<UUID, CalendarDay> getCalendarDays() {
+		return this.days;
+	}
+
+	public CalendarDay getDay(UUID id) {
+		return this.days.get(id);
 	}
 }

@@ -22,7 +22,6 @@ package org.oxymores.chronix.wapi;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
@@ -39,44 +38,38 @@ public class ServiceClient implements IServiceClient {
 	@Override
 	public DTOApplication getApplication(String name) {
 		System.err.println("oups1");
-		Application a = DemoApplication.getNewDemoApplication();  // TODO: really look for the application instead of test one
+		Application a = DemoApplication.getNewDemoApplication(); // TODO: really
+																	// look for
+																	// the
+																	// application
+																	// instead
+																	// of test
+																	// one
 		return Frontier.getApplication(a);
 	}
 
-	/*@Override
-	public DTOApplication getApplication(String name, Boolean byUuid) {
-		// TODO Auto-generated method stub
-		System.err.println("oups2");
-		return null;// DemoApplication.getNewDemoApplication();
-	}*/
+	/*
+	 * @Override public DTOApplication getApplication(String name, Boolean
+	 * byUuid) { // TODO Auto-generated method stub System.err.println("oups2");
+	 * return null;// DemoApplication.getNewDemoApplication(); }
+	 */
 
 	@Override
 	public DTOChain getChain() {
 		System.out.println("oups3");
 		Application a = DemoApplication.getNewDemoApplication();
-		Chain c = null;
-		for (ConfigurableBase cnb : a.getElements()) {
-			if (cnb instanceof Chain) {
-				c = (Chain) cnb;
-				break;
-			}
-		}
+		Chain c = a.getChains().get(0);
 		return Frontier.getChain(c);
 	}
 
 	@Override
 	public void stageApplication(DTOApplication app) {
-		// TODO Replace test code with true persistence and reboot engine context
-		
+		// TODO Replace test code with true persistence and reboot engine
+		// context
+
 		Application a = DemoApplication.getNewDemoApplication();
-		Chain c = null;
-		for (ConfigurableBase cnb : a.getElements()) {
-			if (cnb instanceof Chain) {
-				c = (Chain) cnb;
-				break;
-			}
-		}
-		
+		Chain c = a.getChains().get(0);
+
 		System.out.println(app.chains.get(0).states.get(0).getX());
 		System.out.println(c.getStates().get(0).getX());
 	}
@@ -84,13 +77,13 @@ public class ServiceClient implements IServiceClient {
 	@Override
 	public void storeApplication(String uuid) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void resetStage() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

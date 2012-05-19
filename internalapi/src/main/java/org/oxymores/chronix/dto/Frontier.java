@@ -24,7 +24,7 @@ public class Frontier {
 		res.groups = new ArrayList<DTOPlaceGroup>();
 		res.parameters = new ArrayList<DTOParameter>();
 
-		for (ConfigurableBase o : a.getElements()) {
+		for (ConfigurableBase o : a.getActiveElements().values()) {
 			if (o instanceof Chain) {
 				Chain c = (Chain) o;
 				res.chains.add(getChain(c));

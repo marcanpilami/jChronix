@@ -128,12 +128,12 @@ public class DemoApplication {
 		// ////////////////////
 		// Auto elements retrieval
 		ChainStart cs = null;
-		for (ConfigurableBase nb : a.getActiveElements()) {
+		for (ConfigurableBase nb : a.getActiveElements().values()) {
 			if (nb instanceof ChainStart)
 				cs = (ChainStart) nb;
 		}
 		ChainEnd ce = null;
-		for (ConfigurableBase nb : a.getActiveElements()) {
+		for (ConfigurableBase nb : a.getActiveElements().values()) {
 			if (nb instanceof ChainEnd)
 				ce = (ChainEnd) nb;
 		}
