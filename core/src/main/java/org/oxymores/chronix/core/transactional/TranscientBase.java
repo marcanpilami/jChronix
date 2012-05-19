@@ -5,67 +5,85 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.ChronixObject;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 
+@Entity
 public class TranscientBase implements Serializable {
 	private static final long serialVersionUID = 8976655465578L;
 
-	protected UUID id;
-	protected UUID stateID;
-	protected UUID placeID;
-	protected UUID appID;
+	@Id
+	@Column(columnDefinition="CHAR(36)")
+	protected String id;
+	@Column(columnDefinition="CHAR(36)")
+	protected String stateID;
+	@Column(columnDefinition="CHAR(36)")
+	protected String placeID;
+	@Column(columnDefinition="CHAR(36)")
+	protected String appID;
 	protected Date createdAt;
 
-	protected ArrayList<EnvironmentValue> values;
+	protected ArrayList<EnvironmentValue> envParams;
 
 	public TranscientBase() {
-		id = UUID.randomUUID();
+		id = UUID.randomUUID().toString();
 		createdAt = new Date();
-		values = new ArrayList<EnvironmentValue>();
+		envParams = new ArrayList<EnvironmentValue>();
 	}
 
-	protected UUID getStateID() {
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof ChronixObject))
+			return false;
+		return ((ChronixObject) o).getId().equals(this.getId());
+	}
+
+	protected String getStateID() {
 		return stateID;
 	}
 
-	protected void setStateID(UUID stateID) {
+	protected void setStateID(String stateID) {
 		this.stateID = stateID;
 	}
 
 	public State getState(ChronixContext ctx) {
-		return this.getApplication(ctx).getState(this.stateID);
+		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
 	}
 
-	protected UUID getPlaceID() {
+	protected String getPlaceID() {
 		return placeID;
 	}
 
-	protected void setPlaceID(UUID placeID) {
+	protected void setPlaceID(String placeID) {
 		this.placeID = placeID;
 	}
 
 	public Place getPlace(ChronixContext ctx) {
-		return this.getApplication(ctx).getPlace(this.placeID);
+		return this.getApplication(ctx).getPlace(UUID.fromString(this.placeID));
 	}
 
-	protected UUID getAppID() {
+	protected String getAppID() {
 		return appID;
 	}
 
-	protected void setAppID(UUID appID) {
+	protected void setAppID(String appID) {
 		this.appID = appID;
 	}
 
 	public Application getApplication(ChronixContext ctx) {
-		return ctx.applicationsById.get(this.appID);
+		return ctx.applicationsById.get(UUID.fromString(this.appID));
 	}
 
 	public void setApplication(Application application) {
 		if (application != null)
-			this.appID = application.getId();
+			this.appID = application.getId().toString();
 		else
 			this.appID = null;
 	}
@@ -79,24 +97,24 @@ public class TranscientBase implements Serializable {
 		this.createdAt = created;
 	}
 
-	public UUID getId() {
+	public String getId() {
 		return id;
 	}
 
 	@SuppressWarnings("unused")
-	private void setId(UUID id) {
+	private void setId(String id) {
 		this.id = id;
 	}
 
-	public ArrayList<EnvironmentValue> getValues() {
-		return values;
+	public ArrayList<EnvironmentValue> getEnvParams() {
+		return envParams;
 	}
 
-	protected void setValues(ArrayList<EnvironmentValue> values) {
-		this.values = values;
+	protected void setEnvParams(ArrayList<EnvironmentValue> values) {
+		this.envParams = values;
 	}
 
 	public void addValue(String key, String value) {
-		this.values.add(new EnvironmentValue(key, value));
+		this.envParams.add(new EnvironmentValue(key, value));
 	}
 }

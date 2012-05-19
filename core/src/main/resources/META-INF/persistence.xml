@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence   
+ http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
+
+	<persistence-unit name="TransacUnit">
+		<description>Persistence Unit used for storing Chronix transactional data</description>
+		<provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
+		<class>org.oxymores.chronix.core.transactional.TranscientBase</class>
+
+		<properties>
+			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb" />
+			<property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbcDriver" />
+			<!-- <property name="openjpa.ConnectionUserName" value="none" />
+			<property name="openjpa.ConnectionPassword" value="none" /> -->
+			<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema" />
+			<property name="openjpa.Log" value="DefaultLevel=TRACE, Tool=TRACE" />
+		</properties>
+	</persistence-unit>
+</persistence>

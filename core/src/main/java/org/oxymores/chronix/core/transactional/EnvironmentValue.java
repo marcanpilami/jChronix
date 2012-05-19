@@ -2,6 +2,8 @@ package org.oxymores.chronix.core.transactional;
 
 import java.util.UUID;
 
+import org.oxymores.chronix.core.ChronixObject;
+
 public class EnvironmentValue {
 
 	private UUID id;
@@ -17,6 +19,13 @@ public class EnvironmentValue {
 		id = UUID.randomUUID();
 		this.key = key;
 		this.value = value;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof ChronixObject))
+			return false;
+		return ((ChronixObject) o).getId().equals(this.getId());
 	}
 
 	public UUID getId() {
