@@ -21,6 +21,9 @@
 package org.oxymores.chronix.core;
 
 import java.io.File;
+import java.io.IOException;
+
+import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -68,7 +71,7 @@ public class TestPersistence extends TestCase {
 
 	}
 
-	public void testContext() {
+	public void testContext() throws NumberFormatException, ChronixNoLocalNode, IOException {
 		ChronixContext c1 = new ChronixContext();
 		c1.configurationDirectory = new File("C:\\TEMP\\db");
 

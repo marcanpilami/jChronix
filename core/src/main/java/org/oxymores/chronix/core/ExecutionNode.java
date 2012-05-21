@@ -143,4 +143,8 @@ public class ExecutionNode extends ApplicationObject {
 			place.setNode(this);
 		}
 	}
+
+	public String getBrokerName() {
+		return (this.dns + this.qPort).toUpperCase();
+	}
 }

@@ -27,11 +27,14 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.active.*;
+import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 @XmlRootElement
 public class Application extends ChronixObject {
 	private static final long serialVersionUID = 338399439626386055L;
+	private static Logger log = Logger.getLogger(Application.class);
 
 	protected String name, description;
 
@@ -41,6 +44,8 @@ public class Application extends ChronixObject {
 	protected Hashtable<UUID, ActiveNodeBase> activeElements;
 	protected Hashtable<UUID, Parameter> parameters;
 	protected Hashtable<UUID, Calendar> calendars;
+
+	private transient ExecutionNode localNode;
 
 	public Application() {
 		super();
@@ -60,6 +65,21 @@ public class Application extends ChronixObject {
 		this.activeElements.put(tmp.getId(), tmp);
 		tmp = new ChainStart();
 		this.activeElements.put(tmp.getId(), tmp);
+	}
+
+	public void setLocalNode(String dns, Integer port)
+			throws ChronixNoLocalNode {
+		for (ExecutionNode n : this.nodes.values()) {
+			if (n.dns.toUpperCase().equals(dns.toUpperCase())
+					&& n.qPort.equals(port)) {
+				this.localNode = n;
+				log.info(String
+						.format("Application %s now considers that it is running on node %s (%s - %s)",
+								this.name, n.id, dns, port));
+				return;
+			}
+		}
+		throw new ChronixNoLocalNode(dns + ":" + port);
 	}
 
 	public void setname(String name) {
@@ -217,5 +237,14 @@ public class Application extends ChronixObject {
 
 	public List<PlaceGroup> getGroupsList() {
 		return new ArrayList<PlaceGroup>(this.groups.values());
+	}
+
+	public ExecutionNode getLocalNode() {
+		return localNode;
+	}
+
+	@SuppressWarnings("unused")
+	private void setLocalNode(ExecutionNode localNode) {
+		this.localNode = localNode;
 	}
 }

@@ -20,6 +20,9 @@
 
 package org.oxymores.chronix.demo;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.oxymores.chronix.core.*;
 import org.oxymores.chronix.core.active.*;
 
@@ -31,8 +34,14 @@ public class DemoApplication {
 		a.setDescription("test application auto created");
 
 		// Physical network
+		String hostname;
+		try {
+			hostname = InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			hostname = "localhost";
+		}
 		ExecutionNode n1 = new ExecutionNode();
-		n1.setDns("localhost");
+		n1.setDns(hostname);
 		n1.setOspassword("");
 		n1.setqPort(1789);
 		n1.setX(100);
@@ -40,7 +49,7 @@ public class DemoApplication {
 		a.addNode(n1);
 
 		ExecutionNode n2 = new ExecutionNode();
-		n2.setDns("localhost");
+		n2.setDns(hostname);
 		n2.setOspassword("");
 		n2.setqPort(1400);
 		n2.setX(200);
@@ -119,7 +128,7 @@ public class DemoApplication {
 		c2.setDescription("chain 2");
 		c2.setName("chain2");
 		a.addActiveElement(c2);
-		
+
 		Chain c3 = new Chain();
 		c3.setDescription("chain 3");
 		c3.setName("chain3");
