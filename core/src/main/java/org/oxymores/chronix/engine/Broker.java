@@ -26,7 +26,7 @@ import org.oxymores.chronix.core.NodeLink;
 /*
  * Queues are named
  * 
- * Q.<READERDNS>.APPLICATION
+ * Q.<READERDNSPORT> .APPLICATION
  * 				     .EVENT
  * 				     .HISTORY
  * 					 .EXCLREQUEST
