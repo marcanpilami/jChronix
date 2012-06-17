@@ -34,11 +34,12 @@ public class TestBroker {
 	private ChronixContext ctx2;
 	private Broker b1;
 	private ExecutionNode n1789, n1400;
+	private String db1, db2;
 
 	@Before
 	public void init() throws Exception {
-		String db1 = "C:\\TEMP\\db1";
-		String db2 = "C:\\TEMP\\db2";
+		db1 = "C:\\TEMP\\db1";
+		db2 = "C:\\TEMP\\db2";
 
 		/************************************************
 		 * Create a test configuration db
@@ -208,6 +209,9 @@ public class TestBroker {
 		b1.sendApplication(a, n1400);
 		Thread.sleep(2000); // Time to consume message
 		b2.stop();
+		
+		int i = ctx2.configurationDirectory.listFiles().length;
+		Assert.assertEquals(2, i);
 	}
 	
 	@Test
