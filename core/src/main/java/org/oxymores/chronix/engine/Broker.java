@@ -5,7 +5,6 @@ import java.io.IOException;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
@@ -114,17 +113,11 @@ public class Broker {
 		this.connection.start();
 
 		// Create & register object listeners
-		String qName = String.format("Q.%s.APPLICATION", brokerName);
-		log.debug(String.format(
-				"Broker %s: registering a listener on queue %s",
-				ctx.configurationDirectory, qName));
+		MetadataListener a = new MetadataListener();
+		a.startListening(this.connection, brokerName, ctx);
 		sessionApp = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
-		MetadataListener a = new MetadataListener(sessionApp, ctx);
-		Destination dest = sessionApp.createQueue(qName);
-		MessageConsumer consumerApp = sessionApp.createConsumer(dest);
-		consumerApp.setMessageListener(a);
-
+		
 		RunnerListener r = new RunnerListener();
 		r.startListening(this.connection, brokerName);
 		sessionCmd = this.connection.createSession(true,

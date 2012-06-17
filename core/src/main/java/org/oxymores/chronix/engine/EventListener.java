@@ -1,7 +1,10 @@
 package org.oxymores.chronix.engine;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
@@ -14,12 +17,24 @@ public class EventListener implements MessageListener {
 
 	private static Logger log = Logger.getLogger(EventListener.class);
 
-	private Session session;
+	@SuppressWarnings("unused")
 	private ChronixContext ctx;
+	private Session session;
+	private Destination dest;
+	private Connection cnx;
 
-	public EventListener(Session s, ChronixContext c) {
-		this.ctx = c;
-		this.session = s;
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx)
+			throws JMSException {
+		this.ctx = ctx;
+		this.cnx = cnx;
+		String qName = String.format("Q.%s.EVENT", brokerName);
+		log.debug(String.format(
+				"Broker %s: registering an event listener on queue %s",
+				brokerName, qName));
+		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
+		this.dest = this.session.createQueue(qName);
+		MessageConsumer consumer = this.session.createConsumer(dest);
+		consumer.setMessageListener(this);
 	}
 
 	@Override

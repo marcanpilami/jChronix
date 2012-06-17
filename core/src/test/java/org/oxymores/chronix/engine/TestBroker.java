@@ -204,9 +204,8 @@ public class TestBroker {
 																			// what
 																			// we
 																			// send
-		b1.sendApplication(a, n1400);
-
 		Broker b2 = new Broker(ctx2, true);
+		b1.sendApplication(a, n1400);
 		Thread.sleep(2000); // Time to consume message
 		b2.stop();
 	}

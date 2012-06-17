@@ -1,7 +1,10 @@
 package org.oxymores.chronix.engine;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
@@ -13,13 +16,25 @@ import org.oxymores.chronix.core.ChronixContext;
 public class MetadataListener implements MessageListener {
 
 	private static Logger log = Logger.getLogger(MetadataListener.class);
-	private Session session;
+	
 	private ChronixContext ctx;
+	private Session session;
+	private Destination dest;
+	private Connection cnx;
 
-	public MetadataListener(Session s, ChronixContext c) {
-		log.debug(String.format("Initializing MetadataListener on context %s", c.configurationDirectory));
-		this.session = s;
-		this.ctx = c;
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx)
+			throws JMSException {
+		log.debug(String.format("Initializing MetadataListener on context %s", ctx.configurationDirectory));
+		this.ctx = ctx;
+		this.cnx = cnx;
+		String qName = String.format("Q.%s.APPLICATION", brokerName);
+		log.debug(String.format(
+				"Broker %s: registering a metadata listener on queue %s",
+				brokerName, qName));
+		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
+		this.dest = this.session.createQueue(qName);
+		MessageConsumer consumer = this.session.createConsumer(dest);
+		consumer.setMessageListener(this);
 	}
 
 	@SuppressWarnings("finally")
