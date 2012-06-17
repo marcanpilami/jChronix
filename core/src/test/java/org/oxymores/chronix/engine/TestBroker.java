@@ -60,7 +60,6 @@ public class TestBroker {
 			c1.saveApplication(a1);
 		} catch (Exception e) {
 			e.printStackTrace();
-
 			Assert.fail(e.getMessage());
 		}
 
@@ -98,12 +97,11 @@ public class TestBroker {
 		ctx1 = ChronixContext.loadContext(db1);
 		ctx2 = ChronixContext.loadContext(db2);
 
-		// Create a broker from the new context. Purge its queues
+		// Create a broker from the new context. Purge its queues.
 		b1 = new Broker(ctx1, true);
-		
+
 		// Fetch the nodes
-		for (ExecutionNode n : ctx1.getNetwork().values())
-		{
+		for (ExecutionNode n : ctx1.getNetwork().values()) {
 			if (n.getqPort() == 1789)
 				n1789 = n;
 			else if (n.getqPort() == 1400)
@@ -201,11 +199,22 @@ public class TestBroker {
 	@Test
 	public void testReceiveApplication() throws Exception {
 		log.info("****This tests sending, receving, parsing and saving of an app without an active engine");
-		Application a = ctx1.applicationsById.values().iterator().next(); // who cares what we send
+		Application a = ctx1.applicationsById.values().iterator().next(); // who
+																			// cares
+																			// what
+																			// we
+																			// send
 		b1.sendApplication(a, n1400);
 
 		Broker b2 = new Broker(ctx2, true);
 		Thread.sleep(2000); // Time to consume message
 		b2.stop();
+	}
+	
+	@Test
+	public void testRunner() throws JMSException, InterruptedException {
+		log.info("****This tests running a shell command on the first node");
+		b1.sendCommand("echo aa", n1789);
+		Thread.sleep(2000); // Time to consume message
 	}
 }

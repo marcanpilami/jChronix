@@ -9,6 +9,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -39,10 +40,12 @@ public class Broker {
 
 	private ActiveMQConnectionFactory factory;
 	private Connection connection;
-	private MessageProducer producerApp;// , producerEvent;// , producerOrder,
-										// producerHistory,
-										// producerFile;
+	private MessageProducer producerApp, producerCmd;// , producerEvent;// ,
+														// producerOrder,
+	// producerHistory,
+	// producerFile;
 	private Session sessionApp;// , sessionEvent;
+	private Session sessionCmd;
 
 	public Broker(ChronixContext ctx) throws Exception {
 		this(ctx, false);
@@ -112,13 +115,20 @@ public class Broker {
 
 		// Create & register object listeners
 		String qName = String.format("Q.%s.APPLICATION", brokerName);
-		log.debug(String.format("Broker %s: registering a listener on queue %s", ctx.configurationDirectory, qName));
+		log.debug(String.format(
+				"Broker %s: registering a listener on queue %s",
+				ctx.configurationDirectory, qName));
 		sessionApp = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 		MetadataListener a = new MetadataListener(sessionApp, ctx);
 		Destination dest = sessionApp.createQueue(qName);
 		MessageConsumer consumerApp = sessionApp.createConsumer(dest);
 		consumerApp.setMessageListener(a);
+
+		RunnerListener r = new RunnerListener();
+		r.startListening(this.connection, brokerName);
+		sessionCmd = this.connection.createSession(true,
+				Session.SESSION_TRANSACTED);
 	}
 
 	public void stop() {
@@ -157,17 +167,39 @@ public class Broker {
 			throws JMSException {
 		String qName = String
 				.format("Q.%s.APPLICATION", target.getBrokerName());
-		log.info(String.format("An app will be sent over the wire on queue %s", qName));
+		log.info(String.format("An app will be sent over the wire on queue %s",
+				qName));
 
 		if (producerApp == null) {
 			producerApp = sessionApp.createProducer(null);
 		}
 
-		
 		Destination destination = sessionApp.createQueue(qName);
 
 		ObjectMessage m = sessionApp.createObjectMessage(a);
 		producerApp.send(destination, m);
 		sessionApp.commit();
 	}
+
+	public synchronized void sendCommand(String cmd, ExecutionNode target)
+			throws JMSException {
+		sendCommand(cmd, target, false);
+	}
+
+	public synchronized void sendCommand(String cmd, ExecutionNode target,
+			Boolean Synchronous) throws JMSException {
+
+		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
+		log.info(String.format(
+				"A command will be sent for execution on queue %s (%s)", qName, cmd));
+		Destination destination = sessionCmd.createQueue(qName);
+
+		if (producerCmd == null) {
+			producerCmd = sessionCmd.createProducer(null);
+		}
+		TextMessage m = sessionCmd.createTextMessage(cmd);
+		producerCmd.send(destination, m);
+		sessionCmd.commit();
+	}
+
 }
