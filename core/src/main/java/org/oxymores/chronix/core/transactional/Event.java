@@ -3,6 +3,10 @@ package org.oxymores.chronix.core.transactional;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
+@Entity
 public class Event extends TranscientBase {
 
 	private static final long serialVersionUID = 2488490723929455210L;
@@ -11,10 +15,13 @@ public class Event extends TranscientBase {
 	protected boolean localOnly, analysed;
 
 	protected Integer conditionData1;
+	@Column(columnDefinition="CHAR(50)")
 	protected String conditionData2, conditionData3;
-	protected UUID conditionData4;
+	@Column(columnDefinition="CHAR(36)")
+	protected String conditionData4; // Well, UUID actually
 
-	protected UUID level0Id, level1Id;
+	@Column(columnDefinition="CHAR(36)")
+	protected String level0Id, level1Id; // Same
 
 	public Date getBestBefore() {
 		return bestBefore;
@@ -64,27 +71,51 @@ public class Event extends TranscientBase {
 		this.conditionData3 = conditionData3;
 	}
 
-	public UUID getConditionData4() {
+	public UUID getConditionData4U() {
+		return UUID.fromString(conditionData4);
+	}
+
+	public void setConditionData4U(UUID conditionData4) {
+		this.conditionData4 = conditionData4.toString();
+	}
+
+	protected String getConditionData4() {
 		return conditionData4;
 	}
 
-	public void setConditionData4(UUID conditionData4) {
+	protected void setConditionData4(String conditionData4) {
 		this.conditionData4 = conditionData4;
 	}
 
-	public UUID getLevel0Id() {
+	public UUID getLevel0IdU() {
+		return UUID.fromString(level0Id);
+	}
+
+	public void setLevel0IdU(UUID level0Id) {
+		this.level0Id = level0Id.toString();
+	}
+
+	protected String getLevel0Id() {
 		return level0Id;
 	}
 
-	public void setLevel0Id(UUID level0Id) {
+	protected void setLevel0Id(String level0Id) {
 		this.level0Id = level0Id;
 	}
 
-	public UUID getLevel1Id() {
+	public UUID getLevel1IdU() {
+		return UUID.fromString(level1Id);
+	}
+
+	public void setLevel1IdU(UUID level1Id) {
+		this.level1Id = level1Id.toString();
+	}
+
+	protected String getLevel1Id() {
 		return level1Id;
 	}
 
-	public void setLevel1Id(UUID level1Id) {
+	protected void setLevel1Id(String level1Id) {
 		this.level1Id = level1Id;
 	}
 }

@@ -8,6 +8,10 @@
 		<description>Persistence Unit used for storing Chronix transactional data</description>
 		<provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 		<class>org.oxymores.chronix.core.transactional.TranscientBase</class>
+		<class>org.oxymores.chronix.core.transactional.CalendarPointer</class>
+		<class>org.oxymores.chronix.core.transactional.EnvironmentValue</class>
+		<class>org.oxymores.chronix.core.transactional.Event</class>
+		<class>org.oxymores.chronix.core.transactional.PipelineJob</class>
 
 		<properties>
 			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb" />

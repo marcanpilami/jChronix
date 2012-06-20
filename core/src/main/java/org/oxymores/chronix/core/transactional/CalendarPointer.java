@@ -2,10 +2,13 @@ package org.oxymores.chronix.core.transactional;
 
 import java.util.UUID;
 
+import javax.persistence.Entity;
+
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 
+@Entity
 public class CalendarPointer extends TranscientBase {
 
 	private static final long serialVersionUID = 6905957323594389673L;

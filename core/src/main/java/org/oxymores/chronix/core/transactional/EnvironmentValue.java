@@ -2,21 +2,29 @@ package org.oxymores.chronix.core.transactional;
 
 import java.util.UUID;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import org.oxymores.chronix.core.ChronixObject;
 
+@Entity
 public class EnvironmentValue {
 
-	private UUID id;
+	@Id
+	@Column(columnDefinition="CHAR(36)")
+	private String id;
+	@Column(columnDefinition="CHAR(50)")
 	private String key, value;
 
 	TranscientBase associatedTo;
 
 	public EnvironmentValue() {
-		id = UUID.randomUUID();
+		id = UUID.randomUUID().toString();
 	}
 
 	public EnvironmentValue(String key, String value) {
-		id = UUID.randomUUID();
+		id = UUID.randomUUID().toString();
 		this.key = key;
 		this.value = value;
 	}
@@ -28,11 +36,11 @@ public class EnvironmentValue {
 		return ((ChronixObject) o).getId().equals(this.getId());
 	}
 
-	public UUID getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(UUID id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
