@@ -63,19 +63,22 @@ public class EventListener implements MessageListener {
 			return;
 		}
 
-		// Analyse event!
+		//
+		// TODO: Analyse event!
+		//
 		
+		// Ack
 		try {
 			session.commit();
 		} catch (JMSException e) {
 			log.error(
-					"While receiving an application definition, we could not commit reading the message. It is a catastrophy: the db has already been correctly commited with the application data. The scheduler will stop. Empty the APPLICATION queue and restart it.",
+					"An event was correctly received and analysed, but we fail to acknowledge it in the JMS queue. Scheduler will now abort as it is a dangerous situation. Empty the EVENT queue before restarting.",
 					e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;
 		}
-		// log.debug(String.format("Application of id %s received", a.getId()));
-		log.debug(String.format("Event id %s received", evt.getId()));
+		
+		log.debug(String.format("Event id %s was received, analysed and acked all right", evt.getId()));
 	}
 }

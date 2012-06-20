@@ -22,6 +22,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
+import org.oxymores.chronix.core.transactional.Event;
 
 /*
  * Queues are named
@@ -39,12 +40,13 @@ public class Broker {
 
 	private ActiveMQConnectionFactory factory;
 	private Connection connection;
-	private MessageProducer producerApp, producerCmd;// , producerEvent;// ,
-														// producerOrder,
+	private MessageProducer producerApp, producerCmd, producerEvent;// ,
+	// producerOrder,
 	// producerHistory,
 	// producerFile;
-	private Session sessionApp;// , sessionEvent;
+	private Session sessionApp;
 	private Session sessionCmd;
+	private Session sessionEvent;
 
 	public Broker(ChronixContext ctx) throws Exception {
 		this(ctx, false);
@@ -117,10 +119,15 @@ public class Broker {
 		a.startListening(this.connection, brokerName, ctx);
 		sessionApp = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
-		
+
 		RunnerListener r = new RunnerListener();
 		r.startListening(this.connection, brokerName);
 		sessionCmd = this.connection.createSession(true,
+				Session.SESSION_TRANSACTED);
+
+		EventListener e = new EventListener();
+		e.startListening(this.connection, brokerName, ctx);
+		sessionEvent = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 	}
 
@@ -184,7 +191,8 @@ public class Broker {
 
 		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
 		log.info(String.format(
-				"A command will be sent for execution on queue %s (%s)", qName, cmd));
+				"A command will be sent for execution on queue %s (%s)", qName,
+				cmd));
 		Destination destination = sessionCmd.createQueue(qName);
 
 		if (producerCmd == null) {
@@ -195,4 +203,21 @@ public class Broker {
 		sessionCmd.commit();
 	}
 
+	public synchronized void sendEvent(Event e, ExecutionNode target)
+			throws JMSException {
+		String qName = String
+				.format("Q.%s.EVENT", target.getBrokerName());
+		log.info(String.format("An event will be sent over the wire on queue %s",
+				qName));
+
+		if (producerEvent == null) {
+			producerEvent = sessionEvent.createProducer(null);
+		}
+
+		Destination destination = sessionEvent.createQueue(qName);
+
+		ObjectMessage m = sessionEvent.createObjectMessage(e);
+		producerEvent.send(destination, m);
+		sessionEvent.commit();
+	}
 }

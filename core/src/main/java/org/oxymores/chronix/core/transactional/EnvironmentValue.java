@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.transactional;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,8 +10,10 @@ import javax.persistence.Id;
 import org.oxymores.chronix.core.ChronixObject;
 
 @Entity
-public class EnvironmentValue {
+public class EnvironmentValue implements Serializable {
 
+	private static final long serialVersionUID = -3301527648471127170L;
+	
 	@Id
 	@Column(columnDefinition="CHAR(36)")
 	private String id;

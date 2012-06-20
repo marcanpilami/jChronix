@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.transactional.Event;
 
 import junit.framework.Assert;
 
@@ -209,15 +210,28 @@ public class TestBroker {
 		b1.sendApplication(a, n1400);
 		Thread.sleep(2000); // Time to consume message
 		b2.stop();
-		
+
 		int i = ctx2.configurationDirectory.listFiles().length;
 		Assert.assertEquals(2, i);
 	}
-	
+
 	@Test
 	public void testRunner() throws JMSException, InterruptedException {
 		log.info("****This tests running a shell command on the first node");
 		b1.sendCommand("echo aa", n1789);
+		Thread.sleep(2000); // Time to consume message
+	}
+
+	@Test
+	public void testEventListener() throws JMSException, InterruptedException {
+		log.info("****This tests creates an event and sends it to a running engine.");
+
+		Event e1 = new Event();
+		e1.addValue("KEY", "value");
+		e1.setApplication((Application) ctx1.applicationsById.values()
+				.toArray()[0]);
+
+		b1.sendEvent(e1, n1789);
 		Thread.sleep(2000); // Time to consume message
 	}
 }
