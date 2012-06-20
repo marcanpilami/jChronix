@@ -147,4 +147,20 @@ public class ExecutionNode extends ApplicationObject {
 	public String getBrokerName() {
 		return (this.dns + this.qPort).toUpperCase();
 	}
+
+	public Boolean isHosted() {
+		for (NodeLink nl : this.canReceiveFrom) {
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
+				return true;
+		}
+		return false;
+	}
+
+	public ExecutionNode getHost() {
+		for (NodeLink nl : this.canReceiveFrom) {
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
+				return nl.nodeFrom;
+		}
+		return null;
+	}
 }

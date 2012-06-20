@@ -68,6 +68,36 @@ public class State extends ConfigurableBase {
 		return this.runsOn;
 	}
 
+	public ArrayList<Place> getRunsOnPlaces() {
+		return this.runsOn.getPlaces();
+	}
+
+	public ArrayList<ExecutionNode> getRunsOnExecutionNodes() {
+		ArrayList<ExecutionNode> res = new ArrayList<ExecutionNode>();
+		for (Place p : this.runsOn.getPlaces()) {
+			if (!res.contains(p.getNode())) {
+				res.add(p.getNode());
+			}
+		}
+		return res;
+	}
+
+	public ArrayList<ExecutionNode> getRunsOnPhysicalNodes() {
+		ArrayList<ExecutionNode> all = getRunsOnExecutionNodes();
+		ArrayList<ExecutionNode> res = getRunsOnExecutionNodes();
+		for (ExecutionNode n : all) {
+			if (n.isHosted()) {
+				if (!res.contains(n.getHost()))
+					res.add(n.getHost());
+			} else {
+				// Not hosted - true Physical Node
+				if (!res.contains(n))
+					res.add(n);
+			}
+		}
+		return res;
+	}
+
 	public void setRunsOn(PlaceGroup group) {
 		this.runsOn = group;
 	}
@@ -95,6 +125,38 @@ public class State extends ConfigurableBase {
 		t.setApplication(this.application);
 		this.chain.addTransition(t);
 		return t;
+	}
+
+	public ArrayList<Transition> getTrFromHere() {
+		return trFromHere;
+	}
+
+	public ArrayList<State> getClientStates() {
+		ArrayList<State> res = new ArrayList<State>();
+		for (Transition t : trFromHere) {
+			res.add(t.stateTo);
+		}
+		return res;
+	}
+
+	public ArrayList<State> getParentStates() {
+		ArrayList<State> res = new ArrayList<State>();
+		for (Transition t : trReceivedHere) {
+			res.add(t.stateFrom);
+		}
+		return res;
+	}
+
+	public ArrayList<Transition> getTrReceivedHere() {
+		return trReceivedHere;
+	}
+
+	public ArrayList<AutoSequence> getSequences() {
+		return sequences;
+	}
+
+	public ArrayList<Calendar> getCalendars() {
+		return calendars;
 	}
 
 	public Boolean getParallel() {
