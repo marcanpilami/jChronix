@@ -63,6 +63,7 @@ public class TranscientBase implements Serializable {
 	public void setState(State state) {
 		this.stateID = state.getId().toString();
 		this.setActive(state.getRepresents());
+		this.setApplication(state.getApplication());
 	}
 
 	public State getState(ChronixContext ctx) {

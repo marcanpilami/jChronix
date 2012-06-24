@@ -20,16 +20,22 @@
 
 package org.oxymores.chronix.core;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Session;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.core.transactional.EventConsumption;
+import org.oxymores.chronix.core.transactional.PipelineJob;
 
 public class State extends ConfigurableBase {
 	private static Logger log = Logger.getLogger(State.class);
@@ -291,86 +297,59 @@ public class State extends ConfigurableBase {
 
 	}
 
-	private boolean isParallelCompatible() {
-		if (!this.parallel)
-			return false;
+	
 
-		return false;
+	public void consumeEvents(List<Event> events, List<Place> places,
+			EntityManager em) {
+		for (Event e : events) {
+			for (Place p : places) {
+				EventConsumption ec = new EventConsumption();
+				ec.setEvent(e);
+				ec.setPlace(p);
+				ec.setState(this);
+
+				em.persist(ec);
+
+				log.debug(String.format(
+						"Event %s marked as consumed on place %s", e.getId(),
+						p.name));
+			}
+		}
 	}
 
-	public void isStateExecutionAllowed(Event evt, EntityManager em,
-			ChronixContext ctx, State stateFrom, ActiveNodeBase activeFrom,
-			Application appliFrom) {
-		EventAnalysisResult res = new EventAnalysisResult();
+	public void run(Place p, EntityManager em, MessageProducer pjProducer,
+			Session session, Event e) {
+		DateTime now = DateTime.now();
 
-		// Get session events
-		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1");
-		q.setParameter(1, evt.getLevel0IdU().toString());
-		List<Event> sessionEvents2 = q.getResultList();
-		List<Event> sessionEvents = new ArrayList<Event>();
-		sessionEvents.addAll(sessionEvents2); // OpenJPA lists are read only!
-		sessionEvents.add(evt); // The current event is not yet db persisted
+		PipelineJob pj = new PipelineJob();
+		pj.setLevel0IdU(e.getLevel0IdU());
+		pj.setLevel1IdU(e.getLevel1IdU());
+		pj.setMarkedForRunAt(now.toDate());
+		pj.setPlace(p);
+		pj.setState(this);
+		pj.setStatus("ENTERING_QUEUE");
 
-		if (this.parallel) {
-			// In this case, only
-			log.debug(String.format(
-					"State %s (%s - chain %s) is parallel enabled",
-					this.getId(), this.represents.getName(),
-					this.chain.getName()));
+		if (this.warnAfterMn != null)
+			pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn).toDate());
+		else
+			pj.setWarnNotEndedAt(now.plusDays(1).toDate());
 
-			for (Place p : this.runsOn.places) {
-				log.debug(String
-						.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?",
-								evt.getId(), this.getId(),
-								this.represents.getName(),
-								this.chain.getName(), p.getName()));
+		if (this.killAfterMn != null)
+			pj.setKillAt(now.plusMinutes(this.killAfterMn).toDate());
 
-				res = new EventAnalysisResult();
-				res.res = true;
-				for (Transition tr : this.trReceivedHere) {
-					res.add(tr.isTransitionAllowed(sessionEvents, p));
-					if (!res.res) {
-						log.debug(String
-								.format("State %s (%s - chain %s) is NOT allowed to run on place %s",
-										this.getId(),
-										this.represents.getName(),
-										this.chain.getName(), p.name));
-						continue;
-					}
-				}
-				log.debug(String
-						.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
-								this.represents.getName(),
-								this.chain.getName(), p.name,
-								res.consumedEvents.size()));
-			}
-		} else {
-			// In this case, all incoming transitions must be OK for this
-			// State to run
-			log.debug(String.format(
-					"State %s (%s - chain %s) is not parallel enabled",
-					this.getId(), this.represents.getName(),
-					this.chain.getName()));
-			res.res = true; // we will do logical ANDs
-			for (Transition tr : this.trReceivedHere) {
-				res.add(tr.isTransitionAllowed(sessionEvents, null));
-				// null: no place targeting needed in not // case
-				if (!res.res) {
-					log.debug(String.format(
-							"State %s (%s - chain %s) is NOT allowed to run",
-							this.getId(), this.represents.getName(),
-							this.chain.getName()));
-					return; // not possible
-				}
-			}
-
-			log.debug(String
-					.format("State (%s - chain %s) is triggered by the event on all (%s) its places! Analysis has consumed %s events.",
-							this.represents.getName(), this.chain.getName(),
-							this.runsOn.places.size(),
-							res.consumedEvents.size()));
-
+		String qName = String.format("Q.%s.PJ", p.getNode().getBrokerName());
+		try {
+			Destination d = session.createQueue(qName);
+			ObjectMessage om = session.createObjectMessage(pj);
+			pjProducer.send(d, om);
+		} catch (JMSException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
-		// log.debug(String.format("", ));
+
+		log.debug(String
+				.format("State (%s - chain %s) was enqueued for launch on place %s (queue %s)",
+						this.represents.getName(), this.chain.getName(),
+						p.name, qName));
 	}
 }

@@ -1,10 +1,16 @@
 package org.oxymores.chronix.core.transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
+
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
 
 @Entity
 public class Event extends TranscientBase {
@@ -19,6 +25,9 @@ public class Event extends TranscientBase {
 	protected String conditionData2, conditionData3;
 	@Column(columnDefinition="CHAR(36)")
 	protected String conditionData4; // Well, UUID actually
+	
+	@OneToMany(fetch=FetchType.EAGER)
+	protected ArrayList<EventConsumption> consumptions = new ArrayList<EventConsumption>();
 
 	@Column(columnDefinition="CHAR(36)")
 	protected String level0Id, level1Id; // Same
@@ -88,6 +97,8 @@ public class Event extends TranscientBase {
 	}
 
 	public UUID getLevel0IdU() {
+		if (level0Id == null)
+			return null;
 		return UUID.fromString(level0Id);
 	}
 
@@ -104,6 +115,8 @@ public class Event extends TranscientBase {
 	}
 
 	public UUID getLevel1IdU() {
+		if (level1Id == null)
+			return null;
 		return UUID.fromString(level1Id);
 	}
 
@@ -117,5 +130,15 @@ public class Event extends TranscientBase {
 
 	protected void setLevel1Id(String level1Id) {
 		this.level1Id = level1Id;
+	}
+	
+	public Boolean wasConsumedOnPlace(Place p, State s)
+	{
+		for (EventConsumption ec: this.consumptions)
+		{
+			if (ec.stateID.equals(s.getId().toString()) && ec.placeID.equals(p.getId().toString()) )
+				return true;
+		}
+		return false;
 	}
 }

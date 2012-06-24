@@ -11,13 +11,13 @@ public class PipelineJob extends TranscientBase {
 
 	private static final long serialVersionUID = -3301527645931127170L;
 
-	@Column(columnDefinition="CHAR(10)")
+	@Column(columnDefinition = "CHAR(10)")
 	String status;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
 	String runThis;
 	Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt,
 			markedForRunAt, beganRunningAt, stoppedRunningAt;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
 	String level0Id, level1Id, level2Id, level3Id; // Actually UUID
 
 	public String getStatus() {
@@ -92,39 +92,58 @@ public class PipelineJob extends TranscientBase {
 		this.stoppedRunningAt = stoppedRunningAt;
 	}
 
-	
 	public UUID getLevel0IdU() {
+		if (this.level0Id == null)
+			return null;
 		return UUID.fromString(level0Id);
 	}
 
 	public void setLevel0IdU(UUID level0Id) {
-		this.level0Id = level0Id.toString();
+		if (level0Id == null)
+			this.level0Id = null;
+		else
+			this.level0Id = level0Id.toString();
 	}
 
 	public UUID getLevel1IdU() {
+		if (this.level1Id == null)
+			return null;
 		return UUID.fromString(level1Id);
 	}
 
 	public void setLevel1IdU(UUID level1Id) {
-		this.level1Id = level1Id.toString();
+		if (level1Id == null)
+			this.level1Id = null;
+		else
+			this.level1Id = level1Id.toString();
 	}
 
 	public UUID getLevel2IdU() {
+		if (this.level2Id == null)
+			return null;
 		return UUID.fromString(level2Id);
 	}
 
 	public void setLevel2IdU(UUID level2Id) {
-		this.level2Id = level2Id.toString();
+		if (level2Id == null)
+			this.level2Id = null;
+		else
+			this.level2Id = level2Id.toString();
 	}
 
 	public UUID getLevel3IdU() {
+		if (this.level3Id == null)
+			return null;
 		return UUID.fromString(level3Id);
 	}
 
 	public void setLevel3IdU(UUID level3Id) {
-		this.level3Id = level3Id.toString();
+		if (level3Id == null)
+			this.level3Id = null;
+		else
+			this.level3Id = level3Id.toString();
 	}
-	
+
 	protected String getLevel0Id() {
 		return level0Id;
 	}

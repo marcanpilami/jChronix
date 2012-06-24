@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -9,6 +10,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
@@ -21,6 +23,7 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
 
@@ -34,6 +37,7 @@ public class EventListener implements MessageListener {
 	private Connection cnx;
 	EntityManagerFactory emf;
 	EntityManager entityManager;
+	private MessageProducer producerPJ;
 
 	public void startListening(Connection cnx, String brokerName,
 			ChronixContext ctx) throws JMSException {
@@ -50,6 +54,9 @@ public class EventListener implements MessageListener {
 
 		emf = Persistence.createEntityManagerFactory("TransacUnit");
 		entityManager = emf.createEntityManager();
+
+		qName = String.format("Q.%s.PJ", brokerName);
+		producerPJ = session.createProducer(null);
 	}
 
 	@Override
@@ -119,8 +126,10 @@ public class EventListener implements MessageListener {
 		}
 
 		// Analyze on every local consumer
+		EventAnalysisResult res = new EventAnalysisResult();
 		for (State st : localConsumers) {
-			st.isStateExecutionAllowed(evt, entityManager, ctx, s, active, a);
+			res.add(st.getRepresents().isStateExecutionAllowed(st, evt,
+					entityManager, producerPJ, session, ctx));
 		}
 
 		// if ()
@@ -135,6 +144,11 @@ public class EventListener implements MessageListener {
 		log.debug(String.format(
 				"Event id %s was received, analysed and acked all right",
 				evt.getId()));
+
+		// Purge
+		transaction.begin();
+		this.cleanUp(res.consumedEvents, entityManager);
+		transaction.commit();
 	}
 
 	private void commit() {
@@ -160,6 +174,23 @@ public class EventListener implements MessageListener {
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;
+		}
+	}
+
+	private void cleanUp(List<Event> events, EntityManager em) {
+		for (Event e : events) {
+			State s = e.getState(ctx);
+			ArrayList<State> clientStates = s.getClientStates();
+
+			for (State cs : clientStates) {
+				for (Place p : cs.getRunsOn().getPlaces()) {
+					if (e.wasConsumedOnPlace(p, cs)) {
+						em.remove(e);
+						log.debug(String.format("Event %s will be purged",
+								e.getId()));
+					}
+				}
+			}
 		}
 	}
 }
