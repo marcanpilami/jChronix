@@ -30,12 +30,14 @@ import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.engine.Runner;
 
 public class ActiveNodeBase extends ConfigurableBase {
 	private static final long serialVersionUID = 2317281646089939267L;
 	private static Logger log = Logger.getLogger(State.class);
-	
+
 	protected String description;
 	protected String name;
 
@@ -95,12 +97,13 @@ public class ActiveNodeBase extends ConfigurableBase {
 		// If here: no event allows the transition on the given place
 		return res;
 	}
-	
-	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, EntityManager em,
-			MessageProducer pjProducer, Session session, ChronixContext ctx) {
+
+	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt,
+			EntityManager em, MessageProducer pjProducer, Session session,
+			ChronixContext ctx) {
 		EventAnalysisResult res = new EventAnalysisResult();
 		EventAnalysisResult tmp;
-		
+
 		// Get session events
 		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1");
 		q.setParameter(1, evt.getLevel0IdU().toString());
@@ -114,14 +117,12 @@ public class ActiveNodeBase extends ConfigurableBase {
 			// In this case, only
 			log.debug(String.format(
 					"State %s (%s - chain %s) is parallel enabled",
-					this.getId(), s.represents.getName(),
-					s.chain.getName()));
+					this.getId(), s.represents.getName(), s.chain.getName()));
 
 			for (Place p : s.runsOn.places) {
 				log.debug(String
 						.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?",
-								evt.getId(), s.getId(),
-								s.represents.getName(),
+								evt.getId(), s.getId(), s.represents.getName(),
 								s.chain.getName(), p.getName()));
 
 				tmp = new EventAnalysisResult();
@@ -131,17 +132,15 @@ public class ActiveNodeBase extends ConfigurableBase {
 					if (!tmp.res) {
 						log.debug(String
 								.format("State %s (%s - chain %s) is NOT allowed to run on place %s",
-										s.getId(),
-										s.represents.getName(),
+										s.getId(), s.represents.getName(),
 										s.chain.getName(), p.name));
 						continue;
 					}
 				}
 				log.debug(String
 						.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
-								s.represents.getName(),
-								s.chain.getName(), p.name,
-								tmp.consumedEvents.size()));
+								s.represents.getName(), s.chain.getName(),
+								p.name, tmp.consumedEvents.size()));
 				ArrayList<Place> temp = new ArrayList<Place>();
 				temp.add(p);
 				s.consumeEvents(res.consumedEvents, temp, em);
@@ -153,8 +152,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 			// State to run
 			log.debug(String.format(
 					"State %s (%s - chain %s) is not parallel enabled",
-					s.getId(), s.represents.getName(),
-					s.chain.getName()));
+					s.getId(), s.represents.getName(), s.chain.getName()));
 			res.res = true; // we will do logical ANDs
 			for (Transition tr : s.trReceivedHere) {
 				res.add(tr.isTransitionAllowed(sessionEvents, null));
@@ -171,8 +169,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 			log.debug(String
 					.format("State (%s - chain %s) is triggered by the event on all (%s) its places! Analysis has consumed %s events.",
 							s.represents.getName(), s.chain.getName(),
-							s.runsOn.places.size(),
-							res.consumedEvents.size()));
+							s.runsOn.places.size(), res.consumedEvents.size()));
 
 			s.consumeEvents(res.consumedEvents, s.runsOn.places, em);
 			for (Place p : s.runsOn.places) {
@@ -182,4 +179,15 @@ public class ActiveNodeBase extends ConfigurableBase {
 		}
 		return res;
 	}
+
+	public void run(PipelineJob pj, Runner sender, ChronixContext ctx,
+			EntityManager em) {
+		log.info("running"); // should "usually" be overloaded
+	}
+
+	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx,
+			EntityManager em) {
+		log.info("end of run"); 
+	}
+
 }

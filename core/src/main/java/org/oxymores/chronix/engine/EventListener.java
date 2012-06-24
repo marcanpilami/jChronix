@@ -16,7 +16,6 @@ import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -40,7 +39,7 @@ public class EventListener implements MessageListener {
 	private MessageProducer producerPJ;
 
 	public void startListening(Connection cnx, String brokerName,
-			ChronixContext ctx) throws JMSException {
+			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		this.ctx = ctx;
 		this.cnx = cnx;
 		String qName = String.format("Q.%s.EVENT", brokerName);
@@ -52,8 +51,8 @@ public class EventListener implements MessageListener {
 		MessageConsumer consumer = this.session.createConsumer(dest);
 		consumer.setMessageListener(this);
 
-		emf = Persistence.createEntityManagerFactory("TransacUnit");
-		entityManager = emf.createEntityManager();
+		this.emf = emf;
+		entityManager = this.emf.createEntityManager();
 
 		qName = String.format("Q.%s.PJ", brokerName);
 		producerPJ = session.createProducer(null);

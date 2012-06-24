@@ -10,6 +10,8 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -124,15 +126,23 @@ public class Broker {
 		sessionApp = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 
-		RunnerListener r = new RunnerListener();
+		RunnerAgent r = new RunnerAgent();
 		r.startListening(this.connection, brokerName);
 		sessionCmd = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 
+		EntityManagerFactory emf = Persistence
+				.createEntityManagerFactory("TransacUnit");
 		EventListener e = new EventListener();
-		e.startListening(this.connection, brokerName, ctx);
+		e.startListening(this.connection, brokerName, ctx, emf);
 		sessionEvent = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
+
+		Pipeline pipe = new Pipeline();
+		pipe.startListening(this.connection, brokerName, ctx, emf);
+		
+		Runner runner = new Runner();
+		runner.startListening(this.connection, brokerName, ctx, emf);
 	}
 
 	public void stop() {

@@ -6,9 +6,6 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.log4j.Logger;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -18,10 +15,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import junit.framework.Assert;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
@@ -29,8 +29,6 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
-
-import junit.framework.Assert;
 
 public class TestBroker {
 	private static Logger log = Logger.getLogger(TestBroker.class);
@@ -241,7 +239,6 @@ public class TestBroker {
 			}
 		}
 		State s1 = chain1.getStates().get(0);
-		ActiveNodeBase a1 = s1.getRepresents();
 		Place p1 = s1.getRunsOnPlaces().get(0);
 
 		// Create event
