@@ -21,9 +21,13 @@ import javax.jms.TextMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
 
 import junit.framework.Assert;
@@ -36,6 +40,7 @@ public class TestBroker {
 	private Broker b1;
 	private ExecutionNode n1789, n1400;
 	private String db1, db2;
+	private Application app1;
 
 	@Before
 	public void init() throws Exception {
@@ -98,6 +103,8 @@ public class TestBroker {
 		// Load the configuration db into a context
 		ctx1 = ChronixContext.loadContext(db1);
 		ctx2 = ChronixContext.loadContext(db2);
+
+		app1 = ctx1.applicationsByName.get(a1.getName());
 
 		// Create a broker from the new context. Purge its queues.
 		b1 = new Broker(ctx1, true);
@@ -224,14 +231,29 @@ public class TestBroker {
 
 	@Test
 	public void testEventListener() throws JMSException, InterruptedException {
-		log.info("****This tests creates an event and sends it to a running engine.");
+		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue.");
 
+		// Get relevant data to create the event
+		Chain chain1 = null;
+		for (Chain c : app1.getChains()) {
+			if (c.getName().equals("chain1")) {
+				chain1 = c;
+			}
+		}
+		State s1 = chain1.getStates().get(0);
+		ActiveNodeBase a1 = s1.getRepresents();
+		Place p1 = s1.getRunsOnPlaces().get(0);
+
+		// Create event
 		Event e1 = new Event();
 		e1.addValue("KEY", "value");
-		e1.setApplication((Application) ctx1.applicationsById.values()
-				.toArray()[0]);
-
-		b1.sendEvent(e1, n1789);
+		e1.setApplication(app1);
+		e1.setState(s1);
+		e1.setPlace(p1);
+		e1.setConditionData1(0);
+		e1.setLevel0IdU(chain1.getId());
+		
+		b1.sendEvent(e1);
 		Thread.sleep(2000); // Time to consume message
 	}
 }

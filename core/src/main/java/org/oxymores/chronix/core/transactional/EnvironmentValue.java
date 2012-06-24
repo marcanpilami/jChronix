@@ -6,7 +6,6 @@ import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-
 import org.oxymores.chronix.core.ChronixObject;
 
 @Entity
@@ -20,7 +19,8 @@ public class EnvironmentValue implements Serializable {
 	@Column(columnDefinition="CHAR(50)")
 	private String key, value;
 
-	TranscientBase associatedTo;
+	//@ManyToOne(cascade=CascadeType.ALL, )
+	//TranscientBase associatedTo;
 
 	public EnvironmentValue() {
 		id = UUID.randomUUID().toString();
@@ -62,12 +62,12 @@ public class EnvironmentValue implements Serializable {
 	public void setValue(String value) {
 		this.value = value;
 	}
-
+/*
 	public TranscientBase getAssociatedTo() {
 		return associatedTo;
 	}
 
 	public void setAssociatedTo(TranscientBase associatedTo) {
 		this.associatedTo = associatedTo;
-	}
+	}*/
 }

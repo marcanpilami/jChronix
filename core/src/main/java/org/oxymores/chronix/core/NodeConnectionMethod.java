@@ -5,5 +5,6 @@ public enum NodeConnectionMethod {
 	WSMAN,
 	WMI,
 	REXEC,
-	TCP
+	TCP,
+	RCTRL
 }

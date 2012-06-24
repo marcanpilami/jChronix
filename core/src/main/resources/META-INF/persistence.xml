@@ -19,7 +19,7 @@
 			<!-- <property name="openjpa.ConnectionUserName" value="none" />
 			<property name="openjpa.ConnectionPassword" value="none" /> -->
 			<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema" />
-			<property name="openjpa.Log" value="DefaultLevel=TRACE, Tool=TRACE" />
+			<property name="openjpa.Log" value="DefaultLevel=WARN, Tool=WARN" />
 		</properties>
 	</persistence-unit>
 </persistence>

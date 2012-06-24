@@ -5,10 +5,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
+import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ChronixObject;
@@ -20,16 +24,19 @@ public class TranscientBase implements Serializable {
 	private static final long serialVersionUID = 8976655465578L;
 
 	@Id
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
 	protected String id;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
 	protected String stateID;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
+	protected String activeID;
+	@Column(columnDefinition = "CHAR(36)")
 	protected String placeID;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)")
 	protected String appID;
 	protected Date createdAt;
 
+	@OneToMany(fetch=FetchType.EAGER, targetEntity=EnvironmentValue.class, cascade={CascadeType.PERSIST, CascadeType.REMOVE})
 	protected ArrayList<EnvironmentValue> envParams;
 
 	public TranscientBase() {
@@ -53,16 +60,41 @@ public class TranscientBase implements Serializable {
 		this.stateID = stateID;
 	}
 
+	public void setState(State state) {
+		this.stateID = state.getId().toString();
+		this.setActive(state.getRepresents());
+	}
+
 	public State getState(ChronixContext ctx) {
 		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
 	}
+	
+	public String getActiveID() {
+		return activeID;
+	}
 
-	protected String getPlaceID() {
+	protected void setActiveID(String activeID) {
+		this.activeID = activeID;
+	}
+
+	private void setActive(ActiveNodeBase active) {
+		this.activeID = active.getId().toString();
+	}
+
+	public ActiveNodeBase getActive(ChronixContext ctx) {
+		return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
+	}
+
+	public String getPlaceID() {
 		return placeID;
 	}
 
 	protected void setPlaceID(String placeID) {
 		this.placeID = placeID;
+	}
+
+	public void setPlace(Place place) {
+		this.placeID = place.getId().toString();
 	}
 
 	public Place getPlace(ChronixContext ctx) {

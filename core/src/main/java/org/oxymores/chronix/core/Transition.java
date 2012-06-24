@@ -20,7 +20,11 @@
 
 package org.oxymores.chronix.core;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.engine.EventAnalysisResult;
 
 public class Transition extends ApplicationObject {
 
@@ -97,4 +101,36 @@ public class Transition extends ApplicationObject {
 			chain.addTransition(this);
 	}
 
+	private Boolean isTransitionParallelEnabled() {
+		if (!this.stateFrom.parallel || !this.stateTo.parallel)
+			return false;
+
+		if (!this.stateFrom.runsOn.equals(this.stateTo.runsOn))
+			return false;
+
+		return true;
+	}
+
+	public EventAnalysisResult isTransitionAllowed(List<Event> events, Place targetPlace)
+	{
+		EventAnalysisResult res = new EventAnalysisResult();
+		
+		if (isTransitionParallelEnabled())
+		{
+			// Only analyze on given place
+			return this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, events, targetPlace);
+		}
+		else
+		{
+			// Analyse on every place
+			res.res = true; // we will do logical AND
+			for (Place p: this.stateFrom.runsOn.places)
+			{
+				res.add(this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, events, p));
+				if (!res.res)
+					return res; // no need to continue on first failure...
+			}
+			return res; // If here, means OK
+		}
+	}
 }

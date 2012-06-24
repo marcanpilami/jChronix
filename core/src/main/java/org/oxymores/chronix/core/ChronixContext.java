@@ -18,6 +18,7 @@ import java.io.Writer;
 import java.net.InetAddress;
 
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.exceptions.ChronixInconsistentMetadataException;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 public class ChronixContext {
@@ -255,5 +256,16 @@ public class ChronixContext {
 			res.putAll(a.nodes);
 		}
 		return res;
+	}
+
+	public ExecutionNode getLocalNode(Application a)
+			throws ChronixInconsistentMetadataException {
+		for (ExecutionNode n : a.nodes.values()) {
+			if (n.getBrokerUrl().equals(this.localUrl))
+				return n;
+		}
+		throw new ChronixInconsistentMetadataException(String.format(
+				"Application %s has no definition for local node %s but is still trying an operation on that node!", a.id,
+				this.localUrl));
 	}
 }

@@ -147,6 +147,10 @@ public class ExecutionNode extends ApplicationObject {
 	public String getBrokerName() {
 		return (this.dns + this.qPort).toUpperCase();
 	}
+	
+	public String getBrokerUrl() {
+		return (this.dns + ":" + this.qPort).toUpperCase();
+	}
 
 	public Boolean isHosted() {
 		for (NodeLink nl : this.canReceiveFrom) {

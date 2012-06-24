@@ -20,13 +20,23 @@
 
 package org.oxymores.chronix.core;
 
+import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
+import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.engine.EventAnalysisResult;
 
 public class State extends ConfigurableBase {
+	private static Logger log = Logger.getLogger(State.class);
 
 	private static final long serialVersionUID = -2640644872229489081L;
 
-	protected Boolean parallel;
+	protected Boolean parallel = false;
 
 	// GUI data
 	protected Integer x, y;
@@ -117,11 +127,23 @@ public class State extends ConfigurableBase {
 	}
 
 	public Transition connectTo(State target) {
+		return connectTo(target, 0, null, null, null);
+	}
+
+	public Transition connectTo(State target, Integer guard1) {
+		return connectTo(target, guard1, null, null, null);
+	}
+
+	public Transition connectTo(State target, Integer guard1, String guard2,
+			String guard3, UUID guard4) {
 		// Note: there can be multiple transitions between two states.
 		Transition t = new Transition();
 		t.setStateFrom(this);
 		t.setStateTo(target);
-		t.setGuard1(0);
+		t.setGuard1(guard1);
+		t.setGuard2(guard2);
+		t.setGuard3(guard3);
+		t.setGuard4(guard4);
 		t.setApplication(this.application);
 		this.chain.addTransition(t);
 		return t;
@@ -229,6 +251,7 @@ public class State extends ConfigurableBase {
 
 	public void setChain(Chain chain) {
 		this.chain = chain;
+		this.application = chain.getApplication();
 		if (chain != null)
 			chain.addState(this);
 	}
@@ -261,5 +284,93 @@ public class State extends ConfigurableBase {
 		} finally {
 			c.s_removeStateUsing(this);
 		}
+	}
+
+	void isOutgoingTransitionAllowed(Transition tr, List<Event> events,
+			Place targetPlace) {
+
+	}
+
+	private boolean isParallelCompatible() {
+		if (!this.parallel)
+			return false;
+
+		return false;
+	}
+
+	public void isStateExecutionAllowed(Event evt, EntityManager em,
+			ChronixContext ctx, State stateFrom, ActiveNodeBase activeFrom,
+			Application appliFrom) {
+		EventAnalysisResult res = new EventAnalysisResult();
+
+		// Get session events
+		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1");
+		q.setParameter(1, evt.getLevel0IdU().toString());
+		List<Event> sessionEvents2 = q.getResultList();
+		List<Event> sessionEvents = new ArrayList<Event>();
+		sessionEvents.addAll(sessionEvents2); // OpenJPA lists are read only!
+		sessionEvents.add(evt); // The current event is not yet db persisted
+
+		if (this.parallel) {
+			// In this case, only
+			log.debug(String.format(
+					"State %s (%s - chain %s) is parallel enabled",
+					this.getId(), this.represents.getName(),
+					this.chain.getName()));
+
+			for (Place p : this.runsOn.places) {
+				log.debug(String
+						.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?",
+								evt.getId(), this.getId(),
+								this.represents.getName(),
+								this.chain.getName(), p.getName()));
+
+				res = new EventAnalysisResult();
+				res.res = true;
+				for (Transition tr : this.trReceivedHere) {
+					res.add(tr.isTransitionAllowed(sessionEvents, p));
+					if (!res.res) {
+						log.debug(String
+								.format("State %s (%s - chain %s) is NOT allowed to run on place %s",
+										this.getId(),
+										this.represents.getName(),
+										this.chain.getName(), p.name));
+						continue;
+					}
+				}
+				log.debug(String
+						.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
+								this.represents.getName(),
+								this.chain.getName(), p.name,
+								res.consumedEvents.size()));
+			}
+		} else {
+			// In this case, all incoming transitions must be OK for this
+			// State to run
+			log.debug(String.format(
+					"State %s (%s - chain %s) is not parallel enabled",
+					this.getId(), this.represents.getName(),
+					this.chain.getName()));
+			res.res = true; // we will do logical ANDs
+			for (Transition tr : this.trReceivedHere) {
+				res.add(tr.isTransitionAllowed(sessionEvents, null));
+				// null: no place targeting needed in not // case
+				if (!res.res) {
+					log.debug(String.format(
+							"State %s (%s - chain %s) is NOT allowed to run",
+							this.getId(), this.represents.getName(),
+							this.chain.getName()));
+					return; // not possible
+				}
+			}
+
+			log.debug(String
+					.format("State (%s - chain %s) is triggered by the event on all (%s) its places! Analysis has consumed %s events.",
+							this.represents.getName(), this.chain.getName(),
+							this.runsOn.places.size(),
+							res.consumedEvents.size()));
+
+		}
+		// log.debug(String.format("", ));
 	}
 }
