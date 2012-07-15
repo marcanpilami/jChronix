@@ -1,7 +1,7 @@
 package org.oxymores.chronix.engine;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -28,21 +28,21 @@ public class Pipeline extends Thread implements MessageListener {
 	private static Logger log = Logger.getLogger(Pipeline.class);
 
 	private ChronixContext ctx;
-	private Session session;
-	private Destination dest;
+	private Session session_jms;
+	private Destination incoming_queue;
 	private Connection cnx;
 	EntityManagerFactory emf;
-	EntityManager entityManager, em2;
-	EntityTransaction transaction, tr2;
+	EntityManager em_mainloop, em_injector;
+	EntityTransaction transac_mainloop, transac_injector;
 
-	private MessageProducer producerJR;
+	private MessageProducer producerJR_mainloop;
 
 	private LinkedBlockingQueue<PipelineJob> entering;
-	private ConcurrentLinkedQueue<PipelineJob> waiting_calendar;
-	private ConcurrentLinkedQueue<PipelineJob> waiting_sequence;
-	private ConcurrentLinkedQueue<PipelineJob> waiting_token;
-	private ConcurrentLinkedQueue<PipelineJob> waiting_exclusion;
-	private ConcurrentLinkedQueue<PipelineJob> waiting_run;
+	private ArrayList<PipelineJob> waiting_calendar;
+	private ArrayList<PipelineJob> waiting_sequence;
+	private ArrayList<PipelineJob> waiting_token;
+	private ArrayList<PipelineJob> waiting_exclusion;
+	private ArrayList<PipelineJob> waiting_run;
 
 	private Boolean run = true;
 
@@ -50,35 +50,40 @@ public class Pipeline extends Thread implements MessageListener {
 			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		this.ctx = ctx;
 		this.cnx = cnx;
+
+		// Register on incoming queue
 		String qName = String.format("Q.%s.PJ", brokerName);
 		log.debug(String.format(
 				"Broker %s: registering a pipeline listener on queue %s",
 				brokerName, qName));
-		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
-		this.dest = this.session.createQueue(qName);
-		MessageConsumer consumer = this.session.createConsumer(dest);
+		this.session_jms = this.cnx.createSession(true,
+				Session.SESSION_TRANSACTED);
+		this.incoming_queue = this.session_jms.createQueue(qName);
+		MessageConsumer consumer = this.session_jms
+				.createConsumer(incoming_queue);
 		consumer.setMessageListener(this);
 
+		// Outgoing producer for job runner
+		producerJR_mainloop = session_jms.createProducer(null);
+
+		// OpenJPA stuff
 		this.emf = emf;
-		entityManager = emf.createEntityManager();
-		transaction = entityManager.getTransaction();
+		em_mainloop = emf.createEntityManager();
+		transac_mainloop = em_mainloop.getTransaction();
 
-		em2 = emf.createEntityManager();
-		tr2 = em2.getTransaction();
-
-		qName = String.format("Q.%s.PJ", brokerName);
-		producerJR = session.createProducer(null);
+		em_injector = emf.createEntityManager();
+		transac_injector = em_injector.getTransaction();
 
 		// Create analysis queues
 		entering = new LinkedBlockingQueue<PipelineJob>();
-		waiting_calendar = new ConcurrentLinkedQueue<PipelineJob>();
-		waiting_sequence = new ConcurrentLinkedQueue<PipelineJob>();
-		waiting_token = new ConcurrentLinkedQueue<PipelineJob>();
-		waiting_exclusion = new ConcurrentLinkedQueue<PipelineJob>();
-		waiting_run = new ConcurrentLinkedQueue<PipelineJob>();
+		waiting_calendar = new ArrayList<PipelineJob>();
+		waiting_sequence = new ArrayList<PipelineJob>();
+		waiting_token = new ArrayList<PipelineJob>();
+		waiting_exclusion = new ArrayList<PipelineJob>();
+		waiting_run = new ArrayList<PipelineJob>();
 
 		// Retrieve jobs from previous service launches
-		Query q = entityManager
+		Query q = em_mainloop
 				.createQuery("SELECT j FROM PipelineJob j WHERE j.status = ?1");
 		q.setParameter(1, "CHECK_SYNC_CONDS");
 		@SuppressWarnings("unchecked")
@@ -95,30 +100,43 @@ public class Pipeline extends Thread implements MessageListener {
 			PipelineJob pj = null;
 			try {
 				pj = entering.poll(1, TimeUnit.MINUTES);
+				if (pj != null) {
+					waiting_calendar.add(pj);
+					log.debug(String.format(
+							"A job was registered in the pipeline: %s",
+							pj.getId()));
+				}
 			} catch (InterruptedException e) {
-				// Interruption is all right.
+				// Interruption is all right - we want to loop from time to time
 			}
 
-			if (pj != null)
-				waiting_calendar.add(pj);
-
-			for (PipelineJob j : waiting_calendar) {
+			ArrayList<PipelineJob> toAnalyse = new ArrayList<PipelineJob>();
+			toAnalyse.addAll(waiting_calendar);
+			for (PipelineJob j : toAnalyse) {
 				anCalendar(j);
 			}
 
-			for (PipelineJob j : waiting_sequence) {
+			toAnalyse.clear();
+			toAnalyse.addAll(waiting_sequence);
+			for (PipelineJob j : toAnalyse) {
 				anSequence(j);
 			}
 
-			for (PipelineJob j : waiting_token) {
+			toAnalyse.clear();
+			toAnalyse.addAll(waiting_token);
+			for (PipelineJob j : toAnalyse) {
 				anToken(j);
 			}
 
-			for (PipelineJob j : waiting_exclusion) {
+			toAnalyse.clear();
+			toAnalyse.addAll(waiting_exclusion);
+			for (PipelineJob j : toAnalyse) {
 				anExclusion(j);
 			}
 
-			for (PipelineJob j : waiting_run) {
+			toAnalyse.clear();
+			toAnalyse.addAll(waiting_run);
+			for (PipelineJob j : toAnalyse) {
 				run(j);
 			}
 		}
@@ -144,21 +162,22 @@ public class Pipeline extends Thread implements MessageListener {
 			return;
 		}
 
-		tr2.begin();
+		transac_injector.begin();
 		pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a
 											// crash/stop
-		em2.persist(pj);
-		tr2.commit();
+		em_injector.persist(pj);
+		transac_injector.commit();
 
 		commit();
 
-		log.debug("A job has entered the pipeline");
+		log.debug(String.format("A job has entered the pipeline: %s",
+				pj.getId()));
 		entering.add(pj);
 	}
 
 	private void commit() {
 		try {
-			session.commit();
+			session_jms.commit();
 		} catch (JMSException e) {
 			log.error(
 					"failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
@@ -171,7 +190,7 @@ public class Pipeline extends Thread implements MessageListener {
 
 	private void rollback() {
 		try {
-			session.rollback();
+			session_jms.rollback();
 		} catch (JMSException e) {
 			log.error(
 					"failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
@@ -184,7 +203,7 @@ public class Pipeline extends Thread implements MessageListener {
 
 	private void anCalendar(PipelineJob pj) {
 		// TODO: really check calendar
-		waiting_calendar.remove(pj);
+		boolean r = waiting_calendar.remove(pj);
 		waiting_sequence.add(pj);
 		log.debug(String
 				.format("Job %s has finished calendar analysis - on to sequence analysis",
@@ -222,23 +241,23 @@ public class Pipeline extends Thread implements MessageListener {
 		// Remove from queue
 		waiting_run.remove(pj);
 
-		transaction.begin(); // JPA transaction
-		
+		transac_mainloop.begin(); // JPA transaction
+
 		String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx)
 				.getNode().getBrokerName());
 		try {
-			Destination d = session.createQueue(qName);
-			ObjectMessage om = session.createObjectMessage(pj);
-			producerJR.send(d, om);
+			Destination d = session_jms.createQueue(qName);
+			ObjectMessage om = session_jms.createObjectMessage(pj);
+			producerJR_mainloop.send(d, om);
 		} catch (JMSException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		//entityManager.merge(pj);
+
+		// entityManager.merge(pj);
 		pj.setStatus("RUNNING");
 
-		transaction.commit(); // JPA
+		transac_mainloop.commit(); // JPA
 		commit(); // JMS
 
 		log.debug(String.format("Job %s was given to the runner queue",

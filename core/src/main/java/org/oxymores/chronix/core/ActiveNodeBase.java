@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.Runner;
 
 public class ActiveNodeBase extends ConfigurableBase {
@@ -180,14 +181,47 @@ public class ActiveNodeBase extends ConfigurableBase {
 		return res;
 	}
 
+	// Run - phase 1
+	// Responsible for parameters resolution.
+	// Default implementation resolves all parameters. Should usually be called
+	// by overloads.
+	public void prepareRun(PipelineJob pj, Runner sender, ChronixContext ctx) {
+		for (Parameter p : this.parameters) {
+			p.resolveValue(ctx, sender, pj);
+		}
+	}
+
+	public String getCommandName(PipelineJob pj, Runner sender,
+			ChronixContext ctx) {
+		return null;
+	}
+
+	// Run - phase 2
+	// Called once all parameters are resolved and stored in the PJ.
+	// From the PJ, it is supposed to create the final RD which will be given to
+	// the runner. Should usually be overloaded - default does nothing.
+	public RunDescription finalizeRunDescription(PipelineJob pj, Runner sender,
+			ChronixContext ctx) {
+		return null;
+	}
+
+	// Useless
 	public void run(PipelineJob pj, Runner sender, ChronixContext ctx,
 			EntityManager em) {
 		log.info("running"); // should "usually" be overloaded
 	}
 
+	// ?
 	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx,
 			EntityManager em) {
-		log.info("end of run"); 
+		log.info("end of run");
 	}
 
+	public String getActivityMethod() {
+		return "None";
+	}
+
+	public boolean hasPayload() {
+		return false;
+	}
 }

@@ -100,7 +100,7 @@ public class DemoApplication {
 		// ////////////////////
 		// Shell commands
 		ShellCommand sc1 = new ShellCommand();
-		sc1.setCommand("echo c1");
+		sc1.setCommand("echo");
 		sc1.setDescription("command 1");
 		sc1.setName("command 1");
 		a.addActiveElement(sc1);
@@ -170,6 +170,13 @@ public class DemoApplication {
 		pa3.setKey("k");
 		pa3.setValue("a");
 		a.addParameter(pa3);
+
+		ShellParameter pa4 = new ShellParameter();
+		pa4.setDescription("test shell param");
+		pa4.setKey("");
+		pa4.setValue("echo dynamic");
+		a.addParameter(pa4);
+		sc1.addParameter(pa4);
 
 		// //////////////////////////////////////////////////////////////
 		// State/Transition

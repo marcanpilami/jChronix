@@ -29,7 +29,7 @@ import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.Runner;
 
-public class ShellCommand extends ActiveNodeBase{
+public class ShellCommand extends ActiveNodeBase {
 
 	private static final long serialVersionUID = 3340501935290198518L;
 
@@ -42,24 +42,40 @@ public class ShellCommand extends ActiveNodeBase{
 	public void setCommand(String command) {
 		this.command = command;
 	}
-	
-	private String resolveCommand()
-	{
+
+	private String resolveCommand() {
 		return command;
 	}
-	
+
 	@Override
-	public void run(PipelineJob p, Runner sender, ChronixContext ctx, EntityManager em) {
+	public void run(PipelineJob p, Runner sender, ChronixContext ctx,
+			EntityManager em) {
 		super.run(p, sender, ctx, em);
-		
+
 		RunDescription rd = new RunDescription();
 		rd.command = resolveCommand();
-		
+
 		try {
 			sender.sendRunDescription(rd, p.getPlace(ctx), p);
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public String getActivityMethod() {
+		return "Shell";
+	}
+
+	@Override
+	public String getCommandName(PipelineJob pj, Runner sender,
+			ChronixContext ctx) {
+		return this.command;
+	}
+
+	@Override
+	public boolean hasPayload() {
+		return true;
 	}
 }

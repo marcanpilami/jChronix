@@ -15,24 +15,24 @@ import javax.persistence.OneToMany;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.ChronixObject;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 
 @Entity
 public class TranscientBase implements Serializable {
 	private static final long serialVersionUID = 8976655465578L;
+	//private static Logger log = Logger.getLogger(TranscientBase.class);
 
 	@Id
-	@Column(columnDefinition = "CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String id;
-	@Column(columnDefinition = "CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String stateID;
-	@Column(columnDefinition = "CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String activeID;
-	@Column(columnDefinition = "CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String placeID;
-	@Column(columnDefinition = "CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String appID;
 	protected Date createdAt;
 
@@ -47,9 +47,9 @@ public class TranscientBase implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (!(o instanceof ChronixObject))
+		if (!(o instanceof TranscientBase))
 			return false;
-		return ((ChronixObject) o).getId().equals(this.getId());
+		return ((TranscientBase) o).getId().equals(this.getId());
 	}
 
 	protected String getStateID() {

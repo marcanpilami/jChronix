@@ -142,7 +142,7 @@ public class Broker {
 		pipe.startListening(this.connection, brokerName, ctx, emf);
 		
 		Runner runner = new Runner();
-		runner.startListening(this.connection, brokerName, ctx, emf);
+		runner.startListening(this.connection, brokerName, ctx, emf, this);
 	}
 
 	public void stop() {

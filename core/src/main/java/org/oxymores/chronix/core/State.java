@@ -328,6 +328,7 @@ public class State extends ConfigurableBase {
 		pj.setPlace(p);
 		pj.setState(this);
 		pj.setStatus("ENTERING_QUEUE");
+		pj.setApplication(this.application);
 
 		if (this.warnAfterMn != null)
 			pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn).toDate());

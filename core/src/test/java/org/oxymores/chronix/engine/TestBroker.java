@@ -251,6 +251,6 @@ public class TestBroker {
 		e1.setLevel0IdU(chain1.getId());
 		
 		b1.sendEvent(e1);
-		Thread.sleep(2000); // Time to consume message
+		Thread.sleep(5000); // Time to consume message
 	}
 }

@@ -6,12 +6,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
 import org.apache.log4j.Logger;
-import org.oxymores.chronix.core.transactional.Event;
 
 public class RunnerAgent implements MessageListener {
 
@@ -19,6 +18,7 @@ public class RunnerAgent implements MessageListener {
 	private Session session;
 	private Destination dest;
 	private Connection cnx;
+	private MessageProducer producer;
 
 	public void startListening(Connection cnx, String brokerName)
 			throws JMSException {
@@ -31,12 +31,12 @@ public class RunnerAgent implements MessageListener {
 		this.dest = this.session.createQueue(qName);
 		MessageConsumer consumer = this.session.createConsumer(dest);
 		consumer.setMessageListener(this);
+
+		producer = session.createProducer(null);
 	}
 
 	@Override
 	public void onMessage(Message msg) {
-
-		String cmd;
 		ObjectMessage omsg = (ObjectMessage) msg;
 		RunDescription rd;
 		try {
@@ -55,14 +55,65 @@ public class RunnerAgent implements MessageListener {
 			return;
 		}
 
-		log.info(String.format("Running command %s", rd.command));
+		if (!rd.helperExecRequest)
+			log.info(String.format("Running command %s", rd.command));
+		else
+			log.debug(String.format("Running helper internal command %s",
+					rd.command));
+
+		// Run the command according to its method
+		RunResult res = null;
+		if (rd.Method.equals("Shell"))
+			res = RunnerShell.run(rd);
+		else {
+			res = new RunResult();
+			res.returnCode = -1;
+			res.logStart = String.format(
+					"An unimplemented exec method (%s) was called!", rd.Method);
+			log.error(String.format(
+					"An unimplemented exec method (%s) was called!", rd.Method));
+		}
+
+		// Copy the engine ids - that way it will be able to identify the launch
+		// Part of the ids are in the JMS correlation id too
+		res.id1 = rd.id1;
+		res.id2 = rd.id2;
+		res.outOfPlan = rd.outOfPlan;
+
+		// Env var analysis is done here, so as to enable the remote engine to
+		// know them without waiting for the log file
+		// TODO: env var analysis
+
+		// Send the result!
+		Message response;
+		if (!rd.helperExecRequest) {
+			try {
+				response = session.createObjectMessage(res);
+				response.setJMSCorrelationID(msg.getJMSCorrelationID());
+				producer.send(msg.getJMSReplyTo(), response);
+			} catch (JMSException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		} else {
+			try {
+				response = session.createTextMessage(res.logStart);
+				response.setJMSCorrelationID(msg.getJMSCorrelationID());
+				producer.send(msg.getJMSReplyTo(), response);
+			} catch (JMSException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
 		try {
 			session.commit();
 		} catch (JMSException e) {
 			log.error("oups", e);
+			System.exit(1);
 		}
 	}
-	
+
 	private void commit() {
 		try {
 			session.commit();

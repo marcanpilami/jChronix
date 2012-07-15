@@ -14,9 +14,9 @@ public class EnvironmentValue implements Serializable {
 	private static final long serialVersionUID = -3301527648471127170L;
 	
 	@Id
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition="CHAR(36)", nullable=false, length = 36)
 	private String id;
-	@Column(columnDefinition="CHAR(50)")
+	@Column(columnDefinition="CHAR(50)", length = 50)
 	private String key, value;
 
 	//@ManyToOne(cascade=CascadeType.ALL, )

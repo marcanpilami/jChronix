@@ -21,16 +21,16 @@ public class Event extends TranscientBase {
 	protected boolean localOnly, analysed;
 
 	protected Integer conditionData1;
-	@Column(columnDefinition="CHAR(50)")
+	@Column(columnDefinition = "CHAR(50)", length = 50)
 	protected String conditionData2, conditionData3;
-	@Column(columnDefinition="CHAR(36)")
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String conditionData4; // Well, UUID actually
-	
-	@OneToMany(fetch=FetchType.EAGER)
-	protected ArrayList<EventConsumption> consumptions = new ArrayList<EventConsumption>();
 
-	@Column(columnDefinition="CHAR(36)")
-	protected String level0Id, level1Id; // Same
+	@Column(columnDefinition = "CHAR(36)", length = 36)
+	protected String level0Id, level1Id; // Also UUID
+
+	@OneToMany(fetch = FetchType.EAGER)
+	protected ArrayList<EventConsumption> consumptions = new ArrayList<EventConsumption>();
 
 	public Date getBestBefore() {
 		return bestBefore;
@@ -131,12 +131,11 @@ public class Event extends TranscientBase {
 	protected void setLevel1Id(String level1Id) {
 		this.level1Id = level1Id;
 	}
-	
-	public Boolean wasConsumedOnPlace(Place p, State s)
-	{
-		for (EventConsumption ec: this.consumptions)
-		{
-			if (ec.stateID.equals(s.getId().toString()) && ec.placeID.equals(p.getId().toString()) )
+
+	public Boolean wasConsumedOnPlace(Place p, State s) {
+		for (EventConsumption ec : this.consumptions) {
+			if (ec.stateID.equals(s.getId().toString())
+					&& ec.placeID.equals(p.getId().toString()))
 				return true;
 		}
 		return false;

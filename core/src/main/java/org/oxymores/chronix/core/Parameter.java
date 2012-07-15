@@ -22,6 +22,11 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
+import javax.jms.JMSException;
+
+import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.Runner;
+
 public class Parameter extends ApplicationObject {
 
 	private static final long serialVersionUID = 8017529181151172909L;
@@ -79,6 +84,16 @@ public class Parameter extends ApplicationObject {
 		{
 			elements.add(element);
 			element.addParameter(this);
+		}
+	}
+	
+	public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
+	{
+		try {
+			sender.sendParameterValue(this.getValue(), this.getId(), pj);
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
