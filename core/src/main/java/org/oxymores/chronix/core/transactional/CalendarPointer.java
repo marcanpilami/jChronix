@@ -15,6 +15,8 @@ public class CalendarPointer extends TranscientBase {
 
 	protected String calendarId;
 	protected String dayId;
+	
+	public Boolean isEnd = false;
 
 	public String getCalendarId() {
 		return calendarId;

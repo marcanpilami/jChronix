@@ -111,7 +111,16 @@ public class ActiveNodeBase extends ConfigurableBase {
 		@SuppressWarnings("unchecked")
 		List<Event> sessionEvents2 = q.getResultList();
 		List<Event> sessionEvents = new ArrayList<Event>();
-		sessionEvents.addAll(sessionEvents2); // OpenJPA lists are read only!
+		
+		/*if (s.usesCalendar())
+		{
+			CalendarDay currentStateDay = 
+			for (Event event : sessionEvents2) {
+				if (event.getCalendarOccurrenceID().equals())
+			}
+		}
+		else*/
+			sessionEvents.addAll(sessionEvents2); // OpenJPA lists are read only!
 		sessionEvents.add(evt); // The current event is not yet db persisted
 
 		if (s.parallel) {

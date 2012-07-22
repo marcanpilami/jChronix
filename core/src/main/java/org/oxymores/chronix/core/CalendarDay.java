@@ -4,11 +4,11 @@ public class CalendarDay extends ApplicationObject {
 
 	private static final long serialVersionUID = -8296932253108182976L;
 
-	protected long seq;
+	protected String seq;
 	
 	protected Calendar calendar;
 	
-	public CalendarDay(long day, Calendar calendar)
+	public CalendarDay(String day, Calendar calendar)
 	{
 		super();
 		this.calendar = calendar;

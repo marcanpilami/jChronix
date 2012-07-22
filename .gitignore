@@ -38,6 +38,7 @@ Thumbs.db
 generated.js
 core/target/*
 activemq-data
+doc/html
 
 # Library archive    #
 ######################

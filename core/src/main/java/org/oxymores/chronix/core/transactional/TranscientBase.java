@@ -21,7 +21,7 @@ import org.oxymores.chronix.core.State;
 @Entity
 public class TranscientBase implements Serializable {
 	private static final long serialVersionUID = 8976655465578L;
-	//private static Logger log = Logger.getLogger(TranscientBase.class);
+	// private static Logger log = Logger.getLogger(TranscientBase.class);
 
 	@Id
 	@Column(columnDefinition = "CHAR(36)", length = 36)
@@ -34,9 +34,13 @@ public class TranscientBase implements Serializable {
 	protected String placeID;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String appID;
+	@Column(columnDefinition = "CHAR(36)", length = 36)
+	protected String calendarOccurrenceID;
+
 	protected Date createdAt;
 
-	@OneToMany(fetch=FetchType.EAGER, targetEntity=EnvironmentValue.class, cascade={CascadeType.PERSIST, CascadeType.REMOVE})
+	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = {
+			CascadeType.PERSIST, CascadeType.REMOVE })
 	protected ArrayList<EnvironmentValue> envParams;
 
 	public TranscientBase() {
@@ -69,7 +73,7 @@ public class TranscientBase implements Serializable {
 	public State getState(ChronixContext ctx) {
 		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
 	}
-	
+
 	public String getActiveID() {
 		return activeID;
 	}
@@ -83,7 +87,8 @@ public class TranscientBase implements Serializable {
 	}
 
 	public ActiveNodeBase getActive(ChronixContext ctx) {
-		return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
+		return this.getApplication(ctx).getActiveNode(
+				UUID.fromString(this.activeID));
 	}
 
 	public String getPlaceID() {
@@ -149,5 +154,13 @@ public class TranscientBase implements Serializable {
 
 	public void addValue(String key, String value) {
 		this.envParams.add(new EnvironmentValue(key, value));
+	}
+
+	public String getCalendarOccurrenceID() {
+		return calendarOccurrenceID;
+	}
+
+	public void setCalendarOccurrenceID(String calendarOccurrenceID) {
+		this.calendarOccurrenceID = calendarOccurrenceID;
 	}
 }

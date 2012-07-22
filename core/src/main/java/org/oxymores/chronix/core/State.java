@@ -30,9 +30,11 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -69,7 +71,25 @@ public class State extends ConfigurableBase {
 
 	// Sequences
 	protected ArrayList<AutoSequence> sequences;
-	protected ArrayList<Calendar> calendars;
+	protected Calendar calendar;
+	protected Boolean loopMissedOccurrences;
+	protected Boolean endOfOccurrence;
+
+	public Boolean getLoopMissedOccurrences() {
+		return loopMissedOccurrences;
+	}
+
+	public void setLoopMissedOccurrences(Boolean loopMissedOccurrences) {
+		this.loopMissedOccurrences = loopMissedOccurrences;
+	}
+
+	public Boolean getEndOfOccurrence() {
+		return endOfOccurrence;
+	}
+
+	public void setEndOfOccurrence(Boolean endOfOccurrence) {
+		this.endOfOccurrence = endOfOccurrence;
+	}
 
 	public State() {
 		super();
@@ -77,7 +97,6 @@ public class State extends ConfigurableBase {
 		this.trFromHere = new ArrayList<Transition>();
 		this.trReceivedHere = new ArrayList<Transition>();
 		this.sequences = new ArrayList<AutoSequence>();
-		this.calendars = new ArrayList<Calendar>();
 	}
 
 	public PlaceGroup getRunsOn() {
@@ -183,8 +202,8 @@ public class State extends ConfigurableBase {
 		return sequences;
 	}
 
-	public ArrayList<Calendar> getCalendars() {
-		return calendars;
+	public Calendar getCalendar() {
+		return calendar;
 	}
 
 	public Boolean getParallel() {
@@ -279,25 +298,36 @@ public class State extends ConfigurableBase {
 		}
 	}
 
-	public void addCalendar(Calendar c) {
+	public void setCalendar(Calendar c) {
 		c.s_addStateUsing(this);
-		this.calendars.add(c);
+		this.calendar = c;
 	}
 
-	public void removeCalendar(Calendar c) {
-		try {
-			this.calendars.remove(c);
-		} finally {
-			c.s_removeStateUsing(this);
+	public void removeCalendar() {
+		if (this.calendar != null) {
+			this.calendar.s_removeStateUsing(this);
+			this.calendar = null;
 		}
 	}
 
-	void isOutgoingTransitionAllowed(Transition tr, List<Event> events,
-			Place targetPlace) {
-
+	public Boolean usesCalendar() {
+		return this.calendar != null;
 	}
 
-	
+	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p)
+			throws Exception {
+		if (!usesCalendar())
+			throw new Exception(
+					"A state without calendar has no current occurrence");
+
+		Query q = em
+				.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2 AND p.calendarID = ?3");
+		q.setParameter(1, this.id.toString());
+		q.setParameter(2, p.id.toString());
+		q.setParameter(3, this.calendar.id.toString());
+		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
+		return this.calendar.getDay(UUID.fromString(cp.getDayId()));
+	}
 
 	public void consumeEvents(List<Event> events, List<Place> places,
 			EntityManager em) {
