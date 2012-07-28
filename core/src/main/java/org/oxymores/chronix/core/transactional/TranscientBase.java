@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
@@ -58,6 +59,42 @@ public class TranscientBase implements Serializable {
 		return ((TranscientBase) o).getId().equals(this.getId());
 	}
 
+	// //////////////////////////////////////////////
+	// Calendar & co
+	public String getCalendarID() {
+		return calendarID;
+	}
+
+	public void setCalendarID(String id) {
+		this.calendarID = id;
+	}
+
+	public Calendar getCalendar(ChronixContext ctx) {
+		return this.getApplication(ctx).getCalendar(
+				UUID.fromString(this.calendarID));
+	}
+
+	public void setCalendar(Calendar c) {
+		if (c == null) {
+			this.calendarID = null;
+		} else {
+			this.calendarID = c.getId().toString();
+		}
+	}
+
+	public String getCalendarOccurrenceID() {
+		return calendarOccurrenceID;
+	}
+
+	public void setCalendarOccurrenceID(String calendarOccurrenceID) {
+		this.calendarOccurrenceID = calendarOccurrenceID;
+	}
+
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// State
 	protected String getStateID() {
 		return stateID;
 	}
@@ -67,15 +104,24 @@ public class TranscientBase implements Serializable {
 	}
 
 	public void setState(State state) {
-		this.stateID = state.getId().toString();
-		this.setActive(state.getRepresents());
-		this.setApplication(state.getApplication());
+		if (state != null) {
+			this.stateID = state.getId().toString();
+			this.setActive(state.getRepresents());
+			this.setApplication(state.getApplication());
+		} else {
+			this.stateID = null;
+		}
 	}
 
 	public State getState(ChronixContext ctx) {
 		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
 	}
 
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Active node
 	public String getActiveID() {
 		return activeID;
 	}
@@ -93,6 +139,11 @@ public class TranscientBase implements Serializable {
 				UUID.fromString(this.activeID));
 	}
 
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Network
 	public String getPlaceID() {
 		return placeID;
 	}
@@ -102,14 +153,22 @@ public class TranscientBase implements Serializable {
 	}
 
 	public void setPlace(Place place) {
-		this.placeID = place.getId().toString();
-		this.appID = place.getApplication().getId().toString();
+		if (place != null) {
+			this.placeID = place.getId().toString();
+			this.appID = place.getApplication().getId().toString();
+		} else
+			this.placeID = null;
 	}
 
 	public Place getPlace(ChronixContext ctx) {
 		return this.getApplication(ctx).getPlace(UUID.fromString(this.placeID));
 	}
 
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Misc.
 	protected String getAppID() {
 		return appID;
 	}
@@ -158,20 +217,7 @@ public class TranscientBase implements Serializable {
 	public void addValue(String key, String value) {
 		this.envParams.add(new EnvironmentValue(key, value));
 	}
+	//
+	// //////////////////////////////////////////////
 
-	public String getCalendarOccurrenceID() {
-		return calendarOccurrenceID;
-	}
-
-	public void setCalendarOccurrenceID(String calendarOccurrenceID) {
-		this.calendarOccurrenceID = calendarOccurrenceID;
-	}
-	
-	public String getCalendarID() {
-		return calendarID;
-	}
-
-	public void setCalendarID(String calendarID) {
-		this.calendarID = calendarID;
-	}
 }

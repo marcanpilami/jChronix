@@ -21,11 +21,15 @@ import javax.persistence.EntityTransaction;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
@@ -233,6 +237,9 @@ public class Runner implements MessageListener {
 				break;
 			}
 		}
+		State s = pj.getState(ctx);
+		Place p = pj.getPlace(ctx);
+		Application a = pj.getApplication(ctx);
 
 		// Event throwing
 		Event e = pj.createEvent(rr);
@@ -259,7 +266,39 @@ public class Runner implements MessageListener {
 			e1.printStackTrace();
 		}
 
-		// TODO: advance calendars...
+		// Calendar progress
+		if (s.usesCalendar() && !pj.getIgnoreCalendarUpdating()) {
+			log.debug(pj.getCalendarID());
+			Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
+			CalendarDay justDone = c.getDay(UUID.fromString(pj
+					.getCalendarOccurrenceID()));
+			CalendarDay next = c.getOccurrenceAfter(justDone);
+			CalendarPointer cp = null;
+			try {
+				cp = s.getCurrentCalendarPointer(em, p);
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			tr.begin();
+			cp.setLastEndedOccurrenceCd(justDone);
+			cp.setRunning(false);
+			if (pj.getResultCode() == 0) {
+				cp.setLastEndedOkOccurrenceCd(justDone);
+				cp.setNextRunOccurrenceCd(next);
+			}
+			log.debug(String
+					.format("At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
+							s.getRepresents().getName(),
+							s.getChain().getName(), cp
+									.getLastEndedOccurrenceCd(ctx).getValue(),
+							cp.getLastEndedOkOccurrenceCd(ctx).getValue(),
+							cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
+									.getNextRunOccurrenceCd(ctx).getValue(), cp
+									.getLatestFailed(), cp.getRunning()));
+			tr.commit();
+		}
 
 		// End
 		resolving.remove(pj);

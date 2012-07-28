@@ -1,5 +1,7 @@
 package org.oxymores.chronix.core;
 
+import java.util.UUID;
+
 public class CalendarDay extends ApplicationObject {
 
 	private static final long serialVersionUID = -8296932253108182976L;
@@ -10,7 +12,9 @@ public class CalendarDay extends ApplicationObject {
 
 	public CalendarDay(String day, Calendar calendar) {
 		super();
+		id = UUID.randomUUID();
 		this.calendar = calendar;
+		calendar.addDay(this);
 		this.seq = day;
 	}
 

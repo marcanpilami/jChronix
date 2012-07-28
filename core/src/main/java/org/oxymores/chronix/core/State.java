@@ -75,7 +75,7 @@ public class State extends ConfigurableBase {
 	protected Boolean loopMissedOccurrences;
 	protected Boolean endOfOccurrence;
 	protected Boolean blockIfPreviousFailed = false;
-	protected int calendarShift;
+	protected int calendarShift = 0;
 
 	public Boolean getLoopMissedOccurrences() {
 		return loopMissedOccurrences;
@@ -319,7 +319,7 @@ public class State extends ConfigurableBase {
 	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p)
 			throws Exception {
 		return this.calendar.getDay(this.getCurrentCalendarPointer(em, p)
-				.getLastOkOccurrenceUuid());
+				.getLastEndedOkOccurrenceUuid());
 	}
 
 	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p)
@@ -377,6 +377,23 @@ public class State extends ConfigurableBase {
 		if (this.killAfterMn != null)
 			pj.setKillAt(now.plusMinutes(this.killAfterMn).toDate());
 
+		// Calendar update
+		if (this.usesCalendar()) {
+			try {
+				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
+				pj.setCalendarOccurrenceID(this
+						.getCurrentCalendarOccurrence(em, p).getId().toString());
+				pj.setCalendar(calendar);
+
+				cp.setRunning(true);
+				cp.setLastStartedOccurrenceId(cp.getNextRunOccurrenceId());
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		// Send it (commit is done by main engine later)
 		String qName = String.format("Q.%s.PJ", p.getNode().getBrokerName());
 		try {
 			Destination d = session.createQueue(qName);
@@ -387,6 +404,7 @@ public class State extends ConfigurableBase {
 			e1.printStackTrace();
 		}
 
+		// Done
 		log.debug(String
 				.format("State (%s - chain %s) was enqueued for launch on place %s (queue %s)",
 						this.represents.getName(), this.chain.getName(),
@@ -422,8 +440,12 @@ public class State extends ConfigurableBase {
 				CalendarPointer tmp = new CalendarPointer();
 				tmp.setApplication(this.application);
 				tmp.setCalendar(this.calendar);
-				tmp.setLastOkOccurrenceCd(this.calendar.getFirstOccurrence());
+				tmp.setLastEndedOkOccurrenceCd(this.calendar
+						.getFirstOccurrence());
 				tmp.setLastEndedOccurrenceCd(this.calendar.getFirstOccurrence());
+				tmp.setLastStartedOccurrenceCd(this.calendar
+						.getFirstOccurrence());
+				tmp.setNextRunOccurrenceCd(this.calendar.getFirstOccurrence());
 				tmp.setPlace(p);
 				tmp.setState(this);
 
@@ -440,7 +462,9 @@ public class State extends ConfigurableBase {
 			return true; // no calendar = no calendar constraints
 		}
 
-		log.debug("State %s uses a calendar. Analysis begins.");
+		log.debug(String
+				.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.",
+						this.id, this.represents.name, this.chain.name));
 
 		// Get the pointer
 		Query q = em
@@ -456,10 +480,23 @@ public class State extends ConfigurableBase {
 			e.printStackTrace();
 		}
 
+		if (cp == null) {
+			log.error("CalendarPointer is null - should not be possible. It's a bug.");
+			return false;
+		}
+		em.refresh(cp); //sigh.
+
+		// CalendarDay lastStartedOccurrence = this.calendar.getDay(UUID
+		// .fromString(cp.getLastStartedOccurrenceId()));
+		// CalendarDay lastEndedOccurrence = this.calendar.getDay(UUID
+		// .fromString(cp.getLastEndedOccurrenceId()));
+		// CalendarDay lastEndedOKOccurrence = this.calendar.getDay(UUID
+		// .fromString(cp.getLastEndedOkOccurrenceId()));
+		CalendarDay nextRunOccurrence = this.calendar.getDay(UUID.fromString(cp
+				.getNextRunOccurrenceId()));
+
 		// Only one occurrence can run at the same time
-		// When finished OK, LAST_STARTED = LAST_OK
-		if (!cp.getLastStartedOccurrenceId().equals(
-				cp.getLastEndedOccurrenceId())) {
+		if (cp.getRunning()) {
 			log.debug("Previous run has not ended - it must end for a new run to occur");
 			return false;
 		}
@@ -476,22 +513,27 @@ public class State extends ConfigurableBase {
 
 		// No further than the calendar itself
 		CalendarDay baseLimit = this.calendar.getCurrentOccurrence(em);
+		log.debug(String
+				.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s",
+						baseLimit.seq, this.calendarShift,
+						nextRunOccurrence.seq));
 		CalendarDay shiftedLimit = this.calendar.getOccurrenceShiftedBy(
 				baseLimit, this.calendarShift);
-		CalendarDay localNextRunOccurrence = calendar.getDay(cp
-				.getLastEndedOccurrenceUuid());
 
 		// Shift: -1 means that the State will run at D-1 when the reference is
 		// D. Therefore it should stop one occurrence before the others.
-		if (!this.calendar.isBeforeOrSame(localNextRunOccurrence, shiftedLimit)) {
+		if (!this.calendar.isBeforeOrSame(nextRunOccurrence, shiftedLimit)) {
 			log.debug(String
 					.format("This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
 							baseLimit.seq, shiftedLimit.seq,
-							localNextRunOccurrence.seq));
+							nextRunOccurrence.seq));
 			return false;
 		}
 
 		// If here, alles gut.
+		log.debug(String.format(
+				"State %s (%s - chain %s) can run according to its calendar.",
+				this.id, this.represents.name, this.chain.name));
 		return true;
 	}
 }

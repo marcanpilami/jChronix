@@ -23,8 +23,23 @@ package org.oxymores.chronix.demo;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.oxymores.chronix.core.*;
-import org.oxymores.chronix.core.active.*;
+import org.joda.time.DateTime;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
+import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ConfigurableBase;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.NodeLink;
+import org.oxymores.chronix.core.Parameter;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.PlaceGroup;
+import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.ChainEnd;
+import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.ShellParameter;
 
 public class DemoApplication {
 
@@ -101,9 +116,17 @@ public class DemoApplication {
 		cal1.setName("Week days");
 		cal1.setDescription("All days from monday to friday for the whole year");
 		cal1.setManualSequence(false);
-		
-		
-		
+		a.addCalendar(cal1);
+
+		DateTime d = new DateTime(2029, 12, 31, 0, 0);
+		for (int i = 0; i <= 365; i++) {
+			d = d.plusDays(1);
+			if (d.getDayOfWeek() > 5)
+				continue;
+
+			new CalendarDay(d.toString("dd/MM/yyyy"), cal1);
+		}
+
 		// //////////////////////////////////////////////////////////////
 		// Sources
 		// //////////////////////////////////////////////////////////////
@@ -211,6 +234,7 @@ public class DemoApplication {
 		s2.setRepresents(ce);
 		s2.setX(300);
 		s2.setY(200);
+		s2.setCalendar(cal1);
 
 		// Echo c1
 		State s3 = new State();

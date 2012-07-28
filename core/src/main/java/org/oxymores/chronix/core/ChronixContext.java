@@ -139,6 +139,8 @@ public class ChronixContext {
 		for (Application a : ctx.applicationsById.values()) {
 			for (State s : a.getStates())
 				s.createPointers(em);
+			for (Calendar c : a.calendars.values())
+				c.createPointers(em);
 		}
 		tr.commit();
 

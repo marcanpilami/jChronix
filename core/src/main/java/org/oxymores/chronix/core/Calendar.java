@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
+import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 
 public class Calendar extends ApplicationObject {
+	private static Logger log = Logger.getLogger(Calendar.class);
 
 	public boolean isManualSequence() {
 		return manualSequence;
@@ -84,7 +87,7 @@ public class Calendar extends ApplicationObject {
 
 	public CalendarDay getDay(UUID id) {
 		for (CalendarDay cd : this.days) {
-			if (cd.id == id)
+			if (cd.id.equals(id))
 				return cd;
 		}
 		return null;
@@ -94,10 +97,15 @@ public class Calendar extends ApplicationObject {
 		// Calendar current occurrence pointers have no states and places: they
 		// are only related to the calendar itself.
 		Query q = em
-				.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarId = ?1");
+				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
 		q.setParameter(1, this.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-		return this.getDay(cp.getLastOkOccurrenceUuid());
+		log.debug(String.format(
+				"get current occurrence pointer found: %s. last ok id: %s", cp,
+				cp.getLastEndedOkOccurrenceId()));
+		log.debug(String.format("get current occurrence corresponding day: %s",
+				this.getDay(cp.getLastEndedOkOccurrenceUuid())));
+		return this.getDay(cp.getLastEndedOkOccurrenceUuid());
 	}
 
 	public CalendarDay getOccurrenceAfter(CalendarDay d) {
@@ -114,5 +122,33 @@ public class Calendar extends ApplicationObject {
 
 	public Boolean isBeforeOrSame(CalendarDay before, CalendarDay after) {
 		return this.days.indexOf(before) <= this.days.indexOf(after);
+	}
+
+	// Called within an open transaction. Won't be committed here.
+	public void createPointers(EntityManager em) {
+		// Get existing pointers
+		try {
+			getCurrentOccurrence(em);
+			return;
+		} catch (NoResultException e) {
+		}
+
+		log.info(String
+				.format("Calendar %s current value will be initialised at its first occurrence: %s - %s",
+						this.name, this.getFirstOccurrence().getValue(), this
+								.getFirstOccurrence().getId()));
+
+		CalendarPointer tmp = new CalendarPointer();
+		tmp.setApplication(this.application);
+		tmp.setCalendar(this);
+		tmp.setLastEndedOkOccurrenceCd(this.getFirstOccurrence());
+		tmp.setLastEndedOccurrenceCd(this.getFirstOccurrence());
+		tmp.setLastStartedOccurrenceCd(this.getFirstOccurrence());
+		tmp.setPlace(null);
+		tmp.setState(null);
+
+		em.persist(tmp);
+
+		// Commit is done by the calling method
 	}
 }

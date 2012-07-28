@@ -19,6 +19,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import junit.framework.Assert;
 
@@ -34,6 +35,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 
 public class TestBroker {
@@ -233,6 +235,7 @@ public class TestBroker {
 		Thread.sleep(2000); // Time to consume message
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testEventListener() throws JMSException, InterruptedException {
 		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue.");
@@ -263,14 +266,44 @@ public class TestBroker {
 		EntityManagerFactory emf = Persistence
 				.createEntityManagerFactory("HistoryUnit");
 		EntityManager em = emf.createEntityManager();
-		Query q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
-		@SuppressWarnings("unchecked")
+		Query q = em
+				.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt",
+						RunLog.class);
 		List<RunLog> res = q.getResultList();
 		Assert.assertEquals(2, res.size());
 
 		log.info(RunLog.getTitle());
 		for (RunLog l : res) {
 			log.info(l.getLine());
+		}
+
+		// Now, relaunch. Should block after echo, for the calendar has not
+		// progressed.
+		Event e2 = new Event();
+		e2.addValue("KEY", "value");
+		e2.setApplication(app1);
+		e2.setState(s1);
+		e2.setPlace(p1);
+		e2.setConditionData1(0);
+		e2.setLevel0IdU(chain1.getId());
+
+		b1.sendEvent(e2);
+		Thread.sleep(4000); // Time to consume message
+
+		res = q.getResultList();
+		Assert.assertEquals(3, res.size());
+		log.info(RunLog.getTitle());
+		for (RunLog l : res) {
+			log.info(l.getLine());
+		}
+
+		EntityManagerFactory emf2 = Persistence
+				.createEntityManagerFactory("TransacUnit");
+		EntityManager em2 = emf2.createEntityManager();
+		TypedQuery<CalendarPointer> q2 = em2.createQuery(
+				"SELECT r FROM CalendarPointer r", CalendarPointer.class);
+		for (CalendarPointer c : q2.getResultList()) {
+			log.debug(c.getRunning());
 		}
 	}
 }

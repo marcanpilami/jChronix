@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import javax.persistence.Entity;
 
-import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 
@@ -13,22 +12,22 @@ public class CalendarPointer extends TranscientBase {
 
 	private static final long serialVersionUID = 6905957323594389673L;
 
-	protected String calendarId;
-	protected String lastOkOccurrenceId; // Updated at end of run
+	protected String lastEndedOkOccurrenceId; // Updated at end of run
 	protected String lastStartedOccurrenceId; // Updated before run
 	protected String lastEndedOccurrenceId; // Updated after run
+	protected String nextRunOccurrenceId;
 
-	public Boolean isEnd = false;
 	public Boolean latestFailed = false;
+	public Boolean running = false;
 
 	// //////////////////////////////////////////////
 	// Helper fields
-	public Boolean getIsEnd() {
-		return isEnd;
+	public Boolean getRunning() {
+		return running;
 	}
 
-	public void setIsEnd(Boolean isEnd) {
-		this.isEnd = isEnd;
+	public void setRunning(Boolean running) {
+		this.running = running;
 	}
 
 	public Boolean getLatestFailed() {
@@ -43,55 +42,29 @@ public class CalendarPointer extends TranscientBase {
 	// //////////////////////////////////////////////
 
 	// //////////////////////////////////////////////
-	// Calendar itself
-	public String getCalendarId() {
-		return calendarId;
-	}
-
-	public void setCalendarId(String id) {
-		this.calendarId = id;
-	}
-
-	public Calendar getCalendar(ChronixContext ctx) {
-		return this.getApplication(ctx).getCalendar(
-				UUID.fromString(this.calendarId));
-	}
-
-	public void setCalendar(Calendar c) {
-		if (c == null) {
-			this.calendarId = null;
-		} else {
-			this.calendarId = c.getId().toString();
-		}
-	}
-
-	//
-	// //////////////////////////////////////////////
-
-	// //////////////////////////////////////////////
 	// Last day it ended correctly
-	public String getLastOkOccurrenceId() {
-		return lastOkOccurrenceId;
+	public String getLastEndedOkOccurrenceId() {
+		return lastEndedOkOccurrenceId;
 	}
 
-	public UUID getLastOkOccurrenceUuid() {
-		return UUID.fromString(lastOkOccurrenceId);
+	public UUID getLastEndedOkOccurrenceUuid() {
+		return UUID.fromString(lastEndedOkOccurrenceId);
 	}
 
-	public void setLastOkOccurrenceId(String dayId) {
-		this.lastOkOccurrenceId = dayId;
+	public void setLastEndedOkOccurrenceId(String dayId) {
+		this.lastEndedOkOccurrenceId = dayId;
 	}
 
-	public CalendarDay getLastOkOccurrenceCd(ChronixContext ctx) {
+	public CalendarDay getLastEndedOkOccurrenceCd(ChronixContext ctx) {
 		return this.getCalendar(ctx).getDay(
-				UUID.fromString(this.lastOkOccurrenceId));
+				UUID.fromString(this.lastEndedOkOccurrenceId));
 	}
 
-	public void setLastOkOccurrenceCd(CalendarDay day) {
+	public void setLastEndedOkOccurrenceCd(CalendarDay day) {
 		if (day == null) {
-			this.lastOkOccurrenceId = null;
+			this.lastEndedOkOccurrenceId = null;
 		} else {
-			this.lastOkOccurrenceId = day.getId().toString();
+			this.lastEndedOkOccurrenceId = day.getId().toString();
 		}
 	}
 
@@ -152,6 +125,36 @@ public class CalendarPointer extends TranscientBase {
 			this.lastEndedOccurrenceId = null;
 		} else {
 			this.lastEndedOccurrenceId = day.getId().toString();
+		}
+	}
+
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Next time it will run, it will be...
+	public String getNextRunOccurrenceId() {
+		return nextRunOccurrenceId;
+	}
+
+	public UUID getNextRunOccurrenceUuid() {
+		return UUID.fromString(nextRunOccurrenceId);
+	}
+
+	public void setNextRunOccurrenceId(String dayId) {
+		this.nextRunOccurrenceId = dayId;
+	}
+
+	public CalendarDay getNextRunOccurrenceCd(ChronixContext ctx) {
+		return this.getCalendar(ctx).getDay(
+				UUID.fromString(this.nextRunOccurrenceId));
+	}
+
+	public void setNextRunOccurrenceCd(CalendarDay day) {
+		if (day == null) {
+			this.nextRunOccurrenceId = null;
+		} else {
+			this.nextRunOccurrenceId = day.getId().toString();
 		}
 	}
 	//

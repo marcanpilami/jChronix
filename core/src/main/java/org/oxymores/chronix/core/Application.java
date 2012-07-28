@@ -86,6 +86,18 @@ public class Application extends ChronixObject {
 		this.name = name;
 	}
 
+	public void addCalendar(Calendar c) {
+		if (!this.calendars.contains(c)) {
+			this.calendars.put(c.id, c);
+			c.setApplication(this);
+		}
+	}
+
+	public void removeACalendar(Calendar c) {
+		this.calendars.remove(c.id);
+		c.setApplication(null);
+	}
+
 	public void addPlace(Place place) {
 		if (!this.places.contains(place)) {
 			this.places.put(place.id, place);

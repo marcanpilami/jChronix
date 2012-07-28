@@ -45,7 +45,7 @@ public class TestTransacPersistence extends TestCase {
 		transaction.begin();
 
 		CalendarPointer cp1 = new CalendarPointer();
-		cp1.setCalendarId(UUID.randomUUID().toString());
+		cp1.setCalendarID(UUID.randomUUID().toString());
 		entityManager.persist(cp1);
 		transaction.commit();
 
@@ -53,7 +53,7 @@ public class TestTransacPersistence extends TestCase {
 				cp1.getId());
 
 		Assert.assertEquals(cp1.getId(), cp2.getId());
-		Assert.assertEquals(cp1.getCalendarId(), cp2.getCalendarId());
+		Assert.assertEquals(cp1.getCalendarID(), cp2.getCalendarID());
 	}
 	
 	public void testPers3() {
