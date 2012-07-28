@@ -6,8 +6,12 @@ public class ChainStart extends ActiveNodeBase {
 
 	private static final long serialVersionUID = -4317652537587375361L;
 
-	public ChainStart()
-	{
+	public ChainStart() {
 		this.name = "Chain start";
+	}
+
+	@Override
+	public boolean visibleInHistory() {
+		return false;
 	}
 }

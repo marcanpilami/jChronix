@@ -11,6 +11,26 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 
 public class Calendar extends ApplicationObject {
 
+	public boolean isManualSequence() {
+		return manualSequence;
+	}
+
+	public void setManualSequence(boolean manualSequence) {
+		this.manualSequence = manualSequence;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	private static final long serialVersionUID = 7332812989443095188L;
 
 	protected boolean manualSequence;

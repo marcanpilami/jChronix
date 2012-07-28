@@ -316,9 +316,10 @@ public class PipelineJob extends TranscientBase {
 		RunLog rlog = new RunLog();
 		Application a = ctx.applicationsById.get(UUID.fromString(this.appID));		
 		Place p = a.getPlace(UUID.fromString(this.placeID));
+		ActiveNodeBase act = this.getActive(ctx);
 
 		rlog.activeNodeId = this.activeID;
-		rlog.activeNodeName = this.getActive(ctx).getName();
+		rlog.activeNodeName = act.getName();
 		rlog.applicationId = this.appID;
 		rlog.applicationName = a.getName();
 		rlog.beganRunningAt = this.beganRunningAt;
@@ -343,6 +344,7 @@ public class PipelineJob extends TranscientBase {
 		// rlog.shortLog =
 		rlog.stateId = this.stateID;
 		rlog.stoppedRunningAt = this.stoppedRunningAt;
+		rlog.visible = act.visibleInHistory();
 		rlog.whatWasRun = this.runThis;
 		rlog.logPath = "to be set";
 

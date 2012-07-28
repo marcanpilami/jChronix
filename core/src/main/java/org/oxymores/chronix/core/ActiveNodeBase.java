@@ -254,4 +254,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 	public boolean hasPayload() {
 		return false;
 	}
+
+	public boolean visibleInHistory() {
+		return true;
+	}
 }
