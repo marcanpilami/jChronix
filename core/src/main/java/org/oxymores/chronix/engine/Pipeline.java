@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
@@ -38,7 +40,6 @@ public class Pipeline extends Thread implements MessageListener {
 	private MessageProducer producerJR_mainloop;
 
 	private LinkedBlockingQueue<PipelineJob> entering;
-	private ArrayList<PipelineJob> waiting_calendar;
 	private ArrayList<PipelineJob> waiting_sequence;
 	private ArrayList<PipelineJob> waiting_token;
 	private ArrayList<PipelineJob> waiting_exclusion;
@@ -76,7 +77,6 @@ public class Pipeline extends Thread implements MessageListener {
 
 		// Create analysis queues
 		entering = new LinkedBlockingQueue<PipelineJob>();
-		waiting_calendar = new ArrayList<PipelineJob>();
 		waiting_sequence = new ArrayList<PipelineJob>();
 		waiting_token = new ArrayList<PipelineJob>();
 		waiting_exclusion = new ArrayList<PipelineJob>();
@@ -88,7 +88,7 @@ public class Pipeline extends Thread implements MessageListener {
 		q.setParameter(1, "CHECK_SYNC_CONDS");
 		@SuppressWarnings("unchecked")
 		List<PipelineJob> sessionEvents = q.getResultList();
-		waiting_calendar.addAll(sessionEvents);
+		waiting_sequence.addAll(sessionEvents);
 
 		// Start thread
 		this.start();
@@ -101,7 +101,7 @@ public class Pipeline extends Thread implements MessageListener {
 			try {
 				pj = entering.poll(1, TimeUnit.MINUTES);
 				if (pj != null) {
-					waiting_calendar.add(pj);
+					waiting_sequence.add(pj);
 					log.debug(String.format(
 							"A job was registered in the pipeline: %s",
 							pj.getId()));
@@ -111,11 +111,7 @@ public class Pipeline extends Thread implements MessageListener {
 			}
 
 			ArrayList<PipelineJob> toAnalyse = new ArrayList<PipelineJob>();
-			toAnalyse.addAll(waiting_calendar);
-			for (PipelineJob j : toAnalyse) {
-				anCalendar(j);
-			}
-
+			
 			toAnalyse.clear();
 			toAnalyse.addAll(waiting_sequence);
 			for (PipelineJob j : toAnalyse) {
@@ -165,6 +161,7 @@ public class Pipeline extends Thread implements MessageListener {
 		transac_injector.begin();
 		pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a
 											// crash/stop
+		pj.setEnteredPipeAt(DateTime.now().toDate());
 		em_injector.persist(pj);
 		transac_injector.commit();
 
@@ -199,15 +196,6 @@ public class Pipeline extends Thread implements MessageListener {
 			// stop.
 			return;
 		}
-	}
-
-	private void anCalendar(PipelineJob pj) {
-		// TODO: really check calendar
-		boolean r = waiting_calendar.remove(pj);
-		waiting_sequence.add(pj);
-		log.debug(String
-				.format("Job %s has finished calendar analysis - on to sequence analysis",
-						pj.getId()));
 	}
 
 	private void anSequence(PipelineJob pj) {
@@ -254,8 +242,8 @@ public class Pipeline extends Thread implements MessageListener {
 			e1.printStackTrace();
 		}
 
-		// entityManager.merge(pj);
 		pj.setStatus("RUNNING");
+		pj.setMarkedForRunAt(new Date());
 
 		transac_mainloop.commit(); // JPA
 		commit(); // JMS

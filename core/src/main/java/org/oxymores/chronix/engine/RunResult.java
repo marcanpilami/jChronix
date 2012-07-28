@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -12,7 +13,7 @@ public class RunResult implements Serializable {
 	public String logPath = "";
 	public int returnCode = -1;
 	public HashMap<String, String> newEnvVars = new HashMap<String, String>();
-	
+	public Date start, end;
 	
 	// Data below is from the engine - not created by the run
 	public String id1 = null;

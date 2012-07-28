@@ -143,6 +143,9 @@ public class Broker {
 		
 		Runner runner = new Runner();
 		runner.startListening(this.connection, brokerName, ctx, emf, this);
+		
+		LogListener ll = new LogListener();
+		ll.startListening(this.connection, brokerName, ctx);
 	}
 
 	public void stop() {
@@ -202,7 +205,6 @@ public class Broker {
 
 	public synchronized void sendCommand(String cmd, ExecutionNode target,
 			Boolean Synchronous) throws JMSException {
-
 		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
 		log.info(String.format(
 				"A command will be sent for execution on queue %s (%s)", qName,
@@ -235,7 +237,6 @@ public class Broker {
 	}
 
 	public void sendEvent(Event evt) throws JMSException {
-
 		State s = evt.getState(this.ctx);
 		ArrayList<State> clientStates = s.getClientStates();
 

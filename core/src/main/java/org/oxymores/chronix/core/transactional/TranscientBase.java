@@ -36,6 +36,8 @@ public class TranscientBase implements Serializable {
 	protected String appID;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String calendarOccurrenceID;
+	@Column(columnDefinition = "CHAR(36)", length = 36)
+	protected String calendarID;
 
 	protected Date createdAt;
 
@@ -101,6 +103,7 @@ public class TranscientBase implements Serializable {
 
 	public void setPlace(Place place) {
 		this.placeID = place.getId().toString();
+		this.appID = place.getApplication().getId().toString();
 	}
 
 	public Place getPlace(ChronixContext ctx) {
@@ -162,5 +165,13 @@ public class TranscientBase implements Serializable {
 
 	public void setCalendarOccurrenceID(String calendarOccurrenceID) {
 		this.calendarOccurrenceID = calendarOccurrenceID;
+	}
+	
+	public String getCalendarID() {
+		return calendarID;
+	}
+
+	public void setCalendarID(String calendarID) {
+		this.calendarID = calendarID;
 	}
 }

@@ -39,6 +39,10 @@ public class Calendar extends ApplicationObject {
 		}
 	}
 
+	public String getName() {
+		return this.name;
+	}
+
 	public void addDay(Date d) {
 		addDay(new CalendarDay(d.toString(), this));
 	}
@@ -73,10 +77,22 @@ public class Calendar extends ApplicationObject {
 				.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarId = ?1");
 		q.setParameter(1, this.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-		return this.getDay(UUID.fromString(cp.getDayId()));
+		return this.getDay(cp.getLastOkOccurrenceUuid());
 	}
 
 	public CalendarDay getOccurrenceAfter(CalendarDay d) {
-		return this.days.get(this.days.indexOf(d) + 1);
+		return getOccurrenceShiftedBy(d, 1);
+	}
+
+	public CalendarDay getOccurrenceShiftedBy(CalendarDay origin, int shift) {
+		return this.days.get(this.days.indexOf(origin) + shift);
+	}
+
+	public CalendarDay getFirstOccurrence() {
+		return this.days.get(0);
+	}
+
+	public Boolean isBeforeOrSame(CalendarDay before, CalendarDay after) {
+		return this.days.indexOf(before) <= this.days.indexOf(after);
 	}
 }

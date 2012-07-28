@@ -1,8 +1,5 @@
 package org.oxymores.chronix.core;
 
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.UUID;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,6 +13,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.UUID;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.exceptions.ChronixInconsistentMetadataException;
@@ -29,6 +34,8 @@ public class ChronixContext {
 	public Hashtable<UUID, Application> applicationsById;
 	public Hashtable<String, Application> applicationsByName;
 	public String localUrl = "";
+	public String dns;
+	public int port;
 
 	public static ChronixContext loadContext(String appConfDirectory)
 			throws IOException, NumberFormatException, ChronixNoLocalNode {
@@ -77,6 +84,8 @@ public class ChronixContext {
 				log.debug("A listener configuration file was found");
 				BufferedReader fr = new BufferedReader(new FileReader(f));
 				ctx.localUrl = fr.readLine();
+				ctx.dns = ctx.localUrl.split(":")[0];
+				ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
 				fr.close();
 			}
 
@@ -95,6 +104,8 @@ public class ChronixContext {
 			output.write(url);
 			output.close();
 			ctx.localUrl = url;
+			ctx.dns = ctx.localUrl.split(":")[0];
+			ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
 		}
 
 		// ///////////////////
@@ -116,6 +127,27 @@ public class ChronixContext {
 			}
 		}
 
+		// ///////////////////
+		// Post load checkup & inits
+		// ///////////////////
+
+		EntityManagerFactory emf = Persistence
+				.createEntityManagerFactory("TransacUnit");
+		EntityManager em = emf.createEntityManager();
+		EntityTransaction tr = em.getTransaction();
+		tr.begin();
+		for (Application a : ctx.applicationsById.values()) {
+			for (State s : a.getStates())
+				s.createPointers(em);
+		}
+		tr.commit();
+
+		// TODO: cleanup event data (elements they reference may have been
+		// removed)
+
+		// TODO: validate apps
+
+		// Done!
 		return ctx;
 	}
 
@@ -132,12 +164,7 @@ public class ChronixContext {
 		applicationsById.put(res.getId(), res);
 		applicationsByName.put(res.getName(), res);
 
-		res.setLocalNode(this.localUrl.split(":")[0],
-				Integer.parseInt(this.localUrl.split(":")[1]));
-
-		// TODO: validate app
-		// TODO: really load the second app (network) file and link it to the
-		// first part!
+		res.setLocalNode(this.dns, this.port);
 
 		return res;
 	}
@@ -152,15 +179,13 @@ public class ChronixContext {
 		saveApplication(this.applicationsById.get(id));
 	}
 
-	@SuppressWarnings("unused")
 	public void saveApplication(Application a) throws FileNotFoundException,
 			IOException {
 		log.info(String.format("(%s) Saving application %s to temp file",
 				this.configurationDirectory, a.getName()));
+
 		String dataFilePath = configurationDirectory.getAbsolutePath()
 				+ "/app_data_" + a.getId() + "_WORKING_.crn";
-		String networkFilePath = configurationDirectory.getAbsolutePath()
-				+ "/app_network_" + a.getId() + "_WORKING_.crn";
 		FileOutputStream fos = new FileOutputStream(dataFilePath);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(a);
@@ -168,33 +193,20 @@ public class ChronixContext {
 	}
 
 	// Does NOT refresh caches. Restart engine for that !
-	@SuppressWarnings("unused")
 	public void setWorkingAsCurrent(Application a) throws Exception {
 		log.info(String
 				.format("(%s) Promoting temp file for application %s as the active file",
 						this.configurationDirectory, a.getName()));
 		String workingDataFilePath = configurationDirectory.getAbsolutePath()
 				+ "/app_data_" + a.getId() + "_WORKING_.crn";
-		String workingNetworkFilePath = configurationDirectory
-				.getAbsolutePath()
-				+ "/app_network_"
-				+ a.getId()
-				+ "_WORKING_.crn";
 		String currentDataFilePath = configurationDirectory.getAbsolutePath()
 				+ "/app_data_" + a.getId() + "_CURRENT_.crn";
-		String currentNetworkFilePath = configurationDirectory
-				.getAbsolutePath()
-				+ "/app_network_"
-				+ a.getId()
-				+ "_CURRENT_.crn";
 
 		File workingData = new File(workingDataFilePath);
 		if (!workingData.exists())
 			throw new Exception(
 					"work file does not exist. You sure 'bout that? You seem to have made no changes!");
-		File workingNetwork = new File(workingNetworkFilePath);
 		File currentData = new File(currentDataFilePath);
-		File currentNetwork = new File(currentNetworkFilePath);
 
 		// Get latest version
 		File[] fileList = configurationDirectory.listFiles();
@@ -229,15 +241,7 @@ public class ChronixContext {
 				+ "_"
 				+ v
 				+ "_.crn";
-		String nextArchiveNetworkFilePath = configurationDirectory
-				.getAbsolutePath()
-				+ "/app_network_"
-				+ a.getId()
-				+ "_"
-				+ v
-				+ "_.crn";
 		File nextArchiveDataFile = new File(nextArchiveDataFilePath);
-		File nextArchiveNetworkFile = new File(nextArchiveNetworkFilePath);
 
 		// Move CURRENT to the new archive version
 		if (currentData.exists()) {
@@ -264,8 +268,9 @@ public class ChronixContext {
 			if (n.getBrokerUrl().equals(this.localUrl))
 				return n;
 		}
-		throw new ChronixInconsistentMetadataException(String.format(
-				"Application %s has no definition for local node %s but is still trying an operation on that node!", a.id,
-				this.localUrl));
+		throw new ChronixInconsistentMetadataException(
+				String.format(
+						"Application %s has no definition for local node %s but is still trying an operation on that node!",
+						a.id, this.localUrl));
 	}
 }

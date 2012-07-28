@@ -12,19 +12,21 @@ import javax.persistence.InheritanceType;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.RunResult;
-import org.oxymores.chronix.engine.Runner;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class PipelineJob extends TranscientBase {
-
 	private static final long serialVersionUID = -3301527645931127170L;
 	@SuppressWarnings("unused")
-	private static Logger log = Logger.getLogger(Runner.class);
+	private static Logger log = Logger.getLogger(PipelineJob.class);
 
 	@Column(columnDefinition = "CHAR(20)", length = 20)
 	String status;
@@ -36,8 +38,25 @@ public class PipelineJob extends TranscientBase {
 	String level0Id, level1Id, level2Id, level3Id; // Actually UUID
 
 	HashMap<Integer, String> paramValues;
-	
+
 	Boolean outOfPlan = false;
+	Integer resultCode = -1;
+
+	public PipelineJob() {
+		super();
+		paramValues = new HashMap<Integer, String>();
+	}
+
+	// ///////////////////////////////////////////////////////////////
+	// Set/Get
+
+	public Integer getResultCode() {
+		return resultCode;
+	}
+
+	public void setResultCode(Integer resultCode) {
+		this.resultCode = resultCode;
+	}
 
 	public Boolean getOutOfPlan() {
 		return outOfPlan;
@@ -47,11 +66,8 @@ public class PipelineJob extends TranscientBase {
 		this.outOfPlan = outOfPlan;
 	}
 
-	public PipelineJob() {
-		super();
-		paramValues = new HashMap<Integer, String>();
-	}
-
+	// /////////////
+	// Params
 	public void setParamValue(Integer index, String value) {
 		paramValues.put(index, value);
 	}
@@ -72,6 +88,8 @@ public class PipelineJob extends TranscientBase {
 		this.paramValues = paramValues;
 	}
 
+	// ///////////////////
+	// Misc.
 	public String getStatus() {
 		return status;
 	}
@@ -233,12 +251,15 @@ public class PipelineJob extends TranscientBase {
 		return a.getParameters().size() == this.paramValues.size();
 	}
 
+	//
+	// //////////////////////////////////////////////////////////////////////
+
 	public RunDescription getRD(ChronixContext ctx) {
 		RunDescription rd = new RunDescription();
 
 		// Command to run
 		rd.command = this.runThis;
-		
+
 		// Misc.
 		rd.outOfPlan = this.outOfPlan;
 
@@ -287,7 +308,52 @@ public class PipelineJob extends TranscientBase {
 			e.envParams
 					.add(new EnvironmentValue(name, rr.newEnvVars.get(name)));
 		}
-		
+
 		return e;
+	}
+
+	public RunLog getEventLog(ChronixContext ctx) {
+		RunLog rlog = new RunLog();
+		Application a = ctx.applicationsById.get(UUID.fromString(this.appID));		
+		Place p = a.getPlace(UUID.fromString(this.placeID));
+
+		rlog.activeNodeId = this.activeID;
+		rlog.activeNodeName = this.getActive(ctx).getName();
+		rlog.applicationId = this.appID;
+		rlog.applicationName = a.getName();
+		rlog.beganRunningAt = this.beganRunningAt;
+		rlog.chainId = this.level0Id;
+		// rlog.chainLev1Id = this.level1Id;
+		// rlog.chainLev1Name
+		rlog.chainName = a.getActiveNode(UUID.fromString(this.level0Id))
+				.getName();
+		// rlog.dataIn =
+		// rlog.dataOut =
+		rlog.dns = ctx.dns;
+		rlog.enteredPipeAt = this.enteredPipeAt;
+		rlog.executionNodeId = p.getNode().getId().toString();
+		rlog.id = this.id.toString();
+		rlog.lastKnownStatus = this.status;
+		rlog.markedForUnAt = this.markedForRunAt;
+		rlog.osAccount = "whocares";
+		rlog.placeId = this.placeID;
+		rlog.placeName = p.getName();
+		rlog.resultCode = this.resultCode;
+		// rlog.sequence =
+		// rlog.shortLog =
+		rlog.stateId = this.stateID;
+		rlog.stoppedRunningAt = this.stoppedRunningAt;
+		rlog.whatWasRun = this.runThis;
+		rlog.logPath = "to be set";
+
+		// Calendar
+		if (this.calendarID != null) {
+			Calendar c = a.getCalendar(UUID.fromString(this.calendarID));
+			rlog.calendarName = c.getName();
+			rlog.calendarOccurrence = c.getDay(
+					UUID.fromString(this.calendarOccurrenceID)).getValue();
+		}
+
+		return rlog;
 	}
 }

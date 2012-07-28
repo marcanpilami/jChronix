@@ -110,19 +110,20 @@ public class ActiveNodeBase extends ConfigurableBase {
 		q.setParameter(1, evt.getLevel0IdU().toString());
 		@SuppressWarnings("unchecked")
 		List<Event> sessionEvents2 = q.getResultList();
+
+		// Remove all consumed events
 		List<Event> sessionEvents = new ArrayList<Event>();
-		
-		/*if (s.usesCalendar())
-		{
-			CalendarDay currentStateDay = 
-			for (Event event : sessionEvents2) {
-				if (event.getCalendarOccurrenceID().equals())
+		for (Event e : sessionEvents2) {
+			for (Place p : s.runsOn.places) {
+				if (!e.wasConsumedOnPlace(p, s))
+					sessionEvents.add(e);
 			}
 		}
-		else*/
-			sessionEvents.addAll(sessionEvents2); // OpenJPA lists are read only!
-		sessionEvents.add(evt); // The current event is not yet db persisted
 
+		// The current event is not yet DB persisted
+		sessionEvents.add(evt);
+
+		// Analysis
 		if (s.parallel) {
 			// In this case, only
 			log.debug(String.format(
@@ -147,6 +148,12 @@ public class ActiveNodeBase extends ConfigurableBase {
 						continue;
 					}
 				}
+
+				// Transitions are OK... what about calendars?
+				if (!s.canRunAccordingToCalendarOnPlace(em, p))
+					continue;
+
+				// If here, everything's OK
 				log.debug(String
 						.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
 								s.represents.getName(), s.chain.getName(),
@@ -163,6 +170,10 @@ public class ActiveNodeBase extends ConfigurableBase {
 			log.debug(String.format(
 					"State %s (%s - chain %s) is not parallel enabled",
 					s.getId(), s.represents.getName(), s.chain.getName()));
+
+			ArrayList<Place> places = new ArrayList<Place>();
+
+			// Check transitions
 			res.res = true; // we will do logical ANDs
 			for (Transition tr : s.trReceivedHere) {
 				res.add(tr.isTransitionAllowed(sessionEvents, null));
@@ -176,16 +187,26 @@ public class ActiveNodeBase extends ConfigurableBase {
 				}
 			}
 
-			log.debug(String
-					.format("State (%s - chain %s) is triggered by the event on all (%s) its places! Analysis has consumed %s events.",
-							s.represents.getName(), s.chain.getName(),
-							s.runsOn.places.size(), res.consumedEvents.size()));
-
-			s.consumeEvents(res.consumedEvents, s.runsOn.places, em);
+			// Check calendar
 			for (Place p : s.runsOn.places) {
-				s.run(p, em, pjProducer, session, evt);
+				if (s.canRunAccordingToCalendarOnPlace(em, p))
+					places.add(p);
 			}
-			return res;
+
+			// Go
+			if (places.size() > 0) {
+				log.debug(String
+						.format("State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
+								s.represents.getName(), s.chain.getName(),
+								places.size(), res.consumedEvents.size()));
+
+				s.consumeEvents(res.consumedEvents, places, em);
+				for (Place p : places) {
+					s.run(p, em, pjProducer, session, evt);
+				}
+				return res;
+			} else
+				return new EventAnalysisResult();
 		}
 		return res;
 	}

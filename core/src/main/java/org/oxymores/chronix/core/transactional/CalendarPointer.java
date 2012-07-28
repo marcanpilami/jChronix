@@ -14,24 +14,42 @@ public class CalendarPointer extends TranscientBase {
 	private static final long serialVersionUID = 6905957323594389673L;
 
 	protected String calendarId;
-	protected String dayId;
-	
-	public Boolean isEnd = false;
+	protected String lastOkOccurrenceId; // Updated at end of run
+	protected String lastStartedOccurrenceId; // Updated before run
+	protected String lastEndedOccurrenceId; // Updated after run
 
+	public Boolean isEnd = false;
+	public Boolean latestFailed = false;
+
+	// //////////////////////////////////////////////
+	// Helper fields
+	public Boolean getIsEnd() {
+		return isEnd;
+	}
+
+	public void setIsEnd(Boolean isEnd) {
+		this.isEnd = isEnd;
+	}
+
+	public Boolean getLatestFailed() {
+		return latestFailed;
+	}
+
+	public void setLatestFailed(Boolean latestFailed) {
+		this.latestFailed = latestFailed;
+	}
+
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Calendar itself
 	public String getCalendarId() {
 		return calendarId;
 	}
 
 	public void setCalendarId(String id) {
 		this.calendarId = id;
-	}
-
-	public String getDayId() {
-		return dayId;
-	}
-
-	public void setDayId(String dayId) {
-		this.dayId = dayId;
 	}
 
 	public Calendar getCalendar(ChronixContext ctx) {
@@ -47,15 +65,96 @@ public class CalendarPointer extends TranscientBase {
 		}
 	}
 
-	public CalendarDay getCalendarDay(ChronixContext ctx) {
-		return this.getCalendar(ctx).getDay(UUID.fromString(this.dayId));
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Last day it ended correctly
+	public String getLastOkOccurrenceId() {
+		return lastOkOccurrenceId;
 	}
 
-	public void setCalendarDay(CalendarDay day) {
+	public UUID getLastOkOccurrenceUuid() {
+		return UUID.fromString(lastOkOccurrenceId);
+	}
+
+	public void setLastOkOccurrenceId(String dayId) {
+		this.lastOkOccurrenceId = dayId;
+	}
+
+	public CalendarDay getLastOkOccurrenceCd(ChronixContext ctx) {
+		return this.getCalendar(ctx).getDay(
+				UUID.fromString(this.lastOkOccurrenceId));
+	}
+
+	public void setLastOkOccurrenceCd(CalendarDay day) {
 		if (day == null) {
-			this.dayId = null;
+			this.lastOkOccurrenceId = null;
 		} else {
-			this.dayId = day.getId().toString();
+			this.lastOkOccurrenceId = day.getId().toString();
 		}
 	}
+
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Last day it was started
+	public String getLastStartedOccurrenceId() {
+		return lastStartedOccurrenceId;
+	}
+
+	public UUID getLastStartedOccurrenceUuid() {
+		return UUID.fromString(lastStartedOccurrenceId);
+	}
+
+	public void setLastStartedOccurrenceId(String dayId) {
+		this.lastStartedOccurrenceId = dayId;
+	}
+
+	public CalendarDay getLastStartedOccurrenceCd(ChronixContext ctx) {
+		return this.getCalendar(ctx).getDay(
+				UUID.fromString(this.lastStartedOccurrenceId));
+	}
+
+	public void setLastStartedOccurrenceCd(CalendarDay day) {
+		if (day == null) {
+			this.lastStartedOccurrenceId = null;
+		} else {
+			this.lastStartedOccurrenceId = day.getId().toString();
+		}
+	}
+
+	//
+	// //////////////////////////////////////////////
+
+	// //////////////////////////////////////////////
+	// Last day it finished (possibly incorrectly)
+	public String getLastEndedOccurrenceId() {
+		return lastEndedOccurrenceId;
+	}
+
+	public UUID getLastEndedOccurrenceUuid() {
+		return UUID.fromString(lastEndedOccurrenceId);
+	}
+
+	public void setLastEndedOccurrenceId(String dayId) {
+		this.lastEndedOccurrenceId = dayId;
+	}
+
+	public CalendarDay getLastEndedOccurrenceCd(ChronixContext ctx) {
+		return this.getCalendar(ctx).getDay(
+				UUID.fromString(this.lastEndedOccurrenceId));
+	}
+
+	public void setLastEndedOccurrenceCd(CalendarDay day) {
+		if (day == null) {
+			this.lastEndedOccurrenceId = null;
+		} else {
+			this.lastEndedOccurrenceId = day.getId().toString();
+		}
+	}
+	//
+	// //////////////////////////////////////////////
+
 }

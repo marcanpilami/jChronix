@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -19,9 +20,12 @@ import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
@@ -40,7 +44,7 @@ public class Runner implements MessageListener {
 
 	private ArrayList<PipelineJob> resolving;
 
-	private MessageProducer producerRunDescription;
+	private MessageProducer producerRunDescription, producerHistory;
 
 	public void startListening(Connection cnx, String brokerName,
 			ChronixContext ctx, EntityManagerFactory emf, Broker br)
@@ -75,8 +79,8 @@ public class Runner implements MessageListener {
 		consumer.setMessageListener(this);
 
 		// Register on Log Shipping queue
-		this.destLogFile = this.session.createQueue(String.format("Q.%s.LOG",
-				brokerName));
+		this.destLogFile = this.session.createQueue(String.format(
+				"Q.%s.LOGFILE", brokerName));
 		consumer = this.session.createConsumer(destLogFile);
 		consumer.setMessageListener(this);
 
@@ -86,6 +90,7 @@ public class Runner implements MessageListener {
 
 		// Outgoing producer for running commands
 		producerRunDescription = session.createProducer(null);
+		producerHistory = session.createProducer(null);
 	}
 
 	@Override
@@ -185,24 +190,33 @@ public class Runner implements MessageListener {
 		resolving.add(j);
 
 		ActiveNodeBase toRun = j.getActive(ctx);
+		j.setBeganRunningAt(new Date());
 
-		if (! toRun.hasPayload())
-		{
+		if (!toRun.hasPayload()) {
 			// No payload - direct to analysis and event throwing
 			RunResult res = new RunResult();
 			res.returnCode = 0;
 			res.id1 = j.getId();
+			res.end = new Date();
+			res.start = res.end;
 			recvRR(res);
-		}
-		else if (j.isReady(ctx)) {
+		} else if (j.isReady(ctx)) {
 			try {
+				this.sendHistory(j.getEventLog(ctx));
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
 			} catch (JMSException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else
+		} else {
+			try {
+				this.sendHistory(j.getEventLog(ctx));
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			toRun.prepareRun(j, this, ctx);
+		}
 	}
 
 	private void recvRR(RunResult rr) {
@@ -211,7 +225,7 @@ public class Runner implements MessageListener {
 			return;
 		}
 		log.info(String.format(String.format("Job %s has ended", rr.id1)));
-		
+
 		PipelineJob pj = null;
 		for (PipelineJob pj2 : this.resolving) {
 			if (pj2.getId().equals(rr.id1)) {
@@ -232,10 +246,21 @@ public class Runner implements MessageListener {
 		// Update the PJ (it will stay in the DB for a while)
 		tr.begin();
 		pj.setStatus("DONE");
+		pj.setBeganRunningAt(rr.start);
+		pj.setStoppedRunningAt(rr.end);
+		pj.setResultCode(rr.returnCode);
 		tr.commit();
 
+		// Send history
+		try {
+			this.sendHistory(pj.getEventLog(ctx));
+		} catch (JMSException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
 		// TODO: advance calendars...
-		
+
 		// End
 		resolving.remove(pj);
 	}
@@ -280,6 +305,22 @@ public class Runner implements MessageListener {
 		m.setJMSReplyTo(destEndJob);
 		m.setJMSCorrelationID(pj.getId());
 		producerRunDescription.send(destination, m);
+		session.commit();
+	}
+
+	public void sendHistory(RunLog rl) throws JMSException {
+		// Always send both to ourselves and to the supervisor
+		Application a = ctx.applicationsById.get(UUID
+				.fromString(rl.applicationId));
+		ExecutionNode self = a.getLocalNode();
+
+		String qName = String.format("Q.%s.LOG", self.getBrokerName());
+		log.info(String.format("A scheduler log will be sent on queue %s (%s)",
+				qName, rl.activeNodeName));
+		Destination destination = session.createQueue(qName);
+
+		ObjectMessage m = session.createObjectMessage(rl);
+		producerHistory.send(destination, m);
 		session.commit();
 	}
 

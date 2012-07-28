@@ -1,5 +1,7 @@
 package org.oxymores.chronix.engine;
 
+import java.util.Date;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -63,6 +65,7 @@ public class RunnerAgent implements MessageListener {
 
 		// Run the command according to its method
 		RunResult res = null;
+		Date start = new Date();
 		if (rd.Method.equals("Shell"))
 			res = RunnerShell.run(rd);
 		else {
@@ -73,6 +76,8 @@ public class RunnerAgent implements MessageListener {
 			log.error(String.format(
 					"An unimplemented exec method (%s) was called!", rd.Method));
 		}
+		res.start = start;
+		res.end = new Date();
 
 		// Copy the engine ids - that way it will be able to identify the launch
 		// Part of the ids are in the JMS correlation id too

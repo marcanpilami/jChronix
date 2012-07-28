@@ -39,10 +39,10 @@ Calendars
 Definition
 ==========
 
-They represent the intrinsic temporal progress of business. For
-example, a retailer will often have a batch job for each day its stores are
-open to do various closure computations. The calendar in this case will contain
-the open days.
+They represent the intrinsic temporal progress of business. For example, a
+retailer will often have a batch job for each day its stores are open to do
+various closure computations. The calendar in this case will contain the open
+days.
 
 .. warning::
    Calendars are totally distinct from clocks. Clocks are technical: they trigger 
@@ -127,11 +127,22 @@ during event analysis.
 #. There can be only one instance of the job running on a single place
 #. Sequenciality will be enforced: occurrence O+1 can only run if occurrence
    O has finished (and ended OK) on a given Place.
-#. If a (Job1 AND Job2) -> Job3 trigger is defined, and all jobs use the same
-   calendar, 3 will run only if 1 and 2 run the same calendar occurrence.
-   (events store the occurrence). This takes shifting into account.
 #. If the calendar "current occurrence" is D, no job using this calendar can
-   run on a further occurrence.
+   run on a further occurrence. This takes shifting onto account.
+#. Calendar progress is only made if the job succeeds.
+
+
+Calendars have no consequences on transitions :
+
+#.  If a job fails, its calendar status won't be updated and the next time
+    you'll run it, it will be on the same occurrence as described above. But it
+    won't prevent transitions from the failed job to others that may be
+    triggered on its failure.
+#. In an A->B transition, calendar status of A is not taken into account for
+   launching B (A may be for exemple 10 occurences late from B, and still B
+   will launch after A.) It allows to mix jobs on different occurrences in a
+   chain.
+
 
 
 

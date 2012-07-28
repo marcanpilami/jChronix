@@ -74,6 +74,8 @@ public class State extends ConfigurableBase {
 	protected Calendar calendar;
 	protected Boolean loopMissedOccurrences;
 	protected Boolean endOfOccurrence;
+	protected Boolean blockIfPreviousFailed = false;
+	protected int calendarShift;
 
 	public Boolean getLoopMissedOccurrences() {
 		return loopMissedOccurrences;
@@ -316,17 +318,24 @@ public class State extends ConfigurableBase {
 
 	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p)
 			throws Exception {
+		return this.calendar.getDay(this.getCurrentCalendarPointer(em, p)
+				.getLastOkOccurrenceUuid());
+	}
+
+	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p)
+			throws Exception {
 		if (!usesCalendar())
 			throw new Exception(
 					"A state without calendar has no current occurrence");
 
 		Query q = em
-				.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2 AND p.calendarID = ?3");
+				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2 AND p.calendarID = ?3");
 		q.setParameter(1, this.id.toString());
 		q.setParameter(2, p.id.toString());
 		q.setParameter(3, this.calendar.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-		return this.calendar.getDay(UUID.fromString(cp.getDayId()));
+		return cp;
+
 	}
 
 	public void consumeEvents(List<Event> events, List<Place> places,
@@ -382,5 +391,107 @@ public class State extends ConfigurableBase {
 				.format("State (%s - chain %s) was enqueued for launch on place %s (queue %s)",
 						this.represents.getName(), this.chain.getName(),
 						p.name, qName));
+	}
+
+	// Called within an open transaction. Won't be committed here.
+	public void createPointers(EntityManager em) {
+		if (!this.usesCalendar())
+			return;
+
+		// Get existing pointers
+		Query q = em
+				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1");
+		q.setParameter(1, this.id.toString());
+		@SuppressWarnings("unchecked")
+		List<CalendarPointer> ptrs = q.getResultList();
+
+		// A pointer should exist on all places
+		for (Place p : this.runsOn.places) {
+			// Is there a existing pointer on this place?
+			CalendarPointer existing = null;
+			for (CalendarPointer retrieved : ptrs) {
+				if (retrieved.getPlaceID().equals(p.id.toString())) {
+					existing = retrieved;
+					break;
+				}
+			}
+
+			// If not, create one
+			if (existing == null) {
+				// A pointer should be created on this place!
+				CalendarPointer tmp = new CalendarPointer();
+				tmp.setApplication(this.application);
+				tmp.setCalendar(this.calendar);
+				tmp.setLastOkOccurrenceCd(this.calendar.getFirstOccurrence());
+				tmp.setLastEndedOccurrenceCd(this.calendar.getFirstOccurrence());
+				tmp.setPlace(p);
+				tmp.setState(this);
+
+				em.persist(tmp);
+			}
+		}
+
+		// Commit is done by the calling method
+	}
+
+	public boolean canRunAccordingToCalendarOnPlace(EntityManager em, Place p) {
+		if (!this.usesCalendar()) {
+			log.debug("Does not use a calendar - crontab mode");
+			return true; // no calendar = no calendar constraints
+		}
+
+		log.debug("State %s uses a calendar. Analysis begins.");
+
+		// Get the pointer
+		Query q = em
+				.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2");
+		q.setParameter(1, this.id.toString());
+		q.setParameter(2, p.getId().toString());
+
+		CalendarPointer cp = null;
+		try {
+			cp = this.getCurrentCalendarPointer(em, p);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// Only one occurrence can run at the same time
+		// When finished OK, LAST_STARTED = LAST_OK
+		if (!cp.getLastStartedOccurrenceId().equals(
+				cp.getLastEndedOccurrenceId())) {
+			log.debug("Previous run has not ended - it must end for a new run to occur");
+			return false;
+		}
+
+		// Only run if previous run was OK (unless asked for)
+		if (cp.getLatestFailed() && this.blockIfPreviousFailed) {
+			log.debug("Previous run has ended incorrectly - it must end correctly for a new run to occur");
+			return false;
+		}
+
+		// Sequence must be respected
+		// But actually, nothing has to be done to enforce it
+		// as it comes from either the scheduler itself or the user.
+
+		// No further than the calendar itself
+		CalendarDay baseLimit = this.calendar.getCurrentOccurrence(em);
+		CalendarDay shiftedLimit = this.calendar.getOccurrenceShiftedBy(
+				baseLimit, this.calendarShift);
+		CalendarDay localNextRunOccurrence = calendar.getDay(cp
+				.getLastEndedOccurrenceUuid());
+
+		// Shift: -1 means that the State will run at D-1 when the reference is
+		// D. Therefore it should stop one occurrence before the others.
+		if (!this.calendar.isBeforeOrSame(localNextRunOccurrence, shiftedLimit)) {
+			log.debug(String
+					.format("This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
+							baseLimit.seq, shiftedLimit.seq,
+							localNextRunOccurrence.seq));
+			return false;
+		}
+
+		// If here, alles gut.
+		return true;
 	}
 }

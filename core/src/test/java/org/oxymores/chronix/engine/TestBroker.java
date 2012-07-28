@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -14,6 +15,10 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.Query;
 
 import junit.framework.Assert;
 
@@ -28,6 +33,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 
 public class TestBroker {
@@ -249,8 +255,22 @@ public class TestBroker {
 		e1.setPlace(p1);
 		e1.setConditionData1(0);
 		e1.setLevel0IdU(chain1.getId());
-		
+
 		b1.sendEvent(e1);
 		Thread.sleep(5000); // Time to consume message
+
+		// tests
+		EntityManagerFactory emf = Persistence
+				.createEntityManagerFactory("HistoryUnit");
+		EntityManager em = emf.createEntityManager();
+		Query q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
+		@SuppressWarnings("unchecked")
+		List<RunLog> res = q.getResultList();
+		Assert.assertEquals(2, res.size());
+
+		log.info(RunLog.getTitle());
+		for (RunLog l : res) {
+			log.info(l.getLine());
+		}
 	}
 }
