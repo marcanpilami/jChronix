@@ -205,6 +205,8 @@ public class Runner implements MessageListener {
 			res.start = res.end;
 			recvRR(res);
 		} else if (j.isReady(ctx)) {
+			// It has an active part, but no need for dynamic parameters -> just
+			// run it (i.e. send it to a runner agent)
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
@@ -213,6 +215,8 @@ public class Runner implements MessageListener {
 				e.printStackTrace();
 			}
 		} else {
+			// Active part, and dynamic parameters -> resolve parameters.
+			// The run will occur at parameter value reception
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 			} catch (JMSException e) {
