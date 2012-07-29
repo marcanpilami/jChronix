@@ -38,6 +38,7 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.active.ShellParameter;
 
@@ -167,6 +168,19 @@ public class DemoApplication {
 		c3.setDescription("chain 3");
 		c3.setName("chain3");
 		a.addActiveElement(c3);
+		
+		Chain c4 = new Chain();
+		c4.setDescription("chain 4");
+		c4.setName("chain4");
+		a.addActiveElement(c4);
+
+		// ////////////////////
+		// Calendar next
+		NextOccurrence no1 = new NextOccurrence();
+		no1.setName("End of calendar occurrence");
+		no1.setDescription(no1.getName());
+		no1.setUpdatedCalendar(cal1);
+		a.addActiveElement(no1);
 
 		// ////////////////////
 		// Auto elements retrieval
@@ -309,6 +323,37 @@ public class DemoApplication {
 		// Transitions
 		s31.connectTo(s33);
 		s33.connectTo(s32);
+
+		// ////////////////////
+		// Chain 4 : simple S -> END CALENDAR -> E
+
+		// Start
+		State s41 = new State();
+		s41.setChain(c4);
+		s41.setRunsOn(pg2);
+		s41.setRepresents(cs);
+		s41.setX(60);
+		s41.setY(60);
+
+		// End
+		State s42 = new State();
+		s42.setChain(c4);
+		s42.setRunsOn(pg2);
+		s42.setRepresents(ce);
+		s42.setX(300);
+		s42.setY(400);
+
+		// Echo c1
+		State s43 = new State();
+		s43.setChain(c4);
+		s43.setRunsOn(pg2);
+		s43.setRepresents(no1);
+		s43.setX(200);
+		s43.setY(250);
+
+		// Transitions
+		s41.connectTo(s43);
+		s43.connectTo(s42);
 
 		return a;
 	}

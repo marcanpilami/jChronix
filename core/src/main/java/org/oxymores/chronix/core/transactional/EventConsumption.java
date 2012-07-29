@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.transactional;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -13,7 +14,7 @@ public class EventConsumption extends TranscientBase {
 
 	private static final long serialVersionUID = 4960077419503476652L;
 
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	@InverseLogical("consumptions")
 	public Event event;
 

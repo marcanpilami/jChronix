@@ -29,11 +29,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
@@ -235,6 +238,43 @@ public class TestBroker {
 		Thread.sleep(2000); // Time to consume message
 	}
 
+	@Test
+	public void testCalendarNextOccurrence() throws JMSException,
+			InterruptedException {
+		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue and trigger a +1 in the calendar");
+
+		// Get relevant data to create the event
+		Chain chain4 = null;
+		for (Chain c : app1.getChains()) {
+			if (c.getName().equals("chain4")) {
+				chain4 = c;
+			}
+		}
+		State s1 = chain4.getStates().get(0);
+		Place p1 = s1.getRunsOnPlaces().get(0);
+
+		// Create event
+		Event e3 = new Event();
+		e3.addValue("KEY", "value");
+		e3.setApplication(app1);
+		e3.setState(s1);
+		e3.setPlace(p1);
+		e3.setConditionData1(0);
+		e3.setLevel0IdU(chain4.getId());
+
+		b1.sendEvent(e3);
+		Thread.sleep(3000); // Time to consume message
+
+		// Test calendar updated
+		Calendar ca = ((NextOccurrence) chain4.getStates().get(2)
+				.getRepresents()).getUpdatedCalendar();
+		EntityManagerFactory emf2 = Persistence
+				.createEntityManagerFactory("TransacUnit");
+		EntityManager em2 = emf2.createEntityManager();
+		CalendarDay cd = ca.getCurrentOccurrence(em2);
+		Assert.assertEquals("02/01/2030", cd.getValue());
+	}
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEventListener() throws JMSException, InterruptedException {
@@ -304,6 +344,41 @@ public class TestBroker {
 				"SELECT r FROM CalendarPointer r", CalendarPointer.class);
 		for (CalendarPointer c : q2.getResultList()) {
 			log.debug(c.getRunning());
+		}
+
+		TypedQuery<Event> q3 = em2.createQuery("SELECT e FROM Event e",
+				Event.class);
+		List<Event> events = q3.getResultList();
+		Assert.assertEquals(1, events.size()); // purge - only pending remain
+
+		// Now, advance calendar
+		testCalendarNextOccurrence();
+
+		// Test the event has been renalaysed
+		res = q.getResultList();
+		Assert.assertEquals(6, res.size());
+		log.info(RunLog.getTitle());
+		for (RunLog l : res) {
+			log.info(l.getLine());
+		}
+
+		// and finally again: the end should not run.
+		Event e4 = new Event();
+		e4.setApplication(app1);
+		e4.setState(s1);
+		e4.setPlace(p1);
+		e4.setConditionData1(0);
+		e4.setLevel0IdU(chain1.getId());
+
+		b1.sendEvent(e4);
+		Thread.sleep(2000); // Time to consume message
+
+		// Test...
+		res = q.getResultList();
+		Assert.assertEquals(7, res.size());
+		log.info(RunLog.getTitle());
+		for (RunLog l : res) {
+			log.info(l.getLine());
 		}
 	}
 }

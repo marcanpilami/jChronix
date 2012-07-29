@@ -68,7 +68,7 @@ public class LogListener implements MessageListener {
 			rlog = (RunLog) o;
 		} catch (JMSException e) {
 			log.error(
-					"An error occurred during event reception. BAD. Message will stay in queue and will be analysed later",
+					"An error occurred during log reception. BAD. Message will stay in queue and will be analysed later",
 					e);
 			try {
 				jmsSession.rollback();
@@ -83,6 +83,7 @@ public class LogListener implements MessageListener {
 				.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s",
 						rlog.id, rlog.activeNodeName, rlog.placeName,
 						rlog.stateId));
+		log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
 		em.merge(rlog);
 		tr.commit();
 		try {

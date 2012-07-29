@@ -334,6 +334,7 @@ public class State extends ConfigurableBase {
 		q.setParameter(2, p.id.toString());
 		q.setParameter(3, this.calendar.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
+		em.refresh(cp);
 		return cp;
 
 	}
@@ -380,9 +381,9 @@ public class State extends ConfigurableBase {
 		// Calendar update
 		if (this.usesCalendar()) {
 			try {
+				log.debug("Since this state will run, calendar update!");
 				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
-				pj.setCalendarOccurrenceID(this
-						.getCurrentCalendarOccurrence(em, p).getId().toString());
+				pj.setCalendarOccurrenceID(cp.getNextRunOccurrenceId());
 				pj.setCalendar(calendar);
 
 				cp.setRunning(true);
@@ -484,7 +485,6 @@ public class State extends ConfigurableBase {
 			log.error("CalendarPointer is null - should not be possible. It's a bug.");
 			return false;
 		}
-		em.refresh(cp); //sigh.
 
 		// CalendarDay lastStartedOccurrence = this.calendar.getDay(UUID
 		// .fromString(cp.getLastStartedOccurrenceId()));

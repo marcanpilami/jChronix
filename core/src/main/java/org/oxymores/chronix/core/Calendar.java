@@ -2,6 +2,7 @@ package org.oxymores.chronix.core;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -13,6 +14,25 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 
 public class Calendar extends ApplicationObject {
 	private static Logger log = Logger.getLogger(Calendar.class);
+	private static final long serialVersionUID = 7332812989443095188L;
+
+	protected boolean manualSequence;
+	protected String name;
+	protected String description;
+	protected Integer alertThreshold = 20;
+
+	protected ArrayList<State> usedInStates;
+	protected ArrayList<CalendarDay> days;
+
+	// Constructor
+	public Calendar() {
+		super();
+		usedInStates = new ArrayList<State>();
+		days = new ArrayList<CalendarDay>();
+	}
+
+	// ///////////////////////////////////////////////////////////////
+	// Stupid get/set
 
 	public boolean isManualSequence() {
 		return manualSequence;
@@ -34,20 +54,23 @@ public class Calendar extends ApplicationObject {
 		this.name = name;
 	}
 
-	private static final long serialVersionUID = 7332812989443095188L;
-
-	protected boolean manualSequence;
-	protected String name;
-	protected String description;
-
-	protected ArrayList<State> usedInStates;
-	protected ArrayList<CalendarDay> days;
-
-	public Calendar() {
-		super();
-		usedInStates = new ArrayList<State>();
-		days = new ArrayList<CalendarDay>();
+	public String getName() {
+		return this.name;
 	}
+
+	public Integer getAlertThreshold() {
+		return this.alertThreshold;
+	}
+
+	public List<State> getUsedInStates() {
+		return this.usedInStates;
+	}
+
+	//
+	// ///////////////////////////////////////////////////////////////
+
+	// ///////////////////////////////////////////////////////////////
+	// Setters on relationships
 
 	// Only called from State.addSequence
 	void s_addStateUsing(State s) {
@@ -60,10 +83,6 @@ public class Calendar extends ApplicationObject {
 			usedInStates.remove(s);
 		} finally { // do nothing if asked to remove a non existent state
 		}
-	}
-
-	public String getName() {
-		return this.name;
 	}
 
 	public void addDay(Date d) {
@@ -93,19 +112,26 @@ public class Calendar extends ApplicationObject {
 		return null;
 	}
 
-	public CalendarDay getCurrentOccurrence(EntityManager em) {
+	//
+	// ///////////////////////////////////////////////////////////////
+
+	// ///////////////////////////////////////////////////////////////
+	// Operational data
+
+	public CalendarPointer getCurrentOccurrencePointer(EntityManager em) {
 		// Calendar current occurrence pointers have no states and places: they
 		// are only related to the calendar itself.
 		Query q = em
 				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
 		q.setParameter(1, this.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-		log.debug(String.format(
-				"get current occurrence pointer found: %s. last ok id: %s", cp,
-				cp.getLastEndedOkOccurrenceId()));
-		log.debug(String.format("get current occurrence corresponding day: %s",
-				this.getDay(cp.getLastEndedOkOccurrenceUuid())));
-		return this.getDay(cp.getLastEndedOkOccurrenceUuid());
+		em.refresh(cp);
+		return cp;
+	}
+
+	public CalendarDay getCurrentOccurrence(EntityManager em) {
+		return this.getDay(this.getCurrentOccurrencePointer(em)
+				.getLastEndedOkOccurrenceUuid());
 	}
 
 	public CalendarDay getOccurrenceAfter(CalendarDay d) {
@@ -151,4 +177,6 @@ public class Calendar extends ApplicationObject {
 
 		// Commit is done by the calling method
 	}
+	//
+	// ///////////////////////////////////////////////////////////////
 }

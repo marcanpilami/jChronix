@@ -36,7 +36,7 @@ import org.oxymores.chronix.engine.Runner;
 
 public class ActiveNodeBase extends ConfigurableBase {
 	private static final long serialVersionUID = 2317281646089939267L;
-	private static Logger log = Logger.getLogger(State.class);
+	private static Logger log = Logger.getLogger(ActiveNodeBase.class);
 
 	protected String description;
 	protected String name;
@@ -138,8 +138,9 @@ public class ActiveNodeBase extends ConfigurableBase {
 			}
 		}
 
-		// The current event is not yet DB persisted
-		sessionEvents.add(evt);
+		// The current event nay not yet be DB persisted
+		if (!sessionEvents.contains(evt))
+			sessionEvents.add(evt);
 
 		// Analysis
 		if (s.parallel) {
@@ -255,7 +256,9 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Supposed to do local operations only.
 	// Used by active nodes which influence the scheduling itself rather than
 	// run a payload.
-	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj) {
+	// Called within an open JPA transaction.
+	public void internalRun(EntityManager em, ChronixContext ctx,
+			PipelineJob pj, Runner runner) {
 		return; // Do nothing by default.
 	}
 

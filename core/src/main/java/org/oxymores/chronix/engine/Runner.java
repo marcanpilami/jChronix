@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -198,6 +199,10 @@ public class Runner implements MessageListener {
 
 		if (!toRun.hasPayload()) {
 			// No payload - direct to analysis and event throwing
+			log.debug(String
+					.format("Job execution request %s corresponds to an element (%s) without true execution",
+							j.getId(), toRun.getClass()));
+			toRun.internalRun(em, ctx, j, this);
 			RunResult res = new RunResult();
 			res.returnCode = 0;
 			res.id1 = j.getId();
@@ -207,6 +212,9 @@ public class Runner implements MessageListener {
 		} else if (j.isReady(ctx)) {
 			// It has an active part, but no need for dynamic parameters -> just
 			// run it (i.e. send it to a runner agent)
+			log.debug(String
+					.format("Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run",
+							j.getId()));
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
@@ -217,6 +225,9 @@ public class Runner implements MessageListener {
 		} else {
 			// Active part, and dynamic parameters -> resolve parameters.
 			// The run will occur at parameter value reception
+			log.debug(String
+					.format("Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
+							j.getId()));
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 			} catch (JMSException e) {
@@ -364,6 +375,41 @@ public class Runner implements MessageListener {
 
 		ObjectMessage m = session.createObjectMessage(rl);
 		producerHistory.send(destination, m);
+		session.commit();
+	}
+
+	public void sendCalendarPointer(CalendarPointer cp, Calendar ca)
+			throws JMSException {
+		// Send the updated CP to other execution nodes that may need it.
+		List<State> states_using_calendar = ca.getUsedInStates();
+		List<ExecutionNode> en_using_calendar = new ArrayList<ExecutionNode>();
+		ExecutionNode tmp = null;
+		for (State s : states_using_calendar) {
+			for (Place p : s.getRunsOn().getPlaces()) {
+				tmp = p.getNode().getHost();
+				if (!en_using_calendar.contains(tmp))
+					en_using_calendar.add(tmp);
+			}
+		}
+		// TODO: add supervisor to the list (always)
+		log.debug(String
+				.format("The pointer should be sent to %s execution nodes (for %s possible customer state(s))",
+						en_using_calendar.size(), states_using_calendar.size()));
+
+		// Create message
+		ObjectMessage m = session.createObjectMessage(cp);
+
+		// Send the message to every client execution node
+		for (ExecutionNode en : en_using_calendar) {
+			String qName = String.format("Q.%s.CALENDARPOINTER",
+					en.getBrokerName());
+			log.info(String.format(
+					"A calendar pointer will be sent on queue %s", qName));
+			Destination destination = session.createQueue(qName);
+			producerHistory.send(destination, m);
+		}
+
+		// Send
 		session.commit();
 	}
 

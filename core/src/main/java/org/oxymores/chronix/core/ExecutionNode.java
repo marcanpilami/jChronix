@@ -165,6 +165,6 @@ public class ExecutionNode extends ApplicationObject {
 			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
 				return nl.nodeFrom;
 		}
-		return null;
+		return this;
 	}
 }

@@ -60,7 +60,6 @@ public class EventListener implements MessageListener {
 
 	@Override
 	public void onMessage(Message msg) {
-
 		// For commits: remember an event can be analyzed multiple times
 		// without problems.
 		ObjectMessage omsg = (ObjectMessage) msg;
@@ -82,8 +81,7 @@ public class EventListener implements MessageListener {
 		}
 
 		//
-		// TODO: Analyse event!
-		//
+		// Analyse event!
 		EntityTransaction transaction = entityManager.getTransaction();
 		transaction.begin();
 
@@ -137,7 +135,7 @@ public class EventListener implements MessageListener {
 		log.debug(String
 				.format("Event id %s was received, analysed and will now be acked in the JMS queue",
 						evt.getId()));
-		entityManager.persist(evt);
+		entityManager.merge(evt);
 		transaction.commit();
 		commit();
 		log.debug(String.format(

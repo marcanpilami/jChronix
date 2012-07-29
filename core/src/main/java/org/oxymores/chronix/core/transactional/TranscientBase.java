@@ -43,7 +43,7 @@ public class TranscientBase implements Serializable {
 	protected Date createdAt;
 
 	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = {
-			CascadeType.PERSIST, CascadeType.REMOVE })
+			CascadeType.ALL, CascadeType.REMOVE })
 	protected ArrayList<EnvironmentValue> envParams;
 
 	public TranscientBase() {

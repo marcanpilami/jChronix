@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -29,7 +30,7 @@ public class Event extends TranscientBase {
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String level0Id, level1Id; // Also UUID
 
-	@OneToMany(fetch = FetchType.EAGER)
+	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	protected ArrayList<EventConsumption> consumptions = new ArrayList<EventConsumption>();
 
 	public Date getBestBefore() {

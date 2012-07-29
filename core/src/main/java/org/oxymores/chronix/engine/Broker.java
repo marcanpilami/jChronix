@@ -140,12 +140,15 @@ public class Broker {
 
 		Pipeline pipe = new Pipeline();
 		pipe.startListening(this.connection, brokerName, ctx, emf);
-		
+
 		Runner runner = new Runner();
 		runner.startListening(this.connection, brokerName, ctx, emf, this);
-		
+
 		LogListener ll = new LogListener();
 		ll.startListening(this.connection, brokerName, ctx);
+
+		TranscientListener tl = new TranscientListener();
+		tl.startListening(this.connection, brokerName, ctx, emf);
 	}
 
 	public void stop() {

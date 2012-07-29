@@ -1,0 +1,55 @@
+package org.oxymores.chronix.core.active;
+
+import javax.jms.JMSException;
+import javax.persistence.EntityManager;
+
+import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.ActiveNodeBase;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.Runner;
+
+public class NextOccurrence extends ActiveNodeBase {
+	private static final long serialVersionUID = -2717237089393749264L;
+	private static Logger log = Logger.getLogger(NextOccurrence.class);
+
+	Calendar updatedCalendar;
+
+	public Calendar getUpdatedCalendar() {
+		return updatedCalendar;
+	}
+
+	public void setUpdatedCalendar(Calendar updatedCalendar) {
+		this.updatedCalendar = updatedCalendar;
+	}
+
+	@Override
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, Runner runner) {
+		log.debug(String.format(
+				"Calendar %s current occurrence will now be updated",
+				updatedCalendar.getName()));
+
+		CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(em);
+		CalendarDay old_cd = updatedCalendar.getCurrentOccurrence(em);
+		CalendarDay new_cd = updatedCalendar.getOccurrenceAfter(old_cd);
+		CalendarDay next_cd = updatedCalendar.getOccurrenceAfter(new_cd);
+
+		log.info(String.format("Calendar %s will go from %s to %s",
+				updatedCalendar.getName(), old_cd.getValue(), new_cd.getValue()));
+
+		cp.setLastEndedOccurrenceCd(new_cd);
+		cp.setLastEndedOkOccurrenceCd(new_cd);
+		cp.setLastStartedOccurrenceCd(new_cd);
+		cp.setNextRunOccurrenceCd(next_cd);
+
+		try {
+			runner.sendCalendarPointer(cp, updatedCalendar);
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}
