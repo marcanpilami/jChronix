@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
-import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.Runner;
 
 public class ActiveNodeBase extends ConfigurableBase {
@@ -42,6 +41,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 	protected String description;
 	protected String name;
 
+	// ////////////////////////////////////////////////////////////////////////////
+	// Stupid get/set
 	public String getDescription() {
 		return description;
 	}
@@ -58,6 +59,21 @@ public class ActiveNodeBase extends ConfigurableBase {
 		this.name = name;
 	}
 
+	// Helper function (could be overloaded) returning something intelligible
+	// designating the element that is run by this source
+	public String getCommandName(PipelineJob pj, Runner sender,
+			ChronixContext ctx) {
+		return null;
+	}
+
+	//
+	// ////////////////////////////////////////////////////////////////////////////
+
+	// ////////////////////////////////////////////////////////////////////////////
+	// Event analysis
+
+	// Do the given events allow for a transition originating from a state
+	// representing this source?
 	public EventAnalysisResult createdEventRespectsTransitionOnPlace(
 			Transition tr, List<Event> events, Place p) {
 		EventAnalysisResult res = new EventAnalysisResult();
@@ -99,6 +115,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 		return res;
 	}
 
+	// Do the given events allow the execution of a given State representing
+	// this source? (uses createdEventRespectsTransitionOnPlace)
 	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt,
 			EntityManager em, MessageProducer pjProducer, Session session,
 			ChronixContext ctx) {
@@ -211,6 +229,12 @@ public class ActiveNodeBase extends ConfigurableBase {
 		return res;
 	}
 
+	//
+	// ////////////////////////////////////////////////////////////////////////////
+
+	// ////////////////////////////////////////////////////////////////////////////
+	// Methods called before and after run
+
 	// Run - phase 1
 	// Responsible for parameters resolution.
 	// Default implementation resolves all parameters. Should usually be called
@@ -221,41 +245,41 @@ public class ActiveNodeBase extends ConfigurableBase {
 		}
 	}
 
-	public String getCommandName(PipelineJob pj, Runner sender,
-			ChronixContext ctx) {
-		return null;
-	}
-
-	// Run - phase 2
-	// Called once all parameters are resolved and stored in the PJ.
-	// From the PJ, it is supposed to create the final RD which will be given to
-	// the runner. Should usually be overloaded - default does nothing.
-	public RunDescription finalizeRunDescription(PipelineJob pj, Runner sender,
-			ChronixContext ctx) {
-		return null;
-	}
-
-	// Useless
-	public void run(PipelineJob pj, Runner sender, ChronixContext ctx,
-			EntityManager em) {
-		log.info("running"); // should "usually" be overloaded
-	}
-
 	// ?
 	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx,
 			EntityManager em) {
 		log.info("end of run");
 	}
 
+	// Called before external run (i.e. sending the PJ to the runner agent)
+	// Supposed to do local operations only.
+	// Used by active nodes which influence the scheduling itself rather than
+	// run a payload.
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj) {
+		return; // Do nothing by default.
+	}
+
+	//
+	// ////////////////////////////////////////////////////////////////////////////
+
+	// ////////////////////////////////////////////////////////////////////////////
+	// Flags (engine and runner)
+
+	// How should the runner agent run this source? (shell command, sql through
+	// JDBC, ...)
 	public String getActivityMethod() {
 		return "None";
 	}
 
+	// Should it be run by a runner agent?
 	public boolean hasPayload() {
 		return false;
 	}
 
+	// Should the node execution results be visible in the history table?
 	public boolean visibleInHistory() {
 		return true;
 	}
+	//
+	// ////////////////////////////////////////////////////////////////////////////
 }
