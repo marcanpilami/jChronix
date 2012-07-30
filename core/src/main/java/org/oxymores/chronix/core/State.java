@@ -536,4 +536,20 @@ public class State extends ConfigurableBase {
 				this.id, this.represents.name, this.chain.name));
 		return true;
 	}
+
+	public boolean isLate(EntityManager em, Place p) {
+		// The state is catching the calendar, which should always be one step
+		// ahead of the state.
+		CalendarDay cd = null;
+		try {
+			cd = this.getCurrentCalendarOccurrence(em, p);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		cd = this.calendar.getOccurrenceShiftedBy(cd, this.calendarShift + 1);
+
+		return !this.calendar.isBeforeOrSame(
+				this.calendar.getCurrentOccurrence(em), cd);
+	}
 }

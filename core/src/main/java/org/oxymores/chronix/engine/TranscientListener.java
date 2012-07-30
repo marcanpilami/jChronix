@@ -134,6 +134,14 @@ public class TranscientListener implements MessageListener {
 					return;
 				}
 			}
+			
+			// Some jobs may now be late (or later than before). Signal them.
+			try {
+				ca.processStragglers(em);
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 		// end calendar pointers
 		// /////////////////////////////////////////////////

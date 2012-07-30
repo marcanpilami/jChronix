@@ -177,29 +177,67 @@ public class Calendar extends ApplicationObject {
 
 		// Commit is done by the calling method
 	}
+
 	//
 	// ///////////////////////////////////////////////////////////////
-	
-	
+
 	// ///////////////////////////////////////////////////////////////
 	// Don't go overboard...
-	
-	public boolean warnNotEnoughOccurrencesLeft(EntityManager em)
-	{
+
+	public boolean warnNotEnoughOccurrencesLeft(EntityManager em) {
 		CalendarDay cd = this.getCurrentOccurrence(em);
 		int onow = this.days.indexOf(cd);
-		
+
 		return onow + this.alertThreshold >= this.days.size();
 	}
-	
-	public boolean errorNotEnoughOccurrencesLeft(EntityManager em)
-	{
+
+	public boolean errorNotEnoughOccurrencesLeft(EntityManager em) {
 		CalendarDay cd = this.getCurrentOccurrence(em);
 		int onow = this.days.indexOf(cd);
-		
-		return onow + this.alertThreshold/2 >= this.days.size();
+
+		return onow + this.alertThreshold / 2 >= this.days.size();
 	}
-	
+
 	//
 	// ///////////////////////////////////////////////////////////////
+
+	// ///////////////////////////////////////////////////////////////
+	// Stragglers
+	public class StragglerIssue {
+		public State s;
+		public Place p;
+	}
+
+	public List<StragglerIssue> getStragglers(EntityManager em) {
+		List<StragglerIssue> issues = new ArrayList<StragglerIssue>();
+		StragglerIssue tmp = null;
+
+		for (State s : this.usedInStates) {
+			for (Place p : s.getRunsOn().getPlaces()) {
+				if (s.isLate(em, p)) {
+					tmp = new StragglerIssue();
+					tmp.p = p;
+					tmp.s = s;
+					issues.add(tmp);
+				}
+			}
+		}
+		return issues;
+	}
+
+	public void processStragglers(EntityManager em) throws Exception {
+		log.debug(String.format("Processing stragglers on calendar %s",
+				this.name));
+		CalendarDay d = this.getCurrentOccurrence(em);
+		for (StragglerIssue i : getStragglers(em)) {
+			log.warn(String
+					.format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s",
+							i.s.represents.name, i.p.name, i.s.chain.name,
+							i.s.getCurrentCalendarOccurrence(em, i.p).seq,
+							d.seq));
+		}
+	}
+	//
+	// ///////////////////////////////////////////////////////////////
+
 }

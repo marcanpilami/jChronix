@@ -36,7 +36,6 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
@@ -242,6 +241,18 @@ public class TestBroker {
 	public void testCalendarNextOccurrence() throws JMSException,
 			InterruptedException {
 		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue and trigger a +1 in the calendar");
+		releaseCalendar();
+
+		// Test calendar updated
+		Calendar ca = app1.getCalendars().get(0);
+		EntityManagerFactory emf2 = Persistence
+				.createEntityManagerFactory("TransacUnit");
+		EntityManager em2 = emf2.createEntityManager();
+		CalendarDay cd = ca.getCurrentOccurrence(em2);
+		Assert.assertEquals("02/01/2030", cd.getValue());
+	}
+
+	private void releaseCalendar() throws JMSException, InterruptedException {
 
 		// Get relevant data to create the event
 		Chain chain4 = null;
@@ -264,20 +275,11 @@ public class TestBroker {
 
 		b1.sendEvent(e3);
 		Thread.sleep(3000); // Time to consume message
-
-		// Test calendar updated
-		Calendar ca = ((NextOccurrence) chain4.getStates().get(2)
-				.getRepresents()).getUpdatedCalendar();
-		EntityManagerFactory emf2 = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		EntityManager em2 = emf2.createEntityManager();
-		CalendarDay cd = ca.getCurrentOccurrence(em2);
-		Assert.assertEquals("02/01/2030", cd.getValue());
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testEventListener() throws JMSException, InterruptedException {
+	public void testEventListener() throws Exception {
 		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue.");
 
 		// Get relevant data to create the event
@@ -289,6 +291,7 @@ public class TestBroker {
 		}
 		State s1 = chain1.getStates().get(0);
 		Place p1 = s1.getRunsOnPlaces().get(0);
+		Calendar ca1 = app1.getCalendars().get(0);
 
 		// Create event
 		Event e1 = new Event();
@@ -352,9 +355,9 @@ public class TestBroker {
 		Assert.assertEquals(1, events.size()); // purge - only pending remain
 
 		// Now, advance calendar
-		testCalendarNextOccurrence();
+		releaseCalendar();
 
-		// Test the event has been renalaysed
+		// Test the event has been reanalyzed
 		res = q.getResultList();
 		Assert.assertEquals(6, res.size());
 		log.info(RunLog.getTitle());
@@ -362,7 +365,7 @@ public class TestBroker {
 			log.info(l.getLine());
 		}
 
-		// and finally again: the end should not run.
+		// and do it again: the end of chain1 should not run.
 		Event e4 = new Event();
 		e4.setApplication(app1);
 		e4.setState(s1);
@@ -376,6 +379,20 @@ public class TestBroker {
 		// Test...
 		res = q.getResultList();
 		Assert.assertEquals(7, res.size());
+		log.info(RunLog.getTitle());
+		for (RunLog l : res) {
+			log.info(l.getLine());
+		}
+
+		// and finally free the calendar, and test that chain2 is considered as
+		// straggling
+		releaseCalendar();
+		ca1.processStragglers(em2); // Display to ease debug
+		Assert.assertEquals(1, ca1.getStragglers(em2).size());
+		
+		// and test scheduling...
+		res = q.getResultList();
+		Assert.assertEquals(10, res.size());
 		log.info(RunLog.getTitle());
 		for (RunLog l : res) {
 			log.info(l.getLine());

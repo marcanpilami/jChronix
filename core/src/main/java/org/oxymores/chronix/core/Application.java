@@ -255,6 +255,10 @@ public class Application extends ChronixObject {
 		return localNode;
 	}
 
+	public ArrayList<Calendar> getCalendars() {
+		return new ArrayList<Calendar>(this.calendars.values());
+	}
+
 	@SuppressWarnings("unused")
 	private void setLocalNode(ExecutionNode localNode) {
 		this.localNode = localNode;

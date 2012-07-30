@@ -288,6 +288,7 @@ public class DemoApplication {
 		s23.setRepresents(sc2);
 		s23.setX(200);
 		s23.setY(250);
+		s23.setCalendar(cal1);
 
 		// Transitions
 		s21.connectTo(s23);
