@@ -179,4 +179,27 @@ public class Calendar extends ApplicationObject {
 	}
 	//
 	// ///////////////////////////////////////////////////////////////
+	
+	
+	// ///////////////////////////////////////////////////////////////
+	// Don't go overboard...
+	
+	public boolean warnNotEnoughOccurrencesLeft(EntityManager em)
+	{
+		CalendarDay cd = this.getCurrentOccurrence(em);
+		int onow = this.days.indexOf(cd);
+		
+		return onow + this.alertThreshold >= this.days.size();
+	}
+	
+	public boolean errorNotEnoughOccurrencesLeft(EntityManager em)
+	{
+		CalendarDay cd = this.getCurrentOccurrence(em);
+		int onow = this.days.indexOf(cd);
+		
+		return onow + this.alertThreshold/2 >= this.days.size();
+	}
+	
+	//
+	// ///////////////////////////////////////////////////////////////
 }

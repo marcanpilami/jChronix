@@ -40,6 +40,11 @@ public class NextOccurrence extends ActiveNodeBase {
 		log.info(String.format("Calendar %s will go from %s to %s",
 				updatedCalendar.getName(), old_cd.getValue(), new_cd.getValue()));
 
+		if (this.updatedCalendar.warnNotEnoughOccurrencesLeft(em) && ! this.updatedCalendar.errorNotEnoughOccurrencesLeft(em))
+			log.warn(String.format("Calendar %s will soon reach its end: add more occurrences to it", updatedCalendar.getName()));
+		else if(this.updatedCalendar.errorNotEnoughOccurrencesLeft(em))
+			log.error(String.format("Calendar %s is nearly at its end: add more occurrences to it", updatedCalendar.getName()));
+		
 		cp.setLastEndedOccurrenceCd(new_cd);
 		cp.setLastEndedOkOccurrenceCd(new_cd);
 		cp.setLastStartedOccurrenceCd(new_cd);
