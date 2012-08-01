@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -208,16 +209,26 @@ public class Broker {
 
 	public synchronized void sendCommand(String cmd, ExecutionNode target,
 			Boolean Synchronous) throws JMSException {
+
+		RunDescription rd = new RunDescription();
+		rd.command = cmd;
+		rd.outOfPlan = true;
+		rd.Method = "Shell";
+
 		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
 		log.info(String.format(
 				"A command will be sent for execution on queue %s (%s)", qName,
 				cmd));
 		Destination destination = sessionCmd.createQueue(qName);
+		Destination replyTo = sessionCmd.createQueue(String.format(
+				"Q.%s.ENDOFJOB", broker.getBrokerName()));
 
 		if (producerCmd == null) {
 			producerCmd = sessionCmd.createProducer(null);
 		}
-		TextMessage m = sessionCmd.createTextMessage(cmd);
+		ObjectMessage m = sessionCmd.createObjectMessage(rd);
+		m.setJMSReplyTo(replyTo);
+		m.setJMSCorrelationID(UUID.randomUUID().toString());
 		producerCmd.send(destination, m);
 		sessionCmd.commit();
 	}
