@@ -22,6 +22,9 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
+import org.oxymores.chronix.core.active.ChainEnd;
+import org.oxymores.chronix.core.active.ChainStart;
+
 public class Chain extends ActiveNodeBase {
 
 	private static final long serialVersionUID = -5369294333404575011L;
@@ -55,5 +58,21 @@ public class Chain extends ActiveNodeBase {
 
 	public ArrayList<Transition> getTransitions() {
 		return transitions;
+	}
+
+	public State getStartState() {
+		for (State s : states) {
+			if (s.represents instanceof ChainStart)
+				return s;
+		}
+		return null;
+	}
+
+	public State getEndState() {
+		for (State s : states) {
+			if (s.represents instanceof ChainEnd)
+				return s;
+		}
+		return null;
 	}
 }

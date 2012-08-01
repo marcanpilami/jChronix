@@ -23,7 +23,6 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
-import org.oxymores.chronix.exceptions.ChronixInconsistentMetadataException;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 public class ChronixContext {
@@ -163,10 +162,18 @@ public class ChronixContext {
 		ObjectInputStream ois = new ObjectInputStream(fis);
 
 		Application res = (Application) ois.readObject();
+
+		try {
+			res.setLocalNode(this.dns, this.port);
+		} catch (ChronixNoLocalNode e) {
+			// no local node means this application should not run here
+			log.info(String
+					.format("Application %s has no execution node defined on this server and therefore will not be loaded",
+							res.name));
+			return null;
+		}
 		applicationsById.put(res.getId(), res);
 		applicationsByName.put(res.getName(), res);
-
-		res.setLocalNode(this.dns, this.port);
 
 		return res;
 	}
@@ -192,6 +199,10 @@ public class ChronixContext {
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(a);
 		fos.close();
+	}
+
+	protected void preSaveWorkingApp(Application a) {
+		// TODO: check the app is valid
 	}
 
 	// Does NOT refresh caches. Restart engine for that !
