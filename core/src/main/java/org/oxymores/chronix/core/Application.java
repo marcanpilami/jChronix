@@ -44,6 +44,7 @@ public class Application extends ChronixObject {
 	protected Hashtable<UUID, ActiveNodeBase> activeElements;
 	protected Hashtable<UUID, Parameter> parameters;
 	protected Hashtable<UUID, Calendar> calendars;
+	protected Hashtable<UUID, ClockRRule> rrules;
 
 	private transient ExecutionNode localNode;
 
@@ -55,6 +56,7 @@ public class Application extends ChronixObject {
 		this.activeElements = new Hashtable<UUID, ActiveNodeBase>();
 		this.parameters = new Hashtable<UUID, Parameter>();
 		this.calendars = new Hashtable<UUID, Calendar>();
+		this.rrules = new Hashtable<UUID, ClockRRule>();
 
 		// Basic elements
 		ActiveNodeBase tmp = new And();
@@ -84,6 +86,13 @@ public class Application extends ChronixObject {
 
 	public void setname(String name) {
 		this.name = name;
+	}
+
+	public void addRRule(ClockRRule r) {
+		if (!this.rrules.contains(r)) {
+			this.rrules.put(r.id, r);
+			r.setApplication(this);
+		}
 	}
 
 	public void addCalendar(Calendar c) {
@@ -211,6 +220,16 @@ public class Application extends ChronixObject {
 				res = s;
 				break;
 			}
+		}
+		return res;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> ArrayList<T> getActiveElements(Class<T> tClass) {
+		ArrayList<T> res = new ArrayList<T>();
+		for (ActiveNodeBase a : this.activeElements.values()) {
+			if (a.getClass().isAssignableFrom(tClass))
+				res.add((T) a);
 		}
 		return res;
 	}
