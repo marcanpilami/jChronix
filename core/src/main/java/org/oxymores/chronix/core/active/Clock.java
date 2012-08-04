@@ -3,7 +3,7 @@ package org.oxymores.chronix.core.active;
 import java.text.ParseException;
 import java.util.ArrayList;
 
-import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -12,16 +12,13 @@ import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.RRule;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
 import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.engine.TestStart;
 
 public class Clock extends ActiveNodeBase {
 	private static final long serialVersionUID = -5203055591135192345L;
 	private static Logger log = Logger.getLogger(Clock.class);
 
-	DateTime CREATED;
+	org.joda.time.DateTime CREATED;
 	int DURATION;
 
 	ArrayList<ClockRRule> rulesADD, rulesEXC;
@@ -29,16 +26,14 @@ public class Clock extends ActiveNodeBase {
 	public Clock() {
 		rulesADD = new ArrayList<ClockRRule>();
 		rulesEXC = new ArrayList<ClockRRule>();
-		CREATED = DateTime.now();
+		CREATED = org.joda.time.DateTime.now();
+		CREATED = CREATED.minusMillis(CREATED.getMillisOfSecond());
+		CREATED = CREATED.minusSeconds(CREATED.getSecondOfMinute());
 	}
 
 	public VEvent getEvent() throws ParseException {
-		VEvent evt = new VEvent(new Date(this.CREATED.toDate())/*
-																 * , new Dur(0,
-																 * 0,
-																 * this.DURATION
-																 * , 0)
-																 */, this.name);
+		DateTime dt = new DateTime(this.CREATED.toDate());
+		VEvent evt = new VEvent(dt, new Dur(0, 0, this.DURATION, 0), this.name);
 
 		for (ClockRRule r : rulesADD) {
 			evt.getProperties().add(new RRule(r.getRecur()));
@@ -58,8 +53,16 @@ public class Clock extends ActiveNodeBase {
 		DURATION = dURATION;
 	}
 
-	public DateTime getCREATED() {
+	public org.joda.time.DateTime getCREATED() {
 		return CREATED;
+	}
+
+	public ArrayList<ClockRRule> getRulesADD() {
+		return rulesADD;
+	}
+
+	public ArrayList<ClockRRule> getRulesEXC() {
+		return rulesEXC;
 	}
 
 	@Override
@@ -77,12 +80,20 @@ public class Clock extends ActiveNodeBase {
 			rulesADD.remove(rule);
 	}
 
+	public void addRRuleEXC(ClockRRule rule) {
+		if (!rulesEXC.contains(rule))
+			rulesEXC.add(rule);
+	}
+
+	public void removeRRuleEXC(ClockRRule rule) {
+		if (rulesEXC.contains(rule))
+			rulesEXC.remove(rule);
+	}
+
 	public PeriodList getOccurrences(java.util.Date start, java.util.Date end)
 			throws ParseException {
-		net.fortuna.ical4j.model.DateTime from = new net.fortuna.ical4j.model.DateTime(
-				start);
-		net.fortuna.ical4j.model.DateTime to = new net.fortuna.ical4j.model.DateTime(
-				end);
+		DateTime from = new DateTime(start);
+		DateTime to = new DateTime(end);
 		log.debug(String
 				.format("Computing occurrences from %s to %s", from, to));
 		Period p = new Period(from, to);

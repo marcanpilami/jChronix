@@ -193,7 +193,8 @@ public class DemoApplication {
 		rr1.setDescription("Every day from monday to friday included, every week");
 		rr1.setBYDAY("MO,TU,WE,TH,FR,");
 		rr1.setBYHOUR("10");
-		rr1.setPeriod(Recur.MONTHLY);
+		rr1.setBYMINUTE("00");
+		rr1.setPeriod(Recur.WEEKLY);
 		a.addRRule(rr1);
 
 		Clock ck1 = new Clock();
