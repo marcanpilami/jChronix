@@ -19,7 +19,7 @@ public class Clock extends ActiveNodeBase {
 	private static Logger log = Logger.getLogger(Clock.class);
 
 	org.joda.time.DateTime CREATED;
-	int DURATION;
+	int DURATION = 10;
 
 	ArrayList<ClockRRule> rulesADD, rulesEXC;
 
@@ -31,7 +31,9 @@ public class Clock extends ActiveNodeBase {
 		CREATED = CREATED.minusSeconds(CREATED.getSecondOfMinute());
 	}
 
-	public VEvent getEvent() throws ParseException {
+	// /////////////////////////////////////////////////////////////////////
+	// iCal stuff
+	private VEvent getEvent() throws ParseException {
 		DateTime dt = new DateTime(this.CREATED.toDate());
 		VEvent evt = new VEvent(dt, new Dur(0, 0, this.DURATION, 0), this.name);
 
@@ -45,6 +47,23 @@ public class Clock extends ActiveNodeBase {
 		return evt;
 	}
 
+	public PeriodList getOccurrences(java.util.Date start, java.util.Date end)
+			throws ParseException {
+		DateTime from = new DateTime(start);
+		DateTime to = new DateTime(end);
+		log.debug(String
+				.format("Computing occurrences from %s to %s", from, to));
+		Period p = new Period(from, to);
+		VEvent evt = this.getEvent();
+		PeriodList res = evt.calculateRecurrenceSet(p);
+		return res;
+	}
+
+	//
+	// /////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////
+	// Stupid GET/SET
 	public int getDURATION() {
 		return DURATION;
 	}
@@ -65,11 +84,11 @@ public class Clock extends ActiveNodeBase {
 		return rulesEXC;
 	}
 
-	@Override
-	public boolean visibleInHistory() {
-		return false;
-	}
+	// stupid GET/SET
+	// /////////////////////////////////////////////////////////////////////
 
+	// /////////////////////////////////////////////////////////////////////
+	// Relationships ADD/REMOVE
 	public void addRRuleADD(ClockRRule rule) {
 		if (!rulesADD.contains(rule))
 			rulesADD.add(rule);
@@ -90,15 +109,16 @@ public class Clock extends ActiveNodeBase {
 			rulesEXC.remove(rule);
 	}
 
-	public PeriodList getOccurrences(java.util.Date start, java.util.Date end)
-			throws ParseException {
-		DateTime from = new DateTime(start);
-		DateTime to = new DateTime(end);
-		log.debug(String
-				.format("Computing occurrences from %s to %s", from, to));
-		Period p = new Period(from, to);
-		VEvent evt = this.getEvent();
-		PeriodList res = evt.calculateRecurrenceSet(p);
-		return res;
+	//
+	// /////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////
+	// Scheduling engine methods
+	@Override
+	public boolean visibleInHistory() {
+		return false;
 	}
+	//
+	// /////////////////////////////////////////////////////////////////////
+
 }
