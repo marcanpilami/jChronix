@@ -12,7 +12,7 @@ public class ApplicationObject extends ChronixObject {
 
 	// No access modifier: package private. Should only be called by Application
 	// (inside an addObject method)
-	void setApplication(Application application) {
+	public void setApplication(Application application) {
 		this.application = application;
 	}
 }
