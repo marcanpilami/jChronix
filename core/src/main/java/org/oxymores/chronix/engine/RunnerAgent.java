@@ -1,5 +1,8 @@
 package org.oxymores.chronix.engine;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.jms.Connection;
@@ -12,6 +15,7 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 public class RunnerAgent implements MessageListener {
@@ -21,9 +25,17 @@ public class RunnerAgent implements MessageListener {
 	private Destination dest;
 	private Connection cnx;
 	private MessageProducer producer;
+	private String logDbPath;
 
-	public void startListening(Connection cnx, String brokerName)
-			throws JMSException {
+	public void startListening(Connection cnx, String brokerName,
+			String logDbPath) throws JMSException, IOException {
+		// Log repository
+		this.logDbPath = FilenameUtils.normalize(logDbPath);
+		if (!(new File(this.logDbPath)).exists()) {
+			(new File(this.logDbPath)).mkdir();
+		}
+
+		// Queue listener
 		this.cnx = cnx;
 		String qName = String.format("Q.%s.RUNNER", brokerName);
 		log.debug(String.format(
@@ -34,6 +46,7 @@ public class RunnerAgent implements MessageListener {
 		MessageConsumer consumer = this.session.createConsumer(dest);
 		consumer.setMessageListener(this);
 
+		// Producer to send run results
 		producer = session.createProducer(null);
 	}
 
@@ -63,11 +76,31 @@ public class RunnerAgent implements MessageListener {
 			log.debug(String.format("Running helper internal command %s",
 					rd.command));
 
+		// Log file (only if true run)
+		String logFilePath = null;
+		Date start = new Date();
+		if (!rd.helperExecRequest) {
+
+			SimpleDateFormat myFormatDir = new SimpleDateFormat("yyyyMMdd");
+			SimpleDateFormat myFormatFile = new SimpleDateFormat(
+					"yyyyMMddhhmmssSSS");
+			String dd = myFormatDir.format(start);
+			String logFileDateDir = FilenameUtils.concat(this.logDbPath, dd);
+			if (!(new File(logFileDateDir)).exists()) {
+				(new File(logFileDateDir)).mkdir();
+			}
+			String logFileName = String.format("%s_%s_%s_%s.log",
+					myFormatFile.format(start), rd.placeName.replace(" ", "-"),
+					rd.activeSourceName.replace(" ", "-"), rd.id1);
+			logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
+		}
+
 		// Run the command according to its method
 		RunResult res = null;
-		Date start = new Date();
+
 		if (rd.Method.equals("Shell"))
-			res = RunnerShell.run(rd);
+			res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest,
+					rd.shouldSendLogFile);
 		else {
 			res = new RunResult();
 			res.returnCode = -1;

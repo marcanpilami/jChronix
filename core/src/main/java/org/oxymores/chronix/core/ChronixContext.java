@@ -22,6 +22,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
@@ -29,6 +30,7 @@ public class ChronixContext {
 	private static Logger log = Logger.getLogger(ChronixContext.class);
 
 	public Date loaded;
+	public String configurationDirectoryPath;
 	public File configurationDirectory;
 	public Hashtable<UUID, Application> applicationsById;
 	public Hashtable<String, Application> applicationsByName;
@@ -44,7 +46,9 @@ public class ChronixContext {
 
 		ChronixContext ctx = new ChronixContext();
 		ctx.loaded = new Date();
-		ctx.configurationDirectory = new File(appConfDirectory);
+		ctx.configurationDirectoryPath = FilenameUtils
+				.normalize(appConfDirectory);
+		ctx.configurationDirectory = new File(ctx.configurationDirectoryPath);
 		ctx.applicationsById = new Hashtable<UUID, Application>();
 		ctx.applicationsByName = new Hashtable<String, Application>();
 

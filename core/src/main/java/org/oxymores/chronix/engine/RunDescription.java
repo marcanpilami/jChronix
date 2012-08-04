@@ -17,13 +17,17 @@ public class RunDescription implements Serializable {
 	public ArrayList<String> envValues = new ArrayList<String>();
 	
 	public Boolean helperExecRequest = false;
+	public Boolean shouldSendLogFile = false;
 	
 	public String Method = "Shell";
 	
+	// Helper for log file naming
+	public String placeName = "";
+	public String activeSourceName = "";
 	
 	// This data is only useful for the engine, not the runner.
 	// It should be put as is in the run result object.
-	public String id1;
+	public String id1; // PJ id
 	public UUID id2;
 	public Boolean outOfPlan = false;
 }

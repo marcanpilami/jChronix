@@ -10,6 +10,7 @@ public class RunResult implements Serializable {
 	private static final long serialVersionUID = 316559310140465996L;
 
 	public String logStart = "";
+	public String fullerLog = "";
 	public String logPath = "";
 	public int returnCode = -1;
 	public HashMap<String, String> newEnvVars = new HashMap<String, String>();

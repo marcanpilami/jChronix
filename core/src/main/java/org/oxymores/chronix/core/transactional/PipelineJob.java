@@ -271,6 +271,8 @@ public class PipelineJob extends TranscientBase {
 
 		// Misc.
 		rd.outOfPlan = this.outOfPlan;
+		rd.placeName = this.getPlace(ctx).getName();
+		rd.activeSourceName = this.getActive(ctx).getName();
 
 		// The IDs that will allow to find the PJ at the end
 		rd.id1 = this.getId();

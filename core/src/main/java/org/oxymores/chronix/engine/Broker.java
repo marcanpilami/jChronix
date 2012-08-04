@@ -19,6 +19,7 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -127,7 +128,8 @@ public class Broker {
 				Session.SESSION_TRANSACTED);
 
 		RunnerAgent r = new RunnerAgent();
-		r.startListening(this.connection, brokerName);
+		r.startListening(this.connection, brokerName,
+				FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
 		sessionCmd = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 
