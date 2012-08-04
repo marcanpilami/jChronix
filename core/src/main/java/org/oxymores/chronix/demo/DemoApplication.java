@@ -23,6 +23,8 @@ package org.oxymores.chronix.demo;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import net.fortuna.ical4j.model.Recur;
+
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -38,6 +40,8 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.active.Clock;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.active.ShellParameter;
@@ -168,7 +172,7 @@ public class DemoApplication {
 		c3.setDescription("chain 3");
 		c3.setName("chain3");
 		a.addActiveElement(c3);
-		
+
 		Chain c4 = new Chain();
 		c4.setDescription("chain 4");
 		c4.setName("chain4");
@@ -181,6 +185,23 @@ public class DemoApplication {
 		no1.setDescription(no1.getName());
 		no1.setUpdatedCalendar(cal1);
 		a.addActiveElement(no1);
+
+		// ////////////////////
+		// Clocks
+		ClockRRule rr1 = new ClockRRule();
+		rr1.setName("Monday-Friday days");
+		rr1.setDescription("Every day from monday to friday included, every week");
+		rr1.setBYDAY("MO,TU,WE,TH,FR,");
+		rr1.setBYHOUR("10");
+		rr1.setPeriod(Recur.MONTHLY);
+		a.addRRule(rr1);
+
+		Clock ck1 = new Clock();
+		ck1.setDescription("every workday");
+		ck1.setName("workdays");
+		ck1.setDURATION(10);
+		ck1.addRRuleADD(rr1);
+		a.addActiveElement(ck1);
 
 		// ////////////////////
 		// Auto elements retrieval
