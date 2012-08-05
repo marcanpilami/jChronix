@@ -15,8 +15,10 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.core.transactional.PipelineJob;
 
 public class SenderHelpers {
 	private static Logger log = Logger.getLogger(SenderHelpers.class);
@@ -142,7 +144,6 @@ public class SenderHelpers {
 				qName));
 
 		Destination destination = jmsSession.createQueue(qName);
-
 		ObjectMessage m = jmsSession.createObjectMessage(a);
 		jmsProducer.send(destination, m);
 
@@ -195,6 +196,59 @@ public class SenderHelpers {
 		if (commit)
 			jmsSession.commit();
 	}
+
 	// Send command to a runner agent directly (total shun of the engine)
+	// /////////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////////
+	// PipelineJob
+
+	// Should only be used by tests (poor performances)
+	public static void sendPipelineJobToRunner(PipelineJob pj,
+			ExecutionNode target, ChronixContext ctx) throws JMSException {
+		// Connect to a broker
+		JmsSendData d = new JmsSendData(ctx);
+
+		// Go
+		SenderHelpers.sendPipelineJobToRunner(pj, target, d.jmsProducer,
+				d.jmsSession, true);
+
+		// Cleanup
+		d.close();
+	}
+
+	public static void sendPipelineJobToRunner(PipelineJob pj,
+			ExecutionNode target, MessageProducer jmsProducer,
+			Session jmsSession, boolean commit) throws JMSException {
+		String qName = String.format("Q.%s.PJ", target.getHost()
+				.getBrokerName());
+		log.info(String.format(
+				"A job will be sent to the runner over the wire on queue %s",
+				qName));
+		Destination d = jmsSession.createQueue(qName);
+		ObjectMessage om = jmsSession.createObjectMessage(pj);
+		jmsProducer.send(d, om);
+
+		if (commit)
+			jmsSession.commit();
+	}
+
+	public static void runStateAlone(State s, Place p, ChronixContext ctx)
+			throws JMSException {
+		JmsSendData d = new JmsSendData(ctx);
+		s.runAlone(p, d.jmsProducer, d.jmsSession);
+		d.jmsSession.commit();
+		d.close();
+	}
+
+	public static void runStateInsidePlanWithoutCalendarUpdating(State s,
+			Place p, ChronixContext ctx) throws JMSException {
+		JmsSendData d = new JmsSendData(ctx);
+		s.runInsideChainWithoutUpdatingCalendar(p, d.jmsProducer, d.jmsSession);
+		d.jmsSession.commit();
+		d.close();
+	}
+
+	// PipelineJob
 	// /////////////////////////////////////////////////////////////////////////
 }

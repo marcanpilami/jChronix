@@ -46,6 +46,7 @@ public class TestBroker {
 	private ChronixContext ctx1;
 	private ChronixContext ctx2;
 	private Broker b1;
+	@SuppressWarnings("unused")
 	private ExecutionNode n1789, n1400;
 	private String db1, db2;
 	private Application app1;
@@ -54,6 +55,8 @@ public class TestBroker {
 	public void init() throws Exception {
 		db1 = "C:\\TEMP\\db1";
 		db2 = "C:\\TEMP\\db2";
+		
+		LogHelpers.clearAllTranscientElements();
 
 		/************************************************
 		 * Create a test configuration db
@@ -233,8 +236,44 @@ public class TestBroker {
 	@Test
 	public void testRunner() throws JMSException, InterruptedException {
 		log.info("****This tests running a shell command on the first node");
-		SenderHelpers.sendShellCommand("echo aa", n1789, ctx1);
-		Thread.sleep(2000); // Time to consume message
+
+		// Get relevant data to launch a job
+		Chain chain1 = null;
+		for (Chain c : app1.getChains()) {
+			if (c.getName().equals("chain1")) {
+				chain1 = c;
+			}
+		}
+		State s1 = chain1.getStates().get(2);
+		Place p1 = s1.getRunsOnPlaces().get(0);
+
+		SenderHelpers.runStateAlone(s1, p1, ctx1);
+		Thread.sleep(1000); // Time to consume message
+
+		List<RunLog> res = LogHelpers.displayAllHistory();
+		Assert.assertEquals(1, res.size());
+	}
+
+	@Test
+	public void testManualLaunchWithConsequences() throws JMSException,
+			InterruptedException {
+		log.info("****This tests running a chain on the first node");
+
+		// Get relevant data to launch a job
+		Chain chain1 = null;
+		for (Chain c : app1.getChains()) {
+			if (c.getName().equals("chain1")) {
+				chain1 = c;
+			}
+		}
+		State s1 = chain1.getStates().get(0);
+		Place p1 = s1.getRunsOnPlaces().get(0);
+
+		SenderHelpers.runStateInsidePlanWithoutCalendarUpdating(s1, p1, ctx1);
+		Thread.sleep(1000); // Time to consume message
+
+		List<RunLog> res = LogHelpers.displayAllHistory();
+		Assert.assertEquals(3, res.size());
 	}
 
 	@Test

@@ -141,9 +141,10 @@ public class ActiveNodeBase extends ConfigurableBase {
 		EventAnalysisResult tmp;
 
 		// Get session events
-		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2");
+		Query q = em
+				.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2");
 		q.setParameter(1, evt.getLevel0IdU().toString());
-		//q.setParameter(2, evt.getLevel1IdU().toString());
+		// q.setParameter(2, evt.getLevel1IdU().toString());
 		@SuppressWarnings("unchecked")
 		List<Event> sessionEvents2 = q.getResultList();
 
@@ -198,7 +199,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 				ArrayList<Place> temp = new ArrayList<Place>();
 				temp.add(p);
 				s.consumeEvents(res.consumedEvents, temp, em);
-				s.run(p, em, pjProducer, session, evt);
+				s.runFromEngine(p, em, pjProducer, session, evt);
 				res.add(tmp);
 			}
 		} else {
@@ -239,7 +240,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 				s.consumeEvents(res.consumedEvents, places, em);
 				for (Place p : places) {
-					s.run(p, em, pjProducer, session, evt);
+					s.runFromEngine(p, em, pjProducer, session, evt);
 				}
 				return res;
 			} else

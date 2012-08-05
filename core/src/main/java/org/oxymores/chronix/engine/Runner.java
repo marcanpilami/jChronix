@@ -108,8 +108,8 @@ public class Runner implements MessageListener {
 					PipelineJob pj = (PipelineJob) o;
 					log.warn(String.format(
 							"Job execution %s request was received", pj.getId()));
-					commit();
 					recvPJ(pj);
+					commit();
 					return;
 				}
 
@@ -176,25 +176,21 @@ public class Runner implements MessageListener {
 	}
 
 	private void recvPJ(PipelineJob job) {
-		if (job.getOutOfPlan()) {
-			// out of plan jobs are not yet persisted at this time
-			// (they are given fresh and raw to this thread)
+		PipelineJob j = em.find(PipelineJob.class, job.getId());
+		if (j == null) {
 			tr.begin();
 			em.persist(job);
 			tr.commit();
+			j = em.find(PipelineJob.class, job.getId());
 		}
 
-		recvPJ(job.getId());
-	}
-
-	private void recvPJ(String id) {
-		UUID i = UUID.fromString(id);
-		PipelineJob j = em.find(PipelineJob.class, i);
+		tr.begin();
 		j.setRunThis(j.getActive(ctx).getCommandName(j, this, ctx));
 		resolving.add(j);
 
 		ActiveNodeBase toRun = j.getActive(ctx);
 		j.setBeganRunningAt(new Date());
+		tr.commit();
 
 		if (!toRun.hasPayload()) {
 			// No payload - direct to analysis and event throwing
@@ -207,6 +203,7 @@ public class Runner implements MessageListener {
 			res.id1 = j.getId();
 			res.end = new Date();
 			res.start = res.end;
+			res.outOfPlan = j.getOutOfPlan();
 			recvRR(res);
 		} else if (j.isReady(ctx)) {
 			// It has an active part, but no need for dynamic parameters -> just
@@ -239,9 +236,11 @@ public class Runner implements MessageListener {
 
 	private void recvRR(RunResult rr) {
 		if (rr.outOfPlan) {
-			log.info("An out of plan job run has just finished - it won't be analysed");
-			return;
+			log.info("An out of plan job run has just finished - it won't throw events");
 		}
+		if (rr.id1 == null)
+			return; // Means its a debug job - without PipelineJob (impossible
+					// in normal operations)
 		log.info(String.format(String.format("Job %s has ended", rr.id1)));
 
 		PipelineJob pj = null;
@@ -251,17 +250,24 @@ public class Runner implements MessageListener {
 				break;
 			}
 		}
-		State s = pj.getState(ctx);
-		Place p = pj.getPlace(ctx);
-		Application a = pj.getApplication(ctx);
+		State s = null;
+		Place p = null;
+		Application a = null;
+		if (!rr.outOfPlan) {
+			s = pj.getState(ctx);
+			p = pj.getPlace(ctx);
+			a = pj.getApplication(ctx);
+		}
 
 		// Event throwing
-		Event e = pj.createEvent(rr);
-		try {
-			SenderHelpers.sendEvent(e, producerEvents, session, ctx, true);
-		} catch (JMSException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		if (!rr.outOfPlan) {
+			Event e = pj.createEvent(rr);
+			try {
+				SenderHelpers.sendEvent(e, producerEvents, session, ctx, true);
+			} catch (JMSException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		// Update the PJ (it will stay in the DB for a while)
@@ -281,7 +287,8 @@ public class Runner implements MessageListener {
 		}
 
 		// Calendar progress
-		if (s.usesCalendar() && !pj.getIgnoreCalendarUpdating()) {
+		if (!rr.outOfPlan && s.usesCalendar()
+				&& !pj.getIgnoreCalendarUpdating()) {
 			log.debug(pj.getCalendarID());
 			Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
 			CalendarDay justDone = c.getDay(UUID.fromString(pj

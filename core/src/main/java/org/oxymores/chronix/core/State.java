@@ -24,10 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -38,6 +36,7 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.SenderHelpers;
 
 public class State extends ConfigurableBase {
 	private static Logger log = Logger.getLogger(State.class);
@@ -357,19 +356,63 @@ public class State extends ConfigurableBase {
 		}
 	}
 
-	public void run(Place p, EntityManager em, MessageProducer pjProducer,
-			Session session, Event e) {
+	public void runAlone(Place p, MessageProducer pjProducer, Session session) {
+		run(p, pjProducer, session, null, false, true, true, this.chain.id,
+				UUID.randomUUID(), null);
+	}
+
+	public void runInsideChainWithoutUpdatingCalendar(Place p,
+			MessageProducer pjProducer, Session session) {
+		run(p, pjProducer, session, null, false, false, false, this.chain.id,
+				UUID.randomUUID(), null);
+	}
+
+	public void runFromEngine(Place p, EntityManager em,
+			MessageProducer pjProducer, Session session, Event e) {
+		// Calendar update
+		String CalendarOccurrenceID = null;
+		if (this.usesCalendar()) {
+			try {
+				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
+				CalendarOccurrenceID = cp.getNextRunOccurrenceId();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		CalendarPointer cpToUpdate = null;
+		if (this.usesCalendar()) {
+			try {
+				cpToUpdate = this.getCurrentCalendarPointer(em, p);
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		run(p, pjProducer, session, CalendarOccurrenceID, true, false,
+				e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(),
+				cpToUpdate);
+	}
+
+	public void run(Place p, MessageProducer pjProducer, Session session,
+			String CalendarOccurrenceID, boolean updateCalendarPointer,
+			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id,
+			UUID level1Id, CalendarPointer cpToUpdate) {
 		DateTime now = DateTime.now();
 
 		PipelineJob pj = new PipelineJob();
-		pj.setLevel0IdU(e.getLevel0IdU());
-		pj.setLevel1IdU(e.getLevel1IdU());
+		pj.setLevel0IdU(level0Id);
+		pj.setLevel1IdU(level1Id);
 		pj.setMarkedForRunAt(now.toDate());
 		pj.setPlace(p);
 		pj.setState(this);
 		pj.setStatus("ENTERING_QUEUE");
 		pj.setApplication(this.application);
-		pj.setOutsideChain(e.getOutsideChain());
+		pj.setOutsideChain(outOfChainLaunch);
+		pj.setIgnoreCalendarUpdating(!updateCalendarPointer);
+		pj.setOutOfPlan(outOfPlan);
 
 		if (this.warnAfterMn != null)
 			pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn).toDate());
@@ -382,13 +425,14 @@ public class State extends ConfigurableBase {
 		// Calendar update
 		if (this.usesCalendar()) {
 			try {
-				log.debug("Since this state will run, calendar update!");
-				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
-				pj.setCalendarOccurrenceID(cp.getNextRunOccurrenceId());
+				pj.setCalendarOccurrenceID(CalendarOccurrenceID);
 				pj.setCalendar(calendar);
 
-				cp.setRunning(true);
-				cp.setLastStartedOccurrenceId(cp.getNextRunOccurrenceId());
+				log.debug("Since this state will run, calendar update!");
+				cpToUpdate.setRunning(true);
+				if (updateCalendarPointer)
+					cpToUpdate.setLastStartedOccurrenceId(cpToUpdate
+							.getNextRunOccurrenceId());
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -398,9 +442,8 @@ public class State extends ConfigurableBase {
 		// Send it (commit is done by main engine later)
 		String qName = String.format("Q.%s.PJ", p.getNode().getBrokerName());
 		try {
-			Destination d = session.createQueue(qName);
-			ObjectMessage om = session.createObjectMessage(pj);
-			pjProducer.send(d, om);
+			SenderHelpers.sendPipelineJobToRunner(pj, p.getNode().getHost(),
+					pjProducer, session, false);
 		} catch (JMSException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
