@@ -210,7 +210,7 @@ public class TestBroker {
 	public void testSendApplication() throws JMSException {
 		log.info("****This tests sending, an app without an active engine nor anything to receive it on the other side");
 		Application a = ctx1.applicationsById.values().iterator().next();
-		b1.sendApplication(a, n1400);
+		SenderHelpers.sendApplication(a, n1400, ctx1);
 	}
 
 	@Test
@@ -222,7 +222,7 @@ public class TestBroker {
 																			// we
 																			// send
 		Broker b2 = new Broker(ctx2, true);
-		b1.sendApplication(a, n1400);
+		SenderHelpers.sendApplication(a, n1400, ctx1);
 		Thread.sleep(2000); // Time to consume message
 		b2.stop();
 
@@ -233,7 +233,7 @@ public class TestBroker {
 	@Test
 	public void testRunner() throws JMSException, InterruptedException {
 		log.info("****This tests running a shell command on the first node");
-		b1.sendCommand("echo aa", n1789);
+		SenderHelpers.sendShellCommand("echo aa", n1789, ctx1);
 		Thread.sleep(2000); // Time to consume message
 	}
 
@@ -325,7 +325,7 @@ public class TestBroker {
 		Thread.sleep(4000); // Time to consume message
 
 		res = LogHelpers.displayAllHistory();
-		Assert.assertEquals(3, res.size());		
+		Assert.assertEquals(3, res.size());
 
 		EntityManagerFactory emf2 = Persistence
 				.createEntityManagerFactory("TransacUnit");
@@ -346,7 +346,7 @@ public class TestBroker {
 
 		// Test the event has been reanalyzed
 		res = LogHelpers.displayAllHistory();
-		Assert.assertEquals(6, res.size());		
+		Assert.assertEquals(6, res.size());
 
 		// and do it again: the end of chain1 should not run.
 		Event e4 = new Event();
@@ -371,6 +371,6 @@ public class TestBroker {
 
 		// and test scheduling...
 		res = LogHelpers.displayAllHistory();
-		Assert.assertEquals(10, res.size());		
+		Assert.assertEquals(10, res.size());
 	}
 }

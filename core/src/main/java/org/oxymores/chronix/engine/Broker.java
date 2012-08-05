@@ -1,14 +1,9 @@
 package org.oxymores.chronix.engine;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
@@ -22,7 +17,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
 
@@ -44,9 +38,6 @@ public class Broker {
 
 	private ActiveMQConnectionFactory factory;
 	private Connection connection;
-	private MessageProducer producerApp, producerCmd;
-	private Session sessionApp;
-	private Session sessionCmd;
 
 	public Broker(ChronixContext ctx) throws Exception {
 		this(ctx, false);
@@ -119,14 +110,10 @@ public class Broker {
 		// Create & register object listeners
 		MetadataListener a = new MetadataListener();
 		a.startListening(this.connection, brokerName, ctx);
-		sessionApp = this.connection.createSession(true,
-				Session.SESSION_TRANSACTED);
 
 		RunnerAgent r = new RunnerAgent();
 		r.startListening(this.connection, brokerName,
 				FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
-		sessionCmd = this.connection.createSession(true,
-				Session.SESSION_TRANSACTED);
 
 		EventListener e = new EventListener();
 		e.startListening(this.connection, brokerName, ctx, emf);
@@ -183,54 +170,4 @@ public class Broker {
 					e1);
 		}
 	}
-
-	public void sendApplication(Application a, ExecutionNode target)
-			throws JMSException {
-		String qName = String
-				.format("Q.%s.APPLICATION", target.getBrokerName());
-		log.info(String.format("An app will be sent over the wire on queue %s",
-				qName));
-
-		if (producerApp == null) {
-			producerApp = sessionApp.createProducer(null);
-		}
-
-		Destination destination = sessionApp.createQueue(qName);
-
-		ObjectMessage m = sessionApp.createObjectMessage(a);
-		producerApp.send(destination, m);
-		sessionApp.commit();
-	}
-
-	public synchronized void sendCommand(String cmd, ExecutionNode target)
-			throws JMSException {
-		sendCommand(cmd, target, false);
-	}
-
-	public synchronized void sendCommand(String cmd, ExecutionNode target,
-			Boolean Synchronous) throws JMSException {
-
-		RunDescription rd = new RunDescription();
-		rd.command = cmd;
-		rd.outOfPlan = true;
-		rd.Method = "Shell";
-
-		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
-		log.info(String.format(
-				"A command will be sent for execution on queue %s (%s)", qName,
-				cmd));
-		Destination destination = sessionCmd.createQueue(qName);
-		Destination replyTo = sessionCmd.createQueue(String.format(
-				"Q.%s.ENDOFJOB", broker.getBrokerName()));
-
-		if (producerCmd == null) {
-			producerCmd = sessionCmd.createProducer(null);
-		}
-		ObjectMessage m = sessionCmd.createObjectMessage(rd);
-		m.setJMSReplyTo(replyTo);
-		m.setJMSCorrelationID(UUID.randomUUID().toString());
-		producerCmd.send(destination, m);
-		sessionCmd.commit();
-	}
-
 }

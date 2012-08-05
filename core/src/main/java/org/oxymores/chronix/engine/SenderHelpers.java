@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -11,6 +12,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.State;
@@ -19,6 +21,44 @@ import org.oxymores.chronix.core.transactional.Event;
 public class SenderHelpers {
 	private static Logger log = Logger.getLogger(SenderHelpers.class);
 
+	private static class JmsSendData {
+		public MessageProducer jmsProducer;
+		public Session jmsSession;
+		public Connection connection;
+
+		public JmsSendData(ChronixContext ctx) {
+			try {
+				// Factory
+				ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+						"vm://" + ctx.getBrokerName());
+
+				// Connect to it...
+				this.connection = factory.createConnection();
+				this.connection.start();
+
+				// Create session and producer
+				this.jmsSession = connection.createSession(true,
+						Session.SESSION_TRANSACTED);
+				this.jmsProducer = jmsSession.createProducer(null);
+			} catch (Exception e) {
+			}
+		}
+
+		public void close() {
+			try {
+				this.jmsProducer.close();
+				this.jmsSession.close();
+				this.connection.close();
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+	}
+
+	// /////////////////////////////////////////////////////////////////////////
+	// Event
 	private static void sendEvent(Event e, ExecutionNode target,
 			MessageProducer jmsProducer, Session jmsSession, boolean commit)
 			throws JMSException {
@@ -63,25 +103,98 @@ public class SenderHelpers {
 	// Should only be used by tests (poor performances)
 	public static void sendEvent(Event evt, ChronixContext ctx)
 			throws JMSException {
-		// Factory
-		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
-				"vm://" + ctx.getBrokerName());
-
-		// Connect to it...
-		Connection connection = factory.createConnection();
-		connection.start();
-
-		// Create session and producer
-		Session jmsSession = connection.createSession(true,
-				Session.SESSION_TRANSACTED);
-		MessageProducer jmsProducer = jmsSession.createProducer(null);
+		// Connect to a broker
+		JmsSendData d = new JmsSendData(ctx);
 
 		// Go
-		SenderHelpers.sendEvent(evt, jmsProducer, jmsSession, ctx, true);
+		SenderHelpers.sendEvent(evt, d.jmsProducer, d.jmsSession, ctx, true);
 
 		// Cleanup
-		jmsProducer.close();
-		jmsSession.close();
-		connection.close();
+		d.close();
 	}
+
+	// Event
+	// /////////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////////
+	// Application
+
+	// Should only be used by tests (poor performances)
+	public static void sendApplication(Application a, ExecutionNode target,
+			ChronixContext ctx) throws JMSException {
+		// Connect to a broker
+		JmsSendData d = new JmsSendData(ctx);
+
+		// Go
+		SenderHelpers.sendApplication(a, target, d.jmsProducer, d.jmsSession,
+				true);
+
+		// Cleanup
+		d.close();
+	}
+
+	public static void sendApplication(Application a, ExecutionNode target,
+			MessageProducer jmsProducer, Session jmsSession, boolean commit)
+			throws JMSException {
+		String qName = String
+				.format("Q.%s.APPLICATION", target.getBrokerName());
+		log.info(String.format("An app will be sent over the wire on queue %s",
+				qName));
+
+		Destination destination = jmsSession.createQueue(qName);
+
+		ObjectMessage m = jmsSession.createObjectMessage(a);
+		jmsProducer.send(destination, m);
+
+		if (commit)
+			jmsSession.commit();
+	}
+
+	// Application
+	// /////////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////////
+	// Send command to a runner agent directly (total shun of the engine)
+
+	// Should only be used by tests (poor performances)
+	public static void sendShellCommand(String cmd, ExecutionNode target,
+			ChronixContext ctx) throws JMSException {
+		// Connect to a broker
+		JmsSendData d = new JmsSendData(ctx);
+
+		// Go
+		SenderHelpers.sendShellCommand(cmd, target, ctx, d.jmsProducer,
+				d.jmsSession, true);
+
+		// Cleanup
+		d.close();
+	}
+
+	public static void sendShellCommand(String cmd, ExecutionNode target,
+			ChronixContext ctx, MessageProducer jmsProducer,
+			Session jmsSession, boolean commit) throws JMSException {
+
+		RunDescription rd = new RunDescription();
+		rd.command = cmd;
+		rd.outOfPlan = true;
+		rd.Method = "Shell";
+
+		String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
+		log.info(String.format(
+				"A command will be sent for execution on queue %s (%s)", qName,
+				cmd));
+		Destination destination = jmsSession.createQueue(qName);
+		Destination replyTo = jmsSession.createQueue(String.format(
+				"Q.%s.ENDOFJOB", ctx.getBrokerName()));
+
+		ObjectMessage m = jmsSession.createObjectMessage(rd);
+		m.setJMSReplyTo(replyTo);
+		m.setJMSCorrelationID(UUID.randomUUID().toString());
+		jmsProducer.send(destination, m);
+
+		if (commit)
+			jmsSession.commit();
+	}
+	// Send command to a runner agent directly (total shun of the engine)
+	// /////////////////////////////////////////////////////////////////////////
 }
