@@ -1,7 +1,6 @@
 package org.oxymores.chronix.engine;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -26,8 +25,6 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.transactional.Event;
 
 /*
  * Queues are named
@@ -43,16 +40,13 @@ public class Broker {
 
 	private BrokerService broker;
 	private ChronixContext ctx;
+	private EntityManagerFactory emf;
 
 	private ActiveMQConnectionFactory factory;
 	private Connection connection;
-	private MessageProducer producerApp, producerCmd, producerEvent;// ,
-	// producerOrder,
-	// producerHistory,
-	// producerFile;
+	private MessageProducer producerApp, producerCmd;
 	private Session sessionApp;
 	private Session sessionCmd;
-	private Session sessionEvent;
 
 	public Broker(ChronixContext ctx) throws Exception {
 		this(ctx, false);
@@ -64,8 +58,9 @@ public class Broker {
 						ctx.localUrl, ctx.configurationDirectory));
 		this.ctx = ctx;
 		broker = new BrokerService();
-		String brokerName = ctx.localUrl.replace(":", "").toUpperCase();
+		String brokerName = this.ctx.getBrokerName();
 		broker.setBrokerName(brokerName);
+		this.emf = Persistence.createEntityManagerFactory("TransacUnit");
 
 		// Basic configuration
 		broker.setPersistent(true);
@@ -80,13 +75,13 @@ public class Broker {
 		broker.setUseJmx(false); // Not now. Later.
 
 		// Add a listener
-		broker.addConnector("tcp://" + ctx.localUrl);
+		broker.addConnector("tcp://" + this.ctx.localUrl);
 
 		// Factory
 		this.factory = new ActiveMQConnectionFactory("vm://" + brokerName);
 
 		// Add channels to other nodes
-		for (Application a : ctx.applicationsById.values()) {
+		for (Application a : this.ctx.applicationsById.values()) {
 			for (NodeLink nl : a.getLocalNode().getCanSendTo()) {
 				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
 					break;
@@ -133,18 +128,14 @@ public class Broker {
 		sessionCmd = this.connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("TransacUnit");
 		EventListener e = new EventListener();
 		e.startListening(this.connection, brokerName, ctx, emf);
-		sessionEvent = this.connection.createSession(true,
-				Session.SESSION_TRANSACTED);
 
 		Pipeline pipe = new Pipeline();
 		pipe.startListening(this.connection, brokerName, ctx, emf);
 
 		Runner runner = new Runner();
-		runner.startListening(this.connection, brokerName, ctx, emf, this);
+		runner.startListening(this.connection, brokerName, ctx, emf);
 
 		LogListener ll = new LogListener();
 		ll.startListening(this.connection, brokerName, ctx);
@@ -171,6 +162,14 @@ public class Broker {
 
 	public BrokerService getBroker() {
 		return this.broker;
+	}
+
+	public EntityManagerFactory getEmf() {
+		return emf;
+	}
+
+	public Connection getConnection() {
+		return connection;
 	}
 
 	public void purgeAllQueues() throws JMSException {
@@ -234,39 +233,4 @@ public class Broker {
 		sessionCmd.commit();
 	}
 
-	private synchronized void sendEvent(Event e, ExecutionNode target)
-			throws JMSException {
-		String qName = String.format("Q.%s.EVENT", target.getBrokerName());
-		log.info(String.format(
-				"An event will be sent over the wire on queue %s", qName));
-
-		if (producerEvent == null) {
-			producerEvent = sessionEvent.createProducer(null);
-		}
-
-		Destination destination = sessionEvent.createQueue(qName);
-
-		ObjectMessage m = sessionEvent.createObjectMessage(e);
-		producerEvent.send(destination, m);
-		sessionEvent.commit();
-	}
-
-	public void sendEvent(Event evt) throws JMSException {
-		State s = evt.getState(this.ctx);
-		ArrayList<State> clientStates = s.getClientStates();
-
-		// All client physical nodes
-		ArrayList<ExecutionNode> clientPN = new ArrayList<ExecutionNode>();
-		for (State st : clientStates) {
-			for (ExecutionNode en : st.getRunsOnPhysicalNodes()) {
-				if (!clientPN.contains(en))
-					clientPN.add(en);
-			}
-		}
-
-		// Send to all clients!
-		for (ExecutionNode n : clientPN) {
-			sendEvent(evt, n);
-		}
-	}
 }

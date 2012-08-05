@@ -2,6 +2,7 @@ package org.oxymores.chronix.core.transactional;
 
 import java.util.UUID;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 import org.oxymores.chronix.core.CalendarDay;
@@ -12,9 +13,13 @@ public class CalendarPointer extends TranscientBase {
 
 	private static final long serialVersionUID = 6905957323594389673L;
 
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String lastEndedOkOccurrenceId; // Updated at end of run
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String lastStartedOccurrenceId; // Updated before run
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String lastEndedOccurrenceId; // Updated after run
+	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String nextRunOccurrenceId;
 
 	public Boolean latestFailed = false;

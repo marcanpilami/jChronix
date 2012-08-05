@@ -42,6 +42,9 @@ public class EventListener implements MessageListener {
 			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		this.ctx = ctx;
 		this.cnx = cnx;
+		this.emf = emf;
+		entityManager = this.emf.createEntityManager();
+
 		String qName = String.format("Q.%s.EVENT", brokerName);
 		log.debug(String.format(
 				"Broker %s: registering an event listener on queue %s",
@@ -50,9 +53,6 @@ public class EventListener implements MessageListener {
 		this.dest = this.session.createQueue(qName);
 		MessageConsumer consumer = this.session.createConsumer(dest);
 		consumer.setMessageListener(this);
-
-		this.emf = emf;
-		entityManager = this.emf.createEntityManager();
 
 		qName = String.format("Q.%s.PJ", brokerName);
 		producerPJ = session.createProducer(null);
@@ -63,7 +63,7 @@ public class EventListener implements MessageListener {
 		// For commits: remember an event can be analyzed multiple times
 		// without problems.
 		ObjectMessage omsg = (ObjectMessage) msg;
-		Event evt;
+		Event evt, tmp;
 		try {
 			Object o = omsg.getObject();
 			if (!(o instanceof Event)) {
@@ -72,6 +72,9 @@ public class EventListener implements MessageListener {
 				return;
 			}
 			evt = (Event) o;
+			tmp = entityManager.find(Event.class, evt.getId());
+			if (tmp != null)
+				evt = tmp;
 		} catch (JMSException e) {
 			log.error(
 					"An error occurred during event reception. BAD. Message will stay in queue and will be analysed later",
@@ -135,7 +138,8 @@ public class EventListener implements MessageListener {
 		log.debug(String
 				.format("Event id %s was received, analysed and will now be acked in the JMS queue",
 						evt.getId()));
-		entityManager.merge(evt);
+		if (tmp == null)
+			entityManager.persist(evt);
 		transaction.commit();
 		commit();
 		log.debug(String.format(

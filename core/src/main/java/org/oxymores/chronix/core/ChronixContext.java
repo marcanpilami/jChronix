@@ -278,4 +278,8 @@ public class ChronixContext {
 		}
 		return res;
 	}
+
+	public String getBrokerName() {
+		return this.localUrl.replace(":", "").toUpperCase();
+	}
 }

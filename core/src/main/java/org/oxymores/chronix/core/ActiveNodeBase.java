@@ -28,7 +28,9 @@ import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
@@ -66,7 +68,22 @@ public class ActiveNodeBase extends ConfigurableBase {
 		return null;
 	}
 
-	//
+	// stupid get/set
+	// ////////////////////////////////////////////////////////////////////////////
+
+	// ////////////////////////////////////////////////////////////////////////////
+	// Relationship traversing
+
+	public ArrayList<State> getClientStates() {
+		ArrayList<State> res = new ArrayList<State>();
+		for (State s : this.application.getStates()) {
+			if (s.represents == this)
+				res.add(s);
+		}
+		return res;
+	}
+
+	// Relationship traversing
 	// ////////////////////////////////////////////////////////////////////////////
 
 	// ////////////////////////////////////////////////////////////////////////////
@@ -124,8 +141,9 @@ public class ActiveNodeBase extends ConfigurableBase {
 		EventAnalysisResult tmp;
 
 		// Get session events
-		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1");
+		Query q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2");
 		q.setParameter(1, evt.getLevel0IdU().toString());
+		//q.setParameter(2, evt.getLevel1IdU().toString());
 		@SuppressWarnings("unchecked")
 		List<Event> sessionEvents2 = q.getResultList();
 
@@ -262,6 +280,12 @@ public class ActiveNodeBase extends ConfigurableBase {
 		return; // Do nothing by default.
 	}
 
+	public DateTime selfTrigger(MessageProducer eventProducer,
+			Session jmsSession, ChronixContext ctx, EntityManager em)
+			throws Exception {
+		throw new NotImplementedException();
+	}
+
 	//
 	// ////////////////////////////////////////////////////////////////////////////
 
@@ -282,6 +306,11 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Should the node execution results be visible in the history table?
 	public boolean visibleInHistory() {
 		return true;
+	}
+
+	// Should it be executed by the self-trigger agent?
+	public boolean selfTriggered() {
+		return false;
 	}
 	//
 	// ////////////////////////////////////////////////////////////////////////////

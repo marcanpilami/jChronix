@@ -11,6 +11,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -143,6 +144,10 @@ public class PipelineJob extends TranscientBase {
 		return enteredPipeAt;
 	}
 
+	public void setEnteredPipeAt(DateTime enteredPipeAt) {
+		this.setEnteredPipeAt(enteredPipeAt.toDate());
+	}
+
 	public void setEnteredPipeAt(Date enteredPipeAt) {
 		this.enteredPipeAt = enteredPipeAt;
 	}
@@ -151,12 +156,20 @@ public class PipelineJob extends TranscientBase {
 		return markedForRunAt;
 	}
 
+	public void setMarkedForRunAt(DateTime markedForRunAt) {
+		this.setMarkedForRunAt(markedForRunAt.toDate());
+	}
+
 	public void setMarkedForRunAt(Date markedForRunAt) {
 		this.markedForRunAt = markedForRunAt;
 	}
 
 	public Date getBeganRunningAt() {
 		return beganRunningAt;
+	}
+
+	public void setBeganRunningAt(DateTime beganRunningAt) {
+		this.setBeganRunningAt(beganRunningAt.toDate());
 	}
 
 	public void setBeganRunningAt(Date beganRunningAt) {
@@ -298,6 +311,13 @@ public class PipelineJob extends TranscientBase {
 		return rd;
 	}
 
+	public Event createEvent()
+	{
+		RunResult rr = new RunResult();
+		rr.returnCode = this.resultCode;
+		return createEvent(rr);
+	}
+	
 	public Event createEvent(RunResult rr) {
 		Event e = new Event();
 		e.localOnly = false;
@@ -334,6 +354,7 @@ public class PipelineJob extends TranscientBase {
 		rlog.applicationId = this.appID;
 		rlog.applicationName = a.getName();
 		rlog.beganRunningAt = this.beganRunningAt;
+		rlog.chainLaunchId = this.level1Id;
 		rlog.chainId = this.level0Id;
 		// rlog.chainLev1Id = this.level1Id;
 		// rlog.chainLev1Name

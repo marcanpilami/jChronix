@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -18,7 +19,6 @@ import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import junit.framework.Assert;
@@ -227,7 +227,7 @@ public class TestBroker {
 		b2.stop();
 
 		int i = ctx2.configurationDirectory.listFiles().length;
-		Assert.assertEquals(2, i);
+		Assert.assertEquals(3, i); // Third is the JOBLOG directory
 	}
 
 	@Test
@@ -272,12 +272,12 @@ public class TestBroker {
 		e3.setPlace(p1);
 		e3.setConditionData1(0);
 		e3.setLevel0IdU(chain4.getId());
+		e3.setLevel1IdU(UUID.randomUUID());
 
-		b1.sendEvent(e3);
+		SenderHelpers.sendEvent(e3, this.ctx1);
 		Thread.sleep(3000); // Time to consume message
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testEventListener() throws Exception {
 		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue.");
@@ -301,24 +301,14 @@ public class TestBroker {
 		e1.setPlace(p1);
 		e1.setConditionData1(0);
 		e1.setLevel0IdU(chain1.getId());
+		e1.setLevel1IdU(UUID.randomUUID());
 
-		b1.sendEvent(e1);
+		SenderHelpers.sendEvent(e1, this.ctx1);
 		Thread.sleep(5000); // Time to consume message
 
 		// tests
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("HistoryUnit");
-		EntityManager em = emf.createEntityManager();
-		Query q = em
-				.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt",
-						RunLog.class);
-		List<RunLog> res = q.getResultList();
+		List<RunLog> res = LogHelpers.displayAllHistory();
 		Assert.assertEquals(2, res.size());
-
-		log.info(RunLog.getTitle());
-		for (RunLog l : res) {
-			log.info(l.getLine());
-		}
 
 		// Now, relaunch. Should block after echo, for the calendar has not
 		// progressed.
@@ -329,16 +319,13 @@ public class TestBroker {
 		e2.setPlace(p1);
 		e2.setConditionData1(0);
 		e2.setLevel0IdU(chain1.getId());
+		e2.setLevel1IdU(UUID.randomUUID());
 
-		b1.sendEvent(e2);
+		SenderHelpers.sendEvent(e2, this.ctx1);
 		Thread.sleep(4000); // Time to consume message
 
-		res = q.getResultList();
-		Assert.assertEquals(3, res.size());
-		log.info(RunLog.getTitle());
-		for (RunLog l : res) {
-			log.info(l.getLine());
-		}
+		res = LogHelpers.displayAllHistory();
+		Assert.assertEquals(3, res.size());		
 
 		EntityManagerFactory emf2 = Persistence
 				.createEntityManagerFactory("TransacUnit");
@@ -358,12 +345,8 @@ public class TestBroker {
 		releaseCalendar();
 
 		// Test the event has been reanalyzed
-		res = q.getResultList();
-		Assert.assertEquals(6, res.size());
-		log.info(RunLog.getTitle());
-		for (RunLog l : res) {
-			log.info(l.getLine());
-		}
+		res = LogHelpers.displayAllHistory();
+		Assert.assertEquals(6, res.size());		
 
 		// and do it again: the end of chain1 should not run.
 		Event e4 = new Event();
@@ -372,30 +355,22 @@ public class TestBroker {
 		e4.setPlace(p1);
 		e4.setConditionData1(0);
 		e4.setLevel0IdU(chain1.getId());
+		e4.setLevel1IdU(UUID.randomUUID());
 
-		b1.sendEvent(e4);
+		SenderHelpers.sendEvent(e4, this.ctx1);
 		Thread.sleep(2000); // Time to consume message
 
 		// Test...
-		res = q.getResultList();
-		Assert.assertEquals(7, res.size());
-		log.info(RunLog.getTitle());
-		for (RunLog l : res) {
-			log.info(l.getLine());
-		}
+		res = LogHelpers.displayAllHistory();
 
 		// and finally free the calendar, and test that chain2 is considered as
 		// straggling
 		releaseCalendar();
 		ca1.processStragglers(em2); // Display to ease debug
 		Assert.assertEquals(1, ca1.getStragglers(em2).size());
-		
+
 		// and test scheduling...
-		res = q.getResultList();
-		Assert.assertEquals(10, res.size());
-		log.info(RunLog.getTitle());
-		for (RunLog l : res) {
-			log.info(l.getLine());
-		}
+		res = LogHelpers.displayAllHistory();
+		Assert.assertEquals(10, res.size());		
 	}
 }

@@ -21,6 +21,7 @@ public class ChronixEngine {
 	public Broker broker;
 	public ChronixContext ctx;
 	public String dbPath;
+	public SelfTriggerAgent stAgent;
 
 	public ChronixEngine(String dbPath) {
 		this.dbPath = dbPath;
@@ -32,10 +33,14 @@ public class ChronixEngine {
 		postContextLoad();
 
 		broker = new Broker(ctx, false);
+
+		this.stAgent = new SelfTriggerAgent();
+		this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
 	}
 
 	public void stop() {
-		broker.stop();
+		this.broker.stop();
+		this.stAgent.stopAgent();
 	}
 
 	public void restart() {

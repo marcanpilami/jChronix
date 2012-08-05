@@ -18,7 +18,8 @@ public class ClockRRule extends ApplicationObject {
 
 	String Name, Description;
 
-	String BYMINUTE, BYHOUR, BYDAY, BYMONTHDAY, BYMONTH, BYYEAR, BYSETPOS;
+	String BYSECOND, BYMINUTE, BYHOUR, BYDAY, BYMONTHDAY, BYMONTH, BYYEAR,
+			BYSETPOS;
 
 	// ///////////////////////////////////////////////////////
 	// iCal functions
@@ -29,6 +30,7 @@ public class ClockRRule extends ApplicationObject {
 		res += "FREQ=" + PERIOD + ";";
 
 		// BYxxxxxx
+		res += normalizeByElement(BYSECOND, "BYSECOND");
 		res += normalizeByElement(BYMINUTE, "BYMINUTE");
 		res += normalizeByElement(BYHOUR, "BYHOUR");
 		res += normalizeByElement(BYDAY, "BYDAY");
@@ -101,6 +103,14 @@ public class ClockRRule extends ApplicationObject {
 
 	public void setINTERVAL(Integer iNTERVAL) {
 		INTERVAL = iNTERVAL;
+	}
+
+	public String getBYSECOND() {
+		return BYSECOND;
+	}
+
+	public void setBYSECOND(String bYSECOND) {
+		BYSECOND = bYSECOND;
 	}
 
 	public String getBYMINUTE() {

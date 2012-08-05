@@ -3,6 +3,8 @@ package org.oxymores.chronix.demo;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import net.fortuna.ical4j.model.Recur;
+
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -14,6 +16,8 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.active.Clock;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
 
 public class PlanBuilder {
@@ -127,5 +131,41 @@ public class PlanBuilder {
 		s1.setY(100);
 
 		return s1;
+	}
+
+	public static Clock buildClock(Application a, String name,
+			String description, ClockRRule... rulesADD) {
+		Clock ck1 = new Clock();
+		ck1.setDescription(description);
+		ck1.setName(name);
+		for (ClockRRule r : rulesADD)
+			ck1.addRRuleADD(r);
+		a.addActiveElement(ck1);
+
+		return ck1;
+	}
+
+	public static ClockRRule buildRRuleWeekDays(Application a) {
+		ClockRRule rr1 = new ClockRRule();
+		rr1.setName("Monday-Friday days");
+		rr1.setDescription("Every day from monday to friday included, every week");
+		rr1.setBYDAY("MO,TU,WE,TH,FR,");
+		rr1.setBYHOUR("10");
+		rr1.setBYMINUTE("00");
+		rr1.setPeriod(Recur.WEEKLY);
+		a.addRRule(rr1);
+
+		return rr1;
+	}
+	
+	public static ClockRRule buildRRule10Seconds(Application a) {
+		ClockRRule rr1 = new ClockRRule();
+		rr1.setName("Every 10 second");
+		rr1.setDescription("Every 10 second");
+		rr1.setBYSECOND("00,10,20,30,40,50");
+		rr1.setPeriod(Recur.MINUTELY);
+		a.addRRule(rr1);
+
+		return rr1;
 	}
 }

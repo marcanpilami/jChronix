@@ -39,6 +39,7 @@ public class TranscientBase implements Serializable {
 	protected String calendarOccurrenceID;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String calendarID;
+	protected Boolean outsideChainLaunch = false;
 
 	protected Date createdAt;
 
@@ -216,6 +217,14 @@ public class TranscientBase implements Serializable {
 
 	public void addValue(String key, String value) {
 		this.envParams.add(new EnvironmentValue(key, value));
+	}
+
+	public Boolean getOutsideChain() {
+		return outsideChainLaunch;
+	}
+
+	public void setOutsideChain(Boolean outsideChain) {
+		this.outsideChainLaunch = outsideChain;
 	}
 	//
 	// //////////////////////////////////////////////

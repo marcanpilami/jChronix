@@ -53,22 +53,24 @@ public class RunLog implements Serializable {
 	public String calendarOccurrence;
 	public String logPath;
 	public Boolean visible = true;
+	@Column(columnDefinition = "CHAR(36)", length = 36)
+	public String chainLaunchId;
 
 	public static String getTitle() {
 		String res = "";
 		res = String
-				.format("%-36s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %s | %s | %s | %s | %-15s | %-15s | %-10s | %-5s",
+				.format("%-36s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %s | %s | %s | %s | %-15s | %-15s | %-10s | %-5s | %36s",
 						"ID", "chainName", "applicationName", "activeNodeName",
 						"osAccount", "whatWasRun", "RC", "enteredPipeAt ",
 						"beganRunningAt", "stoppedRunning", "markedForUnAt ",
-						"calendarName", "calendar occr", "logPath", "visib");
+						"calendarName", "calendar occr", "logPath", "visib", "chainLaunchId");
 		return res;
 	}
 
 	public String getLine() {
 		String res = "";
 		res = String
-				.format("%36s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %s | %s | %s | %s | %-15s | %-15s | %-10s | %-5s",
+				.format("%36s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %s | %s | %s | %s | %-15s | %-15s | %-10s | %-5s | %36s",
 						this.id,
 						chainName.substring(0, Math.min(19, chainName.length())),
 						applicationName.substring(0,
@@ -94,7 +96,7 @@ public class RunLog implements Serializable {
 										Math.min(19,
 												calendarOccurrence.length())),
 						logPath == null ? null : logPath.substring(0,
-								Math.min(9, logPath.length())), visible);
+								Math.min(9, logPath.length())), visible, chainLaunchId);
 		return res;
 	}
 }

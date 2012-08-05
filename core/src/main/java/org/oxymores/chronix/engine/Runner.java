@@ -38,7 +38,6 @@ public class Runner implements MessageListener {
 
 	private static Logger log = Logger.getLogger(Runner.class);
 
-	private Broker broker;
 	private ChronixContext ctx;
 	private Session session;
 	private Destination destEndJob, destLogFile, destRequest;
@@ -49,16 +48,15 @@ public class Runner implements MessageListener {
 
 	private ArrayList<PipelineJob> resolving;
 
-	private MessageProducer producerRunDescription, producerHistory;
+	private MessageProducer producerRunDescription, producerHistory,
+			producerEvents;
 
 	public void startListening(Connection cnx, String brokerName,
-			ChronixContext ctx, EntityManagerFactory emf, Broker br)
-			throws JMSException {
+			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		// Save contexts
 		this.ctx = ctx;
 		this.cnx = cnx;
 		this.emf = emf;
-		this.broker = br;
 
 		// Internal queue
 		resolving = new ArrayList<PipelineJob>();
@@ -96,6 +94,7 @@ public class Runner implements MessageListener {
 		// Outgoing producer for running commands
 		producerRunDescription = session.createProducer(null);
 		producerHistory = session.createProducer(null);
+		producerEvents = session.createProducer(null);
 	}
 
 	@Override
@@ -259,7 +258,7 @@ public class Runner implements MessageListener {
 		// Event throwing
 		Event e = pj.createEvent(rr);
 		try {
-			broker.sendEvent(e);
+			SenderHelpers.sendEvent(e, producerEvents, session, ctx, true);
 		} catch (JMSException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
