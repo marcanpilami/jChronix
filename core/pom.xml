@@ -54,6 +54,7 @@
 
 				<configuration>
 					<includes>**/transactional/*.class</includes>
+					<includes>**/timedata/*.class</includes>
 					<excludes>**/*.class</excludes>
 					<addDefaultConstructor>true</addDefaultConstructor>
 					<enforcePropertyRestrictions>true</enforcePropertyRestrictions>

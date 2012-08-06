@@ -15,6 +15,9 @@
 		<class>org.oxymores.chronix.core.transactional.PipelineJob</class>
 		<class>org.oxymores.chronix.core.transactional.EventConsumption</class>
 		<class>org.oxymores.chronix.core.transactional.ClockTick</class>
+		
+		<class>org.oxymores.chronix.core.timedata.RunMetrics</class>
+		<class>org.oxymores.chronix.core.timedata.RunStats</class>
 
 		<properties>
 			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb" />

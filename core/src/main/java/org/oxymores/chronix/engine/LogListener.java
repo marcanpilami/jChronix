@@ -16,6 +16,7 @@ import javax.persistence.Persistence;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.core.timedata.RunStats;
 
 public class LogListener implements MessageListener {
 
@@ -24,8 +25,8 @@ public class LogListener implements MessageListener {
 	private Session jmsSession;
 	private Destination logQueueDestination;
 	private Connection jmsConnection;
-	private EntityManager em;
-	private EntityTransaction tr;
+	private EntityManager emHistory, emTransac;
+	private EntityTransaction trHistory, trTransac;
 
 	public void startListening(Connection cnx, String brokerName,
 			ChronixContext ctx) throws JMSException {
@@ -50,8 +51,13 @@ public class LogListener implements MessageListener {
 		// Persistence on dedicated context
 		EntityManagerFactory emf = Persistence
 				.createEntityManagerFactory("HistoryUnit");
-		em = emf.createEntityManager();
-		tr = em.getTransaction();
+		emHistory = emf.createEntityManager();
+		trHistory = emHistory.getTransaction();
+
+		EntityManagerFactory emf2 = Persistence
+				.createEntityManagerFactory("TransacUnit");
+		emTransac = emf2.createEntityManager();
+		trTransac = emTransac.getTransaction();
 	}
 
 	@Override
@@ -77,21 +83,28 @@ public class LogListener implements MessageListener {
 			}
 			return;
 		}
-		tr.begin();
+		trHistory.begin();
+		trTransac.begin();
 
 		log.info(String
 				.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s",
 						rlog.id, rlog.activeNodeName, rlog.placeName,
 						rlog.stateId));
 		log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
-		em.merge(rlog);
-		tr.commit();
+		emHistory.merge(rlog);
+		RunStats.storeMetrics(rlog, emTransac);
+		trHistory.commit();
+		trTransac.commit();
 		try {
 			jmsSession.commit();
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		trTransac.begin();
+		RunStats.updateStats(rlog, emTransac);
+		trTransac.commit();
 
 	}
 }
