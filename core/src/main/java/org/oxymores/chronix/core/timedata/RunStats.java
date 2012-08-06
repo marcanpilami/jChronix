@@ -27,6 +27,35 @@ public class RunStats implements Serializable {
 	public float maxDuration;
 	public float minDuration;
 
+	private static RunStats getRS(EntityManager em, String stateId,
+			String placeId) {
+		RunStats rs = null;
+		TypedQuery<RunStats> q = em
+				.createQuery(
+						"SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2",
+						RunStats.class);
+		q.setParameter(1, placeId);
+		q.setParameter(2, stateId);
+		try {
+			rs = q.getSingleResult();
+		} catch (NoResultException e) {
+		}
+		return rs;
+	}
+
+	public static float getMean(EntityManager em, String stateId, String placeId) {
+		// Retrieve the statistics object
+		RunStats rs = RunStats.getRS(em, stateId, placeId);
+
+		// If it does not exist, return default time - 1 minute
+		if (rs == null) {
+			return 60000;
+		}
+
+		// Else, return the true result
+		return rs.meanDuration;
+	}
+
 	// Must be called inside open transaction
 	public static void storeMetrics(RunLog rlog, EntityManager em) {
 		if (rlog.stoppedRunningAt != null && rlog.resultCode == 0) {
@@ -46,17 +75,7 @@ public class RunStats implements Serializable {
 	// Must be called inside open transaction
 	public static void updateStats(RunLog rlog, EntityManager em) {
 		// Retrieve the statistics object
-		RunStats rs = null;
-		TypedQuery<RunStats> q = em
-				.createQuery(
-						"SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2",
-						RunStats.class);
-		q.setParameter(1, rlog.placeId);
-		q.setParameter(2, rlog.stateId);
-		try {
-			rs = q.getSingleResult();
-		} catch (NoResultException e) {
-		}
+		RunStats rs = RunStats.getRS(em, rlog.stateId, rlog.placeId);
 
 		// If it does not exist, create it
 		if (rs == null) {
