@@ -1,10 +1,6 @@
 package org.oxymores.chronix.engine;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.Writer;
-import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,8 +13,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
 
 import junit.framework.Assert;
@@ -55,19 +49,19 @@ public class TestBroker {
 	public void init() throws Exception {
 		db1 = "C:\\TEMP\\db1";
 		db2 = "C:\\TEMP\\db2";
-		
-		LogHelpers.clearAllTranscientElements();
 
 		/************************************************
 		 * Create a test configuration db
 		 ***********************************************/
 		ChronixContext c1 = new ChronixContext();
 		c1.configurationDirectory = new File(db1);
+		c1.configurationDirectoryPath = db1;
 
 		// Clear test db directory
 		File[] fileList = c1.configurationDirectory.listFiles();
 		for (int i = 0; i < fileList.length; i++)
 			fileList[i].delete();
+		c1.createNewConfigFile();
 
 		// Create test application and save it inside context
 		Application a1 = org.oxymores.chronix.demo.DemoApplication
@@ -93,6 +87,7 @@ public class TestBroker {
 		 ***********************************************/
 		ChronixContext c2 = new ChronixContext();
 		c2.configurationDirectory = new File(db2);
+		c2.configurationDirectoryPath = db2;
 
 		// Clear test db directory
 		File[] fileList2 = c2.configurationDirectory.listFiles();
@@ -100,20 +95,19 @@ public class TestBroker {
 			fileList2[i].delete();
 
 		// Write a listener configuration file
-		File f = new File(c2.configurationDirectory + "/listener.crn");
-		Writer output = new BufferedWriter(new FileWriter(f));
-		String url = InetAddress.getLocalHost().getCanonicalHostName()
-				+ ":1400";
-		output.write(url);
-		output.close();
+		c2.createNewConfigFile(1400, "TransacUnit2", "HistoryUnit2");
 
 		/************************************************
 		 * Create test objects from the new db
 		 ***********************************************/
 
 		// Load the configuration db into a context
+		LogHelpers.clearAllTranscientElements(c1);
+		LogHelpers.clearAllTranscientElements(c2);
 		ctx1 = ChronixContext.loadContext(db1);
 		ctx2 = ChronixContext.loadContext(db2);
+
+		
 
 		app1 = ctx1.applicationsByName.get(a1.getName());
 
@@ -250,7 +244,7 @@ public class TestBroker {
 		SenderHelpers.runStateAlone(s1, p1, ctx1);
 		Thread.sleep(1000); // Time to consume message
 
-		List<RunLog> res = LogHelpers.displayAllHistory();
+		List<RunLog> res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(1, res.size());
 	}
 
@@ -272,7 +266,7 @@ public class TestBroker {
 		SenderHelpers.runStateInsidePlanWithoutCalendarUpdating(s1, p1, ctx1);
 		Thread.sleep(1000); // Time to consume message
 
-		List<RunLog> res = LogHelpers.displayAllHistory();
+		List<RunLog> res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(3, res.size());
 	}
 
@@ -284,9 +278,7 @@ public class TestBroker {
 
 		// Test calendar updated
 		Calendar ca = app1.getCalendars().get(0);
-		EntityManagerFactory emf2 = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		EntityManager em2 = emf2.createEntityManager();
+		EntityManager em2 = ctx1.getTransacEM();
 		CalendarDay cd = ca.getCurrentOccurrence(em2);
 		Assert.assertEquals("02/01/2030", cd.getValue());
 	}
@@ -346,7 +338,7 @@ public class TestBroker {
 		Thread.sleep(5000); // Time to consume message
 
 		// tests
-		List<RunLog> res = LogHelpers.displayAllHistory();
+		List<RunLog> res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(2, res.size());
 
 		// Now, relaunch. Should block after echo, for the calendar has not
@@ -363,12 +355,10 @@ public class TestBroker {
 		SenderHelpers.sendEvent(e2, this.ctx1);
 		Thread.sleep(4000); // Time to consume message
 
-		res = LogHelpers.displayAllHistory();
+		res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(3, res.size());
 
-		EntityManagerFactory emf2 = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		EntityManager em2 = emf2.createEntityManager();
+		EntityManager em2 = ctx1.getTransacEM();
 		TypedQuery<CalendarPointer> q2 = em2.createQuery(
 				"SELECT r FROM CalendarPointer r", CalendarPointer.class);
 		for (CalendarPointer c : q2.getResultList()) {
@@ -384,7 +374,7 @@ public class TestBroker {
 		releaseCalendar();
 
 		// Test the event has been reanalyzed
-		res = LogHelpers.displayAllHistory();
+		res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(6, res.size());
 
 		// and do it again: the end of chain1 should not run.
@@ -400,7 +390,7 @@ public class TestBroker {
 		Thread.sleep(2000); // Time to consume message
 
 		// Test...
-		res = LogHelpers.displayAllHistory();
+		res = LogHelpers.displayAllHistory(ctx1);
 
 		// and finally free the calendar, and test that chain2 is considered as
 		// straggling
@@ -409,7 +399,7 @@ public class TestBroker {
 		Assert.assertEquals(1, ca1.getStragglers(em2).size());
 
 		// and test scheduling...
-		res = LogHelpers.displayAllHistory();
+		res = LogHelpers.displayAllHistory(ctx1);
 		Assert.assertEquals(10, res.size());
 	}
 }

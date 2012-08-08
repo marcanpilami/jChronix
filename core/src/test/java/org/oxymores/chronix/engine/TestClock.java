@@ -120,7 +120,7 @@ public class TestClock {
 		Thread.sleep(500); // In case we chain tests - free TCP port
 
 		// Get results
-		List<RunLog> res = LogHelpers.displayAllHistory();
+		List<RunLog> res = LogHelpers.displayAllHistory(ctx);
 
 		// 6 per minute - grace period is 1 minute => 6 runs
 		Assert.assertEquals(6, res.size());

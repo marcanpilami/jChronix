@@ -3,22 +3,19 @@ package org.oxymores.chronix.engine;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.TranscientBase;
 
 public class LogHelpers {
 	private static Logger log = Logger.getLogger(LogHelpers.class);
 
-	public static List<RunLog> displayAllHistory() {
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("HistoryUnit");
-		EntityManager em = emf.createEntityManager();
+	public static List<RunLog> displayAllHistory(ChronixContext ctx) {
+		EntityManager em = ctx.getHistoryEM();
 		TypedQuery<RunLog> q = em
 				.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt",
 						RunLog.class);
@@ -32,10 +29,8 @@ public class LogHelpers {
 		return res;
 	}
 
-	public static void clearAllTranscientElements() {
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("HistoryUnit");
-		EntityManager em1 = emf.createEntityManager();
+	public static void clearAllTranscientElements(ChronixContext ctx) {
+		EntityManager em1 = ctx.getHistoryEM();
 		TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r",
 				RunLog.class);
 
@@ -46,9 +41,7 @@ public class LogHelpers {
 		
 		tr1.commit();
 
-		emf = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		EntityManager em2 = emf.createEntityManager();
+		EntityManager em2 = ctx.getTransacEM();
 		TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r",
 				TranscientBase.class);
 		

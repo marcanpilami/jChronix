@@ -15,7 +15,7 @@
 		<class>org.oxymores.chronix.core.transactional.PipelineJob</class>
 		<class>org.oxymores.chronix.core.transactional.EventConsumption</class>
 		<class>org.oxymores.chronix.core.transactional.ClockTick</class>
-		
+
 		<class>org.oxymores.chronix.core.timedata.RunMetrics</class>
 		<class>org.oxymores.chronix.core.timedata.RunStats</class>
 
@@ -37,6 +37,55 @@
 
 		<properties>
 			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhist" />
+			<property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbcDriver" />
+			<!-- <property name="openjpa.ConnectionUserName" value="none" /> <property 
+				name="openjpa.ConnectionPassword" value="none" /> -->
+			<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema" />
+			<property name="openjpa.InverseManager" value="true" />
+			<property name="openjpa.Log" value="DefaultLevel=WARN, Tool=WARN" />
+		</properties>
+	</persistence-unit>
+
+
+
+
+
+
+
+	<!-- For the second test node -->
+	<persistence-unit name="TransacUnit2">
+		<description>Persistence Unit used for storing Chronix transactional data</description>
+		<provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
+
+		<class>org.oxymores.chronix.core.transactional.TranscientBase</class>
+		<class>org.oxymores.chronix.core.transactional.CalendarPointer</class>
+		<class>org.oxymores.chronix.core.transactional.EnvironmentValue</class>
+		<class>org.oxymores.chronix.core.transactional.Event</class>
+		<class>org.oxymores.chronix.core.transactional.PipelineJob</class>
+		<class>org.oxymores.chronix.core.transactional.EventConsumption</class>
+		<class>org.oxymores.chronix.core.transactional.ClockTick</class>
+
+		<class>org.oxymores.chronix.core.timedata.RunMetrics</class>
+		<class>org.oxymores.chronix.core.timedata.RunStats</class>
+
+		<properties>
+			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb2" />
+			<property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbcDriver" />
+			<!-- <property name="openjpa.ConnectionUserName" value="none" /> <property 
+				name="openjpa.ConnectionPassword" value="none" /> -->
+			<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema" />
+			<property name="openjpa.InverseManager" value="true" />
+			<property name="openjpa.Log" value="DefaultLevel=WARN, Tool=WARN" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="HistoryUnit2">
+		<description>Persistence Unit used for storing Chronix history</description>
+		<provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
+		<class>org.oxymores.chronix.core.timedata.RunLog</class>
+
+		<properties>
+			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhist2" />
 			<property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbcDriver" />
 			<!-- <property name="openjpa.ConnectionUserName" value="none" /> <property 
 				name="openjpa.ConnectionPassword" value="none" /> -->

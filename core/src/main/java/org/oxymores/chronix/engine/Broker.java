@@ -5,7 +5,6 @@ import java.io.IOException;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -51,7 +50,7 @@ public class Broker {
 		broker = new BrokerService();
 		String brokerName = this.ctx.getBrokerName();
 		broker.setBrokerName(brokerName);
-		this.emf = Persistence.createEntityManagerFactory("TransacUnit");
+		this.emf = ctx.getTransacEMF();
 
 		// Basic configuration
 		broker.setPersistent(true);

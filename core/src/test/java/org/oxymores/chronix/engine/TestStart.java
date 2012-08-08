@@ -1,10 +1,18 @@
 package org.oxymores.chronix.engine;
 
+import java.io.File;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.exceptions.IncorrectConfigurationException;
 
 public class TestStart {
@@ -48,5 +56,26 @@ public class TestStart {
 		Assert.assertEquals(1, a1.getChains().size());
 		Assert.assertEquals(1, a2.getChains().size());
 		Assert.assertEquals(5, a2.getChains().get(0).getStates().size());
+	}
+
+	@Test
+	public void testCalendarPointerCreationAtStartup() throws Exception {
+		String dbPath = "C:\\TEMP\\db1";
+		ChronixEngine e = new ChronixEngine(dbPath);
+		e.emptyDb();
+		e.injectListenerConfigIntoDb();
+
+		Application a = DemoApplication.getNewDemoApplication();
+		ChronixContext ctx = new ChronixContext();
+		ctx.configurationDirectory = new File(dbPath);
+		ctx.saveApplication(a);
+		ctx.setWorkingAsCurrent(a);
+		e.start();
+
+		EntityManager em = ctx.getTransacEM();
+		TypedQuery<CalendarPointer> q = em.createQuery(
+				"SELECT c from CalendarPointer c", CalendarPointer.class);
+
+		Assert.assertEquals(3, q.getResultList().size());
 	}
 }

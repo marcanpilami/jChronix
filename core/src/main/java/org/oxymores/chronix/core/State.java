@@ -29,6 +29,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -462,13 +463,14 @@ public class State extends ConfigurableBase {
 			return;
 
 		// Get existing pointers
-		Query q = em
-				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1");
+		TypedQuery<CalendarPointer> q = em.createQuery(
+				"SELECT p FROM CalendarPointer p WHERE p.stateID = ?1",
+				CalendarPointer.class);
 		q.setParameter(1, this.id.toString());
-		@SuppressWarnings("unchecked")
 		List<CalendarPointer> ptrs = q.getResultList();
 
 		// A pointer should exist on all places
+		int i = 0;
 		for (Place p : this.runsOn.places) {
 			// Is there a existing pointer on this place?
 			CalendarPointer existing = null;
@@ -493,10 +495,16 @@ public class State extends ConfigurableBase {
 				tmp.setNextRunOccurrenceCd(this.calendar.getFirstOccurrence());
 				tmp.setPlace(p);
 				tmp.setState(this);
+				i++;
 
 				em.persist(tmp);
 			}
 		}
+
+		if (i != 0)
+			log.debug(String
+					.format("State %s (%s - chain %s) has created %s calendar pointer(s).",
+							this.id, this.represents.name, this.chain.name, i));
 
 		// Commit is done by the calling method
 	}
@@ -526,7 +534,9 @@ public class State extends ConfigurableBase {
 		}
 
 		if (cp == null) {
-			log.error("CalendarPointer is null - should not be possible. It's a bug.");
+			log.error(String
+					.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.",
+							this.id, this.represents.name, this.chain.name));
 			return false;
 		}
 

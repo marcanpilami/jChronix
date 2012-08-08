@@ -9,9 +9,7 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
@@ -49,14 +47,10 @@ public class LogListener implements MessageListener {
 		consumer.setMessageListener(this);
 
 		// Persistence on dedicated context
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("HistoryUnit");
-		emHistory = emf.createEntityManager();
+		emHistory = ctx.getHistoryEM();
 		trHistory = emHistory.getTransaction();
 
-		EntityManagerFactory emf2 = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		emTransac = emf2.createEntityManager();
+		emTransac = ctx.getTransacEM();
 		trTransac = emTransac.getTransaction();
 	}
 

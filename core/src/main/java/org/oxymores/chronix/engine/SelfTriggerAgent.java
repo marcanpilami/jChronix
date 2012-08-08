@@ -54,7 +54,7 @@ public class SelfTriggerAgent extends Thread {
 			for (ActiveNodeBase n : a.getActiveElements().values()) {
 				if (n.selfTriggered())
 					this.nodes.add(n);
-			}
+			}// TODO: select only clocks with local consequences
 		}
 
 		// Start thread

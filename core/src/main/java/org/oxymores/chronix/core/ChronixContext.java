@@ -13,6 +13,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.UUID;
@@ -37,6 +38,7 @@ public class ChronixContext {
 	public String localUrl = "";
 	public String dns;
 	public int port;
+	public String transacUnitName, historyUnitName;
 
 	public static ChronixContext loadContext(String appConfDirectory)
 			throws IOException, NumberFormatException, ChronixNoLocalNode {
@@ -72,23 +74,17 @@ public class ChronixContext {
 				toLoad.get(id)[0] = f;
 			}
 
-			if (fileName.startsWith("app_") && fileName.endsWith(".crn")
-					&& fileName.contains("CURRENT")
-					&& fileName.contains("network")) {
-				// This is a current app NETWORK file.
-				String id = fileName.split("_")[2];
-				if (!toLoad.containsKey(id))
-					toLoad.put(id, new File[2]);
-				toLoad.get(id)[1] = f;
-			}
-
 			if (fileName.equals("listener.crn")) {
-				// This is the activemq configuration file
+				// This is the configuration file
 				log.debug("A listener configuration file was found");
 				BufferedReader fr = new BufferedReader(new FileReader(f));
 				ctx.localUrl = fr.readLine();
 				ctx.dns = ctx.localUrl.split(":")[0];
 				ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
+
+				ctx.transacUnitName = fr.readLine();
+				ctx.historyUnitName = fr.readLine();
+
 				fr.close();
 			}
 
@@ -100,15 +96,7 @@ public class ChronixContext {
 		// ///////////////////
 
 		if (ctx.localUrl == "") {
-			File f = new File(appConfDirectory + "/listener.crn");
-			Writer output = new BufferedWriter(new FileWriter(f));
-			String url = InetAddress.getLocalHost().getCanonicalHostName()
-					+ ":1789";
-			output.write(url);
-			output.close();
-			ctx.localUrl = url;
-			ctx.dns = ctx.localUrl.split(":")[0];
-			ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
+			ctx.createNewConfigFile();
 		}
 
 		// ///////////////////
@@ -134,9 +122,7 @@ public class ChronixContext {
 		// Post load checkup & inits
 		// ///////////////////
 
-		EntityManagerFactory emf = Persistence
-				.createEntityManagerFactory("TransacUnit");
-		EntityManager em = emf.createEntityManager();
+		EntityManager em = ctx.getTransacEM();
 		EntityTransaction tr = em.getTransaction();
 		tr.begin();
 		for (Application a : ctx.applicationsById.values()) {
@@ -281,5 +267,55 @@ public class ChronixContext {
 
 	public String getBrokerName() {
 		return this.localUrl.replace(":", "").toUpperCase();
+	}
+
+	public EntityManagerFactory getTransacEMF() {
+		return Persistence.createEntityManagerFactory(this.transacUnitName);
+	}
+
+	public EntityManagerFactory getHistoryEMF() {
+		return Persistence.createEntityManagerFactory(this.historyUnitName);
+	}
+
+	public EntityManager getTransacEM() {
+		return this.getTransacEMF().createEntityManager();
+	}
+
+	public EntityManager getHistoryEM() {
+		return this.getHistoryEMF().createEntityManager();
+	}
+
+	public void createNewConfigFile() throws UnknownHostException, IOException {
+		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
+				1789, "TransacUnit", "HistoryUnit");
+	}
+
+	public void createNewConfigFile(String TransacUnit, String HistoryUnit)
+			throws UnknownHostException, IOException {
+		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
+				1789, TransacUnit, HistoryUnit);
+	}
+
+	public void createNewConfigFile(int port, String TransacUnit,
+			String HistoryUnit) throws UnknownHostException, IOException {
+		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
+				port, TransacUnit, HistoryUnit);
+	}
+
+	public void createNewConfigFile(String interfaceToListenOn, int port,
+			String TransacUnit, String HistoryUnit) throws IOException {
+		String nl = System.getProperty("line.separator");
+		File f = new File(configurationDirectoryPath + "/listener.crn");
+		Writer output = new BufferedWriter(new FileWriter(f));
+		String url = interfaceToListenOn + ":" + port;
+		output.write(url);
+		output.write(nl + TransacUnit);
+		output.write(nl + HistoryUnit);
+		output.close();
+		this.localUrl = url;
+		this.transacUnitName = TransacUnit;
+		this.historyUnitName = HistoryUnit;
+		this.dns = this.localUrl.split(":")[0];
+		this.port = Integer.parseInt(this.localUrl.split(":")[1]);
 	}
 }
