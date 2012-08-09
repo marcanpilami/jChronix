@@ -64,8 +64,7 @@ public class TestBroker {
 		c1.createNewConfigFile();
 
 		// Create test application and save it inside context
-		Application a1 = org.oxymores.chronix.demo.DemoApplication
-				.getNewDemoApplication();
+		Application a1 = org.oxymores.chronix.demo.DemoApplication.getNewDemoApplication();
 
 		// Init creation of app
 		try {
@@ -107,8 +106,6 @@ public class TestBroker {
 		ctx1 = ChronixContext.loadContext(db1);
 		ctx2 = ChronixContext.loadContext(db2);
 
-		
-
 		app1 = ctx1.applicationsByName.get(a1.getName());
 
 		// Create a broker from the new context. Purge its queues.
@@ -136,16 +133,13 @@ public class TestBroker {
 	@Test
 	public void testStart() throws Exception {
 		log.info("****This tests sending a text message without anyone listening to it.");
-		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				"vm://localhost");
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
-		Session session = connection.createSession(false,
-				Session.AUTO_ACKNOWLEDGE);
+		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		Destination destination = session.createQueue("TEST.SIMPLESEND");
 		MessageProducer producer = session.createProducer(destination);
-		String text = "Hello world1! From: " + Thread.currentThread().getName()
-				+ " : " + this.hashCode();
+		String text = "Hello world1! From: " + Thread.currentThread().getName() + " : " + this.hashCode();
 		TextMessage message = session.createTextMessage(text);
 
 		producer.send(message);
@@ -157,14 +151,12 @@ public class TestBroker {
 	@Test
 	public void testPersistence() throws Exception {
 		log.info("****This tests sending a text message, killing the broker, restarting it and checking the message is still alive");
-		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				"vm://" + ctx1.localUrl.replace(":", "").toUpperCase());
+		ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + ctx1.localUrl.replace(":", "").toUpperCase());
 
 		// Send a message
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
-		Session session = connection.createSession(false,
-				Session.AUTO_ACKNOWLEDGE);
+		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		Destination destination = session.createQueue("TEST.PERSIST");
 		MessageProducer producer = session.createProducer(destination);
 		String text = "Hello world2!" + this.hashCode();
@@ -249,8 +241,7 @@ public class TestBroker {
 	}
 
 	@Test
-	public void testManualLaunchWithConsequences() throws JMSException,
-			InterruptedException {
+	public void testManualLaunchWithConsequences() throws JMSException, InterruptedException {
 		log.info("****This tests running a chain on the first node");
 
 		// Get relevant data to launch a job
@@ -271,8 +262,7 @@ public class TestBroker {
 	}
 
 	@Test
-	public void testCalendarNextOccurrence() throws JMSException,
-			InterruptedException {
+	public void testCalendarNextOccurrence() throws JMSException, InterruptedException {
 		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue and trigger a +1 in the calendar");
 		releaseCalendar();
 
@@ -359,14 +349,12 @@ public class TestBroker {
 		Assert.assertEquals(3, res.size());
 
 		EntityManager em2 = ctx1.getTransacEM();
-		TypedQuery<CalendarPointer> q2 = em2.createQuery(
-				"SELECT r FROM CalendarPointer r", CalendarPointer.class);
+		TypedQuery<CalendarPointer> q2 = em2.createQuery("SELECT r FROM CalendarPointer r", CalendarPointer.class);
 		for (CalendarPointer c : q2.getResultList()) {
 			log.debug(c.getRunning());
 		}
 
-		TypedQuery<Event> q3 = em2.createQuery("SELECT e FROM Event e",
-				Event.class);
+		TypedQuery<Event> q3 = em2.createQuery("SELECT e FROM Event e", Event.class);
 		List<Event> events = q3.getResultList();
 		Assert.assertEquals(1, events.size()); // purge - only pending remain
 

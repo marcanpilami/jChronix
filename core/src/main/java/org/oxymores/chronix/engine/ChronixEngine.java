@@ -1,12 +1,7 @@
 package org.oxymores.chronix.engine;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
@@ -15,36 +10,128 @@ import org.oxymores.chronix.demo.MaintenanceApplication;
 import org.oxymores.chronix.demo.OperationsApplication;
 import org.oxymores.chronix.exceptions.IncorrectConfigurationException;
 
-public class ChronixEngine {
+public class ChronixEngine extends Thread {
 	private static Logger log = Logger.getLogger(ChronixEngine.class);
 
 	public Broker broker;
 	public ChronixContext ctx;
 	public String dbPath;
 	public SelfTriggerAgent stAgent;
+	private Semaphore startCritical, stop, threadInit;
 
 	public ChronixEngine(String dbPath) {
 		this.dbPath = dbPath;
+		this.ctx = new ChronixContext(); // to allow some basic config
+		this.ctx.configurationDirectoryPath = dbPath; // before starting
+		this.ctx.configurationDirectory = new File(dbPath);
+
+		this.startCritical = new Semaphore(1);
+		this.stop = new Semaphore(0);
+		this.threadInit = new Semaphore(0);
 	}
 
-	public void start() throws Exception {
-		preContextLoad();
-		ctx = ChronixContext.loadContext(dbPath);
-		postContextLoad();
-
-		broker = new Broker(ctx, false);
-
-		this.stAgent = new SelfTriggerAgent();
-		this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+	public void startEngine() {
+		startEngine(false, false);
 	}
 
-	public void stop() {
-		this.broker.stop();
-		this.stAgent.stopAgent();
+	boolean run = true;
+
+	private void startEngine(boolean blocking, boolean purgeQueues) {
+		log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
+		try {
+			this.startCritical.acquire();
+			this.threadInit.release(1);
+
+			// Context
+			preContextLoad();
+			this.ctx = ChronixContext.loadContext(this.dbPath);
+			postContextLoad();
+
+			// Broker with all the consumer threads
+			this.broker = new Broker(this, purgeQueues);
+			this.broker.registerListeners(this);
+
+			// Active sources agent
+			this.stAgent = new SelfTriggerAgent();
+			this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+
+			// Done
+			this.startCritical.release();
+
+			if (blocking) {
+				stop.wait();
+			} /*
+			 * else this.start();
+			 */
+
+		} catch (Exception e) {
+			this.run = false;
+		}
 	}
 
-	public void restart() {
+	@Override
+	public void run() {
+		// Only does one thing: reload configuration and stop on trigger
+		while (this.run) {
+			// First : start!
+			startEngine(false, false);
+			if (!run) {
+				this.startCritical.release();
+				this.stop.release();
+				this.threadInit.release();
+				return;
+			}
 
+			// Then, wait for the end signal
+			try {
+				this.stop.acquire();
+			} catch (InterruptedException e) {
+				log.error("big problem here", e);
+			}
+
+			// Properly stop the engine
+			if (this.stAgent != null)
+				this.stAgent.stopAgent();
+			this.broker.stop();
+
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			} // Port release is not immediate, sad.
+
+			// Done. If 'run' is still true, will restart the engine
+		}
+	}
+
+	public void waitForInitEnd() {
+		try {
+			this.threadInit.acquire();
+			this.startCritical.acquire();
+		} catch (InterruptedException e) {
+		}
+		this.startCritical.release();
+		this.threadInit.release();
+	}
+
+	public void queueReloadConfiguration() {
+		try {
+			this.startCritical.acquire();
+			this.run = true;
+			this.stop.release();
+		} catch (InterruptedException e) {
+		}
+		this.startCritical.release();
+	}
+
+	public void stopEngine() {
+		log.info("The main engine has received a stop request");
+		try {
+			this.startCritical.acquire();
+			this.run = false;
+			this.stop.release();
+		} catch (InterruptedException e) {
+		}
+		this.startCritical.release();
 	}
 
 	protected void preContextLoad() throws Exception {
@@ -59,10 +146,9 @@ public class ChronixEngine {
 			}
 		}
 		if (!found) {
-			log.error("The listener.crn file was not found in folder " + dbPath
-					+ " - scheduler cannot start");
-			throw new IncorrectConfigurationException(
-					"listener.crn file missing from configuration database");
+			log.error("The listener.crn file was not found in folder " + dbPath + " - scheduler cannot start");
+			this.run = false;
+			throw new IncorrectConfigurationException("listener.crn file missing from configuration database");
 		}
 	}
 
@@ -89,21 +175,5 @@ public class ChronixEngine {
 		File[] fileList = new File(this.dbPath).listFiles();
 		for (int i = 0; i < fileList.length; i++)
 			fileList[i].delete();
-	}
-
-	public void injectListenerConfigIntoDb() throws IOException {
-		try {
-			injectListenerConfigIntoDb(InetAddress.getLocalHost()
-					.getCanonicalHostName() + ":1789");
-		} catch (UnknownHostException e) {
-			injectListenerConfigIntoDb("localhost" + ":1400");
-		}
-	}
-
-	public void injectListenerConfigIntoDb(String url) throws IOException {
-		File f = new File(dbPath + "/listener.crn");
-		Writer output = new BufferedWriter(new FileWriter(f));
-		output.write(url);
-		output.close();
 	}
 }

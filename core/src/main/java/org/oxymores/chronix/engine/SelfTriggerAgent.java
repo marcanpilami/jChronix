@@ -30,16 +30,26 @@ public class SelfTriggerAgent extends Thread {
 	private MessageProducer producerEvents;
 	private Session jmsSession;
 	private EntityTransaction jpaTransaction;
+	private Semaphore triggering;
 
 	public void stopAgent() {
+		try {
+			this.triggering.acquire();
+		} catch (InterruptedException e1) {
+		}
+		try {
+			this.producerEvents.close();
+			this.jmsSession.close();
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 		run = false;
 		loop.release();
 	}
 
-	public void startAgent(EntityManagerFactory emf, ChronixContext ctx,
-			Connection cnx) throws JMSException {
-		log.debug(String.format("(%s) Agent responsible for clocks will start",
-				ctx.configurationDirectoryPath));
+	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException {
+		log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
+
 		// Save pointers
 		this.loop = new Semaphore(0);
 		this.em = emf.createEntityManager();
@@ -47,6 +57,7 @@ public class SelfTriggerAgent extends Thread {
 		this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
 		this.producerEvents = jmsSession.createProducer(null);
 		this.jpaTransaction = this.em.getTransaction();
+		this.triggering = new Semaphore(1);
 
 		// Get all self triggered nodes
 		this.nodes = new ArrayList<ActiveNodeBase>();
@@ -75,6 +86,11 @@ public class SelfTriggerAgent extends Thread {
 			}
 			if (!run)
 				break; // Don't bother doing the final loop
+
+			try {
+				this.triggering.acquire();
+			} catch (InterruptedException e1) {
+			}
 
 			// Log
 			log.debug("Self trigger agent loops");
@@ -106,11 +122,10 @@ public class SelfTriggerAgent extends Thread {
 			}
 			jpaTransaction.commit();
 
-			sToWait = Seconds.secondsBetween(DateTime.now(), nextLoopTime)
-					.getSeconds();
-			log.debug(String
-					.format("Self trigger agent will loop again in %s seconds",
-							sToWait));
+			this.triggering.release();
+
+			sToWait = Seconds.secondsBetween(DateTime.now(), nextLoopTime).getSeconds();
+			log.debug(String.format("Self trigger agent will loop again in %s seconds", sToWait));
 		}
 	}
 }

@@ -84,7 +84,7 @@ public class TestClock {
 		String dbPath = "C:\\TEMP\\db1";
 		ChronixEngine e = new ChronixEngine(dbPath);
 		e.emptyDb();
-		e.injectListenerConfigIntoDb();
+		e.ctx.createNewConfigFile();
 
 		// Create test application
 		Application a = PlanBuilder.buildApplication("testing clocks",

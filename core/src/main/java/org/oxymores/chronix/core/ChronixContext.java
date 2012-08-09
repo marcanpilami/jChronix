@@ -40,16 +40,12 @@ public class ChronixContext {
 	public int port;
 	public String transacUnitName, historyUnitName;
 
-	public static ChronixContext loadContext(String appConfDirectory)
-			throws IOException, NumberFormatException, ChronixNoLocalNode {
-		log.info(String.format(
-				"Creating a new context from configuration database %s",
-				appConfDirectory));
+	public static ChronixContext loadContext(String appConfDirectory) throws IOException, NumberFormatException, ChronixNoLocalNode {
+		log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
 		ChronixContext ctx = new ChronixContext();
 		ctx.loaded = new Date();
-		ctx.configurationDirectoryPath = FilenameUtils
-				.normalize(appConfDirectory);
+		ctx.configurationDirectoryPath = FilenameUtils.normalize(appConfDirectory);
 		ctx.configurationDirectory = new File(ctx.configurationDirectoryPath);
 		ctx.applicationsById = new Hashtable<UUID, Application>();
 		ctx.applicationsByName = new Hashtable<String, Application>();
@@ -64,9 +60,7 @@ public class ChronixContext {
 			File f = fileList[i];
 			String fileName = f.getName();
 
-			if (fileName.startsWith("app_") && fileName.endsWith(".crn")
-					&& fileName.contains("CURRENT")
-					&& fileName.contains("data")) {
+			if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains("CURRENT") && fileName.contains("data")) {
 				// This is a current app DATA file.
 				String id = fileName.split("_")[2];
 				if (!toLoad.containsKey(id))
@@ -142,11 +136,9 @@ public class ChronixContext {
 		return ctx;
 	}
 
-	public Application loadApplication(File dataFile, File networkFile)
-			throws FileNotFoundException, IOException, ClassNotFoundException,
+	public Application loadApplication(File dataFile, File networkFile) throws FileNotFoundException, IOException, ClassNotFoundException,
 			NumberFormatException, ChronixNoLocalNode {
-		log.info(String.format("(%s) Loading an application from file %s",
-				this.configurationDirectory, dataFile.getAbsolutePath()));
+		log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
 
 		FileInputStream fis = new FileInputStream(dataFile);
 		ObjectInputStream ois = new ObjectInputStream(fis);
@@ -157,9 +149,7 @@ public class ChronixContext {
 			res.setLocalNode(this.dns, this.port);
 		} catch (ChronixNoLocalNode e) {
 			// no local node means this application should not run here
-			log.info(String
-					.format("Application %s has no execution node defined on this server and therefore will not be loaded",
-							res.name));
+			log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
 			return null;
 		}
 		applicationsById.put(res.getId(), res);
@@ -168,23 +158,18 @@ public class ChronixContext {
 		return res;
 	}
 
-	public void saveApplication(String name) throws FileNotFoundException,
-			IOException {
+	public void saveApplication(String name) throws FileNotFoundException, IOException {
 		saveApplication(this.applicationsByName.get(name));
 	}
 
-	public void saveApplication(UUID id) throws FileNotFoundException,
-			IOException {
+	public void saveApplication(UUID id) throws FileNotFoundException, IOException {
 		saveApplication(this.applicationsById.get(id));
 	}
 
-	public void saveApplication(Application a) throws FileNotFoundException,
-			IOException {
-		log.info(String.format("(%s) Saving application %s to temp file",
-				this.configurationDirectory, a.getName()));
+	public void saveApplication(Application a) throws FileNotFoundException, IOException {
+		log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
 
-		String dataFilePath = configurationDirectory.getAbsolutePath()
-				+ "/app_data_" + a.getId() + "_WORKING_.crn";
+		String dataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_WORKING_.crn";
 		FileOutputStream fos = new FileOutputStream(dataFilePath);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(a);
@@ -197,18 +182,13 @@ public class ChronixContext {
 
 	// Does NOT refresh caches. Restart engine for that !
 	public void setWorkingAsCurrent(Application a) throws Exception {
-		log.info(String
-				.format("(%s) Promoting temp file for application %s as the active file",
-						this.configurationDirectory, a.getName()));
-		String workingDataFilePath = configurationDirectory.getAbsolutePath()
-				+ "/app_data_" + a.getId() + "_WORKING_.crn";
-		String currentDataFilePath = configurationDirectory.getAbsolutePath()
-				+ "/app_data_" + a.getId() + "_CURRENT_.crn";
+		log.info(String.format("(%s) Promoting temp file for application %s as the active file", this.configurationDirectory, a.getName()));
+		String workingDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_WORKING_.crn";
+		String currentDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_CURRENT_.crn";
 
 		File workingData = new File(workingDataFilePath);
 		if (!workingData.exists())
-			throw new Exception(
-					"work file does not exist. You sure 'bout that? You seem to have made no changes!");
+			throw new Exception("work file does not exist. You sure 'bout that? You seem to have made no changes!");
 		File currentData = new File(currentDataFilePath);
 
 		// Get latest version
@@ -217,11 +197,8 @@ public class ChronixContext {
 		for (int i = 0; i < fileList.length; i++) {
 			File f = fileList[i];
 			String fileName = f.getName();
-			if (fileName.startsWith("app_") && fileName.endsWith(".crn")
-					&& fileName.contains(a.getId().toString())
-					&& !fileName.contains("CURRENT")
-					&& !fileName.contains("WORKING")
-					&& fileName.contains("data")) {
+			if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains(a.getId().toString()) && !fileName.contains("CURRENT")
+					&& !fileName.contains("WORKING") && fileName.contains("data")) {
 				Integer tmp;
 				try {
 					tmp = Integer.parseInt(fileName.split("_")[3]);
@@ -233,17 +210,10 @@ public class ChronixContext {
 			}
 		}
 		v++;
-		log.info(String
-				.format("(%s) Current state of application %s will be saved before switching as version %s",
-						this.configurationDirectory, a.getName(), v));
+		log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s", this.configurationDirectory,
+				a.getName(), v));
 
-		String nextArchiveDataFilePath = configurationDirectory
-				.getAbsolutePath()
-				+ "/app_data_"
-				+ a.getId()
-				+ "_"
-				+ v
-				+ "_.crn";
+		String nextArchiveDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_" + v + "_.crn";
 		File nextArchiveDataFile = new File(nextArchiveDataFilePath);
 
 		// Move CURRENT to the new archive version
@@ -252,8 +222,7 @@ public class ChronixContext {
 		}
 
 		// Move WORKING as the new CURRENT
-		log.debug(String.format("(%s) New path will be %s",
-				this.configurationDirectory, currentDataFilePath));
+		log.debug(String.format("(%s) New path will be %s", this.configurationDirectory, currentDataFilePath));
 		workingData.renameTo(new File(currentDataFilePath));
 	}
 
@@ -285,25 +254,31 @@ public class ChronixContext {
 		return this.getHistoryEMF().createEntityManager();
 	}
 
-	public void createNewConfigFile() throws UnknownHostException, IOException {
-		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
-				1789, "TransacUnit", "HistoryUnit");
+	public void createNewConfigFile() throws IOException {
+		try {
+			createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(), 1789, "TransacUnit", "HistoryUnit");
+		} catch (UnknownHostException e) {
+			createNewConfigFile("localhost", 1789, "TransacUnit", "HistoryUnit");
+		}
 	}
 
-	public void createNewConfigFile(String TransacUnit, String HistoryUnit)
-			throws UnknownHostException, IOException {
-		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
-				1789, TransacUnit, HistoryUnit);
+	public void createNewConfigFile(String TransacUnit, String HistoryUnit) throws IOException {
+		try {
+			createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(), 1789, TransacUnit, HistoryUnit);
+		} catch (UnknownHostException e) {
+			createNewConfigFile("localhost", 1789, TransacUnit, HistoryUnit);
+		}
 	}
 
-	public void createNewConfigFile(int port, String TransacUnit,
-			String HistoryUnit) throws UnknownHostException, IOException {
-		createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(),
-				port, TransacUnit, HistoryUnit);
+	public void createNewConfigFile(int port, String TransacUnit, String HistoryUnit) throws IOException {
+		try {
+			createNewConfigFile(InetAddress.getLocalHost().getCanonicalHostName(), port, TransacUnit, HistoryUnit);
+		} catch (UnknownHostException e) {
+			createNewConfigFile("localhost", port, TransacUnit, HistoryUnit);
+		}
 	}
 
-	public void createNewConfigFile(String interfaceToListenOn, int port,
-			String TransacUnit, String HistoryUnit) throws IOException {
+	public void createNewConfigFile(String interfaceToListenOn, int port, String TransacUnit, String HistoryUnit) throws IOException {
 		String nl = System.getProperty("line.separator");
 		File f = new File(configurationDirectoryPath + "/listener.crn");
 		Writer output = new BufferedWriter(new FileWriter(f));

@@ -33,8 +33,7 @@ public class PipelineJob extends TranscientBase {
 	String status;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	String runThis;
-	Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt,
-			markedForRunAt, beganRunningAt, stoppedRunningAt;
+	Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	String level0Id, level1Id, level2Id, level3Id; // Actually UUID
 
@@ -311,13 +310,12 @@ public class PipelineJob extends TranscientBase {
 		return rd;
 	}
 
-	public Event createEvent()
-	{
+	public Event createEvent() {
 		RunResult rr = new RunResult();
 		rr.returnCode = this.resultCode;
 		return createEvent(rr);
 	}
-	
+
 	public Event createEvent(RunResult rr) {
 		Event e = new Event();
 		e.localOnly = false;
@@ -336,8 +334,7 @@ public class PipelineJob extends TranscientBase {
 			e.envParams.add(new EnvironmentValue(ev.getKey(), ev.getValue()));
 		}
 		for (String name : rr.newEnvVars.keySet()) {
-			e.envParams
-					.add(new EnvironmentValue(name, rr.newEnvVars.get(name)));
+			e.envParams.add(new EnvironmentValue(name, rr.newEnvVars.get(name)));
 		}
 
 		return e;
@@ -358,13 +355,13 @@ public class PipelineJob extends TranscientBase {
 		rlog.chainId = this.level0Id;
 		// rlog.chainLev1Id = this.level1Id;
 		// rlog.chainLev1Name
-		rlog.chainName = a.getActiveNode(UUID.fromString(this.level0Id))
-				.getName();
+		rlog.chainName = a.getActiveNode(UUID.fromString(this.level0Id)).getName();
 		// rlog.dataIn =
 		// rlog.dataOut =
 		rlog.dns = ctx.dns;
 		rlog.enteredPipeAt = this.enteredPipeAt;
 		rlog.executionNodeId = p.getNode().getId().toString();
+		rlog.executionNodeName = p.getNode().getBrokerUrl();
 		rlog.id = this.id.toString();
 		rlog.lastKnownStatus = this.status;
 		rlog.markedForUnAt = this.markedForRunAt;
@@ -384,8 +381,7 @@ public class PipelineJob extends TranscientBase {
 		if (this.calendarID != null) {
 			Calendar c = a.getCalendar(UUID.fromString(this.calendarID));
 			rlog.calendarName = c.getName();
-			rlog.calendarOccurrence = c.getDay(
-					UUID.fromString(this.calendarOccurrenceID)).getValue();
+			rlog.calendarOccurrence = c.getDay(UUID.fromString(this.calendarOccurrenceID)).getValue();
 		}
 
 		return rlog;

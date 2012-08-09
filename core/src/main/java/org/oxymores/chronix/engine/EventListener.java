@@ -31,31 +31,35 @@ public class EventListener implements MessageListener {
 	private static Logger log = Logger.getLogger(EventListener.class);
 
 	private ChronixContext ctx;
-	private Session session;
+	private Session jmsSession;
 	private Destination dest;
 	private Connection cnx;
 	EntityManagerFactory emf;
 	EntityManager entityManager;
 	private MessageProducer producerPJ;
+	MessageConsumer consumer;
 
-	public void startListening(Connection cnx, String brokerName,
-			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		this.ctx = ctx;
 		this.cnx = cnx;
 		this.emf = emf;
-		entityManager = this.emf.createEntityManager();
+		this.entityManager = this.emf.createEntityManager();
 
 		String qName = String.format("Q.%s.EVENT", brokerName);
-		log.debug(String.format(
-				"Broker %s: registering an event listener on queue %s",
-				brokerName, qName));
-		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
-		this.dest = this.session.createQueue(qName);
-		MessageConsumer consumer = this.session.createConsumer(dest);
-		consumer.setMessageListener(this);
+		log.debug(String.format("Broker %s: registering an event listener on queue %s", brokerName, qName));
+		this.jmsSession = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
+		this.dest = this.jmsSession.createQueue(qName);
+		this.consumer = this.jmsSession.createConsumer(dest);
+		this.consumer.setMessageListener(this);
 
 		qName = String.format("Q.%s.PJ", brokerName);
-		producerPJ = session.createProducer(null);
+		this.producerPJ = this.jmsSession.createProducer(null);
+	}
+
+	public void stopListening() throws JMSException {
+		this.producerPJ.close();
+		this.consumer.close();
+		this.jmsSession.close();
 	}
 
 	@Override
@@ -68,7 +72,7 @@ public class EventListener implements MessageListener {
 			Object o = omsg.getObject();
 			if (!(o instanceof Event)) {
 				log.warn("An object was received on the event queue but was not an event! Ignored.");
-				session.commit();
+				jmsSession.commit();
 				return;
 			}
 			evt = (Event) o;
@@ -76,9 +80,7 @@ public class EventListener implements MessageListener {
 			if (tmp != null)
 				evt = tmp;
 		} catch (JMSException e) {
-			log.error(
-					"An error occurred during event reception. BAD. Message will stay in queue and will be analysed later",
-					e);
+			log.error("An error occurred during event reception. BAD. Message will stay in queue and will be analysed later", e);
 			rollback();
 			return;
 		}
@@ -92,16 +94,14 @@ public class EventListener implements MessageListener {
 		Application a = evt.getApplication(ctx);
 		State s = evt.getState(ctx);
 		ActiveNodeBase active = s.getRepresents();
-		log.debug(String
-				.format("Event %s (from application %s / active node %s) was received and will be analysed",
-						evt.getId(), a.getName(), active.getName()));
+		log.debug(String.format("Event %s (from application %s / active node %s) was received and will be analysed", evt.getId(), a.getName(),
+				active.getName()));
 
 		// Should it be discarded?
-		if (evt.getBestBefore() != null
-				&& evt.getBestBefore().before(new Date())) {
-			log.info(String
-					.format("Event %s (from application %s / active node %s) was discarded because it was too old according to its 'best before' date",
-							evt.getId(), a.getName(), active.getName()));
+		if (evt.getBestBefore() != null && evt.getBestBefore().before(new Date())) {
+			log.info(String.format(
+					"Event %s (from application %s / active node %s) was discarded because it was too old according to its 'best before' date",
+					evt.getId(), a.getName(), active.getName()));
 			commit();
 			return;
 		}
@@ -128,23 +128,18 @@ public class EventListener implements MessageListener {
 		// Analyze on every local consumer
 		EventAnalysisResult res = new EventAnalysisResult();
 		for (State st : localConsumers) {
-			res.add(st.getRepresents().isStateExecutionAllowed(st, evt,
-					entityManager, producerPJ, session, ctx));
+			res.add(st.getRepresents().isStateExecutionAllowed(st, evt, entityManager, producerPJ, jmsSession, ctx));
 		}
 
 		// if ()
 
 		// Ack
-		log.debug(String
-				.format("Event id %s was received, analysed and will now be acked in the JMS queue",
-						evt.getId()));
+		log.debug(String.format("Event id %s was received, analysed and will now be acked in the JMS queue", evt.getId()));
 		if (tmp == null)
 			entityManager.persist(evt);
 		transaction.commit();
 		commit();
-		log.debug(String.format(
-				"Event id %s was received, analysed and acked all right",
-				evt.getId()));
+		log.debug(String.format("Event id %s was received, analysed and acked all right", evt.getId()));
 
 		// Purge
 		transaction.begin();
@@ -154,7 +149,7 @@ public class EventListener implements MessageListener {
 
 	private void commit() {
 		try {
-			session.commit();
+			jmsSession.commit();
 		} catch (JMSException e) {
 			log.error(
 					"failure to acknowledge an event consumption in the JMS queue. Scheduler will now abort as it is a dangerous situation. Empty the EVENT queue before restarting.",
@@ -167,7 +162,7 @@ public class EventListener implements MessageListener {
 
 	private void rollback() {
 		try {
-			session.rollback();
+			jmsSession.rollback();
 		} catch (JMSException e) {
 			log.error(
 					"failure to rollback an event consumption in the JMS queue. Scheduler will now abort as it is a dangerous situation. Empty the EVENT queue before restarting.",
@@ -187,8 +182,7 @@ public class EventListener implements MessageListener {
 				for (Place p : cs.getRunsOn().getPlaces()) {
 					if (e.wasConsumedOnPlace(p, cs)) {
 						em.remove(e);
-						log.debug(String.format("Event %s will be purged",
-								e.getId()));
+						log.debug(String.format("Event %s will be purged", e.getId()));
 					}
 				}
 			}

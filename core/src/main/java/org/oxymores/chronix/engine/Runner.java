@@ -39,23 +39,23 @@ public class Runner implements MessageListener {
 	private static Logger log = Logger.getLogger(Runner.class);
 
 	private ChronixContext ctx;
-	private Session session;
+	private Session jmsSession;
 	private Destination destEndJob, destLogFile, destRequest;
-	private Connection cnx;
+	private Connection jmsConnection;
+	private MessageConsumer jmsPipelineConsumer;
+
 	EntityManagerFactory emf;
 	EntityManager em;
 	EntityTransaction tr;
 
 	private ArrayList<PipelineJob> resolving;
 
-	private MessageProducer producerRunDescription, producerHistory,
-			producerEvents;
+	private MessageProducer producerRunDescription, producerHistory, producerEvents;
 
-	public void startListening(Connection cnx, String brokerName,
-			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
 		// Save contexts
 		this.ctx = ctx;
-		this.cnx = cnx;
+		this.jmsConnection = cnx;
 		this.emf = emf;
 
 		// Internal queue
@@ -63,38 +63,39 @@ public class Runner implements MessageListener {
 
 		// Log
 		String qName = String.format("Q.%s.RUNNERMGR", brokerName);
-		log.debug(String.format(
-				"Broker %s: registering a jobrunner listener on queue %s",
-				brokerName, qName));
+		log.debug(String.format("Broker %s: registering a jobrunner listener on queue %s", brokerName, qName));
 
 		// Create JMS session
-		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
+		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
 
 		// Register on Request queue
-		this.destRequest = this.session.createQueue(qName);
-		MessageConsumer consumer = this.session.createConsumer(destRequest);
-		consumer.setMessageListener(this);
+		this.destRequest = this.jmsSession.createQueue(qName);
+		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.destRequest);
+		this.jmsPipelineConsumer.setMessageListener(this);
 
 		// Register on End of job queue
-		this.destEndJob = this.session.createQueue(String.format(
-				"Q.%s.ENDOFJOB", brokerName));
-		consumer = this.session.createConsumer(destEndJob);
-		consumer.setMessageListener(this);
+		this.destEndJob = this.jmsSession.createQueue(String.format("Q.%s.ENDOFJOB", brokerName));
+		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.destEndJob);
+		this.jmsPipelineConsumer.setMessageListener(this);
 
 		// Register on Log Shipping queue
-		this.destLogFile = this.session.createQueue(String.format(
-				"Q.%s.LOGFILE", brokerName));
-		consumer = this.session.createConsumer(destLogFile);
-		consumer.setMessageListener(this);
+		this.destLogFile = this.jmsSession.createQueue(String.format("Q.%s.LOGFILE", brokerName));
+		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.destLogFile);
+		this.jmsPipelineConsumer.setMessageListener(this);
 
 		// Create JPA context for this thread
 		this.em = this.emf.createEntityManager();
 		this.tr = this.em.getTransaction();
 
 		// Outgoing producer for running commands
-		producerRunDescription = session.createProducer(null);
-		producerHistory = session.createProducer(null);
-		producerEvents = session.createProducer(null);
+		this.producerRunDescription = this.jmsSession.createProducer(null);
+		this.producerHistory = this.jmsSession.createProducer(null);
+		this.producerEvents = this.jmsSession.createProducer(null);
+	}
+
+	public void stopListening() throws JMSException {
+		this.jmsPipelineConsumer.close();
+		this.jmsSession.close();
 	}
 
 	@Override
@@ -106,8 +107,7 @@ public class Runner implements MessageListener {
 				Object o = omsg.getObject();
 				if ((o instanceof PipelineJob)) {
 					PipelineJob pj = (PipelineJob) o;
-					log.warn(String.format(
-							"Job execution %s request was received", pj.getId()));
+					log.warn(String.format("Job execution %s request was received", pj.getId()));
 					recvPJ(pj);
 					commit();
 					return;
@@ -121,9 +121,7 @@ public class Runner implements MessageListener {
 				}
 
 			} catch (JMSException e) {
-				log.error(
-						"An error occurred during job reception. BAD. Message will stay in queue and will be analysed later",
-						e);
+				log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
 				rollback();
 				return;
 			}
@@ -146,8 +144,7 @@ public class Runner implements MessageListener {
 				}
 
 				int paramIndex = -1;
-				ArrayList<Parameter> prms = resolvedJob.getActive(ctx)
-						.getParameters();
+				ArrayList<Parameter> prms = resolvedJob.getActive(ctx).getParameters();
 				for (int i = 0; i < prms.size(); i++) {
 					if (prms.get(i).getId().toString().equals(paramid)) {
 						paramIndex = i;
@@ -165,8 +162,7 @@ public class Runner implements MessageListener {
 				tr.commit();
 
 				if (resolvedJob.isReady(ctx)) {
-					this.sendRunDescription(resolvedJob.getRD(ctx),
-							resolvedJob.getPlace(ctx), resolvedJob);
+					this.sendRunDescription(resolvedJob.getRD(ctx), resolvedJob.getPlace(ctx), resolvedJob);
 				}
 
 			} catch (JMSException e) {
@@ -194,9 +190,7 @@ public class Runner implements MessageListener {
 
 		if (!toRun.hasPayload()) {
 			// No payload - direct to analysis and event throwing
-			log.debug(String
-					.format("Job execution request %s corresponds to an element (%s) without true execution",
-							j.getId(), toRun.getClass()));
+			log.debug(String.format("Job execution request %s corresponds to an element (%s) without true execution", j.getId(), toRun.getClass()));
 			toRun.internalRun(em, ctx, j, this);
 			RunResult res = new RunResult();
 			res.returnCode = 0;
@@ -208,9 +202,8 @@ public class Runner implements MessageListener {
 		} else if (j.isReady(ctx)) {
 			// It has an active part, but no need for dynamic parameters -> just
 			// run it (i.e. send it to a runner agent)
-			log.debug(String
-					.format("Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run",
-							j.getId()));
+			log.debug(String.format(
+					"Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run", j.getId()));
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
@@ -221,9 +214,8 @@ public class Runner implements MessageListener {
 		} else {
 			// Active part, and dynamic parameters -> resolve parameters.
 			// The run will occur at parameter value reception
-			log.debug(String
-					.format("Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
-							j.getId()));
+			log.debug(String.format("Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
+					j.getId()));
 			try {
 				this.sendHistory(j.getEventLog(ctx));
 			} catch (JMSException e) {
@@ -263,7 +255,7 @@ public class Runner implements MessageListener {
 		if (!rr.outOfPlan) {
 			Event e = pj.createEvent(rr);
 			try {
-				SenderHelpers.sendEvent(e, producerEvents, session, ctx, true);
+				SenderHelpers.sendEvent(e, producerEvents, jmsSession, ctx, true);
 			} catch (JMSException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -287,12 +279,10 @@ public class Runner implements MessageListener {
 		}
 
 		// Calendar progress
-		if (!rr.outOfPlan && s.usesCalendar()
-				&& !pj.getIgnoreCalendarUpdating()) {
+		if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating()) {
 			log.debug(pj.getCalendarID());
 			Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
-			CalendarDay justDone = c.getDay(UUID.fromString(pj
-					.getCalendarOccurrenceID()));
+			CalendarDay justDone = c.getDay(UUID.fromString(pj.getCalendarOccurrenceID()));
 			CalendarDay next = c.getOccurrenceAfter(justDone);
 			CalendarPointer cp = null;
 			try {
@@ -311,13 +301,9 @@ public class Runner implements MessageListener {
 			}
 			log.debug(String
 					.format("At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
-							s.getRepresents().getName(),
-							s.getChain().getName(), cp
-									.getLastEndedOccurrenceCd(ctx).getValue(),
-							cp.getLastEndedOkOccurrenceCd(ctx).getValue(),
-							cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
-									.getNextRunOccurrenceCd(ctx).getValue(), cp
-									.getLatestFailed(), cp.getRunning()));
+							s.getRepresents().getName(), s.getChain().getName(), cp.getLastEndedOccurrenceCd(ctx).getValue(), cp
+									.getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
+									.getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
 			tr.commit();
 		}
 
@@ -327,11 +313,9 @@ public class Runner implements MessageListener {
 
 	private void commit() {
 		try {
-			session.commit();
+			jmsSession.commit();
 		} catch (JMSException e) {
-			log.error(
-					"failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
-					e);
+			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;
@@ -340,52 +324,53 @@ public class Runner implements MessageListener {
 
 	private void rollback() {
 		try {
-			session.rollback();
+			jmsSession.rollback();
 		} catch (JMSException e) {
-			log.error(
-					"failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
-					e);
+			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;
 		}
 	}
 
-	public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj)
-			throws JMSException {
+	public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj) throws JMSException {
 		// Always send to the node, not its hosting node.
-		String qName = String
-				.format("Q.%s.RUNNER", p.getNode().getBrokerName());
-		log.info(String.format(
-				"A command will be sent for execution on queue %s (%s)", qName,
-				rd.command));
-		Destination destination = session.createQueue(qName);
+		String qName = String.format("Q.%s.RUNNER", p.getNode().getBrokerName());
+		log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.command));
+		Destination destination = jmsSession.createQueue(qName);
 
-		ObjectMessage m = session.createObjectMessage(rd);
+		ObjectMessage m = jmsSession.createObjectMessage(rd);
 		m.setJMSReplyTo(destEndJob);
 		m.setJMSCorrelationID(pj.getId());
 		producerRunDescription.send(destination, m);
-		session.commit();
+		jmsSession.commit();
 	}
 
 	public void sendHistory(RunLog rl) throws JMSException {
 		// Always send both to ourselves and to the supervisor
-		Application a = ctx.applicationsById.get(UUID
-				.fromString(rl.applicationId));
+		Application a = ctx.applicationsById.get(UUID.fromString(rl.applicationId));
 		ExecutionNode self = a.getLocalNode();
 
 		String qName = String.format("Q.%s.LOG", self.getBrokerName());
-		log.info(String.format("A scheduler log will be sent on queue %s (%s)",
-				qName, rl.activeNodeName));
-		Destination destination = session.createQueue(qName);
-
-		ObjectMessage m = session.createObjectMessage(rl);
+		log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
+		Destination destination = jmsSession.createQueue(qName);
+		ObjectMessage m = jmsSession.createObjectMessage(rl);
 		producerHistory.send(destination, m);
-		session.commit();
+
+		ExecutionNode console = ctx.applicationsById.get(UUID.fromString(rl.applicationId)).getConsoleNode();
+		if (console != null) {
+			log.debug(rl.applicationId);
+			qName = String.format("Q.%s.LOG", console.getBrokerName());
+			log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
+			destination = jmsSession.createQueue(qName);
+			m = jmsSession.createObjectMessage(rl);
+			producerHistory.send(destination, m);
+		}
+
+		jmsSession.commit();
 	}
 
-	public void sendCalendarPointer(CalendarPointer cp, Calendar ca)
-			throws JMSException {
+	public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException {
 		// Send the updated CP to other execution nodes that may need it.
 		List<State> states_using_calendar = ca.getUsedInStates();
 		List<ExecutionNode> en_using_calendar = new ArrayList<ExecutionNode>();
@@ -398,55 +383,45 @@ public class Runner implements MessageListener {
 			}
 		}
 		// TODO: add supervisor to the list (always)
-		log.debug(String
-				.format("The pointer should be sent to %s execution nodes (for %s possible customer state(s))",
-						en_using_calendar.size(), states_using_calendar.size()));
+		log.debug(String.format("The pointer should be sent to %s execution nodes (for %s possible customer state(s))", en_using_calendar.size(),
+				states_using_calendar.size()));
 
 		// Create message
-		ObjectMessage m = session.createObjectMessage(cp);
+		ObjectMessage m = jmsSession.createObjectMessage(cp);
 
 		// Send the message to every client execution node
 		for (ExecutionNode en : en_using_calendar) {
-			String qName = String.format("Q.%s.CALENDARPOINTER",
-					en.getBrokerName());
-			log.info(String.format(
-					"A calendar pointer will be sent on queue %s", qName));
-			Destination destination = session.createQueue(qName);
+			String qName = String.format("Q.%s.CALENDARPOINTER", en.getBrokerName());
+			log.info(String.format("A calendar pointer will be sent on queue %s", qName));
+			Destination destination = jmsSession.createQueue(qName);
 			producerHistory.send(destination, m);
 		}
 
 		// Send
-		session.commit();
+		jmsSession.commit();
 	}
 
-	public void getParameterValue(RunDescription rd, PipelineJob pj,
-			UUID paramId) throws JMSException {
+	public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException {
 		// Always send to the node, not its hosting node.
 		Place p = pj.getPlace(ctx);
-		String qName = String
-				.format("Q.%s.RUNNER", p.getNode().getBrokerName());
-		log.info(String.format(
-				"A command will be sent for execution on queue %s (%s)", qName,
-				rd.command));
-		Destination destination = session.createQueue(qName);
+		String qName = String.format("Q.%s.RUNNER", p.getNode().getBrokerName());
+		log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.command));
+		Destination destination = jmsSession.createQueue(qName);
 
-		ObjectMessage m = session.createObjectMessage(rd);
+		ObjectMessage m = jmsSession.createObjectMessage(rd);
 		m.setJMSReplyTo(destEndJob);
 		m.setJMSCorrelationID(pj.getId() + "|" + paramId);
 		producerRunDescription.send(destination, m);
-		session.commit();
+		jmsSession.commit();
 	}
 
-	public void sendParameterValue(String value, UUID paramID, PipelineJob pj)
-			throws JMSException {
+	public void sendParameterValue(String value, UUID paramID, PipelineJob pj) throws JMSException {
 		// This is a loopback send (used by static parameter value mostly)
-		log.debug(String
-				.format("A param value resolved locally (static) will be sent to the local engine ( value is %s)",
-						value));
+		log.debug(String.format("A param value resolved locally (static) will be sent to the local engine ( value is %s)", value));
 
-		TextMessage m = session.createTextMessage(value);
+		TextMessage m = jmsSession.createTextMessage(value);
 		m.setJMSCorrelationID(pj.getId() + "|" + paramID.toString());
 		producerRunDescription.send(destEndJob, m);
-		session.commit();
+		jmsSession.commit();
 	}
 }

@@ -19,16 +19,20 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 public class RunnerAgent implements MessageListener {
-
 	private static Logger log = Logger.getLogger(RunnerAgent.class);
-	private Session session;
-	private Destination dest;
-	private Connection cnx;
-	private MessageProducer producer;
+
+	private Session jmsSession;
+	private Destination jmsRunnerDestination;
+	private Connection jmsConnection;
+	private MessageProducer jmsProducer;
+	private MessageConsumer jmsRequestConsumer;
+
 	private String logDbPath;
 
-	public void startListening(Connection cnx, String brokerName,
-			String logDbPath) throws JMSException, IOException {
+	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException {
+		// Pointers
+		this.jmsConnection = cnx;
+
 		// Log repository
 		this.logDbPath = FilenameUtils.normalize(logDbPath);
 		if (!(new File(this.logDbPath)).exists()) {
@@ -36,18 +40,21 @@ public class RunnerAgent implements MessageListener {
 		}
 
 		// Queue listener
-		this.cnx = cnx;
 		String qName = String.format("Q.%s.RUNNER", brokerName);
-		log.debug(String.format(
-				"Broker %s: registering a runner listener on queue %s",
-				brokerName, qName));
-		this.session = this.cnx.createSession(true, Session.SESSION_TRANSACTED);
-		this.dest = this.session.createQueue(qName);
-		MessageConsumer consumer = this.session.createConsumer(dest);
-		consumer.setMessageListener(this);
+		log.debug(String.format("Broker %s: registering a runner listener on queue %s", brokerName, qName));
+		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
+		this.jmsRunnerDestination = this.jmsSession.createQueue(qName);
+		this.jmsRequestConsumer = this.jmsSession.createConsumer(this.jmsRunnerDestination);
+		this.jmsRequestConsumer.setMessageListener(this);
 
 		// Producer to send run results
-		producer = session.createProducer(null);
+		this.jmsProducer = this.jmsSession.createProducer(null);
+	}
+
+	public void stopListening() throws JMSException {
+		this.jmsProducer.close();
+		this.jmsRequestConsumer.close();
+		this.jmsSession.close();
 	}
 
 	@Override
@@ -63,9 +70,7 @@ public class RunnerAgent implements MessageListener {
 			}
 			rd = (RunDescription) o;
 		} catch (JMSException e) {
-			log.error(
-					"An error occurred during RunDescription reception. BAD. Message will stay in queue and will be analysed later",
-					e);
+			log.error("An error occurred during RunDescription reception. BAD. Message will stay in queue and will be analysed later", e);
 			rollback();
 			return;
 		}
@@ -73,8 +78,7 @@ public class RunnerAgent implements MessageListener {
 		if (!rd.helperExecRequest)
 			log.info(String.format("Running command %s", rd.command));
 		else
-			log.debug(String.format("Running helper internal command %s",
-					rd.command));
+			log.debug(String.format("Running helper internal command %s", rd.command));
 
 		// Log file (only if true run)
 		String logFilePath = null;
@@ -82,15 +86,13 @@ public class RunnerAgent implements MessageListener {
 		if (!rd.helperExecRequest) {
 
 			SimpleDateFormat myFormatDir = new SimpleDateFormat("yyyyMMdd");
-			SimpleDateFormat myFormatFile = new SimpleDateFormat(
-					"yyyyMMddhhmmssSSS");
+			SimpleDateFormat myFormatFile = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 			String dd = myFormatDir.format(start);
 			String logFileDateDir = FilenameUtils.concat(this.logDbPath, dd);
 			if (!(new File(logFileDateDir)).exists()) {
 				(new File(logFileDateDir)).mkdir();
 			}
-			String logFileName = String.format("%s_%s_%s_%s.log",
-					myFormatFile.format(start), rd.placeName.replace(" ", "-"),
+			String logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.placeName.replace(" ", "-"),
 					rd.activeSourceName.replace(" ", "-"), rd.id1);
 			logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
 		}
@@ -99,15 +101,12 @@ public class RunnerAgent implements MessageListener {
 		RunResult res = null;
 
 		if (rd.Method.equals("Shell"))
-			res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest,
-					rd.shouldSendLogFile);
+			res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest, rd.shouldSendLogFile);
 		else {
 			res = new RunResult();
 			res.returnCode = -1;
-			res.logStart = String.format(
-					"An unimplemented exec method (%s) was called!", rd.Method);
-			log.error(String.format(
-					"An unimplemented exec method (%s) was called!", rd.Method));
+			res.logStart = String.format("An unimplemented exec method (%s) was called!", rd.Method);
+			log.error(String.format("An unimplemented exec method (%s) was called!", rd.Method));
 		}
 		res.start = start;
 		res.end = new Date();
@@ -126,18 +125,18 @@ public class RunnerAgent implements MessageListener {
 		Message response;
 		if (!rd.helperExecRequest) {
 			try {
-				response = session.createObjectMessage(res);
+				response = jmsSession.createObjectMessage(res);
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
-				producer.send(msg.getJMSReplyTo(), response);
+				jmsProducer.send(msg.getJMSReplyTo(), response);
 			} catch (JMSException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		} else {
 			try {
-				response = session.createTextMessage(res.logStart);
+				response = jmsSession.createTextMessage(res.logStart);
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
-				producer.send(msg.getJMSReplyTo(), response);
+				jmsProducer.send(msg.getJMSReplyTo(), response);
 			} catch (JMSException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -145,7 +144,7 @@ public class RunnerAgent implements MessageListener {
 		}
 
 		try {
-			session.commit();
+			jmsSession.commit();
 		} catch (JMSException e) {
 			log.error("oups", e);
 			System.exit(1);
@@ -154,11 +153,9 @@ public class RunnerAgent implements MessageListener {
 
 	private void commit() {
 		try {
-			session.commit();
+			jmsSession.commit();
 		} catch (JMSException e) {
-			log.error(
-					"failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
-					e);
+			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;
@@ -167,11 +164,9 @@ public class RunnerAgent implements MessageListener {
 
 	private void rollback() {
 		try {
-			session.rollback();
+			jmsSession.rollback();
 		} catch (JMSException e) {
-			log.error(
-					"failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.",
-					e);
+			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
 			return;

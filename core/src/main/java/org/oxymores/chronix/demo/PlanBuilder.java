@@ -68,6 +68,53 @@ public class PlanBuilder {
 		return c1;
 	}
 
+	public static ExecutionNode buildExecutionNode(Application a, int port) {
+		String hostname;
+		try {
+			hostname = InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			hostname = "localhost";
+		}
+		return buildExecutionNode(a, hostname, port);
+	}
+
+	public static ExecutionNode buildExecutionNode(Application a, String dns,
+			int port) {
+		ExecutionNode n1 = new ExecutionNode();
+		n1.setDns(dns);
+		n1.setOspassword("");
+		n1.setqPort(port);
+		n1.setX(100);
+		n1.setY(100);
+		a.addNode(n1);
+
+		return n1;
+	}
+
+	public static Place buildPlace(Application a, String name,
+			String description, ExecutionNode en) {
+		Place p1 = new Place();
+		p1.setDescription(description);
+		p1.setName(name);
+		p1.setNode(en);
+		a.addPlace(p1);
+
+		return p1;
+	}
+
+	public static PlaceGroup buildPlaceGroup(Application a, String name,
+			String description, Place... places) {
+		PlaceGroup pg1 = new PlaceGroup();
+		pg1.setDescription(description);
+		pg1.setName(name);
+		a.addGroup(pg1);
+
+		for (Place p : places)
+			pg1.addPlace(p);
+
+		return pg1;
+	}
+
 	public static PlaceGroup buildDefaultLocalNetwork(Application a) {
 		// Execution node (the local sever)
 		String hostname;
@@ -76,27 +123,13 @@ public class PlanBuilder {
 		} catch (UnknownHostException e) {
 			hostname = "localhost";
 		}
-		ExecutionNode n1 = new ExecutionNode();
-		n1.setDns(hostname);
-		n1.setOspassword("");
-		n1.setqPort(1789);
-		n1.setX(100);
-		n1.setY(100);
-		a.addNode(n1);
+		ExecutionNode n1 = buildExecutionNode(a, hostname, 1789);
 
 		// Place
-		Place p1 = new Place();
-		p1.setDescription("the local server");
-		p1.setName(hostname);
-		p1.setNode(n1);
-		a.addPlace(p1);
+		Place p1 = buildPlace(a, hostname, "the local server", n1);
 
 		// Group with only this place
-		PlaceGroup pg1 = new PlaceGroup();
-		pg1.setDescription("the local server");
-		pg1.setName(hostname);
-		a.addGroup(pg1);
-		pg1.addPlace(p1);
+		PlaceGroup pg1 = buildPlaceGroup(a, hostname, "the local server", p1);
 
 		return pg1;
 	}
@@ -157,7 +190,7 @@ public class PlanBuilder {
 
 		return rr1;
 	}
-	
+
 	public static ClockRRule buildRRule10Seconds(Application a) {
 		ClockRRule rr1 = new ClockRRule();
 		rr1.setName("Every 10 second");

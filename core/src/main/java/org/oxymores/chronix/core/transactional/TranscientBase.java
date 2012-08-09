@@ -43,8 +43,7 @@ public class TranscientBase implements Serializable {
 
 	protected Date createdAt;
 
-	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = {
-			CascadeType.ALL, CascadeType.REMOVE })
+	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
 	protected ArrayList<EnvironmentValue> envParams;
 
 	public TranscientBase() {
@@ -71,8 +70,7 @@ public class TranscientBase implements Serializable {
 	}
 
 	public Calendar getCalendar(ChronixContext ctx) {
-		return this.getApplication(ctx).getCalendar(
-				UUID.fromString(this.calendarID));
+		return this.getApplication(ctx).getCalendar(UUID.fromString(this.calendarID));
 	}
 
 	public void setCalendar(Calendar c) {
@@ -136,8 +134,7 @@ public class TranscientBase implements Serializable {
 	}
 
 	public ActiveNodeBase getActive(ChronixContext ctx) {
-		return this.getApplication(ctx).getActiveNode(
-				UUID.fromString(this.activeID));
+		return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
 	}
 
 	//

@@ -31,15 +31,15 @@ public class TranscientListener implements MessageListener {
 	private Session jmsSession;
 	private Destination logQueueDestination;
 	private Connection jmsConnection;
+	private MessageProducer producerEvent;
+	private MessageConsumer jmsTranscientConsumer;
+
 	private EntityManager em;
 	private EntityTransaction tr;
 	private ChronixContext ctx;
-	private MessageProducer producerEvent;
 
-	public void startListening(Connection cnx, String brokerName,
-			ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
-		log.debug(String.format("Initializing LogListener on context %s",
-				ctx.configurationDirectory));
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+		log.debug(String.format("Initializing LogListener on context %s", ctx.configurationDirectory));
 
 		// Save pointers
 		this.jmsConnection = cnx;
@@ -47,24 +47,25 @@ public class TranscientListener implements MessageListener {
 
 		// Register current object as a listener on LOG queue
 		String qName = String.format("Q.%s.CALENDARPOINTER", brokerName);
-		log.debug(String.format(
-				"Broker %s: registering a transcient listener on queue %s",
-				brokerName, qName));
-		this.jmsSession = this.jmsConnection.createSession(true,
-				Session.SESSION_TRANSACTED);
+		log.debug(String.format("Broker %s: registering a transcient listener on queue %s", brokerName, qName));
+		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
 		this.logQueueDestination = this.jmsSession.createQueue(qName);
-		MessageConsumer consumer = this.jmsSession
-				.createConsumer(logQueueDestination);
-		consumer.setMessageListener(this);
+		this.jmsTranscientConsumer = this.jmsSession.createConsumer(this.logQueueDestination);
+		this.jmsTranscientConsumer.setMessageListener(this);
 
 		// Producers
 		qName = String.format("Q.%s.EVENT", brokerName);
 		Destination d = this.jmsSession.createQueue(qName);
-		producerEvent = this.jmsSession.createProducer(d);
+		this.producerEvent = this.jmsSession.createProducer(d);
 
 		// Persistence on transac context
-		em = emf.createEntityManager();
-		tr = em.getTransaction();
+		this.em = emf.createEntityManager();
+		this.tr = this.em.getTransaction();
+	}
+
+	public void stopListening() throws JMSException {
+		this.jmsTranscientConsumer.close();
+		this.jmsSession.close();
 	}
 
 	@Override
@@ -76,9 +77,7 @@ public class TranscientListener implements MessageListener {
 			o = omsg.getObject();
 
 		} catch (JMSException e) {
-			log.error(
-					"An error occurred during transcient reception. BAD. Message will stay in queue and will be analysed later",
-					e);
+			log.error("An error occurred during transcient reception. BAD. Message will stay in queue and will be analysed later", e);
 			try {
 				jmsSession.rollback();
 			} catch (JMSException e1) {
@@ -110,17 +109,13 @@ public class TranscientListener implements MessageListener {
 				}
 			}
 
-			TypedQuery<Event> q = em.createQuery(
-					"SELECT e from Event e WHERE e.stateID IN ( :ids )",
-					Event.class);
+			TypedQuery<Event> q = em.createQuery("SELECT e from Event e WHERE e.stateID IN ( :ids )", Event.class);
 			q.setParameter("ids", ids);
 			List<Event> events = q.getResultList();
 
 			// Send these events for analysis (local only - every execution node
 			// has also received this pointer)
-			log.info(String
-					.format("The updated calendar pointer may have impacts on %s events that will have to be reanalysed",
-							events.size()));
+			log.info(String.format("The updated calendar pointer may have impacts on %s events that will have to be reanalysed", events.size()));
 			for (Event e : events) {
 				try {
 					ObjectMessage om = jmsSession.createObjectMessage(e);
@@ -134,7 +129,7 @@ public class TranscientListener implements MessageListener {
 					return;
 				}
 			}
-			
+
 			// Some jobs may now be late (or later than before). Signal them.
 			try {
 				ca.processStragglers(em);

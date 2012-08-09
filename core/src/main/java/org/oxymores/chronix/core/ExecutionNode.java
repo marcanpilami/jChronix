@@ -5,6 +5,8 @@ import java.util.ArrayList;
 public class ExecutionNode extends ApplicationObject {
 	private static final long serialVersionUID = 2115315700815310189L;
 	protected NodeType type;
+	protected boolean console;
+
 	protected String sshKeyFilePath;
 	protected String sslKeyFilePath;
 
@@ -147,7 +149,7 @@ public class ExecutionNode extends ApplicationObject {
 	public String getBrokerName() {
 		return (this.dns + this.qPort).toUpperCase();
 	}
-	
+
 	public String getBrokerUrl() {
 		return (this.dns + ":" + this.qPort).toUpperCase();
 	}
@@ -166,5 +168,20 @@ public class ExecutionNode extends ApplicationObject {
 				return nl.nodeFrom;
 		}
 		return this;
+	}
+
+	public void connectTo(ExecutionNode target, NodeConnectionMethod method) {
+		NodeLink l1 = new NodeLink();
+		l1.setMethod(method);
+		l1.setNodeFrom(this);
+		l1.setNodeTo(target);
+	}
+
+	public boolean isConsole() {
+		return console;
+	}
+
+	public void setConsole(boolean console) {
+		this.console = console;
 	}
 }

@@ -47,6 +47,7 @@ public class Application extends ChronixObject {
 	protected Hashtable<UUID, ClockRRule> rrules;
 
 	private transient ExecutionNode localNode;
+	public transient ExecutionNode consoleNode;
 
 	public Application() {
 		super();
@@ -69,19 +70,22 @@ public class Application extends ChronixObject {
 		this.activeElements.put(tmp.getId(), tmp);
 	}
 
-	public void setLocalNode(String dns, Integer port)
-			throws ChronixNoLocalNode {
+	public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode {
 		for (ExecutionNode n : this.nodes.values()) {
-			if (n.dns.toUpperCase().equals(dns.toUpperCase())
-					&& n.qPort.equals(port)) {
+			if (n.dns.toUpperCase().equals(dns.toUpperCase()) && n.qPort.equals(port)) {
 				this.localNode = n;
-				log.info(String
-						.format("Application %s now considers that it is running on node %s (%s - %s)",
-								this.name, n.id, dns, port));
+				log.info(String.format("Application %s now considers that it is running on node %s (%s - %s)", this.name, n.id, dns, port));
 				return;
 			}
 		}
 		throw new ChronixNoLocalNode(dns + ":" + port);
+	}
+
+	public ExecutionNode getConsoleNode() {
+		for (ExecutionNode n : this.nodes.values())
+			if (n.isConsole())
+				return n;
+		return null;
 	}
 
 	public void setname(String name) {

@@ -13,7 +13,6 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.demo.DemoApplication;
-import org.oxymores.chronix.exceptions.IncorrectConfigurationException;
 
 public class TestStart {
 	private static Logger log = Logger.getLogger(TestStart.class);
@@ -29,13 +28,16 @@ public class TestStart {
 	@Test
 	public void testNoDb() throws Exception {
 		log.info("***** Test: without a db, the scheduler fails with a adequate exception");
+		ChronixEngine e = null;
 		try {
-			ChronixEngine e = new ChronixEngine("C:\\WONTEXISTEVER");
+			e = new ChronixEngine("C:\\WONTEXISTEVER");
 			e.start();
-		} catch (IncorrectConfigurationException e) {
+			e.waitForInitEnd();
+		} catch (Exception ex) {
 			return;
 		}
-		Assert.fail(); // engine should not have been able to start
+		Assert.assertEquals(false, e.run); // engine should not have been able
+											// to start
 	}
 
 	@Test
@@ -44,9 +46,10 @@ public class TestStart {
 
 		ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1");
 		e.emptyDb();
-		e.injectListenerConfigIntoDb();
+		e.ctx.createNewConfigFile();
 		e.start();
-		e.stop();
+		e.waitForInitEnd();
+		e.stopEngine();
 
 		Assert.assertEquals(2, e.ctx.applicationsById.values().size());
 
@@ -63,7 +66,7 @@ public class TestStart {
 		String dbPath = "C:\\TEMP\\db1";
 		ChronixEngine e = new ChronixEngine(dbPath);
 		e.emptyDb();
-		e.injectListenerConfigIntoDb();
+		e.ctx.createNewConfigFile();
 
 		Application a = DemoApplication.getNewDemoApplication();
 		ChronixContext ctx = new ChronixContext();
@@ -71,10 +74,10 @@ public class TestStart {
 		ctx.saveApplication(a);
 		ctx.setWorkingAsCurrent(a);
 		e.start();
+		e.waitForInitEnd();
 
 		EntityManager em = ctx.getTransacEM();
-		TypedQuery<CalendarPointer> q = em.createQuery(
-				"SELECT c from CalendarPointer c", CalendarPointer.class);
+		TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
 		Assert.assertEquals(3, q.getResultList().size());
 	}
