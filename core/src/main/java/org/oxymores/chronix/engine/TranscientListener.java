@@ -20,6 +20,7 @@ import javax.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
@@ -93,7 +94,47 @@ public class TranscientListener implements MessageListener {
 		if (o instanceof CalendarPointer) {
 			log.debug("A calendar pointer was received");
 			CalendarPointer cp = (CalendarPointer) o;
-			Calendar ca = cp.getCalendar(ctx);
+			Calendar ca = null;
+			State ss = null;
+			@SuppressWarnings("unused")
+			Place pp = null;
+			try {
+				ca = cp.getCalendar(ctx);
+				if (cp.getPlaceID() != null) {
+					ss = cp.getState(ctx);
+					pp = cp.getPlace(ctx);
+				}
+			} catch (Exception e) {
+				log.error("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
+				tr.rollback();
+				try {
+					jmsSession.commit();
+				} catch (JMSException e1) {
+				}
+				return;
+			}
+
+			// Save it/update it. Beware, id are not the same throughout the
+			// network, so query the logical key
+			if (cp.getPlaceID() != null) {
+				TypedQuery<CalendarPointer> q1 = em.createQuery(
+						"SELECT cp FROM CalendarPointer cp WHERE cp.stateID=?1 AND cp.placeID=?2 AND cp.calendarID=?3", CalendarPointer.class);
+				q1.setParameter(1, ss.getId().toString());
+				q1.setParameter(2, cp.getPlaceID());
+				q1.setParameter(3, cp.getCalendarID());
+				CalendarPointer tmp = q1.getSingleResult();
+				if (tmp != null)
+					cp.setId(tmp.getId());
+			} else {
+				TypedQuery<CalendarPointer> q1 = em.createQuery(
+						"SELECT cp FROM CalendarPointer cp WHERE cp.stateID IS NULL AND cp.placeID IS NULL AND cp.calendarID=?1",
+						CalendarPointer.class);
+				q1.setParameter(1, cp.getCalendarID());
+				CalendarPointer tmp = q1.getSingleResult();
+				if (tmp != null)
+					cp.setId(tmp.getId());
+			}
+
 			cp = em.merge(cp);
 
 			// Re analyse events that may benefit from this calendar change
@@ -121,7 +162,7 @@ public class TranscientListener implements MessageListener {
 					ObjectMessage om = jmsSession.createObjectMessage(e);
 					producerEvent.send(om);
 				} catch (JMSException e1) {
-					log.error("Impossible to send an event locally... Will be attenpted next reboot");
+					log.error("Impossible to send an event locally... Will be attempted next reboot");
 					try {
 						jmsSession.rollback();
 					} catch (JMSException e2) {

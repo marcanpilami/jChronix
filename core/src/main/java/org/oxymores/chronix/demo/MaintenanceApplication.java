@@ -15,9 +15,9 @@ public class MaintenanceApplication {
 		PlaceGroup pg = PlanBuilder.buildDefaultLocalNetwork(a);
 		Chain c1 = PlanBuilder.buildChain(a, "Maintenance plan", "all the default maintenance jobs", pg);
 		
-		State s1 = PlanBuilder.buildNewState(c1, pg, PlanBuilder.buildNewActiveShell(a, "echo purge", "History purge", "Will purge the history table", "-d", "10"));
-		State s2 = PlanBuilder.buildNewState(c1, pg, PlanBuilder.buildNewActiveShell(a, "echo purge", "Trace purge", "Will purge the performance trace table", "-d", "2"));
-		State s3 = PlanBuilder.buildNewState(c1, pg, PlanBuilder.buildNewActiveShell(a, "echo aggre", "Compile purge", "Will aggregate the performance trace table data"));
+		State s1 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo purge", "History purge", "Will purge the history table", "-d", "10"));
+		State s2 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo purge", "Trace purge", "Will purge the performance trace table", "-d", "2"));
+		State s3 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo aggre", "Compile purge", "Will aggregate the performance trace table data"));
 		
 		c1.getStartState().connectTo(s1);
 		s1.connectTo(s2);

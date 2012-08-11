@@ -43,6 +43,11 @@ public class CalendarPointer extends TranscientBase {
 		this.latestFailed = latestFailed;
 	}
 
+	// Only for transient listener!
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	//
 	// //////////////////////////////////////////////
 
@@ -61,8 +66,7 @@ public class CalendarPointer extends TranscientBase {
 	}
 
 	public CalendarDay getLastEndedOkOccurrenceCd(ChronixContext ctx) {
-		return this.getCalendar(ctx).getDay(
-				UUID.fromString(this.lastEndedOkOccurrenceId));
+		return this.getCalendar(ctx).getDay(UUID.fromString(this.lastEndedOkOccurrenceId));
 	}
 
 	public void setLastEndedOkOccurrenceCd(CalendarDay day) {
@@ -91,8 +95,7 @@ public class CalendarPointer extends TranscientBase {
 	}
 
 	public CalendarDay getLastStartedOccurrenceCd(ChronixContext ctx) {
-		return this.getCalendar(ctx).getDay(
-				UUID.fromString(this.lastStartedOccurrenceId));
+		return this.getCalendar(ctx).getDay(UUID.fromString(this.lastStartedOccurrenceId));
 	}
 
 	public void setLastStartedOccurrenceCd(CalendarDay day) {
@@ -121,8 +124,7 @@ public class CalendarPointer extends TranscientBase {
 	}
 
 	public CalendarDay getLastEndedOccurrenceCd(ChronixContext ctx) {
-		return this.getCalendar(ctx).getDay(
-				UUID.fromString(this.lastEndedOccurrenceId));
+		return this.getCalendar(ctx).getDay(UUID.fromString(this.lastEndedOccurrenceId));
 	}
 
 	public void setLastEndedOccurrenceCd(CalendarDay day) {
@@ -151,8 +153,7 @@ public class CalendarPointer extends TranscientBase {
 	}
 
 	public CalendarDay getNextRunOccurrenceCd(ChronixContext ctx) {
-		return this.getCalendar(ctx).getDay(
-				UUID.fromString(this.nextRunOccurrenceId));
+		return this.getCalendar(ctx).getDay(UUID.fromString(this.nextRunOccurrenceId));
 	}
 
 	public void setNextRunOccurrenceCd(CalendarDay day) {

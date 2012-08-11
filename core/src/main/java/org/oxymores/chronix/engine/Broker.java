@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -73,7 +74,7 @@ public class Broker {
 
 		// Basic configuration
 		broker.setPersistent(true);
-		//broker.setBrokerId(UUID.randomUUID().toString());
+		// broker.setBrokerId(UUID.randomUUID().toString());
 		SystemUsage su = new SystemUsage();
 		StoreUsage stu = new StoreUsage();
 		stu.setLimit(104857600);
@@ -88,21 +89,28 @@ public class Broker {
 		broker.addConnector("tcp://" + this.ctx.localUrl);
 
 		// Add channels to other nodes
+		ArrayList<String> opened = new ArrayList<String>();
 		for (Application a : this.ctx.applicationsById.values()) {
 			for (NodeLink nl : a.getLocalNode().getCanSendTo()) {
 				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
 					break;
+				if (opened.contains(nl.getNodeTo().getBrokerUrl()))
+					break;
+				opened.add(nl.getNodeTo().getBrokerUrl());
 
 				String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
-				log.info(String.format("This broker will be able to open a channel towards %s", url));
+				log.info(String.format("This broker will be able to open a channel towards %s (db is %s)", url, ctx.configurationDirectoryPath));
 				NetworkConnector tc = broker.addNetworkConnector(url);
 				tc.setDuplex(true);
 				tc.setNetworkTTL(20);
 			}
 
 			for (NodeLink nl : a.getLocalNode().getCanReceiveFrom()) {
-				log.info(String.format("This broker should receive channels incoming from %s:%s", nl.getNodeFrom().getDns(), nl.getNodeFrom()
-						.getqPort()));
+				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
+					break;
+
+				log.info(String.format("This broker should receive channels incoming from %s:%s (db is %s)", nl.getNodeFrom().getDns(), nl
+						.getNodeFrom().getqPort(), ctx.configurationDirectoryPath));
 			}
 		}
 

@@ -7,6 +7,7 @@ import net.fortuna.ical4j.model.Recur;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -18,6 +19,7 @@ import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 
 public class PlanBuilder {
@@ -30,8 +32,7 @@ public class PlanBuilder {
 		return a;
 	}
 
-	public static Chain buildChain(Application a, String name,
-			String description, PlaceGroup targets) {
+	public static Chain buildChain(Application a, String name, String description, PlaceGroup targets) {
 		Chain c1 = new Chain();
 		c1.setDescription(description);
 		c1.setName(name);
@@ -78,8 +79,7 @@ public class PlanBuilder {
 		return buildExecutionNode(a, hostname, port);
 	}
 
-	public static ExecutionNode buildExecutionNode(Application a, String dns,
-			int port) {
+	public static ExecutionNode buildExecutionNode(Application a, String dns, int port) {
 		ExecutionNode n1 = new ExecutionNode();
 		n1.setDns(dns);
 		n1.setOspassword("");
@@ -91,8 +91,7 @@ public class PlanBuilder {
 		return n1;
 	}
 
-	public static Place buildPlace(Application a, String name,
-			String description, ExecutionNode en) {
+	public static Place buildPlace(Application a, String name, String description, ExecutionNode en) {
 		Place p1 = new Place();
 		p1.setDescription(description);
 		p1.setName(name);
@@ -102,8 +101,7 @@ public class PlanBuilder {
 		return p1;
 	}
 
-	public static PlaceGroup buildPlaceGroup(Application a, String name,
-			String description, Place... places) {
+	public static PlaceGroup buildPlaceGroup(Application a, String name, String description, Place... places) {
 		PlaceGroup pg1 = new PlaceGroup();
 		pg1.setDescription(description);
 		pg1.setName(name);
@@ -134,9 +132,7 @@ public class PlanBuilder {
 		return pg1;
 	}
 
-	public static ShellCommand buildNewActiveShell(Application a,
-			String command, String name, String description,
-			String... prmsandvalues) {
+	public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues) {
 		ShellCommand sc1 = new ShellCommand();
 		sc1.setCommand(command);
 		sc1.setDescription(description);
@@ -154,8 +150,17 @@ public class PlanBuilder {
 		return sc1;
 	}
 
-	public static State buildNewState(Chain c1, PlaceGroup pg1,
-			ActiveNodeBase target) {
+	public static NextOccurrence buildNextOccurrence(Application a, Calendar ca) {
+		NextOccurrence no1 = new NextOccurrence();
+		no1.setName("End of calendar occurrence");
+		no1.setDescription(no1.getName());
+		no1.setUpdatedCalendar(ca);
+		a.addActiveElement(no1);
+
+		return no1;
+	}
+
+	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target) {
 		State s1 = new State();
 		s1.setChain(c1);
 		s1.setRunsOn(pg1);
@@ -166,8 +171,7 @@ public class PlanBuilder {
 		return s1;
 	}
 
-	public static Clock buildClock(Application a, String name,
-			String description, ClockRRule... rulesADD) {
+	public static Clock buildClock(Application a, String name, String description, ClockRRule... rulesADD) {
 		Clock ck1 = new Clock();
 		ck1.setDescription(description);
 		ck1.setName(name);

@@ -86,16 +86,26 @@ public class EventListener implements MessageListener {
 		}
 
 		//
+		// Check event is OK while getting data from event
+		Application a = null;
+		State s = null;
+		ActiveNodeBase active = null;
+		try {
+			a = evt.getApplication(ctx);
+			s = evt.getState(ctx);
+			active = s.getRepresents();
+		} catch (Exception e) {
+			log.error("An event was received that was not related to a local applicaiton. Discarded.");
+			commit();
+			return;
+		}
+		log.debug(String.format("Event %s (from application %s / active node %s) was received and will be analysed", evt.getId(), a.getName(),
+				active.getName()));
+
+		//
 		// Analyse event!
 		EntityTransaction transaction = entityManager.getTransaction();
 		transaction.begin();
-
-		// Get data from event
-		Application a = evt.getApplication(ctx);
-		State s = evt.getState(ctx);
-		ActiveNodeBase active = s.getRepresents();
-		log.debug(String.format("Event %s (from application %s / active node %s) was received and will be analysed", evt.getId(), a.getName(),
-				active.getName()));
 
 		// Should it be discarded?
 		if (evt.getBestBefore() != null && evt.getBestBefore().before(new Date())) {

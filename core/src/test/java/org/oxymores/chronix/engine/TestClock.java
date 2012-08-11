@@ -96,11 +96,11 @@ public class TestClock {
 		Clock ck1 = PlanBuilder.buildClock(a, "every second", "every second",
 				rr1);
 		ck1.setDURATION(1);
-		ShellCommand sc1 = PlanBuilder.buildNewActiveShell(a, "echo aa", "aa",
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa",
 				"should display 'aa'");
 
-		State s1 = PlanBuilder.buildNewState(c, pgLocal, ck1);
-		State s2 = PlanBuilder.buildNewState(c, pgLocal, sc1);
+		State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
+		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
 		s1.connectTo(s2);
 
 		ChronixContext ctx = new ChronixContext();

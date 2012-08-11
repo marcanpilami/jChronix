@@ -13,7 +13,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
 import junit.framework.Assert;
 
@@ -31,7 +30,6 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 
 public class TestBroker {
@@ -297,97 +295,5 @@ public class TestBroker {
 
 		SenderHelpers.sendEvent(e3, this.ctx1);
 		Thread.sleep(3000); // Time to consume message
-	}
-
-	@Test
-	public void testEventListener() throws Exception {
-		log.info("****This tests creates an event and sends it to a running engine. Analysis should ensue.");
-
-		// Get relevant data to create the event
-		Chain chain1 = null;
-		for (Chain c : app1.getChains()) {
-			if (c.getName().equals("chain1")) {
-				chain1 = c;
-			}
-		}
-		State s1 = chain1.getStates().get(0);
-		Place p1 = s1.getRunsOnPlaces().get(0);
-		Calendar ca1 = app1.getCalendars().get(0);
-
-		// Create event
-		Event e1 = new Event();
-		e1.addValue("KEY", "value");
-		e1.setApplication(app1);
-		e1.setState(s1);
-		e1.setPlace(p1);
-		e1.setConditionData1(0);
-		e1.setLevel0IdU(chain1.getId());
-		e1.setLevel1IdU(UUID.randomUUID());
-
-		SenderHelpers.sendEvent(e1, this.ctx1);
-		Thread.sleep(5000); // Time to consume message
-
-		// tests
-		List<RunLog> res = LogHelpers.displayAllHistory(ctx1);
-		Assert.assertEquals(2, res.size());
-
-		// Now, relaunch. Should block after echo, for the calendar has not
-		// progressed.
-		Event e2 = new Event();
-		e2.addValue("KEY", "value");
-		e2.setApplication(app1);
-		e2.setState(s1);
-		e2.setPlace(p1);
-		e2.setConditionData1(0);
-		e2.setLevel0IdU(chain1.getId());
-		e2.setLevel1IdU(UUID.randomUUID());
-
-		SenderHelpers.sendEvent(e2, this.ctx1);
-		Thread.sleep(4000); // Time to consume message
-
-		res = LogHelpers.displayAllHistory(ctx1);
-		Assert.assertEquals(3, res.size());
-
-		EntityManager em2 = ctx1.getTransacEM();
-		TypedQuery<CalendarPointer> q2 = em2.createQuery("SELECT r FROM CalendarPointer r", CalendarPointer.class);
-		for (CalendarPointer c : q2.getResultList()) {
-			log.debug(c.getRunning());
-		}
-
-		TypedQuery<Event> q3 = em2.createQuery("SELECT e FROM Event e", Event.class);
-		List<Event> events = q3.getResultList();
-		Assert.assertEquals(1, events.size()); // purge - only pending remain
-
-		// Now, advance calendar
-		releaseCalendar();
-
-		// Test the event has been reanalyzed
-		res = LogHelpers.displayAllHistory(ctx1);
-		Assert.assertEquals(6, res.size());
-
-		// and do it again: the end of chain1 should not run.
-		Event e4 = new Event();
-		e4.setApplication(app1);
-		e4.setState(s1);
-		e4.setPlace(p1);
-		e4.setConditionData1(0);
-		e4.setLevel0IdU(chain1.getId());
-		e4.setLevel1IdU(UUID.randomUUID());
-
-		SenderHelpers.sendEvent(e4, this.ctx1);
-		Thread.sleep(2000); // Time to consume message
-
-		// Test...
-		res = LogHelpers.displayAllHistory(ctx1);
-
-		// and finally free the calendar, and test that chain2 is considered as
-		// straggling
-		releaseCalendar();
-		ca1.processStragglers(em2); // Display to ease debug
-		Assert.assertEquals(1, ca1.getStragglers(em2).size());
-
-		// and test scheduling...
-		res = LogHelpers.displayAllHistory(ctx1);
-		Assert.assertEquals(10, res.size());
 	}
 }

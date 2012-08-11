@@ -65,6 +65,7 @@ public class ChronixEngine extends Thread {
 			 */
 
 		} catch (Exception e) {
+			log.error("The engine has failed to start", e);
 			this.run = false;
 		}
 	}
@@ -116,6 +117,7 @@ public class ChronixEngine extends Thread {
 	public void queueReloadConfiguration() {
 		try {
 			this.startCritical.acquire();
+			threadInit.acquire();
 			this.run = true;
 			this.stop.release();
 		} catch (InterruptedException e) {

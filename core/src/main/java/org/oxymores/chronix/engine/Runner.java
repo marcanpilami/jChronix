@@ -2,7 +2,6 @@ package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -180,17 +179,32 @@ public class Runner implements MessageListener {
 			j = em.find(PipelineJob.class, job.getId());
 		}
 
+		// Check the job is OK
+		ActiveNodeBase toRun = null;
+		State s = null;
+		try {
+			toRun = j.getActive(ctx);
+			s = j.getState(ctx);
+		} catch (Exception e) {
+			log.error("A pipeline job was received with no corresponding application data - thrown out");
+			return;
+		}
+		if (s == null) {
+			log.error("A pipeline job was received with no corresponding application data - thrown out");
+			return;
+		}
+
 		tr.begin();
-		j.setRunThis(j.getActive(ctx).getCommandName(j, this, ctx));
+		j.setRunThis(toRun.getCommandName(j, this, ctx));
 		resolving.add(j);
 
-		ActiveNodeBase toRun = j.getActive(ctx);
 		j.setBeganRunningAt(new Date());
 		tr.commit();
 
 		if (!toRun.hasPayload()) {
 			// No payload - direct to analysis and event throwing
-			log.debug(String.format("Job execution request %s corresponds to an element (%s) without true execution", j.getId(), toRun.getClass()));
+			log.debug(String.format("Job execution request %s corresponds to an element (%s) with only internal execution", j.getId(),
+					toRun.getClass()));
 			toRun.internalRun(em, ctx, j, this);
 			RunResult res = new RunResult();
 			res.returnCode = 0;
@@ -242,6 +256,11 @@ public class Runner implements MessageListener {
 				break;
 			}
 		}
+		if (pj == null) {
+			log.error("A result was received that was not waited for - thrown out");
+			return;
+		}
+
 		State s = null;
 		Place p = null;
 		Application a = null;
@@ -249,6 +268,11 @@ public class Runner implements MessageListener {
 			s = pj.getState(ctx);
 			p = pj.getPlace(ctx);
 			a = pj.getApplication(ctx);
+			if (s == null) {
+				log.error("A result was received for a pipeline job without state - thrown out");
+				resolving.remove(pj);
+				return;
+			}
 		}
 
 		// Event throwing
@@ -358,7 +382,7 @@ public class Runner implements MessageListener {
 		producerHistory.send(destination, m);
 
 		ExecutionNode console = ctx.applicationsById.get(UUID.fromString(rl.applicationId)).getConsoleNode();
-		if (console != null) {
+		if (console != null && console != self) {
 			log.debug(rl.applicationId);
 			qName = String.format("Q.%s.LOG", console.getBrokerName());
 			log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
@@ -371,34 +395,7 @@ public class Runner implements MessageListener {
 	}
 
 	public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException {
-		// Send the updated CP to other execution nodes that may need it.
-		List<State> states_using_calendar = ca.getUsedInStates();
-		List<ExecutionNode> en_using_calendar = new ArrayList<ExecutionNode>();
-		ExecutionNode tmp = null;
-		for (State s : states_using_calendar) {
-			for (Place p : s.getRunsOn().getPlaces()) {
-				tmp = p.getNode().getHost();
-				if (!en_using_calendar.contains(tmp))
-					en_using_calendar.add(tmp);
-			}
-		}
-		// TODO: add supervisor to the list (always)
-		log.debug(String.format("The pointer should be sent to %s execution nodes (for %s possible customer state(s))", en_using_calendar.size(),
-				states_using_calendar.size()));
-
-		// Create message
-		ObjectMessage m = jmsSession.createObjectMessage(cp);
-
-		// Send the message to every client execution node
-		for (ExecutionNode en : en_using_calendar) {
-			String qName = String.format("Q.%s.CALENDARPOINTER", en.getBrokerName());
-			log.info(String.format("A calendar pointer will be sent on queue %s", qName));
-			Destination destination = jmsSession.createQueue(qName);
-			producerHistory.send(destination, m);
-		}
-
-		// Send
-		jmsSession.commit();
+		SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true);
 	}
 
 	public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException {

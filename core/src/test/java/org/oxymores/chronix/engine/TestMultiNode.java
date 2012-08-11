@@ -3,20 +3,26 @@ package org.oxymores.chronix.engine;
 import java.util.List;
 
 import javax.jms.JMSException;
+import javax.persistence.TypedQuery;
 
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.demo.CalendarBuilder;
 import org.oxymores.chronix.demo.PlanBuilder;
 
 public class TestMultiNode {
@@ -152,8 +158,8 @@ public class TestMultiNode {
 
 		// Build a very simple chain
 		Chain c1 = PlanBuilder.buildChain(a1, "empty chain", "empty chain", pg1);
-		ShellCommand sc1 = PlanBuilder.buildNewActiveShell(a1, "echo oo", "echo oo", "oo");
-		State s1 = PlanBuilder.buildNewState(c1, pg2, sc1);
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+		State s1 = PlanBuilder.buildState(c1, pg2, sc1);
 		c1.getStartState().connectTo(s1);
 		s1.connectTo(c1.getEndState());
 		try {
@@ -199,6 +205,139 @@ public class TestMultiNode {
 		Assert.assertEquals(3, res.size());
 
 		// Close
+		try {
+			e1.stopEngine();
+			Thread.sleep(500); // Since both stop at the same moment, could
+								// create harmless errors without ordering stops
+			e2.stopEngine();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	}
+
+	@Test
+	public void testCalendarTransmission() {
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+
+		// Build the test chains //////////////////////
+		Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
+
+		Chain c1 = PlanBuilder.buildChain(a1, "simple chain using calendar", "chain2", pg2);
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+		State s1 = PlanBuilder.buildState(c1, pg2, sc1);
+		s1.setCalendar(ca);
+		s1.setCalendarShift(-1);
+		c1.getStartState().connectTo(s1);
+		s1.connectTo(c1.getEndState());
+
+		Chain c2 = PlanBuilder.buildChain(a1, "advance calendar chain", "chain3", pg1);
+		NextOccurrence no = PlanBuilder.buildNextOccurrence(a1, ca);
+		State s2 = PlanBuilder.buildState(c2, pg1, no);
+		c2.getStartState().connectTo(s2);
+		s2.connectTo(c2.getEndState());
+		// //////////////////////////////////////////////
+
+		log.debug("**************************************************************************************");
+		log.debug("****SAVE CHAIN************************************************************************");
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN************************************************************************");
+		// Send the chain to node 2
+		try {
+			prepare();
+			sendA(a1);
+			e1.waitForInitEnd();
+			e2.waitForInitEnd();
+			log.debug("Application integration should be over by now...");
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Test reception is OK
+		Application a2 = e2.ctx.applicationsByName.get("Multinode test");
+		if (a2 == null)
+			Assert.fail("No application in remote context after reception");
+		Assert.assertEquals(3, a2.getPlaces().values().size());
+
+		TypedQuery<CalendarPointer> q2 = e1.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
+		Assert.assertEquals(2, q2.getResultList().size());
+
+		log.debug("**************************************************************************************");
+		log.debug("****SHIFT CALENDAR********************************************************************");
+		// Shift the state by 1 so that it cannot start (well, shouldn't)
+		try {
+			SenderHelpers.sendCalendarPointerShift(1, s1, e1.ctx);
+			Thread.sleep(500);
+		} catch (Exception e4) {
+			e4.printStackTrace();
+			Assert.fail(e4.getMessage());
+		}
+		Assert.assertEquals(2, q2.getResultList().size());
+		TypedQuery<CalendarPointer> q3 = e2.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
+		Assert.assertEquals(2, q3.getResultList().size());
+
+		// Run the first chain - should be blocked after starting State
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER START FIRST CHAIN***********************************************************");
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+		} catch (JMSException e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e3) {
+		}
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(1, res.size());
+
+		// Run second chain - should unlock the first chain on the other node
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER START SECOND CHAIN**********************************************************");
+		try {
+			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+		} catch (JMSException e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		try {
+			Thread.sleep(2000); // Process events
+		} catch (InterruptedException e3) {
+		}
+
+		// Have all jobs run?
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(6, res.size());
+
+		// Has purge worked?
+		TypedQuery<Event> q4 = e2.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
+		Assert.assertEquals(0, q4.getResultList().size());
+
+		TypedQuery<Event> q5 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
+		Assert.assertEquals(0, q5.getResultList().size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("****THE END OF THE TEST***************************************************************");
 		try {
 			e1.stopEngine();
 			Thread.sleep(500); // Since both stop at the same moment, could

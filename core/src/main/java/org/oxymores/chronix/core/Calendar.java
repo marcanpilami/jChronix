@@ -121,8 +121,7 @@ public class Calendar extends ApplicationObject {
 	public CalendarPointer getCurrentOccurrencePointer(EntityManager em) {
 		// Calendar current occurrence pointers have no states and places: they
 		// are only related to the calendar itself.
-		Query q = em
-				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
+		Query q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
 		q.setParameter(1, this.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
 		em.refresh(cp);
@@ -130,8 +129,7 @@ public class Calendar extends ApplicationObject {
 	}
 
 	public CalendarDay getCurrentOccurrence(EntityManager em) {
-		return this.getDay(this.getCurrentOccurrencePointer(em)
-				.getLastEndedOkOccurrenceUuid());
+		return this.getDay(this.getCurrentOccurrencePointer(em).getLastEndedOkOccurrenceUuid());
 	}
 
 	public CalendarDay getOccurrenceAfter(CalendarDay d) {
@@ -149,6 +147,10 @@ public class Calendar extends ApplicationObject {
 	public Boolean isBeforeOrSame(CalendarDay before, CalendarDay after) {
 		return this.days.indexOf(before) <= this.days.indexOf(after);
 	}
+	
+	public Boolean isBefore(CalendarDay before, CalendarDay after) {
+		return this.days.indexOf(before) < this.days.indexOf(after);
+	}
 
 	// Called within an open transaction. Won't be committed here.
 	public void createPointers(EntityManager em) {
@@ -159,17 +161,24 @@ public class Calendar extends ApplicationObject {
 		} catch (NoResultException e) {
 		}
 
+		int minShift = 0;
+		for (State s : usedInStates) {
+			if (s.calendarShift < minShift)
+				minShift = s.calendarShift;
+		}
+		minShift--;
+
+		CalendarDay cd = this.getOccurrenceShiftedBy(this.getFirstOccurrence(), -minShift);
 		log.info(String
-				.format("Calendar %s current value will be initialised at its first occurrence: %s - %s",
-						this.name, this.getFirstOccurrence().getValue(), this
-								.getFirstOccurrence().getId()));
+				.format("Calendar %s current value will be initialised at its first allowed occurrence by the shifts of the using states (max shift is %s): %s - %s",
+						this.name, minShift, cd.getValue(), cd.getId()));
 
 		CalendarPointer tmp = new CalendarPointer();
 		tmp.setApplication(this.application);
 		tmp.setCalendar(this);
-		tmp.setLastEndedOkOccurrenceCd(this.getFirstOccurrence());
-		tmp.setLastEndedOccurrenceCd(this.getFirstOccurrence());
-		tmp.setLastStartedOccurrenceCd(this.getFirstOccurrence());
+		tmp.setLastEndedOkOccurrenceCd(cd);
+		tmp.setLastEndedOccurrenceCd(cd);
+		tmp.setLastStartedOccurrenceCd(cd);
 		tmp.setPlace(null);
 		tmp.setState(null);
 
@@ -226,15 +235,12 @@ public class Calendar extends ApplicationObject {
 	}
 
 	public void processStragglers(EntityManager em) throws Exception {
-		log.debug(String.format("Processing stragglers on calendar %s",
-				this.name));
+		log.debug(String.format("Processing stragglers on calendar %s", this.name));
 		CalendarDay d = this.getCurrentOccurrence(em);
 		for (StragglerIssue i : getStragglers(em)) {
 			log.warn(String
-					.format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s",
-							i.s.represents.name, i.p.name, i.s.chain.name,
-							i.s.getCurrentCalendarOccurrence(em, i.p).seq,
-							d.seq));
+					.format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
+							i.s.represents.name, i.p.name, i.s.chain.name, i.s.getCurrentCalendarOccurrence(em, i.p).seq, d.seq, i.s.calendarShift));
 		}
 	}
 	//

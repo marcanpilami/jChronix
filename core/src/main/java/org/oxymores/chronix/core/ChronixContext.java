@@ -120,10 +120,14 @@ public class ChronixContext {
 		EntityTransaction tr = em.getTransaction();
 		tr.begin();
 		for (Application a : ctx.applicationsById.values()) {
-			for (State s : a.getStates())
-				s.createPointers(em);
 			for (Calendar c : a.calendars.values())
 				c.createPointers(em);
+		}
+		tr.commit();
+		tr.begin();
+		for (Application a : ctx.applicationsById.values()) {
+			for (State s : a.getStates())
+				s.createPointers(em);
 		}
 		tr.commit();
 

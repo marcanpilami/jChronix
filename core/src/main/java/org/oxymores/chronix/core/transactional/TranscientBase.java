@@ -94,10 +94,6 @@ public class TranscientBase implements Serializable {
 
 	// //////////////////////////////////////////////
 	// State
-	protected String getStateID() {
-		return stateID;
-	}
-
 	protected void setStateID(String stateID) {
 		this.stateID = stateID;
 	}
@@ -114,6 +110,14 @@ public class TranscientBase implements Serializable {
 
 	public State getState(ChronixContext ctx) {
 		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
+	}
+
+	public String getStateID() {
+		return this.stateID;
+	}
+
+	public UUID getStateIDU() {
+		return UUID.fromString(this.stateID);
 	}
 
 	//
