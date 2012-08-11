@@ -1,5 +1,6 @@
 package org.oxymores.chronix.engine;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -10,6 +11,7 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
@@ -67,23 +69,35 @@ public class Broker {
 	public Broker(ChronixContext ctx, boolean purge) throws Exception {
 		log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl, ctx.configurationDirectory));
 		this.ctx = ctx;
-		broker = new BrokerService();
 		brokerName = this.ctx.getBrokerName();
-		broker.setBrokerName(brokerName);
-		this.emf = ctx.getTransacEMF();
+		if (ctx.applicationsById.values().size() > 0)
+			this.emf = ctx.getTransacEMF();
+
+		// Create broker service
+		broker = new BrokerService();
 
 		// Basic configuration
+		broker.setBrokerName(brokerName);
 		broker.setPersistent(true);
-		// broker.setBrokerId(UUID.randomUUID().toString());
-		SystemUsage su = new SystemUsage();
+		broker.setDataDirectory(ctx.configurationDirectoryPath + File.separator + "activemq-data");
+		broker.setUseJmx(false); // Not now. Later.
+		broker.setDeleteAllMessagesOnStartup(purge);
+
+		// System resources
+		MemoryUsage mu = new MemoryUsage();
+		mu.setLimit((1024 * 1024) * 20);
+
 		StoreUsage stu = new StoreUsage();
-		stu.setLimit(104857600);
-		su.setStoreUsage(stu);
+		stu.setLimit((1024 * 1024) * 38);
+
 		TempUsage tu = new TempUsage();
-		tu.setLimit(104857600);
+		tu.setLimit((1024 * 1024) * 38);
+
+		SystemUsage su = broker.getSystemUsage();
+		su.setMemoryUsage(mu);
+		su.setStoreUsage(stu);
 		su.setTempUsage(tu);
 		broker.setSystemUsage(su);
-		broker.setUseJmx(false); // Not now. Later.
 
 		// Add a listener
 		broker.addConnector("tcp://" + this.ctx.localUrl);
@@ -92,14 +106,14 @@ public class Broker {
 		ArrayList<String> opened = new ArrayList<String>();
 		for (Application a : this.ctx.applicationsById.values()) {
 			for (NodeLink nl : a.getLocalNode().getCanSendTo()) {
-				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
+				if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL)))
 					break;
 				if (opened.contains(nl.getNodeTo().getBrokerUrl()))
 					break;
 				opened.add(nl.getNodeTo().getBrokerUrl());
 
 				String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
-				log.info(String.format("This broker will be able to open a channel towards %s (db is %s)", url, ctx.configurationDirectoryPath));
+				log.info(String.format("(%s) This broker will be able to open a channel towards %s", ctx.configurationDirectoryPath, url));
 				NetworkConnector tc = broker.addNetworkConnector(url);
 				tc.setDuplex(true);
 				tc.setNetworkTTL(20);
@@ -109,18 +123,19 @@ public class Broker {
 				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
 					break;
 
-				log.info(String.format("This broker should receive channels incoming from %s:%s (db is %s)", nl.getNodeFrom().getDns(), nl
-						.getNodeFrom().getqPort(), ctx.configurationDirectoryPath));
+				log.info(String.format("(%s) This broker should receive channels incoming from %s:%s)", ctx.configurationDirectoryPath, nl
+						.getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
 			}
 		}
 
-		// Purge (for tests, mostly)
-		if (purge)
-			purgeAllQueues();
-
 		// Start
-		log.info("The message broker will now start");
-		broker.start();
+		log.info(String.format("(%s) The message broker will now start", ctx.configurationDirectoryPath));
+		try {
+			broker.start();
+		} catch (Exception e) {
+			log.error("Failed to star the broker", e);
+			throw e; // a little stupid...
+		}
 
 		// Factory
 		this.factory = new ActiveMQConnectionFactory("vm://" + brokerName);
@@ -131,33 +146,47 @@ public class Broker {
 	}
 
 	public void registerListeners(ChronixEngine engine) throws JMSException, IOException {
-		registerListeners(engine, true, true, true, true, true, true);
+		registerListeners(engine, true, true, true, true, true, true, true);
 	}
 
-	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgnet, boolean startPipeline, boolean startRunner,
-			boolean startLog, boolean startTranscient) throws JMSException, IOException {
+	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
+			boolean startLog, boolean startTranscient, boolean startEventListener) throws JMSException, IOException {
 		this.engine = engine;
 
-		this.thrML = new MetadataListener();
-		this.thrML.startListening(this.connection, brokerName, ctx, this.engine);
+		if (startMeta) {
+			this.thrML = new MetadataListener();
+			this.thrML.startListening(this.connection, brokerName, ctx, this.engine);
+		}
 
-		this.thrRA = new RunnerAgent();
-		this.thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
+		if (startRunnerAgent) {
+			this.thrRA = new RunnerAgent();
+			this.thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
+		}
 
-		this.thrEL = new EventListener();
-		this.thrEL.startListening(this.connection, brokerName, ctx, emf);
+		if (startEventListener && this.emf != null) {
+			this.thrEL = new EventListener();
+			this.thrEL.startListening(this.connection, brokerName, ctx, emf);
+		}
 
-		this.thrPL = new Pipeline();
-		this.thrPL.startListening(this.connection, brokerName, ctx, emf);
+		if (startPipeline && this.emf != null) {
+			this.thrPL = new Pipeline();
+			this.thrPL.startListening(this.connection, brokerName, ctx, emf);
+		}
 
-		this.thrRU = new Runner();
-		this.thrRU.startListening(this.connection, brokerName, ctx, emf);
+		if (startRunner && this.emf != null) {
+			this.thrRU = new Runner();
+			this.thrRU.startListening(this.connection, brokerName, ctx, emf);
+		}
 
-		this.thrLL = new LogListener();
-		this.thrLL.startListening(this.connection, brokerName, ctx);
+		if (startLog) {
+			this.thrLL = new LogListener();
+			this.thrLL.startListening(this.connection, brokerName, ctx);
+		}
 
-		this.thrTL = new TranscientListener();
-		this.thrTL.startListening(this.connection, brokerName, ctx, emf);
+		if (startTranscient && this.emf != null) {
+			this.thrTL = new TranscientListener();
+			this.thrTL.startListening(this.connection, brokerName, ctx, emf);
+		}
 	}
 
 	public void stop() {
@@ -179,19 +208,14 @@ public class Broker {
 				this.thrTL.stopListening();
 
 			for (NetworkConnector nc : this.broker.getNetworkConnectors()) {
-				// nc.stop();
 				this.broker.removeNetworkConnector(nc);
 			}
 
 			this.connection.close();
 			broker.stop();
+			broker.waitUntilStopped();
 		} catch (Exception e) {
-			log.warn("an error occured while trying to stop the broker. Will not impact the scheduler.", e);
-		} finally {
-			try {
-				this.connection.stop();
-			} catch (JMSException e) {
-			}
+			log.warn("an error occured while trying to stop the broker", e);
 		}
 	}
 

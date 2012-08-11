@@ -25,7 +25,7 @@ public class MetadataListener implements MessageListener {
 	private MessageConsumer jmsApplicationConsumer;
 
 	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, ChronixEngine engine) throws JMSException {
-		log.debug(String.format("Initializing MetadataListener on context %s", ctx.configurationDirectory));
+		log.debug(String.format("(%s) Initializing MetadataListener", ctx.configurationDirectory));
 
 		// Pointers
 		this.ctx = ctx;

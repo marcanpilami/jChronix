@@ -30,9 +30,7 @@ public class TestClock {
 		for (Object p : pl) {
 			DateTime from = new DateTime(((Period) p).getStart());
 			DateTime to = new DateTime(((Period) p).getEnd());
-			log.info(String.format("from %s to %s",
-					from.toString("yyyy/MM/dd HH:mm:ss"),
-					to.toString("yyyy/MM/dd HH:mm:ss")));
+			log.info(String.format("from %s to %s", from.toString("yyyy/MM/dd HH:mm:ss"), to.toString("yyyy/MM/dd HH:mm:ss")));
 		}
 	}
 
@@ -44,8 +42,8 @@ public class TestClock {
 		Clock ck1 = a.getActiveElements(Clock.class).get(0);
 		ClockRRule rr1 = ck1.getRulesADD().get(0);
 
-		DateTime start = new DateTime(2012, 8, 6, 0, 0); // a monday
-		DateTime end = new DateTime(2012, 8, 12, 0, 0); // sunday
+		DateTime start = new DateTime(2012, 7, 30, 0, 0); // a monday
+		DateTime end = new DateTime(2012, 8, 5, 0, 0); // sunday
 
 		// As in the demo application: on open days only
 		log.info("**** Normal");
@@ -85,19 +83,17 @@ public class TestClock {
 		ChronixEngine e = new ChronixEngine(dbPath);
 		e.emptyDb();
 		e.ctx.createNewConfigFile();
+		LogHelpers.clearAllTranscientElements(e.ctx);
 
 		// Create test application
-		Application a = PlanBuilder.buildApplication("testing clocks",
-				"no description for tests");
+		Application a = PlanBuilder.buildApplication("testing clocks", "no description for tests");
 		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a);
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
 		ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
-		Clock ck1 = PlanBuilder.buildClock(a, "every second", "every second",
-				rr1);
+		Clock ck1 = PlanBuilder.buildClock(a, "every second", "every second", rr1);
 		ck1.setDURATION(1);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa",
-				"should display 'aa'");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa", "should display 'aa'");
 
 		State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
 		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
@@ -116,11 +112,11 @@ public class TestClock {
 		// Start engine
 		e.start();
 		Thread.sleep(3 * 1000); // run & analysis time
-		e.stop();
-		Thread.sleep(500); // In case we chain tests - free TCP port
+		e.stopEngine();
+		e.waitForStopEnd();
 
 		// Get results
-		List<RunLog> res = LogHelpers.displayAllHistory(ctx);
+		List<RunLog> res = LogHelpers.displayAllHistory(e.ctx);
 
 		// 6 per minute - grace period is 1 minute => 6 runs
 		Assert.assertEquals(6, res.size());

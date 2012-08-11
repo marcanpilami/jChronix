@@ -61,8 +61,12 @@ public class Application extends ChronixObject {
 
 		// Basic elements
 		ActiveNodeBase tmp = new And();
+		tmp.setName("AND");
+		tmp.setDescription("AND logical door - unique for the whole application");
 		this.activeElements.put(tmp.getId(), tmp);
 		tmp = new Or();
+		tmp.setName("OR");
+		tmp.setDescription("OR logical door - unique for the whole application");
 		this.activeElements.put(tmp.getId(), tmp);
 		tmp = new ChainEnd();
 		this.activeElements.put(tmp.getId(), tmp);

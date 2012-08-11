@@ -32,10 +32,12 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 
+// These tests are deprecated.
 public class TestBroker {
 	private static Logger log = Logger.getLogger(TestBroker.class);
 
 	private ChronixContext ctx1;
+	@SuppressWarnings("unused")
 	private ChronixContext ctx2;
 	private Broker b1;
 	@SuppressWarnings("unused")
@@ -191,30 +193,6 @@ public class TestBroker {
 
 		// Check result
 		Assert.assertEquals(res, text);
-	}
-
-	@Test
-	public void testSendApplication() throws JMSException {
-		log.info("****This tests sending, an app without an active engine nor anything to receive it on the other side");
-		Application a = ctx1.applicationsById.values().iterator().next();
-		SenderHelpers.sendApplication(a, n1400, ctx1);
-	}
-
-	@Test
-	public void testReceiveApplication() throws Exception {
-		log.info("****This tests sending, receving, parsing and saving of an app without an active engine");
-		Application a = ctx1.applicationsById.values().iterator().next(); // who
-																			// cares
-																			// what
-																			// we
-																			// send
-		Broker b2 = new Broker(ctx2, true);
-		SenderHelpers.sendApplication(a, n1400, ctx1);
-		Thread.sleep(2000); // Time to consume message
-		b2.stop();
-
-		int i = ctx2.configurationDirectory.listFiles().length;
-		Assert.assertEquals(3, i); // Third is the JOBLOG directory
 	}
 
 	@Test

@@ -26,7 +26,7 @@ import java.util.List;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
@@ -63,8 +63,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Helper function (could be overloaded) returning something intelligible
 	// designating the element that is run by this source
-	public String getCommandName(PipelineJob pj, Runner sender,
-			ChronixContext ctx) {
+	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx) {
 		return null;
 	}
 
@@ -91,8 +90,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Do the given events allow for a transition originating from a state
 	// representing this source?
-	public EventAnalysisResult createdEventRespectsTransitionOnPlace(
-			Transition tr, List<Event> events, Place p) {
+	public EventAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p) {
 		EventAnalysisResult res = new EventAnalysisResult();
 		res.res = false;
 
@@ -134,55 +132,49 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Do the given events allow the execution of a given State representing
 	// this source? (uses createdEventRespectsTransitionOnPlace)
-	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt,
-			EntityManager em, MessageProducer pjProducer, Session session,
+	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, EntityManager em, MessageProducer pjProducer, Session session,
 			ChronixContext ctx) {
 		EventAnalysisResult res = new EventAnalysisResult();
 		EventAnalysisResult tmp;
 
 		// Get session events
-		Query q = em
-				.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2");
+		TypedQuery<Event> q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2", Event.class);
 		q.setParameter(1, evt.getLevel0IdU().toString());
-		// q.setParameter(2, evt.getLevel1IdU().toString());
-		@SuppressWarnings("unchecked")
+		q.setParameter(2, evt.getLevel1IdU().toString());
 		List<Event> sessionEvents2 = q.getResultList();
 
-		// Remove all consumed events
+		// Remove consumed events (first filter: those which are completely
+		// consumed)
 		List<Event> sessionEvents = new ArrayList<Event>();
 		for (Event e : sessionEvents2) {
 			for (Place p : s.runsOn.places) {
-				if (!e.wasConsumedOnPlace(p, s))
+				if (!e.wasConsumedOnPlace(p, s) && !sessionEvents.contains(e))
 					sessionEvents.add(e);
 			}
 		}
 
-		// The current event nay not yet be DB persisted
+		// The current event may not yet be DB persisted
 		if (!sessionEvents.contains(evt))
 			sessionEvents.add(evt);
 
 		// Analysis
 		if (s.parallel) {
-			// In this case, only
-			log.debug(String.format(
-					"State %s (%s - chain %s) is parallel enabled",
-					this.getId(), s.represents.getName(), s.chain.getName()));
+			// In this case, only check for one place at a time
+			log.debug(String.format("State %s (%s - chain %s) is parallel enabled", this.getId(), s.represents.getName(), s.chain.getName()));
 
 			for (Place p : s.runsOn.places) {
-				log.debug(String
-						.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?",
-								evt.getId(), s.getId(), s.represents.getName(),
-								s.chain.getName(), p.getName()));
+				if (p.node.getHost() != s.application.getLocalNode())
+					continue;
+				log.debug(String.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?", evt.getId(), s.getId(),
+						s.represents.getName(), s.chain.getName(), p.getName()));
 
 				tmp = new EventAnalysisResult();
 				tmp.res = true;
 				for (Transition tr : s.trReceivedHere) {
 					tmp.add(tr.isTransitionAllowed(sessionEvents, p));
 					if (!tmp.res) {
-						log.debug(String
-								.format("State %s (%s - chain %s) is NOT allowed to run on place %s",
-										s.getId(), s.represents.getName(),
-										s.chain.getName(), p.name));
+						log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run on place %s", s.getId(), s.represents.getName(),
+								s.chain.getName(), p.name));
 						continue;
 					}
 				}
@@ -192,10 +184,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 					continue;
 
 				// If here, everything's OK
-				log.debug(String
-						.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
-								s.represents.getName(), s.chain.getName(),
-								p.name, tmp.consumedEvents.size()));
+				log.debug(String.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
+						s.represents.getName(), s.chain.getName(), p.name, tmp.consumedEvents.size()));
 				ArrayList<Place> temp = new ArrayList<Place>();
 				temp.add(p);
 				s.consumeEvents(res.consumedEvents, temp, em);
@@ -205,9 +195,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 		} else {
 			// In this case, all incoming transitions must be OK for this
 			// State to run
-			log.debug(String.format(
-					"State %s (%s - chain %s) is not parallel enabled",
-					s.getId(), s.represents.getName(), s.chain.getName()));
+			log.debug(String.format("State %s (%s - chain %s) is not parallel enabled. Analysing with %s events", s.getId(), s.represents.getName(),
+					s.chain.getName(), sessionEvents.size()));
 
 			ArrayList<Place> places = new ArrayList<Place>();
 
@@ -217,10 +206,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 				res.add(tr.isTransitionAllowed(sessionEvents, null));
 				// null: no place targeting needed in not // case
 				if (!res.res) {
-					log.debug(String.format(
-							"State %s (%s - chain %s) is NOT allowed to run",
-							s.getId(), s.represents.getName(),
-							s.chain.getName()));
+					log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
+							s.represents.getName(), s.chain.getName(), tr.stateFrom.represents.name));
 					return new EventAnalysisResult(); // not possible
 				}
 			}
@@ -233,14 +220,14 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 			// Go
 			if (places.size() > 0) {
-				log.debug(String
-						.format("State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
-								s.represents.getName(), s.chain.getName(),
-								places.size(), res.consumedEvents.size()));
+				log.debug(String.format(
+						"State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
+						s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
 
 				s.consumeEvents(res.consumedEvents, places, em);
 				for (Place p : places) {
-					s.runFromEngine(p, em, pjProducer, session, evt);
+					if (p.node.getHost() == s.application.getLocalNode())
+						s.runFromEngine(p, em, pjProducer, session, evt);
 				}
 				return res;
 			} else
@@ -266,8 +253,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 	}
 
 	// ?
-	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx,
-			EntityManager em) {
+	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx, EntityManager em) {
 		log.info("end of run");
 	}
 
@@ -276,14 +262,11 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Used by active nodes which influence the scheduling itself rather than
 	// run a payload.
 	// Called within an open JPA transaction.
-	public void internalRun(EntityManager em, ChronixContext ctx,
-			PipelineJob pj, Runner runner) {
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, Runner runner) {
 		return; // Do nothing by default.
 	}
 
-	public DateTime selfTrigger(MessageProducer eventProducer,
-			Session jmsSession, ChronixContext ctx, EntityManager em)
-			throws Exception {
+	public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em) throws Exception {
 		throw new NotImplementedException();
 	}
 

@@ -85,8 +85,8 @@ public class SenderHelpers {
 		ArrayList<ExecutionNode> clientPN = new ArrayList<ExecutionNode>();
 		for (State st : clientStates) {
 			for (ExecutionNode en : st.getRunsOnPhysicalNodes()) {
-				if (!clientPN.contains(en))
-					clientPN.add(en);
+				if (!clientPN.contains(en.getHost()))
+					clientPN.add(en.getHost());
 			}
 		}
 

@@ -29,7 +29,7 @@ public class LogListener implements MessageListener {
 	private ChronixContext ctx;
 
 	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException {
-		log.debug(String.format("Initializing LogListener on context %s", ctx.configurationDirectory));
+		log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
 		// Save pointers
 		this.jmsConnection = cnx;

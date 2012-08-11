@@ -40,6 +40,8 @@ public class EventListener implements MessageListener {
 	MessageConsumer consumer;
 
 	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+		log.info(String.format("(%s) Starting an event engine", ctx.configurationDirectoryPath));
+
 		this.ctx = ctx;
 		this.cnx = cnx;
 		this.emf = emf;
@@ -185,16 +187,25 @@ public class EventListener implements MessageListener {
 
 	private void cleanUp(List<Event> events, EntityManager em) {
 		for (Event e : events) {
+			boolean shouldPurge = true;
 			State s = e.getState(ctx);
 			ArrayList<State> clientStates = s.getClientStates();
 
 			for (State cs : clientStates) {
 				for (Place p : cs.getRunsOn().getPlaces()) {
-					if (e.wasConsumedOnPlace(p, cs)) {
-						em.remove(e);
-						log.debug(String.format("Event %s will be purged", e.getId()));
+					if (p.getNode().getHost() != e.getApplication(ctx).getLocalNode())
+						continue;
+
+					if (!e.wasConsumedOnPlace(p, cs)) {
+						shouldPurge = false;
+						break;
 					}
 				}
+			}
+
+			if (shouldPurge) {
+				em.remove(e);
+				log.debug(String.format("Event %s will be purged", e.getId()));
 			}
 		}
 	}

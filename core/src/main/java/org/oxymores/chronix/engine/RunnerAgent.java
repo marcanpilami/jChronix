@@ -30,6 +30,8 @@ public class RunnerAgent implements MessageListener {
 	private String logDbPath;
 
 	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException {
+		log.info(String.format("(%s) Starting a runner agent", brokerName));
+
 		// Pointers
 		this.jmsConnection = cnx;
 
@@ -59,6 +61,7 @@ public class RunnerAgent implements MessageListener {
 
 	@Override
 	public void onMessage(Message msg) {
+		log.info("Run request received");
 		ObjectMessage omsg = (ObjectMessage) msg;
 		RunDescription rd;
 		try {

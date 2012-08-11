@@ -13,14 +13,24 @@ import org.oxymores.chronix.exceptions.IncorrectConfigurationException;
 public class ChronixEngine extends Thread {
 	private static Logger log = Logger.getLogger(ChronixEngine.class);
 
-	public Broker broker;
+	private boolean runnerMode;
+
 	public ChronixContext ctx;
 	public String dbPath;
+
+	public Broker broker;
 	public SelfTriggerAgent stAgent;
-	private Semaphore startCritical, stop, threadInit;
+
+	private Semaphore startCritical, stop, threadInit, stopped;
+	boolean run = true;
 
 	public ChronixEngine(String dbPath) {
+		this(dbPath, false);
+	}
+
+	public ChronixEngine(String dbPath, boolean runnerMode) {
 		this.dbPath = dbPath;
+		this.runnerMode = runnerMode;
 		this.ctx = new ChronixContext(); // to allow some basic config
 		this.ctx.configurationDirectoryPath = dbPath; // before starting
 		this.ctx.configurationDirectory = new File(dbPath);
@@ -28,13 +38,8 @@ public class ChronixEngine extends Thread {
 		this.startCritical = new Semaphore(1);
 		this.stop = new Semaphore(0);
 		this.threadInit = new Semaphore(0);
+		this.stopped = new Semaphore(0);
 	}
-
-	public void startEngine() {
-		startEngine(false, false);
-	}
-
-	boolean run = true;
 
 	private void startEngine(boolean blocking, boolean purgeQueues) {
 		log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
@@ -49,11 +54,16 @@ public class ChronixEngine extends Thread {
 
 			// Broker with all the consumer threads
 			this.broker = new Broker(this, purgeQueues);
-			this.broker.registerListeners(this);
+			if (!runnerMode)
+				this.broker.registerListeners(this);
+			else
+				this.broker.registerListeners(this, false, true, false, false, false, false, false);
 
 			// Active sources agent
-			this.stAgent = new SelfTriggerAgent();
-			this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+			if (!this.runnerMode && broker.getEmf() != null) {
+				this.stAgent = new SelfTriggerAgent();
+				this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+			}
 
 			// Done
 			this.startCritical.release();
@@ -102,6 +112,8 @@ public class ChronixEngine extends Thread {
 
 			// Done. If 'run' is still true, will restart the engine
 		}
+		this.stopped.release();
+		log.info("The scheduler has stopped");
 	}
 
 	public void waitForInitEnd() {
@@ -112,6 +124,14 @@ public class ChronixEngine extends Thread {
 		}
 		this.startCritical.release();
 		this.threadInit.release();
+	}
+
+	public void waitForStopEnd() {
+		try {
+			this.stopped.acquire();
+		} catch (InterruptedException e) {
+		}
+		this.stop.release();
 	}
 
 	public void queueReloadConfiguration() {
@@ -156,7 +176,7 @@ public class ChronixEngine extends Thread {
 
 	protected void postContextLoad() throws Exception {
 		// First start?
-		if (this.ctx.applicationsById.values().size() == 0) {
+		if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode) {
 			// Create OPERATIONS application
 			Application a = OperationsApplication.getNewApplication();
 			this.ctx.saveApplication(a);

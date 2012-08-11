@@ -116,20 +116,22 @@ public class ChronixContext {
 		// Post load checkup & inits
 		// ///////////////////
 
-		EntityManager em = ctx.getTransacEM();
-		EntityTransaction tr = em.getTransaction();
-		tr.begin();
-		for (Application a : ctx.applicationsById.values()) {
-			for (Calendar c : a.calendars.values())
-				c.createPointers(em);
+		if (ctx.applicationsById.values().size() > 0) {
+			EntityManager em = ctx.getTransacEM();
+			EntityTransaction tr = em.getTransaction();
+			tr.begin();
+			for (Application a : ctx.applicationsById.values()) {
+				for (Calendar c : a.calendars.values())
+					c.createPointers(em);
+			}
+			tr.commit();
+			tr.begin();
+			for (Application a : ctx.applicationsById.values()) {
+				for (State s : a.getStates())
+					s.createPointers(em);
+			}
+			tr.commit();
 		}
-		tr.commit();
-		tr.begin();
-		for (Application a : ctx.applicationsById.values()) {
-			for (State s : a.getStates())
-				s.createPointers(em);
-		}
-		tr.commit();
 
 		// TODO: cleanup event data (elements they reference may have been
 		// removed)

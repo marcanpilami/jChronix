@@ -62,7 +62,7 @@ public class Runner implements MessageListener {
 
 		// Log
 		String qName = String.format("Q.%s.RUNNERMGR", brokerName);
-		log.debug(String.format("Broker %s: registering a jobrunner listener on queue %s", brokerName, qName));
+		log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.configurationDirectoryPath, qName));
 
 		// Create JMS session
 		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
@@ -304,7 +304,6 @@ public class Runner implements MessageListener {
 
 		// Calendar progress
 		if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating()) {
-			log.debug(pj.getCalendarID());
 			Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
 			CalendarDay justDone = c.getDay(UUID.fromString(pj.getCalendarOccurrenceID()));
 			CalendarDay next = c.getOccurrenceAfter(justDone);
@@ -383,7 +382,6 @@ public class Runner implements MessageListener {
 
 		ExecutionNode console = ctx.applicationsById.get(UUID.fromString(rl.applicationId)).getConsoleNode();
 		if (console != null && console != self) {
-			log.debug(rl.applicationId);
 			qName = String.format("Q.%s.LOG", console.getBrokerName());
 			log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
 			destination = jmsSession.createQueue(qName);

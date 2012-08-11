@@ -40,7 +40,7 @@ public class TranscientListener implements MessageListener {
 	private ChronixContext ctx;
 
 	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
-		log.debug(String.format("Initializing LogListener on context %s", ctx.configurationDirectory));
+		log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
 		// Save pointers
 		this.jmsConnection = cnx;

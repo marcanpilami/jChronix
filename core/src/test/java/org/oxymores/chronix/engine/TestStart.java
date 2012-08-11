@@ -22,7 +22,6 @@ public class TestStart {
 	@Before
 	public void init() throws Exception {
 		db1 = "C:\\TEMP\\db1";
-
 	}
 
 	@Test
@@ -59,6 +58,8 @@ public class TestStart {
 		Assert.assertEquals(1, a1.getChains().size());
 		Assert.assertEquals(1, a2.getChains().size());
 		Assert.assertEquals(5, a2.getChains().get(0).getStates().size());
+
+		e.waitForStopEnd();
 	}
 
 	@Test
@@ -80,5 +81,8 @@ public class TestStart {
 		TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
 		Assert.assertEquals(3, q.getResultList().size());
+
+		e.stopEngine();
+		e.waitForStopEnd();
 	}
 }

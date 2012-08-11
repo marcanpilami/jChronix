@@ -15,6 +15,7 @@ import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.And;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
@@ -169,6 +170,11 @@ public class PlanBuilder {
 		s1.setY(100);
 
 		return s1;
+	}
+
+	public static State buildStateAND(Chain c1, PlaceGroup pg1) {
+		ActiveNodeBase target = c1.getApplication().getActiveElements(And.class).get(0);
+		return buildState(c1, pg1, target);
 	}
 
 	public static Clock buildClock(Application a, String name, String description, ClockRRule... rulesADD) {

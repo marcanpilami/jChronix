@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
+import javax.jms.JMSException;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
@@ -35,9 +36,6 @@ public class TestSingleNode {
 	PlaceGroup pg1, pg2;
 
 	public void prepare() throws Exception {
-		if (a1 != null)
-			return;
-
 		db1 = "C:\\TEMP\\db1";
 
 		/************************************************
@@ -47,6 +45,7 @@ public class TestSingleNode {
 		e1 = new ChronixEngine(db1);
 		e1.emptyDb();
 		e1.ctx.createNewConfigFile(); // default is 1789/localhost
+		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Single node test", "test");
@@ -113,8 +112,7 @@ public class TestSingleNode {
 		State s3 = PlanBuilder.buildState(c2, pg1, sc2);
 		s3.setCalendar(ca1);
 
-		log.debug("**************************************************************************************");
-		log.debug("****SAVE CHAIN************************************************************************");
+		// Save plan
 		try {
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
@@ -189,5 +187,174 @@ public class TestSingleNode {
 		// and test scheduling...
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(11, res.size());
+
+		// The end
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+	}
+
+	@Test
+	public void testAND() {
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+		EntityManager em = e1.ctx.getTransacEM();
+
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE PLAN***********************************************************************");
+
+		// Build the test chain
+		Chain c1 = PlanBuilder.buildChain(a1, "chain on both nodes", "simple chain", pg1);
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echoa", "a");
+		State s1 = PlanBuilder.buildState(c1, pg1, sc1);
+		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo b", "echob", "b");
+		State s2 = PlanBuilder.buildState(c1, pg1, sc2);
+		State s3 = PlanBuilder.buildStateAND(c1, pg1);
+
+		c1.getStartState().connectTo(s1);
+		c1.getStartState().connectTo(s2);
+		s1.connectTo(s3);
+		s2.connectTo(s3);
+		s3.connectTo(c1.getEndState());
+
+		// Save plan
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Run the chain
+		log.debug("**************************************************************************************");
+		log.debug("****START OF CHAIN1*******************************************************************");
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+		} catch (JMSException e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e3) {
+		}
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(5, res.size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+	}
+
+	@Test
+	public void testANDWithBarrier() {
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+		EntityManager em = e1.ctx.getTransacEM();
+
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE PLAN***********************************************************************");
+
+		// Build the test chains
+		Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
+
+		// First chain with the AND, with a State blocked by calendar
+		Chain c1 = PlanBuilder.buildChain(a1, "chain on both nodes", "simple chain", pg1);
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echoa", "a");
+		State s1 = PlanBuilder.buildState(c1, pg1, sc1);
+		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo b", "echob", "b");
+		State s2 = PlanBuilder.buildState(c1, pg1, sc2);
+		State s3 = PlanBuilder.buildStateAND(c1, pg1);
+
+		s2.setCalendar(ca);
+		s2.setCalendarShift(-1);
+
+		c1.getStartState().connectTo(s1);
+		c1.getStartState().connectTo(s2);
+		s1.connectTo(s3);
+		s2.connectTo(s3);
+		s3.connectTo(c1.getEndState());
+
+		// Second chain to advance calendar
+		Chain c2 = PlanBuilder.buildChain(a1, "advance calendar chain", "chain3", pg1);
+		NextOccurrence no = PlanBuilder.buildNextOccurrence(a1, ca);
+		State s9 = PlanBuilder.buildState(c2, pg1, no);
+		c2.getStartState().connectTo(s9);
+		s9.connectTo(c2.getEndState());
+
+		// Save to file & recycle
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Shift the state by 1 so that it cannot start (well, shouldn't)
+		log.debug("**************************************************************************************");
+		log.debug("****SHIFT CALENDAR********************************************************************");
+		try {
+			SenderHelpers.sendCalendarPointerShift(1, s2, e1.ctx);
+			Thread.sleep(500);
+		} catch (Exception e4) {
+			e4.printStackTrace();
+			Assert.fail(e4.getMessage());
+		}
+
+		// Run the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER START OF CHAIN1*************************************************************");
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+			Thread.sleep(2000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(2, res.size());
+
+		TypedQuery<Event> q1 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
+		Assert.assertEquals(2, q1.getResultList().size());
+
+		// Run second chain - should unlock the first chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER START SECOND CHAIN**********************************************************");
+		try {
+			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(3000); // Process events
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(8, res.size());
+		Assert.assertEquals(0, q1.getResultList().size()); // events
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
 	}
 }

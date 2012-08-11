@@ -16,9 +16,7 @@ public class LogHelpers {
 
 	public static List<RunLog> displayAllHistory(ChronixContext ctx) {
 		EntityManager em = ctx.getHistoryEM();
-		TypedQuery<RunLog> q = em
-				.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt",
-						RunLog.class);
+		TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
 		List<RunLog> res = q.getResultList();
 
 		log.info(RunLog.getTitle());
@@ -31,20 +29,18 @@ public class LogHelpers {
 
 	public static void clearAllTranscientElements(ChronixContext ctx) {
 		EntityManager em1 = ctx.getHistoryEM();
-		TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r",
-				RunLog.class);
+		TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r", RunLog.class);
 
 		EntityTransaction tr1 = em1.getTransaction();
 		tr1.begin();
 		for (RunLog l : q.getResultList())
 			em1.remove(l);
-		
+
 		tr1.commit();
 
 		EntityManager em2 = ctx.getTransacEM();
-		TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r",
-				TranscientBase.class);
-		
+		TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r", TranscientBase.class);
+
 		EntityTransaction tr2 = em2.getTransaction();
 		tr2.begin();
 		for (TranscientBase b : q2.getResultList())

@@ -24,6 +24,7 @@ import javax.persistence.Query;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
 public class Pipeline extends Thread implements MessageListener {
@@ -58,7 +59,7 @@ public class Pipeline extends Thread implements MessageListener {
 
 		// Register on incoming queue
 		String qName = String.format("Q.%s.PJ", brokerName);
-		log.debug(String.format("Broker %s: registering a pipeline listener on queue %s", brokerName, qName));
+		log.debug(String.format("(%s) Registering a pipeline listener on queue %s", ctx.configurationDirectoryPath, qName));
 		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
 		this.jmsPipelineQueue = this.jmsSession.createQueue(qName);
 		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.jmsPipelineQueue);
@@ -110,12 +111,22 @@ public class Pipeline extends Thread implements MessageListener {
 	public void run() {
 		while (this.run) {
 			// Poll for a job
-			PipelineJob pj = null;
 			try {
-				pj = entering.poll(1, TimeUnit.MINUTES);
+				PipelineJob pj = entering.poll(1, TimeUnit.MINUTES);
 				if (pj != null) {
-					waiting_sequence.add(pj);
-					log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
+					Place p = null;
+					org.oxymores.chronix.core.State s = null;
+					try {
+						p = pj.getPlace(ctx);
+						s = pj.getState(ctx);
+					} catch (Exception e) {
+					}
+					if (s == null || p == null) {
+						log.error("A job was received in the pipeline without any corresponding local application data - ignored");
+					} else {
+						waiting_sequence.add(pj);
+						log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
+					}
 				}
 			} catch (InterruptedException e) {
 				// Interruption is all right - we want to loop from time to time
@@ -240,7 +251,7 @@ public class Pipeline extends Thread implements MessageListener {
 
 		transac_mainloop.begin(); // JPA transaction
 
-		String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getBrokerName());
+		String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getHost().getBrokerName());
 		try {
 			Destination d = jmsSession.createQueue(qName);
 			ObjectMessage om = jmsSession.createObjectMessage(pj);
@@ -256,6 +267,6 @@ public class Pipeline extends Thread implements MessageListener {
 		transac_mainloop.commit(); // JPA
 		commit(); // JMS
 
-		log.debug(String.format("Job %s was given to the runner queue", pj.getId()));
+		log.debug(String.format("Job %s was given to the runner queue %s", pj.getId(), qName));
 	}
 }
