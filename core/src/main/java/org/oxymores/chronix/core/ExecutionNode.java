@@ -119,7 +119,7 @@ public class ExecutionNode extends ApplicationObject {
 	public void addCanReceiveFrom(NodeLink nl) {
 		if (!this.canReceiveFrom.contains(nl)) {
 			this.canReceiveFrom.add(nl);
-			nl.setNodeFrom(this);
+			nl.setNodeTo(this);
 		}
 	}
 

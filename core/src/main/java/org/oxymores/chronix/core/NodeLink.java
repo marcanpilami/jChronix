@@ -18,10 +18,11 @@ public class NodeLink extends ApplicationObject {
 	}
 
 	public void setNodeFrom(ExecutionNode nodeFrom) {
-		if (this.nodeFrom == null
-				|| !this.nodeFrom.getId().equals(nodeFrom.getId()))
+		if (this.nodeFrom == null || this.nodeFrom != nodeFrom) {
+			this.nodeFrom = nodeFrom;
 			nodeFrom.addCanSendTo(this);
-		this.nodeFrom = nodeFrom;
+		} else
+			this.nodeFrom = nodeFrom;
 	}
 
 	public ExecutionNode getNodeTo() {
@@ -29,8 +30,10 @@ public class NodeLink extends ApplicationObject {
 	}
 
 	public void setNodeTo(ExecutionNode nodeTo) {
-		if (this.nodeTo == null || !this.nodeTo.getId().equals(nodeTo.getId()))
+		if (this.nodeTo == null || this.nodeTo != nodeTo) {
+			this.nodeTo = nodeTo;
 			nodeTo.addCanReceiveFrom(this);
-		this.nodeTo = nodeTo;
+		} else
+			this.nodeTo = nodeTo;
 	}
 }
