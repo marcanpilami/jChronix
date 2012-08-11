@@ -83,12 +83,13 @@ public class Clock extends ActiveNodeBase {
 		return evt;
 	}
 
-	public PeriodList getOccurrences(org.joda.time.DateTime start,
-			org.joda.time.DateTime end) throws ParseException {
+	public PeriodList getOccurrences(org.joda.time.DateTime start, org.joda.time.DateTime end) throws ParseException {
 		DateTime from = new DateTime(start.toDate());
 		DateTime to = new DateTime(end.toDate());
-		log.debug(String
-				.format("Computing occurrences from %s to %s", from, to));
+		if (start.isBefore(this.CREATED))
+			this.CREATED = start.minusDays(1);
+
+		log.debug(String.format("Computing occurrences from %s to %s", from, to));
 		Period p = new Period(from, to);
 		VEvent evt = this.getEvent();
 		PeriodList res = evt.calculateRecurrenceSet(p);
@@ -161,51 +162,36 @@ public class Clock extends ActiveNodeBase {
 	}
 
 	@Override
-	public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer,
-			Session jmsSession, ChronixContext ctx, EntityManager em)
+	public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em)
 			throws Exception {
 		org.joda.time.DateTime now = org.joda.time.DateTime.now();
-		org.joda.time.DateTime nowminusgrace = now
-				.minusMinutes(this.DURATION + 60);
-		if (occurrenceCache == null || lastComputed == null
-				|| lastComputed.getDayOfYear() < now.getDayOfYear()) {
-			occurrenceCache = this.getOccurrences(nowminusgrace,
-					now.plusDays(1));
+		org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.DURATION + 60);
+		if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear()) {
+			occurrenceCache = this.getOccurrences(nowminusgrace, now.plusDays(1));
 		}
 
 		// Select the occurrences that should be active
 		ArrayList<org.joda.time.DateTime> theory = new ArrayList<org.joda.time.DateTime>();
 		for (Object p : occurrenceCache) {
-			org.joda.time.DateTime from = new org.joda.time.DateTime(
-					((Period) p).getStart());
-			org.joda.time.DateTime to = new org.joda.time.DateTime(
-					((Period) p).getEnd());
+			org.joda.time.DateTime from = new org.joda.time.DateTime(((Period) p).getStart());
+			org.joda.time.DateTime to = new org.joda.time.DateTime(((Period) p).getEnd());
 
 			if (from.compareTo(now) <= 0 && to.compareTo(now) >= 0) {
 				theory.add(from);
-				log.trace(from.toString("dd/MM/YYYY HH:mm:ss") + " - "
-						+ to.toString("dd/MM/YYYY HH:mm:ss"));
+				log.trace(from.toString("dd/MM/YYYY HH:mm:ss") + " - " + to.toString("dd/MM/YYYY HH:mm:ss"));
 			}
 		}
-		log.debug(String.format(
-				"There are %s clock ticks that should be active at %s",
-				theory.size(), now.toString("dd/MM/YYYY HH:mm:ss")));
+		log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString("dd/MM/YYYY HH:mm:ss")));
 
 		// Select the ones that are active
-		TypedQuery<ClockTick> q = em
-				.createQuery(
-						"SELECT t FROM ClockTick t WHERE t.TickTime >= ?1 ORDER BY t.TickTime",
-						ClockTick.class);
+		TypedQuery<ClockTick> q = em.createQuery("SELECT t FROM ClockTick t WHERE t.TickTime >= ?1 ORDER BY t.TickTime", ClockTick.class);
 		q.setParameter(1, nowminusgrace.toDate());
 		List<ClockTick> real = q.getResultList();
-		log.debug(String.format(
-				"There are %s clock ticks that really are active", real.size()));
+		log.debug(String.format("There are %s clock ticks that really are active", real.size()));
 
 		// Select the ones that will have to be created
-		List<org.joda.time.DateTime> toCreate = theory.subList(real.size(),
-				theory.size());
-		log.debug(String.format("%s ticks will have to be created",
-				toCreate.size()));
+		List<org.joda.time.DateTime> toCreate = theory.subList(real.size(), theory.size());
+		log.debug(String.format("%s ticks will have to be created", toCreate.size()));
 
 		// //////////////////////////
 		// Create events
@@ -225,13 +211,9 @@ public class Clock extends ActiveNodeBase {
 					Event e = pj.createEvent();
 
 					// Send the event
-					SenderHelpers.sendEvent(e, eventProducer, jmsSession, ctx,
-							false);
+					SenderHelpers.sendEvent(e, eventProducer, jmsSession, ctx, false);
 
-					log.debug(String
-							.format("Creating event on place %s for state [%s in chain %s]",
-									p.getName(), this.name, s.getChain()
-											.getName()));
+					log.debug(String.format("Creating event on place %s for state [%s in chain %s]", p.getName(), this.name, s.getChain().getName()));
 
 					// Mark the tick as done
 					ClockTick ct = new ClockTick();
@@ -243,27 +225,22 @@ public class Clock extends ActiveNodeBase {
 		}
 
 		// Purge the past ticks
-		q = em.createQuery(
-				"SELECT t FROM ClockTick t WHERE t.TickTime < ?1 ORDER BY t.TickTime",
-				ClockTick.class);
+		q = em.createQuery("SELECT t FROM ClockTick t WHERE t.TickTime < ?1 ORDER BY t.TickTime", ClockTick.class);
 		q.setParameter(1, nowminusgrace.toDate());
 		real = q.getResultList();
 		for (ClockTick ct : real)
 			em.remove(ct);
 
 		// Get the next time the method should be called and return it
-		org.joda.time.DateTime res = now.plusDays(1).minusMillis(
-				now.getMillisOfDay());
+		org.joda.time.DateTime res = now.plusDays(1).minusMillis(now.getMillisOfDay());
 		for (Object p : occurrenceCache) {
-			org.joda.time.DateTime from = new org.joda.time.DateTime(
-					((Period) p).getStart());
+			org.joda.time.DateTime from = new org.joda.time.DateTime(((Period) p).getStart());
 			if (from.compareTo(now) > 0) {
 				res = new org.joda.time.DateTime(from.toDate());
 				break;
 			}
 		}
-		log.debug(String.format("The clock asks to be awaken at %s",
-				res.toString("dd/MM/YYYY hh:mm:ss")));
+		log.debug(String.format("The clock asks to be awaken at %s", res.toString("dd/MM/YYYY hh:mm:ss")));
 		return res;
 	}
 	//
