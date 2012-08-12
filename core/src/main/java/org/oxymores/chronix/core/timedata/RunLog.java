@@ -41,6 +41,7 @@ public class RunLog implements Serializable {
 	public String dns;
 	public String osAccount;
 	public String whatWasRun;
+	@Column(length = 10000)
 	public String shortLog;
 	public int resultCode;
 	public Date enteredPipeAt;

@@ -12,15 +12,15 @@ import org.oxymores.chronix.core.ChronixObject;
 public class EnvironmentValue implements Serializable {
 
 	private static final long serialVersionUID = -3301527648471127170L;
-	
+
 	@Id
-	@Column(columnDefinition="CHAR(36)", nullable=false, length = 36)
+	@Column(nullable = false, length = 36)
 	private String id;
-	@Column(columnDefinition="CHAR(50)", length = 50)
+	@Column(length = 50)
 	private String key, value;
 
-	//@ManyToOne(cascade=CascadeType.ALL, )
-	//TranscientBase associatedTo;
+	// @ManyToOne(cascade=CascadeType.ALL, )
+	// TranscientBase associatedTo;
 
 	public EnvironmentValue() {
 		id = UUID.randomUUID().toString();
@@ -62,12 +62,10 @@ public class EnvironmentValue implements Serializable {
 	public void setValue(String value) {
 		this.value = value;
 	}
-/*
-	public TranscientBase getAssociatedTo() {
-		return associatedTo;
-	}
-
-	public void setAssociatedTo(TranscientBase associatedTo) {
-		this.associatedTo = associatedTo;
-	}*/
+	/*
+	 * public TranscientBase getAssociatedTo() { return associatedTo; }
+	 * 
+	 * public void setAssociatedTo(TranscientBase associatedTo) {
+	 * this.associatedTo = associatedTo; }
+	 */
 }

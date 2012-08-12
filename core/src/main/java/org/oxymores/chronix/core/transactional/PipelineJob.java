@@ -31,7 +31,7 @@ public class PipelineJob extends TranscientBase {
 
 	@Column(columnDefinition = "CHAR(20)", length = 20)
 	String status;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
+	@Column(length = 255)
 	String runThis;
 	Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
@@ -112,7 +112,10 @@ public class PipelineJob extends TranscientBase {
 	}
 
 	public void setRunThis(String runThis) {
-		this.runThis = runThis;
+		if (runThis == null)
+			this.runThis = null;
+		else
+			this.runThis = runThis.substring(0, Math.min(255, runThis.length()));
 	}
 
 	public Date getWarnNotEndedAt() {
@@ -341,6 +344,10 @@ public class PipelineJob extends TranscientBase {
 	}
 
 	public RunLog getEventLog(ChronixContext ctx) {
+		return this.getEventLog(ctx, new RunResult());
+	}
+
+	public RunLog getEventLog(ChronixContext ctx, RunResult rr) {
 		RunLog rlog = new RunLog();
 		Application a = ctx.applicationsById.get(UUID.fromString(this.appID));
 		Place p = a.getPlace(UUID.fromString(this.placeID));
@@ -370,7 +377,7 @@ public class PipelineJob extends TranscientBase {
 		rlog.placeName = p.getName();
 		rlog.resultCode = this.resultCode;
 		// rlog.sequence =
-		// rlog.shortLog =
+		rlog.shortLog = rr.logStart;
 		rlog.stateId = this.stateID;
 		rlog.stoppedRunningAt = this.stoppedRunningAt;
 		rlog.visible = act.visibleInHistory();

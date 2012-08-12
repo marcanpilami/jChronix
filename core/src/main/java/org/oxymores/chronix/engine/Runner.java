@@ -296,7 +296,7 @@ public class Runner implements MessageListener {
 
 		// Send history
 		try {
-			this.sendHistory(pj.getEventLog(ctx));
+			this.sendHistory(pj.getEventLog(ctx, rr));
 		} catch (JMSException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

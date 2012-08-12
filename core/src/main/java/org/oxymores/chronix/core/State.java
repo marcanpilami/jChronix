@@ -34,6 +34,7 @@ import javax.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.core.transactional.EnvironmentValue;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -421,14 +422,17 @@ public class State extends ConfigurableBase {
 			}
 		}
 
-		run(p, pjProducer, session, CalendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(), cpToUpdate);
+		run(p, pjProducer, session, CalendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(), cpToUpdate, e
+				.getEnvParams().toArray(new EnvironmentValue[0]));
 	}
 
 	public void run(Place p, MessageProducer pjProducer, Session session, String CalendarOccurrenceID, boolean updateCalendarPointer,
-			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, CalendarPointer cpToUpdate) {
+			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, CalendarPointer cpToUpdate, EnvironmentValue... params) {
 		DateTime now = DateTime.now();
 
 		PipelineJob pj = new PipelineJob();
+
+		// Common fields
 		pj.setLevel0IdU(level0Id);
 		pj.setLevel1IdU(level1Id);
 		pj.setMarkedForRunAt(now.toDate());
@@ -440,6 +444,7 @@ public class State extends ConfigurableBase {
 		pj.setIgnoreCalendarUpdating(!updateCalendarPointer);
 		pj.setOutOfPlan(outOfPlan);
 
+		// Warning and kill
 		if (this.warnAfterMn != null)
 			pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn).toDate());
 		else
@@ -447,6 +452,29 @@ public class State extends ConfigurableBase {
 
 		if (this.killAfterMn != null)
 			pj.setKillAt(now.plusMinutes(this.killAfterMn).toDate());
+
+		// Environment variables from the State itself
+		for (EnvironmentParameter ep : this.envParams) {
+			pj.addValue(ep.key, ep.value);
+		}
+
+		// Environment variables passed from other jobs through the event (or
+		// manually set)
+		for (EnvironmentValue ep : params) {
+			if (ep.getKey().startsWith("CHR_"))
+				continue; // Don't propagate auto variables
+			pj.addValue(ep.getKey(), ep.getValue());
+		}
+
+		// Environment variables auto
+		pj.addValue("CHR_STATEID", this.id.toString());
+		pj.addValue("CHR_CHAINID", this.chain.id.toString());
+		pj.addValue("CHR_LAUNCHID", pj.getId());
+		pj.addValue("CHR_JOBNAME", this.represents.name);
+		pj.addValue("CHR_PLACEID", p.id.toString());
+		pj.addValue("CHR_PLACENAME", p.name);
+		pj.addValue("CHR_PLACEGROUPID", this.runsOn.id.toString());
+		pj.addValue("CHR_PLACEID", this.runsOn.name);
 
 		// Calendar update
 		if (this.usesCalendar()) {
@@ -458,10 +486,17 @@ public class State extends ConfigurableBase {
 				cpToUpdate.setRunning(true);
 				if (updateCalendarPointer)
 					cpToUpdate.setLastStartedOccurrenceId(cpToUpdate.getNextRunOccurrenceId());
+
+				pj.addValue("CHR_CALENDAR", this.calendar.name);
+				pj.addValue("CHR_CALENDARID", this.calendar.id.toString());
+				pj.addValue("CHR_CALENDARDATE", cpToUpdate.getNextRunOccurrenceId());
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+		} else {
+			pj.addValue("CHR_CALENDAR", "NONE");
+			pj.addValue("CHR_CALENDARDATE", "NONE");
 		}
 
 		// Send it (commit is done by main engine later)

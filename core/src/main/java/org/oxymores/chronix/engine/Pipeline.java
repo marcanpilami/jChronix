@@ -23,6 +23,7 @@ import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -116,12 +117,14 @@ public class Pipeline extends Thread implements MessageListener {
 				if (pj != null) {
 					Place p = null;
 					org.oxymores.chronix.core.State s = null;
+					Application a = null;
 					try {
+						a = pj.getApplication(ctx);
 						p = pj.getPlace(ctx);
 						s = pj.getState(ctx);
 					} catch (Exception e) {
 					}
-					if (s == null || p == null) {
+					if (s == null || p == null || a == null) {
 						log.error("A job was received in the pipeline without any corresponding local application data - ignored");
 					} else {
 						waiting_sequence.add(pj);

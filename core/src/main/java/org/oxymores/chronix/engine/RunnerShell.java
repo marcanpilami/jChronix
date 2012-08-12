@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
@@ -17,10 +19,12 @@ public class RunnerShell {
 	// RunnerAgent logger, yes.
 	private static Logger log = Logger.getLogger(RunnerAgent.class);
 
-	public static RunResult run(RunDescription rd, String logFilePath,
-			boolean storeLogFile, boolean returnFullerLog) {
+	public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog) {
 		RunResult res = new RunResult();
 		Process p;
+		String nl = System.getProperty("line.separator");
+		Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
+		Matcher matcher = pat.matcher("Testing123Testing");
 
 		// Create array containing arguments
 		ArrayList<String> argsStrings = new ArrayList<String>();
@@ -33,11 +37,9 @@ public class RunnerShell {
 			String arg = "";
 			if (key != null && !key.equals(""))
 				arg = key;
-			if (value != null && !value.equals("")
-					&& (key != null && !key.equals("")))
+			if (value != null && !value.equals("") && (key != null && !key.equals("")))
 				arg += " " + value;
-			if (value != null && !value.equals("")
-					&& !(key != null && !key.equals("")))
+			if (value != null && !value.equals("") && !(key != null && !key.equals("")))
 				arg += value;
 
 			argsStrings.add(arg);
@@ -71,8 +73,7 @@ public class RunnerShell {
 				private static final long serialVersionUID = -6773540176968046737L;
 
 				@Override
-				protected boolean removeEldestEntry(
-						java.util.Map.Entry<Integer, String> eldest) {
+				protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest) {
 					return this.size() > 1000;
 				}
 			};
@@ -86,14 +87,14 @@ public class RunnerShell {
 				if (storeLogFile)
 					output.write(line);
 
-				// Small log gets first 500 lines
-				if (i < 500)
-					res.logStart += line;
+				// Small log gets first 500 lines or 10000 characters (the
+				// smaller of the two)
+				if (i < 500 && res.logStart.length() < 10000)
+					res.logStart += nl + line;
 
-				// Scheduler log gets first line only
+				// Scheduler internal log gets first line only
 				if (i == 1)
-					log.debug(String.format(
-							"Job running. First line of output is: %s", line));
+					log.debug(String.format("Job running. First line of output is: %s", line));
 
 				// Fuller log gets first 10k lines, then last 1k lines.
 				if (returnFullerLog) {
@@ -102,11 +103,18 @@ public class RunnerShell {
 					if (i >= 10000)
 						endBuffer.put(i, line);
 				}
+
+				// Analyse: there may be a new variable definition in the line
+				matcher.reset(line);
+				if (matcher.find()) {
+					log.debug("Key detected :" + matcher.group(1));
+					log.debug("Value detected :" + matcher.group(2));
+					res.newEnvVars.put(matcher.group(1), matcher.group(2));
+				}
 			}
 
 			if (i > 10000 && i < 11000 && returnFullerLog)
-				res.fullerLog += Arrays
-						.toString(endBuffer.entrySet().toArray());
+				res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
 			if (i >= 11000 && returnFullerLog)
 				res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
 						+ Arrays.toString(endBuffer.entrySet().toArray());

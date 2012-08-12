@@ -15,8 +15,8 @@ public class RunResult implements Serializable {
 	public int returnCode = -1;
 	public HashMap<String, String> newEnvVars = new HashMap<String, String>();
 	public Date start, end;
-	
-	// Data below is from the engine - not created by the run
+
+	// Data below is from and for the engine - not created by the run
 	public String id1 = null;
 	public UUID id2 = null;
 	public Boolean outOfPlan = false;
