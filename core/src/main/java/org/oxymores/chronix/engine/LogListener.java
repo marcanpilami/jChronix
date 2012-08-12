@@ -35,6 +35,13 @@ public class LogListener implements MessageListener {
 		this.jmsConnection = cnx;
 		this.ctx = ctx;
 
+		// Persistence on two contexts
+		this.emHistory = this.ctx.getHistoryEM();
+		this.trHistory = this.emHistory.getTransaction();
+
+		this.emTransac = this.ctx.getTransacEM();
+		this.trTransac = this.emTransac.getTransaction();
+
 		// Register current object as a listener on LOG queue
 		String qName = String.format("Q.%s.LOG", brokerName);
 		log.debug(String.format("Broker %s: registering a log listener on queue %s", brokerName, qName));
@@ -43,12 +50,6 @@ public class LogListener implements MessageListener {
 		this.jmsLogConsumer = this.jmsSession.createConsumer(logQueueDestination);
 		this.jmsLogConsumer.setMessageListener(this);
 
-		// Persistence on two contexts
-		this.emHistory = this.ctx.getHistoryEM();
-		this.trHistory = this.emHistory.getTransaction();
-
-		this.emTransac = this.ctx.getTransacEM();
-		this.trTransac = this.emTransac.getTransaction();
 	}
 
 	public void stopListening() throws JMSException {
