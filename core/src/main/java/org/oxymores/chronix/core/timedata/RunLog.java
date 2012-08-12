@@ -27,16 +27,16 @@ public class RunLog implements Serializable {
 	public String applicationName;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	public String applicationId; // UUID
-	@Column(columnDefinition = "CHAR(36)", length = 36)
+	@Column(length = 36)
 	public String stateId; // UUID
 	public String activeNodeName;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
+	@Column(length = 36)
 	public String activeNodeId; // UUID
 	public String placeName;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
+	@Column(length = 36)
 	public String placeId; // UUID
 	public String executionNodeName;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
+	@Column(length = 36)
 	public String executionNodeId; // UUID
 	public String dns;
 	public String osAccount;

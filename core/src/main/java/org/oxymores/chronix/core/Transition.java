@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.engine.PlaceAnalysisResult;
+import org.oxymores.chronix.engine.TransitionAnalysisResult;
 
 public class Transition extends ApplicationObject {
 
@@ -102,7 +103,7 @@ public class Transition extends ApplicationObject {
 			chain.addTransition(this);
 	}
 
-	private Boolean isTransitionParallelEnabled() {
+	public Boolean isTransitionParallelEnabled() {
 		if (!this.stateFrom.parallel || !this.stateTo.parallel)
 			return false;
 
@@ -112,27 +113,27 @@ public class Transition extends ApplicationObject {
 		return true;
 	}
 
-	public EventAnalysisResult isTransitionAllowed(List<Event> events, Place targetPlace) {
-		EventAnalysisResult res = new EventAnalysisResult();
+	public TransitionAnalysisResult isTransitionAllowed(List<Event> events) {
+		TransitionAnalysisResult res = new TransitionAnalysisResult(this);
 
-		if (isTransitionParallelEnabled()) {
-			// Only analyze on given place
-			return this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, events, targetPlace);
-		} else {
-			// Analyse on every place
-			res.res = true; // we will do logical AND
-			for (Place p : this.stateFrom.runsOn.places) {
-				ArrayList<Event> virginEvents = new ArrayList<Event>();
-				for (Event e : events) {
-					if (!e.wasConsumedOnPlace(p, this.stateTo) && !virginEvents.contains(e))
-						virginEvents.add(e);
-				}
-
-				res.add(this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p));
-				if (!res.res)
-					return res; // no need to continue on first failure...
+		for (Place p : this.stateFrom.runsOn.places) {
+			ArrayList<Event> virginEvents = new ArrayList<Event>();
+			for (Event e : events) {
+				if (!e.wasConsumedOnPlace(p, this.stateTo) && !virginEvents.contains(e))
+					virginEvents.add(e);
 			}
-			return res; // If here, means OK
+			res.analysis.put(p.id, this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p));
+
+			if (!this.isTransitionParallelEnabled() && !res.allowedOnAllPlaces()) {
+				res = new TransitionAnalysisResult(this); // We already know the transition is KO, so no need to continue
+				for (Place pp : this.stateFrom.runsOn.places) {
+					res.analysis.put(pp.id, new PlaceAnalysisResult(pp)); // Create a FORBIDDEN result on all places
+				}
+				return res;
+			}
 		}
+		return res;
+
 	}
+
 }

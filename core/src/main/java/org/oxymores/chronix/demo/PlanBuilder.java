@@ -162,19 +162,23 @@ public class PlanBuilder {
 	}
 
 	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target) {
+		return buildState(c1, pg1, target, false);
+	}
+
+	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target, boolean parallel) {
 		State s1 = new State();
 		s1.setChain(c1);
 		s1.setRunsOn(pg1);
 		s1.setRepresents(target);
 		s1.setX(100);
 		s1.setY(100);
-
+		s1.setParallel(parallel);
 		return s1;
 	}
 
 	public static State buildStateAND(Chain c1, PlaceGroup pg1) {
 		ActiveNodeBase target = c1.getApplication().getActiveElements(And.class).get(0);
-		return buildState(c1, pg1, target);
+		return buildState(c1, pg1, target, true);
 	}
 
 	public static Clock buildClock(Application a, String name, String description, ClockRRule... rulesADD) {

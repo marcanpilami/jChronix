@@ -6,4 +6,6 @@ doc here.
 .. toctree::
    :maxdepth: 2
 
-   plandev/funcperiod 
+   plandev/funcperiod
+   plandev/parallelism 
+

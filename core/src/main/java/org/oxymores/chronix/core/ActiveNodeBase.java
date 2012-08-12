@@ -35,8 +35,10 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.engine.TransitionAnalysisResult;
 import org.oxymores.chronix.engine.RunResult;
 import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.PlaceAnalysisResult;
 
 public class ActiveNodeBase extends ConfigurableBase {
 	private static final long serialVersionUID = 2317281646089939267L;
@@ -92,18 +94,18 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Do the given events allow for a transition originating from a state
 	// representing this source?
-	public EventAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p) {
-		EventAnalysisResult res = new EventAnalysisResult();
+	public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p) {
+		PlaceAnalysisResult res = new PlaceAnalysisResult(p);
 		res.res = false;
 
 		for (Event e : events) {
-			if (!e.getActiveID().equals(id.toString())) {
-				// Only accept events from this source
+			if (!e.getPlaceID().equals(p.id.toString())) {
+				// Only accept events from the analyzed place
 				continue;
 			}
 
-			if (!e.getPlaceID().equals(p.id.toString())) {
-				// Only accept events on the analyzed place
+			if (!e.getStateID().equals(tr.stateFrom.id.toString())) {
+				// Only accept events from the analyzed state
 				continue;
 			}
 
@@ -124,20 +126,16 @@ public class ActiveNodeBase extends ConfigurableBase {
 			// If here: the event is OK for the given transition on the given
 			// place.
 			res.consumedEvents.add(e);
+			res.usedEvents.add(e);
 			res.res = true;
 			return res;
 		}
-
-		// If here: no event allows the transition on the given place
 		return res;
 	}
 
-	// Do the given events allow the execution of a given State representing
-	// this source? (uses createdEventRespectsTransitionOnPlace)
 	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, EntityManager em, MessageProducer pjProducer, Session session,
 			ChronixContext ctx) {
-		EventAnalysisResult res = new EventAnalysisResult();
-		EventAnalysisResult tmp;
+		EventAnalysisResult res = new EventAnalysisResult(s);
 
 		// Get session events
 		TypedQuery<Event> q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2", Event.class);
@@ -159,83 +157,50 @@ public class ActiveNodeBase extends ConfigurableBase {
 		if (!sessionEvents.contains(evt))
 			sessionEvents.add(evt);
 
-		// Analysis
-		if (s.parallel) {
-			// In this case, only check for one place at a time
-			log.debug(String.format("State %s (%s - chain %s) is parallel enabled", this.getId(), s.represents.getName(), s.chain.getName()));
+		// Check every incoming transition: are they allowed?
+		for (Transition tr : s.getTrReceivedHere()) {
+			log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(), s.chain.getName(),
+					sessionEvents.size()));
 
-			for (Place p : s.runsOn.places) {
-				if (p.node.getHost() != s.application.getLocalNode())
-					continue;
-				log.debug(String.format("Event %s analysis: should // state %s (%s - chain %s) be run on place %s?", evt.getId(), s.getId(),
-						s.represents.getName(), s.chain.getName(), p.getName()));
+			TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents);
 
-				tmp = new EventAnalysisResult();
-				tmp.res = true;
-				for (Transition tr : s.trReceivedHere) {
-					tmp.add(tr.isTransitionAllowed(sessionEvents, p));
-					if (!tmp.res) {
-						log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run on place %s", s.getId(), s.represents.getName(),
-								s.chain.getName(), p.name));
-						continue;
-					}
-				}
-
-				// Transitions are OK... what about calendars?
-				if (!s.canRunAccordingToCalendarOnPlace(em, p))
-					continue;
-
-				// If here, everything's OK
-				log.debug(String.format("State (%s - chain %s) is triggered by the event on place %s! Analysis has consumed %s events.",
-						s.represents.getName(), s.chain.getName(), p.name, tmp.consumedEvents.size()));
-				ArrayList<Place> temp = new ArrayList<Place>();
-				temp.add(p);
-				s.consumeEvents(res.consumedEvents, temp, em);
-				s.runFromEngine(p, em, pjProducer, session, evt);
-				res.add(tmp);
-			}
-		} else {
-			// In this case, all incoming transitions must be OK for this
-			// State to run
-			log.debug(String.format("State %s (%s - chain %s) is not parallel enabled. Analysing with %s events", s.getId(), s.represents.getName(),
-					s.chain.getName(), sessionEvents.size()));
-
-			ArrayList<Place> places = new ArrayList<Place>();
-
-			// Check transitions
-			res.res = true; // we will do logical ANDs
-			for (Transition tr : s.trReceivedHere) {
-				res.add(tr.isTransitionAllowed(sessionEvents, null));
-				// null: no place targeting needed in not // case
-				if (!res.res) {
-					log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
-							s.represents.getName(), s.chain.getName(), tr.stateFrom.represents.name));
-					return new EventAnalysisResult(); // not possible
-				}
+			if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND) {
+				// No need to go further - one transition will block everything
+				log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
+						s.represents.getName(), s.chain.getName(), tr.stateFrom.represents.name));
+				return new EventAnalysisResult(s);
 			}
 
-			// Check calendar
-			for (Place p : s.runsOn.places) {
-				if (s.canRunAccordingToCalendarOnPlace(em, p))
-					places.add(p);
-			}
-
-			// Go
-			if (places.size() > 0) {
-				log.debug(String.format(
-						"State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
-						s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
-
-				s.consumeEvents(res.consumedEvents, places, em);
-				for (Place p : places) {
-					if (p.node.getHost() == s.application.getLocalNode())
-						s.runFromEngine(p, em, pjProducer, session, evt);
-				}
-				return res;
-			} else
-				return new EventAnalysisResult();
+			res.analysis.put(tr.id, tar);
 		}
-		return res;
+
+		ArrayList<Place> places = res.getPossiblePlaces();
+		log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places", s.represents.getName(),
+				s.chain.getName(), places.size()));
+
+		// Check calendar
+		for (Place p : places.toArray(new Place[0])) {
+			if (!s.canRunAccordingToCalendarOnPlace(em, p))
+				places.remove(p);
+		}
+		log.debug(String.format("After taking calendar conditions into account, the state [%s] in chain [%s] could run on %s places",
+				s.represents.getName(), s.chain.getName(), places.size()));
+
+		// Go
+		if (places.size() > 0) {
+			log.debug(String.format(
+					"State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
+					s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
+
+			s.consumeEvents(res.consumedEvents, places, em);
+			for (Place p : places) {
+				if (p.node.getHost() == s.application.getLocalNode())
+					s.runFromEngine(p, em, pjProducer, session, evt);
+			}
+			return res;
+		} else
+			return new EventAnalysisResult(s);
+
 	}
 
 	//
@@ -311,6 +276,11 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Should it be executed by the self-trigger agent?
 	public boolean selfTriggered() {
 		return false;
+	}
+
+	// How should it behave when multiple transition point on a single State?
+	public MultipleTransitionsHandlingMode multipleTransitionHandling() {
+		return MultipleTransitionsHandlingMode.AND;
 	}
 	//
 	// ////////////////////////////////////////////////////////////////////////////

@@ -336,4 +336,419 @@ public class TestParallelism {
 		e3.stopEngine();
 		e3.waitForStopEnd();
 	}
+
+	@Test
+	public void testCaseP1() {
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST 3 - case P1 ****************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+
+		// Build a very simple chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1,
+				"powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+				"Will fail with return code 19 on P2, be OK on other places");
+		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
+
+		Chain c1 = PlanBuilder.buildChain(a1, "chain P1", "chain P1", pg1);
+		State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+		State s2 = PlanBuilder.buildState(c1, groupAllNodes, sc2, true);
+		c1.getStartState().connectTo(s1);
+		s1.connectTo(s2);
+		s2.connectTo(c1.getEndState());
+
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+		try {
+			SenderHelpers.sendApplication(a1, en2, e1.ctx);
+			Thread.sleep(500); // integrate the application, restart node...
+			e2.waitForInitEnd();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Launch chain
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(5000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test finished nominally
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(12, res.size());
+		RunLog failedLog = null;
+		for (RunLog rl : res) {
+			if (rl.placeName.startsWith("P21"))
+				failedLog = rl;
+		}
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(14, res.size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST END ************************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+		e2.stopEngine();
+		e2.waitForStopEnd();
+		e3.stopEngine();
+		e3.waitForStopEnd();
+	}
+
+	@Test
+	public void testCaseP2() {
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST 4 - case P2 ****************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+
+		// Build the test chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1,
+				"powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+				"Will fail with return code 19 on P2, be OK on other places");
+		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
+
+		Chain c1 = PlanBuilder.buildChain(a1, "chain P1", "chain P1", pg1);
+		State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc2, true);
+		State s2 = PlanBuilder.buildState(c1, groupAllNodes, sc2, true);
+		State s3 = PlanBuilder.buildState(c1, groupnode2, sc1, true);
+		State s4 = PlanBuilder.buildStateAND(c1, groupAllNodes);
+		c1.getStartState().connectTo(s1);
+		c1.getStartState().connectTo(s3);
+		s1.connectTo(s4);
+		s3.connectTo(s4);
+		s4.connectTo(s2);
+		s2.connectTo(c1.getEndState());
+
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+		try {
+			SenderHelpers.sendApplication(a1, en2, e1.ctx);
+			Thread.sleep(500); // integrate the application, restart node...
+			e2.waitForInitEnd();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Launch chain
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(5000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test finished nominally
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(9, res.size());
+		RunLog failedLog = null;
+		for (RunLog rl : res) {
+			if (rl.placeName.startsWith("P21"))
+				failedLog = rl;
+		}
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(22, res.size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST END ************************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+		e2.stopEngine();
+		e2.waitForStopEnd();
+		e3.stopEngine();
+		e3.waitForStopEnd();
+	}
+
+	@Test
+	public void testCaseP5() {
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST 5 - case P5 ****************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+
+		// Build the test chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1,
+				"powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+				"Will fail with return code 19 on P2, be OK on other places");
+
+		Chain c1 = PlanBuilder.buildChain(a1, "chain P1", "chain P1", pg1);
+		State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
+		State s2 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+		State s3 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
+
+		c1.getStartState().connectTo(s1);
+		s1.connectTo(s2);
+		s2.connectTo(s3);
+		s3.connectTo(c1.getEndState());
+
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+		try {
+			SenderHelpers.sendApplication(a1, en2, e1.ctx);
+			Thread.sleep(500); // integrate the application, restart node...
+			e2.waitForInitEnd();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Launch chain
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(5000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test finished nominally
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(7, res.size());
+		RunLog failedLog = null;
+		for (RunLog rl : res) {
+			log.debug(rl.stateId);
+			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s1.getId().toString()))
+				failedLog = rl;
+		}
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			log.error("oups", e);
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(13, res.size());
+		failedLog = null;
+		for (RunLog rl : res) {
+			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s2.getId().toString()))
+				failedLog = rl;
+		}
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 2*********************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(19, res.size());
+		failedLog = null;
+		for (RunLog rl : res) {
+			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s3.getId().toString()))
+				failedLog = rl;
+		}
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 3*********************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(20, res.size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST END ************************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+		e2.stopEngine();
+		e2.waitForStopEnd();
+		e3.stopEngine();
+		e3.waitForStopEnd();
+	}
+
+	@Test
+	public void testCaseP1Prime() {
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST 6 - case P1' ***************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+
+		// Build the test chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"echo 'job done'\"", "A - Always OK", "Always OK");
+		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"echo 'job done'\"", "B - Always OK", "Always OK");
+
+		Chain c1 = PlanBuilder.buildChain(a1, "chain P1", "chain P1", pg1);
+		State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+		State s2 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+		State s3 = PlanBuilder.buildState(c1, groupAllNodes, sc2, true);
+		State s4 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+		State s5 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
+
+		c1.getStartState().connectTo(s1);
+		s1.connectTo(s2);
+		s2.connectTo(s3);
+		s3.connectTo(s4);
+		s4.connectTo(s5);
+		s5.connectTo(c1.getEndState());
+
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+		try {
+			SenderHelpers.sendApplication(a1, en2, e1.ctx);
+			Thread.sleep(500); // integrate the application, restart node...
+			e2.waitForInitEnd();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Launch chain
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(5000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test finished nominally
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(32, res.size());
+
+		// Close
+		log.debug("**************************************************************************************");
+		log.debug("**** TEST END ************************************************************************");
+		e1.stopEngine();
+		e1.waitForStopEnd();
+		e2.stopEngine();
+		e2.waitForStopEnd();
+		e3.stopEngine();
+		e3.waitForStopEnd();
+	}
 }

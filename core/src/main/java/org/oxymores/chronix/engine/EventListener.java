@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.jms.Connection;
@@ -138,9 +139,9 @@ public class EventListener implements MessageListener {
 		}
 
 		// Analyze on every local consumer
-		EventAnalysisResult res = new EventAnalysisResult();
+		ArrayList<Event> toCheck = new ArrayList<Event>();
 		for (State st : localConsumers) {
-			res.add(st.getRepresents().isStateExecutionAllowed(st, evt, entityManager, producerPJ, jmsSession, ctx));
+			toCheck.addAll(st.getRepresents().isStateExecutionAllowed(st, evt, entityManager, producerPJ, jmsSession, ctx).consumedEvents);
 		}
 
 		// if ()
@@ -155,7 +156,7 @@ public class EventListener implements MessageListener {
 
 		// Purge
 		transaction.begin();
-		this.cleanUp(res.consumedEvents, entityManager);
+		this.cleanUp(toCheck, entityManager);
 		transaction.commit();
 	}
 
@@ -186,6 +187,10 @@ public class EventListener implements MessageListener {
 	}
 
 	private void cleanUp(List<Event> events, EntityManager em) {
+		HashSet<Event> hs = new HashSet<Event>();
+		hs.addAll(events);
+		events.clear();
+		events.addAll(hs);
 		for (Event e : events) {
 			boolean shouldPurge = true;
 			State s = e.getState(ctx);

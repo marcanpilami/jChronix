@@ -47,10 +47,12 @@ public class RunnerAgent implements MessageListener {
 		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
 		this.jmsRunnerDestination = this.jmsSession.createQueue(qName);
 		this.jmsRequestConsumer = this.jmsSession.createConsumer(this.jmsRunnerDestination);
-		this.jmsRequestConsumer.setMessageListener(this);
 
 		// Producer to send run results
 		this.jmsProducer = this.jmsSession.createProducer(null);
+
+		// start listening
+		this.jmsRequestConsumer.setMessageListener(this);
 	}
 
 	public void stopListening() throws JMSException {
