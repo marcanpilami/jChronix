@@ -13,6 +13,9 @@ public class RunResult implements Serializable {
 	public String fullerLog = "";
 	public String logPath = "";
 	public int returnCode = -1;
+	public String conditionData2 = null;
+	public String conditionData3 = null;
+	public String conditionData4 = null; // Actually UUID
 	public HashMap<String, String> newEnvVars = new HashMap<String, String>();
 	public Date start, end;
 

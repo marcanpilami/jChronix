@@ -53,6 +53,7 @@ public class Broker {
 	Runner thrRU;
 	LogListener thrLL;
 	TranscientListener thrTL;
+	OrderListener thrOL;
 
 	public Broker(ChronixEngine engine) throws Exception {
 		this(engine, false);
@@ -146,11 +147,11 @@ public class Broker {
 	}
 
 	public void registerListeners(ChronixEngine engine) throws JMSException, IOException {
-		registerListeners(engine, true, true, true, true, true, true, true);
+		registerListeners(engine, true, true, true, true, true, true, true, true);
 	}
 
 	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
-			boolean startLog, boolean startTranscient, boolean startEventListener) throws JMSException, IOException {
+			boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener) throws JMSException, IOException {
 		this.engine = engine;
 
 		if (startMeta) {
@@ -187,6 +188,11 @@ public class Broker {
 			this.thrTL = new TranscientListener();
 			this.thrTL.startListening(this.connection, brokerName, ctx, emf);
 		}
+
+		if (startOrderListener && this.emf != null) {
+			this.thrOL = new OrderListener();
+			this.thrOL.startListening(this.connection, brokerName, ctx);
+		}
 	}
 
 	public void stop() {
@@ -206,6 +212,8 @@ public class Broker {
 				this.thrLL.stopListening();
 			if (this.thrTL != null)
 				this.thrTL.stopListening();
+			if (this.thrOL != null)
+				this.thrOL.stopListening();
 
 			for (NetworkConnector nc : this.broker.getNetworkConnectors()) {
 				this.broker.removeNetworkConnector(nc);

@@ -21,6 +21,7 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.jms.MessageProducer;
@@ -34,6 +35,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.EventAnalysisResult;
+import org.oxymores.chronix.engine.RunResult;
 import org.oxymores.chronix.engine.Runner;
 
 public class ActiveNodeBase extends ConfigurableBase {
@@ -268,6 +270,20 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em) throws Exception {
 		throw new NotImplementedException();
+	}
+
+	public RunResult forceOK() {
+		RunResult rr = new RunResult();
+		rr.returnCode = 0;
+		rr.conditionData2 = null;
+		rr.conditionData3 = null;
+		rr.conditionData4 = null;
+		rr.end = new Date();
+		rr.logStart = "Job forced OK";
+		rr.fullerLog = rr.logStart;
+		rr.start = new Date();
+
+		return rr;
 	}
 
 	//

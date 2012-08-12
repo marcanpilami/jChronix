@@ -21,6 +21,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -113,6 +114,36 @@ public class SenderHelpers {
 	}
 
 	// Event
+	// /////////////////////////////////////////////////////////////////////////
+
+	// /////////////////////////////////////////////////////////////////////////
+	// History
+
+	public static void sendHistory(RunLog rl, ChronixContext ctx, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException {
+		// Always send both to ourselves and to the supervisor
+		Application a = ctx.applicationsById.get(UUID.fromString(rl.applicationId));
+		ExecutionNode self = a.getLocalNode();
+
+		String qName = String.format("Q.%s.LOG", self.getBrokerName());
+		log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
+		Destination destination = jmsSession.createQueue(qName);
+		ObjectMessage m = jmsSession.createObjectMessage(rl);
+		jmsProducer.send(destination, m);
+
+		ExecutionNode console = ctx.applicationsById.get(UUID.fromString(rl.applicationId)).getConsoleNode();
+		if (console != null && console != self) {
+			qName = String.format("Q.%s.LOG", console.getBrokerName());
+			log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
+			destination = jmsSession.createQueue(qName);
+			m = jmsSession.createObjectMessage(rl);
+			jmsProducer.send(destination, m);
+		}
+
+		if (commit)
+			jmsSession.commit();
+	}
+
+	// History
 	// /////////////////////////////////////////////////////////////////////////
 
 	// /////////////////////////////////////////////////////////////////////////
@@ -307,6 +338,66 @@ public class SenderHelpers {
 		for (Place p : s.getRunsOn().getPlaces())
 			sendCalendarPointerShift(em, shift, s, p, ctx);
 	}
-	// State calendar pointers
+
 	// /////////////////////////////////////////////////////////////////////////
+	// restart orders
+	public static void sendOrderRestartAfterFailure(String pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer,
+			boolean commit) throws JMSException {
+
+		Order o = new Order();
+		o.type = OrderType.RESTARTPJ;
+		o.data = pipelineJobId;
+
+		// Create message
+		ObjectMessage m = jmsSession.createObjectMessage(o);
+
+		// Send the message to every client execution node
+		String qName = String.format("Q.%s.ORDER", en.getHost().getBrokerName());
+		log.info(String.format("An order will be sent on queue %s", qName));
+		Destination destination = jmsSession.createQueue(qName);
+		jmsProducer.send(destination, m);
+
+		// Send
+		if (commit)
+			jmsSession.commit();
+	}
+
+	public static void sendOrderRestartAfterFailure(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException {
+		JmsSendData d = new JmsSendData(ctx);
+		sendOrderRestartAfterFailure(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
+		d.jmsSession.commit();
+		d.close();
+	}
+
+	public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer, boolean commit)
+			throws JMSException {
+
+		Order o = new Order();
+		o.type = OrderType.FORCEOK;
+		o.data = pipelineJobId;
+
+		// Create message
+		ObjectMessage m = jmsSession.createObjectMessage(o);
+
+		// Send the message to every client execution node
+		String qName = String.format("Q.%s.ORDER", en.getHost().getBrokerName());
+		log.info(String.format("An order will be sent on queue %s", qName));
+		Destination destination = jmsSession.createQueue(qName);
+		jmsProducer.send(destination, m);
+
+		// Send
+		if (commit)
+			jmsSession.commit();
+	}
+
+	public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException {
+		JmsSendData d = new JmsSendData(ctx);
+		sendOrderForceOk(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
+		d.jmsSession.commit();
+		d.close();
+	}
+
+	// restart orders
+	// /////////////////////////////////////////////////////////////////////////
+
 }

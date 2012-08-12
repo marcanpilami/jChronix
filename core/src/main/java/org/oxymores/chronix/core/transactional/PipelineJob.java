@@ -324,6 +324,9 @@ public class PipelineJob extends TranscientBase {
 		e.localOnly = false;
 		e.analysed = false;
 		e.conditionData1 = rr.returnCode;
+		e.conditionData2 = rr.conditionData2;
+		e.conditionData3 = rr.conditionData3;
+		e.conditionData4 = rr.conditionData4;
 		e.level0Id = this.level0Id;
 		e.level1Id = this.level1Id;
 		e.placeID = this.placeID;

@@ -341,7 +341,7 @@ public class TestSingleNode {
 		log.debug("****ORDER START SECOND CHAIN**********************************************************");
 		try {
 			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-			Thread.sleep(3000); // Process events
+			Thread.sleep(4000); // Process events
 		} catch (Exception e3) {
 			Assert.fail(e3.getMessage());
 		}

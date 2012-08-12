@@ -196,7 +196,7 @@ public class Pipeline extends Thread implements MessageListener {
 		pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a
 											// crash/stop
 		pj.setEnteredPipeAt(DateTime.now().toDate());
-		em_injector.persist(pj);
+		em_injector.merge(pj);
 		transac_injector.commit();
 
 		commit();

@@ -73,7 +73,8 @@ public class RunLog implements Serializable {
 				"%36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %s | %s | %s | %s | %-15s | %-15s | %-10s | %-5s | %36s",
 				this.id, this.placeName.substring(0, Math.min(19, placeName.length())), this.executionNodeName, chainName.substring(0,
 						Math.min(19, chainName.length())), applicationName.substring(0, Math.min(19, applicationName.length())), activeNodeName
-						.substring(0, Math.min(19, activeNodeName.length())), osAccount, whatWasRun, resultCode, enteredPipeAt == null ? null
+						.substring(0, Math.min(19, activeNodeName.length())), osAccount,
+				whatWasRun == null ? "" : whatWasRun.substring(0, Math.min(29, whatWasRun.length())), resultCode, enteredPipeAt == null ? null
 						: DateFormatUtils.format(enteredPipeAt, "dd/MM HH:mm:ss"),
 				beganRunningAt == null ? null : DateFormatUtils.format(beganRunningAt, "dd/MM HH:mm:ss"), stoppedRunningAt == null ? null
 						: DateFormatUtils.format(stoppedRunningAt, "dd/MM HH:mm:ss"),

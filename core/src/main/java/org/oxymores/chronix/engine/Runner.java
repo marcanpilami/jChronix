@@ -24,11 +24,9 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -219,7 +217,7 @@ public class Runner implements MessageListener {
 			log.debug(String.format(
 					"Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run", j.getId()));
 			try {
-				this.sendHistory(j.getEventLog(ctx));
+				SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
 			} catch (JMSException e) {
 				// TODO Auto-generated catch block
@@ -231,7 +229,7 @@ public class Runner implements MessageListener {
 			log.debug(String.format("Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
 					j.getId()));
 			try {
-				this.sendHistory(j.getEventLog(ctx));
+				SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
 			} catch (JMSException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -296,7 +294,7 @@ public class Runner implements MessageListener {
 
 		// Send history
 		try {
-			this.sendHistory(pj.getEventLog(ctx, rr));
+			SenderHelpers.sendHistory(pj.getEventLog(ctx, rr), ctx, producerHistory, jmsSession, true);
 		} catch (JMSException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -366,29 +364,6 @@ public class Runner implements MessageListener {
 		m.setJMSReplyTo(destEndJob);
 		m.setJMSCorrelationID(pj.getId());
 		producerRunDescription.send(destination, m);
-		jmsSession.commit();
-	}
-
-	public void sendHistory(RunLog rl) throws JMSException {
-		// Always send both to ourselves and to the supervisor
-		Application a = ctx.applicationsById.get(UUID.fromString(rl.applicationId));
-		ExecutionNode self = a.getLocalNode();
-
-		String qName = String.format("Q.%s.LOG", self.getBrokerName());
-		log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
-		Destination destination = jmsSession.createQueue(qName);
-		ObjectMessage m = jmsSession.createObjectMessage(rl);
-		producerHistory.send(destination, m);
-
-		ExecutionNode console = ctx.applicationsById.get(UUID.fromString(rl.applicationId)).getConsoleNode();
-		if (console != null && console != self) {
-			qName = String.format("Q.%s.LOG", console.getBrokerName());
-			log.info(String.format("A scheduler log will be sent on queue %s (%s)", qName, rl.activeNodeName));
-			destination = jmsSession.createQueue(qName);
-			m = jmsSession.createObjectMessage(rl);
-			producerHistory.send(destination, m);
-		}
-
 		jmsSession.commit();
 	}
 

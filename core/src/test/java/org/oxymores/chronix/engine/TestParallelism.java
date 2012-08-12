@@ -25,7 +25,9 @@ public class TestParallelism {
 	ChronixEngine e1, e2, e3;
 	ExecutionNode en1, en2, en3;
 	Place p1, p2, p3;
+	Place h11, h12, h21, h22, h31, h32;
 	PlaceGroup pg1, pg2, pg3, pg4;
+	PlaceGroup groupOneEach, groupAllNodes, groupnode1, groupnode2, groupnode3;
 
 	public void prepare() throws Exception {
 		if (a1 != null)
@@ -56,14 +58,27 @@ public class TestParallelism {
 		en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
 		// Logical network
-		p1 = PlanBuilder.buildPlace(a1, "master node", "master node", en1);
-		p2 = PlanBuilder.buildPlace(a1, "second node", "second node", en2);
-		p3 = PlanBuilder.buildPlace(a1, "hosted node by second node", "third node", en3);
+		p1 = PlanBuilder.buildPlace(a1, "master node", "master node reference place", en1);
+		p2 = PlanBuilder.buildPlace(a1, "second node", "second node reference place", en2);
+		p3 = PlanBuilder.buildPlace(a1, "hosted node by second node reference place", "third node", en3);
 
-		pg1 = PlanBuilder.buildPlaceGroup(a1, "master node", "master node", p1);
-		pg2 = PlanBuilder.buildPlaceGroup(a1, "second node", "second node", p2);
-		pg3 = PlanBuilder.buildPlaceGroup(a1, "hosted node by second node", "third node", p3);
-		pg4 = PlanBuilder.buildPlaceGroup(a1, "all nodes", "all nodes", p1, p2, p3);
+		h11 = PlanBuilder.buildPlace(a1, "P11", "master node 1", en1);
+		h12 = PlanBuilder.buildPlace(a1, "P12", "master node 2", en1);
+		h21 = PlanBuilder.buildPlace(a1, "P21", "second node 1", en2);
+		h22 = PlanBuilder.buildPlace(a1, "P22", "second node 2", en2);
+		h31 = PlanBuilder.buildPlace(a1, "P31", "hosted node by second node 1", en3);
+		h32 = PlanBuilder.buildPlace(a1, "P32", "hosted node by second node 2", en3);
+
+		pg1 = PlanBuilder.buildPlaceGroup(a1, "master node reference group", "master node", p1);
+		pg2 = PlanBuilder.buildPlaceGroup(a1, "second node reference group", "second node", p2);
+		pg3 = PlanBuilder.buildPlaceGroup(a1, "hosted node by second node reference group", "third node", p3);
+		pg4 = PlanBuilder.buildPlaceGroup(a1, "all reference places", "all nodes", p1, p2, p3);
+
+		groupOneEach = PlanBuilder.buildPlaceGroup(a1, "one place on each node", "", h11, h21, h31);
+		groupAllNodes = PlanBuilder.buildPlaceGroup(a1, "all nodes places", "all nodes", h11, h12, h21, h22, h31, h32);
+		groupnode1 = PlanBuilder.buildPlaceGroup(a1, "all node 1 places", "", h11, h12);
+		groupnode2 = PlanBuilder.buildPlaceGroup(a1, "all node 2 places", "", h21, h22);
+		groupnode3 = PlanBuilder.buildPlaceGroup(a1, "all node 3 places", "", h31, h32);
 
 		// Chains and other stuff depends on the test
 
@@ -134,6 +149,9 @@ public class TestParallelism {
 		}
 
 		// Build a very simple chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+
 		Chain c1 = PlanBuilder.buildChain(a1, "empty chain", "empty chain", pg1);
 		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "set", "Display envt", "Will display all env vars");
 		State s1 = PlanBuilder.buildState(c1, pg1, sc1);
@@ -165,6 +183,9 @@ public class TestParallelism {
 		}
 
 		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+
 		try {
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
@@ -175,8 +196,11 @@ public class TestParallelism {
 		}
 
 		// Launch state
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
 		try {
-			SenderHelpers.runStateInsidePlanWithoutCalendarUpdating(c1.getStartState(), p1, e1.ctx);
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(2000);
 		} catch (Exception e3) {
 			Assert.fail(e3.getMessage());
@@ -199,6 +223,9 @@ public class TestParallelism {
 		Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(5).shortLog);
 
 		// Close
+		log.debug("**************************************************************************************");
+		log.debug("****TEST END**************************************************************************");
+
 		e1.stopEngine();
 		e1.waitForStopEnd();
 		e2.stopEngine();
@@ -207,4 +234,106 @@ public class TestParallelism {
 		e3.waitForStopEnd();
 	}
 
+	@Test
+	public void testTestJob() {
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("****TEST 2 - preparatory *************************************************************");
+		log.debug("**************************************************************************************");
+		log.debug("**************************************************************************************");
+
+		// Prepare
+		try {
+			prepare();
+		} catch (Exception e3) {
+			e3.printStackTrace();
+			Assert.fail(e3.getMessage());
+		}
+
+		// Build a very simple chain
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE CHAIN**********************************************************************");
+		Chain c1 = PlanBuilder.buildChain(a1, "empty chain", "empty chain", pg1);
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1,
+				"powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+				"Will fail with return code 19 on P2, be OK on other places");
+		State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
+		c1.getStartState().connectTo(s1);
+		s1.connectTo(c1.getEndState());
+
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// Send the chain to node 2
+		log.debug("**************************************************************************************");
+		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
+		try {
+			SenderHelpers.sendApplication(a1, en2, e1.ctx);
+			Thread.sleep(500); // integrate the application, restart node...
+			e2.waitForInitEnd();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+
+		// Launch chain
+		log.debug("**************************************************************************************");
+		log.debug("****START CHAIN***********************************************************************");
+
+		try {
+			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+			Thread.sleep(5000);
+		} catch (Exception e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		// Test finished nominally
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(7, res.size());
+		RunLog failedLog = null;
+		for (RunLog rl : res) {
+			log.info(rl.shortLog);
+			if (rl.placeName.startsWith("P21"))
+				failedLog = rl;
+		}
+
+		// Restart failed job
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO RESTART*******************************************************");
+		try {
+			SenderHelpers.sendOrderRestartAfterFailure(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(7, res.size());
+
+		// Ask the failed job to free the rest of the chain
+		log.debug("**************************************************************************************");
+		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
+		try {
+			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+			Thread.sleep(2000);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(8, res.size());
+
+		// Close
+		e1.stopEngine();
+		e1.waitForStopEnd();
+		e2.stopEngine();
+		e2.waitForStopEnd();
+		e3.stopEngine();
+		e3.waitForStopEnd();
+	}
 }
