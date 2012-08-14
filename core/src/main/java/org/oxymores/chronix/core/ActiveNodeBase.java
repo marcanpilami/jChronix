@@ -139,8 +139,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 		// Get session events
 		TypedQuery<Event> q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2", Event.class);
-		q.setParameter(1, evt.getLevel0IdU().toString());
-		q.setParameter(2, evt.getLevel1IdU().toString());
+		q.setParameter(1, evt.getLevel0IdU().toString()); // The unique ID associated to a chain run instance
+		q.setParameter(2, evt.getLevel1IdU().toString()); // The chain ID 
 		List<Event> sessionEvents2 = q.getResultList();
 
 		// Remove consumed events (first filter: those which are completely
@@ -228,8 +228,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Supposed to do local operations only.
 	// Used by active nodes which influence the scheduling itself rather than
 	// run a payload.
-	// Called within an open JPA transaction.
-	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, Runner runner) {
+	// Not called within an open JPA transaction.
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession) {
 		return; // Do nothing by default.
 	}
 
@@ -264,7 +264,12 @@ public class ActiveNodeBase extends ConfigurableBase {
 	}
 
 	// Should it be run by a runner agent?
-	public boolean hasPayload() {
+	public boolean hasExternalPayload() {
+		return false;
+	}
+	
+	// Should it be run locally but asynchronously?
+	public boolean hasInternalPayload() {
 		return false;
 	}
 

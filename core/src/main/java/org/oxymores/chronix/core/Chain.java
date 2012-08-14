@@ -22,8 +22,14 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.persistence.EntityManager;
+
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.transactional.PipelineJob;
 
 public class Chain extends ActiveNodeBase {
 
@@ -75,4 +81,28 @@ public class Chain extends ActiveNodeBase {
 		}
 		return null;
 	}
+
+	// ///////////////////////////////////////////////////////////////////
+	// Run methods
+	@Override
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession) {
+		// Create a new run for the chain.
+		pj.setBeganRunningAt(new DateTime());
+		State s = this.getStartState();
+		s.runInsidePlan(em, jmsProducer, jmsSession, pj.getIdU(), null);
+	}
+
+	@Override
+	public boolean hasInternalPayload() {
+		return true;
+	}
+
+	@Override
+	public boolean visibleInHistory() {
+		return true;
+	}
+
+	// Run methods
+	// ///////////////////////////////////////////////////////////////////
+
 }

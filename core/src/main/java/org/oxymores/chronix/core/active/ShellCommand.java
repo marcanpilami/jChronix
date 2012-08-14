@@ -51,7 +51,7 @@ public class ShellCommand extends ActiveNodeBase {
 	}
 
 	@Override
-	public boolean hasPayload() {
+	public boolean hasExternalPayload() {
 		return true;
 	}
 }

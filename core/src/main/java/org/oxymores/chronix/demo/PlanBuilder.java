@@ -70,6 +70,14 @@ public class PlanBuilder {
 		return c1;
 	}
 
+	public static Chain buildPlan(Application a, String name, String description) {
+		Chain c1 = new Chain();
+		c1.setDescription(description);
+		c1.setName(name);
+		a.addActiveElement(c1);
+		return c1;
+	}
+
 	public static ExecutionNode buildExecutionNode(Application a, int port) {
 		String hostname;
 		try {

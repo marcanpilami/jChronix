@@ -28,7 +28,7 @@ public class Event extends TranscientBase {
 	protected String conditionData4; // Well, UUID actually
 
 	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String level0Id, level1Id; // Also UUID
+	protected String level0Id, level1Id, level2Id, level3Id; // Also UUID
 
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	protected ArrayList<EventConsumption> consumptions = new ArrayList<EventConsumption>();
@@ -133,10 +133,45 @@ public class Event extends TranscientBase {
 		this.level1Id = level1Id;
 	}
 
+	public UUID getLevel2IdU() {
+		if (level2Id == null)
+			return null;
+		return UUID.fromString(level2Id);
+	}
+
+	public void setLevel2IdU(UUID level2Id) {
+		this.level2Id = level2Id.toString();
+	}
+
+	protected String getLevel2Id() {
+		return level2Id;
+	}
+
+	protected void setLevel2Id(String level2Id) {
+		this.level2Id = level2Id;
+	}
+
+	public UUID getLevel3IdU() {
+		if (level3Id == null)
+			return null;
+		return UUID.fromString(level3Id);
+	}
+
+	public void setLevel3IdU(UUID level3Id) {
+		this.level3Id = level3Id.toString();
+	}
+
+	protected String getLevel3Id() {
+		return level3Id;
+	}
+
+	protected void setLevel3Id(String level3Id) {
+		this.level3Id = level3Id;
+	}
+
 	public Boolean wasConsumedOnPlace(Place p, State s) {
 		for (EventConsumption ec : this.consumptions) {
-			if (ec.stateID.equals(s.getId().toString())
-					&& ec.placeID.equals(p.getId().toString()))
+			if (ec.stateID.equals(s.getId().toString()) && ec.placeID.equals(p.getId().toString()))
 				return true;
 		}
 		return false;

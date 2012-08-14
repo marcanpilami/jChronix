@@ -199,18 +199,24 @@ public class Runner implements MessageListener {
 		j.setBeganRunningAt(new Date());
 		tr.commit();
 
-		if (!toRun.hasPayload()) {
+		if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload()) {
 			// No payload - direct to analysis and event throwing
-			log.debug(String.format("Job execution request %s corresponds to an element (%s) with only internal execution", j.getId(),
+			log.debug(String.format(
+					"Job execution request %s corresponds to an element (%s) with only internal execution - no asynchronous operations", j.getId(),
 					toRun.getClass()));
-			toRun.internalRun(em, ctx, j, this);
 			RunResult res = new RunResult();
 			res.returnCode = 0;
 			res.id1 = j.getId();
 			res.end = new Date();
 			res.start = res.end;
 			res.outOfPlan = j.getOutOfPlan();
+			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
 			recvRR(res);
+		} else if (toRun.hasInternalPayload()) {
+			// Asynchronous local run
+			log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution", j.getId(),
+					toRun.getClass()));
+			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
 		} else if (j.isReady(ctx)) {
 			// It has an active part, but no need for dynamic parameters -> just
 			// run it (i.e. send it to a runner agent)
@@ -242,9 +248,10 @@ public class Runner implements MessageListener {
 		if (rr.outOfPlan) {
 			log.info("An out of plan job run has just finished - it won't throw events");
 		}
-		if (rr.id1 == null)
-			return; // Means its a debug job - without PipelineJob (impossible
-					// in normal operations)
+		if (rr.id1 == null) {
+			log.warn("Test RR received");
+			return; // Means its a debug job - without PipelineJob (impossible in normal operations)
+		}
 		log.info(String.format(String.format("Job %s has ended", rr.id1)));
 
 		PipelineJob pj = null;
@@ -287,7 +294,8 @@ public class Runner implements MessageListener {
 		// Update the PJ (it will stay in the DB for a while)
 		tr.begin();
 		pj.setStatus("DONE");
-		pj.setBeganRunningAt(rr.start);
+		if (rr.start != null)
+			pj.setBeganRunningAt(rr.start);
 		pj.setStoppedRunningAt(rr.end);
 		pj.setResultCode(rr.returnCode);
 		tr.commit();

@@ -246,7 +246,7 @@ public class PipelineJob extends TranscientBase {
 		this.level0Id = level0Id;
 	}
 
-	protected String getLevel1Id() {
+	public String getLevel1Id() {
 		return level1Id;
 	}
 
@@ -254,7 +254,7 @@ public class PipelineJob extends TranscientBase {
 		this.level1Id = level1Id;
 	}
 
-	protected String getLevel2Id() {
+	public String getLevel2Id() {
 		return level2Id;
 	}
 
@@ -262,7 +262,7 @@ public class PipelineJob extends TranscientBase {
 		this.level2Id = level2Id;
 	}
 
-	protected String getLevel3Id() {
+	public String getLevel3Id() {
 		return level3Id;
 	}
 
@@ -329,6 +329,8 @@ public class PipelineJob extends TranscientBase {
 		e.conditionData4 = rr.conditionData4;
 		e.level0Id = this.level0Id;
 		e.level1Id = this.level1Id;
+		e.level2Id = this.level2Id;
+		e.level3Id = this.level3Id;
 		e.placeID = this.placeID;
 		e.stateID = this.stateID;
 		e.appID = this.appID;

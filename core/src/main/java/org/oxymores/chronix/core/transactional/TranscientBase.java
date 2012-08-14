@@ -203,6 +203,10 @@ public class TranscientBase implements Serializable {
 		return id;
 	}
 
+	public UUID getIdU() {
+		return UUID.fromString(this.id);
+	}
+
 	@SuppressWarnings("unused")
 	private void setId(String id) {
 		this.id = id;
