@@ -8,6 +8,8 @@ import javax.persistence.EntityManager;
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -30,6 +32,21 @@ public class TestHostedNode {
 	Place p1, p2;
 	PlaceGroup pg1, pg2, pg3;
 
+	@After
+	public void cleanup() {
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		if (e1 != null && e1.run) {
+			e1.stopEngine();
+			e1.waitForStopEnd();
+		}
+		if (e2 != null && e2.run) {
+			e2.stopEngine();
+			e2.waitForStopEnd();
+		}
+	}
+
+	@Before
 	public void prepare() throws Exception {
 		db1 = "C:\\TEMP\\db1";
 		db2 = "C:\\TEMP\\db3";
@@ -91,29 +108,7 @@ public class TestHostedNode {
 	}
 
 	@Test
-	public void testAgentStart() {
-		try {
-			prepare();
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
-
-		e1.stopEngine();
-		e2.stopEngine();
-		e1.waitForStopEnd();
-		e2.waitForStopEnd();
-	}
-
-	@Test
 	public void testSimpleChain() {
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build a very simple chain
@@ -146,23 +141,10 @@ public class TestHostedNode {
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(3, res.size());
-
-		// Close
-		e1.stopEngine();
-		e2.stopEngine();
-		e1.waitForStopEnd();
-		e2.waitForStopEnd();
 	}
 
 	@Test
 	public void testMasterAndSlaveChain() {
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build the test chain
@@ -204,23 +186,10 @@ public class TestHostedNode {
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
-
-		// Close
-		e1.stopEngine();
-		e2.stopEngine();
-		e1.waitForStopEnd();
-		e2.waitForStopEnd();
 	}
 
 	@Test
 	public void testMixedConditionChain() {
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build the test chain
@@ -261,12 +230,6 @@ public class TestHostedNode {
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
-
-		// Close
-		e1.stopEngine();
-		e2.stopEngine();
-		e1.waitForStopEnd();
-		e2.waitForStopEnd();
 	}
 
 }

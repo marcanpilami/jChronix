@@ -8,6 +8,8 @@ import javax.persistence.TypedQuery;
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -35,6 +37,25 @@ public class TestMultiNode {
 	Place p1, p2, p3;
 	PlaceGroup pg1, pg2, pg3, pg4;
 
+	@After
+	public void cleanup() {
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		if (e1 != null && e1.run) {
+			e1.stopEngine();
+			e1.waitForStopEnd();
+		}
+		if (e2 != null && e2.run) {
+			e2.stopEngine();
+			e2.waitForStopEnd();
+		}
+		if (e3 != null && e3.run) {
+			e3.stopEngine();
+			e3.waitForStopEnd();
+		}
+	}
+
+	@Before
 	public void prepare() throws Exception {
 		if (a1 != null)
 			return;
@@ -138,7 +159,6 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 
 		try {
-			prepare();
 			sendA(e1.ctx.applicationsByName.get("Multinode test"));
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
@@ -157,14 +177,6 @@ public class TestMultiNode {
 		log.debug(a2.getPlaces());
 		Assert.assertEquals(3, a2.getPlaces().values().size());
 		Assert.assertEquals(0, a2.getChains().size());
-
-		// Close
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -174,14 +186,6 @@ public class TestMultiNode {
 		log.debug("****TEST 2****************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build a very simple chain
 		Chain c1 = PlanBuilder.buildChain(a1, "empty chain", "empty chain", pg1);
@@ -232,14 +236,6 @@ public class TestMultiNode {
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(3, res.size());
-
-		// Close
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -250,13 +246,6 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE CHAIN**********************************************************************");
 
@@ -366,16 +355,6 @@ public class TestMultiNode {
 
 		TypedQuery<Event> q5 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
 		Assert.assertEquals(0, q5.getResultList().size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("****THE END OF THE TEST***************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -386,13 +365,6 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE CHAIN**********************************************************************");
 
@@ -518,15 +490,5 @@ public class TestMultiNode {
 
 		TypedQuery<Event> q5 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
 		Assert.assertEquals(0, q5.getResultList().size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("****THE END OF THE TEST***************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 }

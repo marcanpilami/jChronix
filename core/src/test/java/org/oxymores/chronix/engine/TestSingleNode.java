@@ -9,6 +9,8 @@ import javax.persistence.TypedQuery;
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -35,6 +37,17 @@ public class TestSingleNode {
 	Place p1;
 	PlaceGroup pg1, pg2;
 
+	@After
+	public void cleanup() {
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		if (e1 != null && e1.run) {
+			e1.stopEngine();
+			e1.waitForStopEnd();
+		}
+	}
+
+	@Before
 	public void prepare() throws Exception {
 		db1 = "C:\\TEMP\\db1";
 
@@ -89,8 +102,6 @@ public class TestSingleNode {
 
 	@Test
 	public void mainScenario() throws Exception {
-		prepare();
-
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -187,23 +198,10 @@ public class TestSingleNode {
 		// and test scheduling...
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(11, res.size());
-
-		// The end
-		log.debug("**************************************************************************************");
-		log.debug("****END OF TEST***********************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
 	}
 
 	@Test
 	public void testAND() {
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		EntityManager em = e1.ctx.getTransacEM();
 
 		log.debug("**************************************************************************************");
@@ -249,23 +247,10 @@ public class TestSingleNode {
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("****END OF TEST***********************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
 	}
 
 	@Test
 	public void testANDWithBarrier() {
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 		EntityManager em = e1.ctx.getTransacEM();
 
 		log.debug("**************************************************************************************");
@@ -350,11 +335,5 @@ public class TestSingleNode {
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(8, res.size());
 		Assert.assertEquals(0, q1.getResultList().size()); // events
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("****END OF TEST***********************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
 	}
 }

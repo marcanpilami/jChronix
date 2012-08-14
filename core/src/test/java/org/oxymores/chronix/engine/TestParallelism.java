@@ -5,6 +5,8 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -29,6 +31,25 @@ public class TestParallelism {
 	PlaceGroup pg1, pg2, pg3, pg4;
 	PlaceGroup groupOneEach, groupAllNodes, groupnode1, groupnode2, groupnode3;
 
+	@After
+	public void cleanup() {
+		log.debug("**************************************************************************************");
+		log.debug("****END OF TEST***********************************************************************");
+		if (e1 != null && e1.run) {
+			e1.stopEngine();
+			e1.waitForStopEnd();
+		}
+		if (e2 != null && e2.run) {
+			e2.stopEngine();
+			e2.waitForStopEnd();
+		}
+		if (e3 != null && e3.run) {
+			e3.stopEngine();
+			e3.waitForStopEnd();
+		}
+	}
+
+	@Before
 	public void prepare() throws Exception {
 		if (a1 != null)
 			return;
@@ -141,12 +162,6 @@ public class TestParallelism {
 
 		// Prepare
 		String nl = System.getProperty("line.separator");
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build a very simple chain
 		log.debug("**************************************************************************************");
@@ -221,17 +236,6 @@ public class TestParallelism {
 
 		// Test propagated variable on the remotely hosted node
 		Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(5).shortLog);
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("****TEST END**************************************************************************");
-
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -241,14 +245,6 @@ public class TestParallelism {
 		log.debug("****TEST 2 - preparatory *************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build a very simple chain
 		log.debug("**************************************************************************************");
@@ -327,14 +323,6 @@ public class TestParallelism {
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(8, res.size());
-
-		// Close
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -344,14 +332,6 @@ public class TestParallelism {
 		log.debug("**** TEST 3 - case P1 ****************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build a very simple chain
 		log.debug("**************************************************************************************");
@@ -421,16 +401,6 @@ public class TestParallelism {
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(14, res.size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("**** TEST END ************************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -440,14 +410,6 @@ public class TestParallelism {
 		log.debug("**** TEST 4 - case P2 ****************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build the test chain
 		log.debug("**************************************************************************************");
@@ -522,16 +484,6 @@ public class TestParallelism {
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(22, res.size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("**** TEST END ************************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -541,14 +493,6 @@ public class TestParallelism {
 		log.debug("**** TEST 5 - case P5 ****************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build the test chain
 		log.debug("**************************************************************************************");
@@ -656,16 +600,6 @@ public class TestParallelism {
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(20, res.size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("**** TEST END ************************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 
 	@Test
@@ -675,14 +609,6 @@ public class TestParallelism {
 		log.debug("**** TEST 6 - case P1' ***************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
-
-		// Prepare
-		try {
-			prepare();
-		} catch (Exception e3) {
-			e3.printStackTrace();
-			Assert.fail(e3.getMessage());
-		}
 
 		// Build the test chain
 		log.debug("**************************************************************************************");
@@ -740,15 +666,5 @@ public class TestParallelism {
 		// Test finished nominally
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(32, res.size());
-
-		// Close
-		log.debug("**************************************************************************************");
-		log.debug("**** TEST END ************************************************************************");
-		e1.stopEngine();
-		e1.waitForStopEnd();
-		e2.stopEngine();
-		e2.waitForStopEnd();
-		e3.stopEngine();
-		e3.waitForStopEnd();
 	}
 }
