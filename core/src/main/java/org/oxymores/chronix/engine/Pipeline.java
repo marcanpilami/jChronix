@@ -3,6 +3,7 @@ package org.oxymores.chronix.engine;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,9 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
 public class Pipeline extends Thread implements MessageListener {
 
@@ -46,6 +49,7 @@ public class Pipeline extends Thread implements MessageListener {
 	private LinkedBlockingQueue<PipelineJob> entering;
 	private ArrayList<PipelineJob> waiting_sequence;
 	private ArrayList<PipelineJob> waiting_token;
+	private ArrayList<PipelineJob> waiting_token_answer;
 	private ArrayList<PipelineJob> waiting_exclusion;
 	private ArrayList<PipelineJob> waiting_run;
 
@@ -83,13 +87,14 @@ public class Pipeline extends Thread implements MessageListener {
 		waiting_token = new ArrayList<PipelineJob>();
 		waiting_exclusion = new ArrayList<PipelineJob>();
 		waiting_run = new ArrayList<PipelineJob>();
+		waiting_token_answer = new ArrayList<PipelineJob>();
 
 		// Retrieve jobs from previous service launches
 		Query q = em_mainloop.createQuery("SELECT j FROM PipelineJob j WHERE j.status = ?1");
 		q.setParameter(1, "CHECK_SYNC_CONDS");
 		@SuppressWarnings("unchecked")
 		List<PipelineJob> sessionEvents = q.getResultList();
-		waiting_sequence.addAll(sessionEvents);
+		entering.addAll(sessionEvents);
 
 		// Start thread
 		this.start();
@@ -114,7 +119,7 @@ public class Pipeline extends Thread implements MessageListener {
 			// Poll for a job
 			try {
 				PipelineJob pj = entering.poll(1, TimeUnit.MINUTES);
-				if (pj != null) {
+				if (pj != null && pj.getAppID() != null) {
 					Place p = null;
 					org.oxymores.chronix.core.State s = null;
 					Application a = null;
@@ -177,32 +182,69 @@ public class Pipeline extends Thread implements MessageListener {
 	@Override
 	public void onMessage(Message msg) {
 		ObjectMessage omsg = (ObjectMessage) msg;
-		PipelineJob pj;
+		PipelineJob pj = null;
+		TokenRequest rq = null;
 		try {
 			Object o = omsg.getObject();
-			if (!(o instanceof PipelineJob)) {
-				log.warn("An object was received on the pipeline queue but was not a job! Ignored.");
+			if (o instanceof PipelineJob) {
+				pj = (PipelineJob) o;
+			} else if (o instanceof TokenRequest) {
+				rq = (TokenRequest) o;
+			} else {
+				log.warn("An object was received on the pipeline queue but was not a job or a token request answer! Ignored.");
 				commit();
 				return;
 			}
-			pj = (PipelineJob) o;
+
 		} catch (JMSException e) {
 			log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
 			rollback();
 			return;
 		}
 
-		transac_injector.begin();
-		pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a
-											// crash/stop
-		pj.setEnteredPipeAt(DateTime.now().toDate());
-		em_injector.merge(pj);
-		transac_injector.commit();
+		if (pj != null) {
+			transac_injector.begin();
 
-		commit();
+			pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a crash/stop
+			pj.setEnteredPipeAt(DateTime.now().toDate());
+			em_injector.merge(pj);
 
-		log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
-		entering.add(pj);
+			transac_injector.commit();
+
+			log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
+			commit(); // JMS
+			entering.add(pj);
+		}
+
+		if (rq != null) {
+			log.debug("Token message received");
+			try {
+				this.analyze.acquire();
+			} catch (InterruptedException e1) {
+			}
+
+			pj = null;
+			for (PipelineJob jj : waiting_token_answer) {
+				if (jj.getIdU().equals(rq.pipelineJobID))
+					pj = jj;
+			}
+			if (pj == null) {
+				log.warn("A token was given to an unexisting PJ. Ignored");
+				this.analyze.release();
+				commit();
+				return;
+			}
+
+			waiting_token_answer.remove(pj);
+			waiting_exclusion.add(pj);
+			log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
+
+			this.analyze.release();
+			commit(); // JMS
+			entering.add(new PipelineJob());
+		}
+
+		
 	}
 
 	private void commit() {
@@ -228,21 +270,47 @@ public class Pipeline extends Thread implements MessageListener {
 	}
 
 	private void anSequence(PipelineJob pj) {
-		// TODO: really check calendar
+		// TODO: really check sequences
 		waiting_sequence.remove(pj);
 		waiting_token.add(pj);
 		log.debug(String.format("Job %s has finished sequence analysis - on to token analysis", pj.getId()));
 	}
 
 	private void anToken(PipelineJob pj) {
-		// TODO: really check calendar
-		waiting_token.remove(pj);
-		waiting_exclusion.add(pj);
-		log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
+		org.oxymores.chronix.core.State s = pj.getState(ctx);
+		if (s.getTokens().size() > 0) {
+			for (Token tk : s.getTokens()) {
+				TokenRequest tr = new TokenRequest();
+				tr.applicationID = UUID.fromString(pj.getAppID());
+				tr.local = true;
+				tr.placeID = UUID.fromString(pj.getPlaceID());
+				tr.requestedAt = new DateTime();
+				tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
+				tr.stateID = pj.getStateIDU();
+				tr.tokenID = tk.getId();
+				tr.type = TokenRequestType.REQUEST;
+				tr.pipelineJobID = pj.getIdU();
+
+				try {
+					SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, jmsJRProducer, true);
+				} catch (JMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				waiting_token.remove(pj);
+				waiting_token_answer.add(pj);
+			}
+		} else {
+			// No tokens to analyse - continue advancing in the pipeline
+			waiting_token.remove(pj);
+			waiting_exclusion.add(pj);
+			log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
+		}
 	}
 
 	private void anExclusion(PipelineJob pj) {
-		// TODO: really check calendar
+		// TODO: really check exclusions
 		waiting_exclusion.remove(pj);
 		waiting_run.add(pj);
 		log.debug(String.format("Job %s has finished exclusion analysis - on to run", pj.getId()));

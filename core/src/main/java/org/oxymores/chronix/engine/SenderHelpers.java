@@ -119,7 +119,8 @@ public class SenderHelpers {
 	// /////////////////////////////////////////////////////////////////////////
 	// History
 
-	public static void sendHistory(RunLog rl, ChronixContext ctx, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException {
+	public static void sendHistory(RunLog rl, ChronixContext ctx, MessageProducer jmsProducer, Session jmsSession, boolean commit)
+			throws JMSException {
 		// Always send both to ourselves and to the supervisor
 		Application a = ctx.applicationsById.get(UUID.fromString(rl.applicationId));
 		ExecutionNode self = a.getLocalNode();
@@ -400,4 +401,37 @@ public class SenderHelpers {
 	// restart orders
 	// /////////////////////////////////////////////////////////////////////////
 
+	// /////////////////////////////////////////////////////////////////////////
+	// Tokens
+	public static void sendTokenRequest(TokenRequest tr, ChronixContext ctx, Session jmsSession, MessageProducer jmsProducer, boolean commit)
+			throws JMSException {
+		String qName = "";
+		Application a = ctx.applicationsById.get(tr.applicationID);
+		Place p = a.getPlace(tr.placeID);
+		if (tr.local) {
+			qName = String.format("Q.%s.TOKEN", a.getLocalNode().getBrokerName());
+		} else {
+			qName = String.format("Q.%s.TOKEN", p.getNode().getHost().getBrokerName());
+		}
+
+		// Return queue
+		String localQueueName = String.format("Q.%s.TOKEN", a.getLocalNode().getBrokerName());
+		Destination returnQueue = jmsSession.createQueue(localQueueName);
+
+		// Create message
+		ObjectMessage m = jmsSession.createObjectMessage(tr);
+		m.setJMSReplyTo(returnQueue);
+		m.setJMSCorrelationID(tr.stateID.toString() + tr.placeID.toString());
+
+		// Send the message to its target
+		log.info(String.format("A token request will be sent on queue %s", qName));
+		Destination destination = jmsSession.createQueue(qName);
+		jmsProducer.send(destination, m);
+
+		// Send
+		if (commit)
+			jmsSession.commit();
+	}
+	// tokens
+	// /////////////////////////////////////////////////////////////////////////
 }

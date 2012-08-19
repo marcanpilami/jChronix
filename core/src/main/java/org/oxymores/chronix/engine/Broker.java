@@ -47,13 +47,15 @@ public class Broker {
 
 	// Threads
 	MetadataListener thrML;
-	RunnerAgent thrRA;
+	ArrayList<RunnerAgent> thrsRA;
 	EventListener thrEL;
 	Pipeline thrPL;
 	Runner thrRU;
 	LogListener thrLL;
 	TranscientListener thrTL;
 	OrderListener thrOL;
+	TokenDistributionCenter thrTC;
+	int nbRunners = 4;
 
 	public Broker(ChronixEngine engine) throws Exception {
 		this(engine, false);
@@ -73,6 +75,7 @@ public class Broker {
 		brokerName = this.ctx.getBrokerName();
 		if (ctx.applicationsById.values().size() > 0)
 			this.emf = ctx.getTransacEMF();
+		this.thrsRA = new ArrayList<RunnerAgent>();
 
 		// Create broker service
 		broker = new BrokerService();
@@ -147,11 +150,12 @@ public class Broker {
 	}
 
 	public void registerListeners(ChronixEngine engine) throws JMSException, IOException {
-		registerListeners(engine, true, true, true, true, true, true, true, true);
+		registerListeners(engine, true, true, true, true, true, true, true, true, true);
 	}
 
 	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
-			boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener) throws JMSException, IOException {
+			boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener, boolean startTokenDistributionCenter)
+			throws JMSException, IOException {
 		this.engine = engine;
 
 		if (startMeta) {
@@ -160,8 +164,11 @@ public class Broker {
 		}
 
 		if (startRunnerAgent) {
-			this.thrRA = new RunnerAgent();
-			this.thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
+			for (int i = 0; i < this.nbRunners; i++) {
+				RunnerAgent thrRA = new RunnerAgent();
+				thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
+				this.thrsRA.add(thrRA);
+			}
 		}
 
 		if (startEventListener && this.emf != null) {
@@ -193,6 +200,11 @@ public class Broker {
 			this.thrOL = new OrderListener();
 			this.thrOL.startListening(this.connection, brokerName, ctx);
 		}
+
+		if (startTokenDistributionCenter && this.emf != null) {
+			this.thrTC = new TokenDistributionCenter();
+			this.thrTC.startListening(this.connection, brokerName, ctx);
+		}
 	}
 
 	public void stop() {
@@ -200,8 +212,10 @@ public class Broker {
 		try {
 			if (this.thrML != null)
 				this.thrML.stopListening();
-			if (this.thrRA != null)
-				this.thrRA.stopListening();
+			if (this.thrsRA.size() > 0) {
+				for (RunnerAgent ra : this.thrsRA)
+					ra.stopListening();
+			}
 			if (this.thrEL != null)
 				this.thrEL.stopListening();
 			if (this.thrPL != null)
@@ -214,6 +228,8 @@ public class Broker {
 				this.thrTL.stopListening();
 			if (this.thrOL != null)
 				this.thrOL.stopListening();
+			if (this.thrTC != null)
+				this.thrTC.stopListening();
 
 			for (NetworkConnector nc : this.broker.getNetworkConnectors()) {
 				this.broker.removeNetworkConnector(nc);

@@ -15,6 +15,7 @@ import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.active.And;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
@@ -222,5 +223,24 @@ public class PlanBuilder {
 		a.addRRule(rr1);
 
 		return rr1;
+	}
+
+	public static Token buildToken(Application a, String name) {
+		return buildToken(a, name, 1);
+	}
+
+	public static Token buildToken(Application a, String name, int count) {
+		return buildToken(a, name, count, false);
+	}
+
+	public static Token buildToken(Application a, String name, int count, boolean byPlace) {
+		Token t = new Token();
+		t.setApplication(a);
+		t.setByPlace(byPlace);
+		t.setCount(count);
+		t.setName(name);
+		a.addToken(t);
+
+		return t;
 	}
 }

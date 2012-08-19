@@ -72,6 +72,7 @@ public class State extends ConfigurableBase {
 
 	// Sequences
 	protected ArrayList<AutoSequence> sequences;
+	protected ArrayList<Token> tokens;
 	protected Calendar calendar;
 	protected Boolean loopMissedOccurrences;
 	protected Boolean endOfOccurrence;
@@ -89,6 +90,7 @@ public class State extends ConfigurableBase {
 		this.trFromHere = new ArrayList<Transition>();
 		this.trReceivedHere = new ArrayList<Transition>();
 		this.sequences = new ArrayList<AutoSequence>();
+		this.tokens = new ArrayList<Token>();
 	}
 
 	//
@@ -240,6 +242,19 @@ public class State extends ConfigurableBase {
 		}
 	}
 
+	public void addToken(Token t) {
+		t.s_addStateUsing(this);
+		this.tokens.add(t);
+	}
+
+	public void removeToken(Token t) {
+		try {
+			this.tokens.remove(t);
+		} finally {
+			t.s_removeStateUsing(this);
+		}
+	}
+
 	public void setCalendar(Calendar c) {
 		c.s_addStateUsing(this);
 		this.calendar = c;
@@ -250,6 +265,14 @@ public class State extends ConfigurableBase {
 			this.calendar.s_removeStateUsing(this);
 			this.calendar = null;
 		}
+	}
+	
+	public ArrayList<Token> getTokens() {
+		return tokens;
+	}
+
+	public void setTokens(ArrayList<Token> tokens) {
+		this.tokens = tokens;
 	}
 
 	// Stupid GET/SET

@@ -171,7 +171,7 @@ public class TranscientBase implements Serializable {
 
 	// //////////////////////////////////////////////
 	// Misc.
-	protected String getAppID() {
+	public String getAppID() {
 		return appID;
 	}
 

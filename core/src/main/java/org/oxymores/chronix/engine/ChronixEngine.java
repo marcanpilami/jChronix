@@ -57,7 +57,7 @@ public class ChronixEngine extends Thread {
 			if (!runnerMode)
 				this.broker.registerListeners(this);
 			else
-				this.broker.registerListeners(this, false, true, false, false, false, false, false, false);
+				this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
 
 			// Active sources agent
 			if (!this.runnerMode && broker.getEmf() != null) {

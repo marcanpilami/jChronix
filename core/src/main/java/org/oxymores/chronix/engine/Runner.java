@@ -19,6 +19,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -27,9 +28,11 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
 public class Runner implements MessageListener {
 
@@ -334,6 +337,29 @@ public class Runner implements MessageListener {
 									.getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
 									.getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
 			tr.commit();
+		}
+
+		// Free tokens
+		if (s.getTokens().size() > 0) {
+			for (Token tk : s.getTokens()) {
+				TokenRequest tr = new TokenRequest();
+				tr.applicationID = UUID.fromString(pj.getAppID());
+				tr.local = true;
+				tr.placeID = UUID.fromString(pj.getPlaceID());
+				tr.requestedAt = new DateTime();
+				tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
+				tr.stateID = pj.getStateIDU();
+				tr.tokenID = tk.getId();
+				tr.type = TokenRequestType.RELEASE;
+				tr.pipelineJobID = pj.getIdU();
+				
+				try {
+					SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, producerEvents, true);
+				} catch (JMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 
 		// End

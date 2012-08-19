@@ -44,6 +44,7 @@ public class Application extends ChronixObject {
 	protected Hashtable<UUID, ActiveNodeBase> activeElements;
 	protected Hashtable<UUID, Parameter> parameters;
 	protected Hashtable<UUID, Calendar> calendars;
+	protected Hashtable<UUID, Token> tokens;
 	protected Hashtable<UUID, ClockRRule> rrules;
 
 	private transient ExecutionNode localNode;
@@ -58,6 +59,7 @@ public class Application extends ChronixObject {
 		this.parameters = new Hashtable<UUID, Parameter>();
 		this.calendars = new Hashtable<UUID, Calendar>();
 		this.rrules = new Hashtable<UUID, ClockRRule>();
+		this.tokens = new Hashtable<UUID, Token>();
 
 		// Basic elements
 		ActiveNodeBase tmp = new And();
@@ -113,6 +115,18 @@ public class Application extends ChronixObject {
 	public void removeACalendar(Calendar c) {
 		this.calendars.remove(c.id);
 		c.setApplication(null);
+	}
+
+	public void addToken(Token t) {
+		if (!this.tokens.contains(t)) {
+			this.tokens.put(t.id, t);
+			t.setApplication(this);
+		}
+	}
+
+	public void removeToken(Token t) {
+		this.tokens.remove(t.id);
+		t.setApplication(null);
 	}
 
 	public void addPlace(Place place) {
@@ -252,6 +266,10 @@ public class Application extends ChronixObject {
 
 	public ExecutionNode getNode(UUID id) {
 		return this.nodes.get(id);
+	}
+
+	public Token getToken(UUID id) {
+		return this.tokens.get(id);
 	}
 
 	public ActiveNodeBase getActiveNode(UUID id) {

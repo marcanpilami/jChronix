@@ -28,23 +28,32 @@ public class LogHelpers {
 	}
 
 	public static void clearAllTranscientElements(ChronixContext ctx) {
-		EntityManager em1 = ctx.getHistoryEM();
-		TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r", RunLog.class);
+		try {
+			// Clean history db
+			EntityManager em1 = ctx.getHistoryEM();
+			TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r", RunLog.class);
 
-		EntityTransaction tr1 = em1.getTransaction();
-		tr1.begin();
-		for (RunLog l : q.getResultList())
-			em1.remove(l);
+			EntityTransaction tr1 = em1.getTransaction();
+			tr1.begin();
+			for (RunLog l : q.getResultList())
+				em1.remove(l);
 
-		tr1.commit();
+			tr1.commit();
 
-		EntityManager em2 = ctx.getTransacEM();
-		TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r", TranscientBase.class);
+			// Clean OP db
+			EntityManager em2 = ctx.getTransacEM();
+			TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r", TranscientBase.class);
 
-		EntityTransaction tr2 = em2.getTransaction();
-		tr2.begin();
-		for (TranscientBase b : q2.getResultList())
-			em2.remove(b);
-		tr2.commit();
+			EntityTransaction tr2 = em2.getTransaction();
+			tr2.begin();
+			for (TranscientBase b : q2.getResultList())
+				em2.remove(b);
+
+			em2.createQuery("DELETE FROM TokenReservation r").executeUpdate();
+			em2.createQuery("DELETE FROM ClockTick r").executeUpdate();
+			tr2.commit();
+		} catch (Exception e) {
+			log.warn(e.getMessage(), e);
+		}
 	}
 }
