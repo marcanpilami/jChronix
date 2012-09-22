@@ -10,6 +10,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 
 public class Calendar extends ApplicationObject {
@@ -23,6 +24,9 @@ public class Calendar extends ApplicationObject {
 
 	protected ArrayList<State> usedInStates;
 	protected ArrayList<CalendarDay> days;
+
+	protected ClockRRule createdFrom = null; // Optional
+	protected boolean autoReset = false;
 
 	// Constructor
 	public Calendar() {
@@ -64,6 +68,18 @@ public class Calendar extends ApplicationObject {
 
 	public List<State> getUsedInStates() {
 		return this.usedInStates;
+	}
+
+	public boolean isAutoReset() {
+		return autoReset;
+	}
+
+	public void setAutoReset(boolean autoReset) {
+		this.autoReset = autoReset;
+	}
+
+	public void setAlertThreshold(Integer alertThreshold) {
+		this.alertThreshold = alertThreshold;
 	}
 
 	//
@@ -112,6 +128,14 @@ public class Calendar extends ApplicationObject {
 		return null;
 	}
 
+	public ClockRRule getCreatedFrom() {
+		return createdFrom;
+	}
+
+	public void setCreatedFrom(ClockRRule createdFrom) {
+		this.createdFrom = createdFrom;
+	}
+
 	//
 	// ///////////////////////////////////////////////////////////////
 
@@ -121,7 +145,8 @@ public class Calendar extends ApplicationObject {
 	public CalendarPointer getCurrentOccurrencePointer(EntityManager em) {
 		// Calendar current occurrence pointers have no states and places: they
 		// are only related to the calendar itself.
-		Query q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
+		Query q = em
+				.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
 		q.setParameter(1, this.id.toString());
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
 		em.refresh(cp);
@@ -129,7 +154,8 @@ public class Calendar extends ApplicationObject {
 	}
 
 	public CalendarDay getCurrentOccurrence(EntityManager em) {
-		return this.getDay(this.getCurrentOccurrencePointer(em).getLastEndedOkOccurrenceUuid());
+		return this.getDay(this.getCurrentOccurrencePointer(em)
+				.getLastEndedOkOccurrenceUuid());
 	}
 
 	public CalendarDay getOccurrenceAfter(CalendarDay d) {
@@ -147,7 +173,7 @@ public class Calendar extends ApplicationObject {
 	public Boolean isBeforeOrSame(CalendarDay before, CalendarDay after) {
 		return this.days.indexOf(before) <= this.days.indexOf(after);
 	}
-	
+
 	public Boolean isBefore(CalendarDay before, CalendarDay after) {
 		return this.days.indexOf(before) < this.days.indexOf(after);
 	}
@@ -168,7 +194,8 @@ public class Calendar extends ApplicationObject {
 		}
 		minShift--;
 
-		CalendarDay cd = this.getOccurrenceShiftedBy(this.getFirstOccurrence(), -minShift);
+		CalendarDay cd = this.getOccurrenceShiftedBy(this.getFirstOccurrence(),
+				-minShift);
 		log.info(String
 				.format("Calendar %s current value will be initialised at its first allowed occurrence by the shifts of the using states (max shift is %s): %s - %s",
 						this.name, minShift, cd.getValue(), cd.getId()));
@@ -235,12 +262,15 @@ public class Calendar extends ApplicationObject {
 	}
 
 	public void processStragglers(EntityManager em) throws Exception {
-		log.debug(String.format("Processing stragglers on calendar %s", this.name));
+		log.debug(String.format("Processing stragglers on calendar %s",
+				this.name));
 		CalendarDay d = this.getCurrentOccurrence(em);
 		for (StragglerIssue i : getStragglers(em)) {
 			log.warn(String
 					.format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
-							i.s.represents.name, i.p.name, i.s.chain.name, i.s.getCurrentCalendarOccurrence(em, i.p).seq, d.seq, i.s.calendarShift));
+							i.s.represents.name, i.p.name, i.s.chain.name,
+							i.s.getCurrentCalendarOccurrence(em, i.p).seq,
+							d.seq, i.s.calendarShift));
 		}
 	}
 	//
