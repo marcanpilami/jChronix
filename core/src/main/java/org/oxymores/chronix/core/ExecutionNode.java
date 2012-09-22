@@ -11,7 +11,7 @@ public class ExecutionNode extends ApplicationObject {
 	protected String sslKeyFilePath;
 
 	protected String dns, osusername, ospassword;
-	protected Integer qPort, wsPort, remoteExecPort;
+	protected Integer qPort, wsPort, remoteExecPort, jmxPort;
 
 	protected ArrayList<NodeLink> canSendTo, canReceiveFrom;
 	protected ArrayList<Place> placesHosted;
@@ -23,6 +23,9 @@ public class ExecutionNode extends ApplicationObject {
 		canSendTo = new ArrayList<NodeLink>();
 		canReceiveFrom = new ArrayList<NodeLink>();
 		placesHosted = new ArrayList<Place>();
+		jmxPort = 1788;
+		this.wsPort = 1790;
+		this.remoteExecPort = 1789;
 	}
 
 	public NodeType getType() {
@@ -87,6 +90,14 @@ public class ExecutionNode extends ApplicationObject {
 
 	public void setWsPort(Integer wsPort) {
 		this.wsPort = wsPort;
+	}
+
+	public Integer getJmxPort() {
+		return this.jmxPort;
+	}
+
+	public void setJmxPort(Integer port) {
+		this.jmxPort = port;
 	}
 
 	public Integer getRemoteExecPort() {
