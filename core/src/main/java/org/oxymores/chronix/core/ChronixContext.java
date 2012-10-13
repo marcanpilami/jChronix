@@ -150,6 +150,7 @@ public class ChronixContext {
 		ObjectInputStream ois = new ObjectInputStream(fis);
 
 		Application res = (Application) ois.readObject();
+		ois.close();
 
 		try {
 			res.setLocalNode(this.dns, this.port);
