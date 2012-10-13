@@ -8,6 +8,8 @@ import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -26,8 +28,14 @@ public class Frontier {
 		res.places = new ArrayList<DTOPlace>();
 		res.groups = new ArrayList<DTOPlaceGroup>();
 		res.parameters = new ArrayList<DTOParameter>();
-		
+
 		res.nodes = getNetwork(a);
+
+		for (Place p : a.getPlacesList())
+			res.places.add(getPlace(p));
+
+		for (PlaceGroup pg : a.getGroupsList())
+			res.groups.add(getPlaceGroup(pg));
 
 		for (ConfigurableBase o : a.getActiveElements().values()) {
 			if (o instanceof Chain) {
@@ -115,6 +123,7 @@ public class Frontier {
 		res.fromTCP = new ArrayList<String>();
 		res.toRCTRL = new ArrayList<String>();
 		res.toTCP = new ArrayList<String>();
+		res.places = new ArrayList<String>();
 
 		for (NodeLink nl : en.getCanSendTo()) {
 			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
@@ -127,6 +136,42 @@ public class Frontier {
 				res.fromRCTRL.add(nl.getNodeFrom().getId().toString());
 			if (nl.getMethod() == NodeConnectionMethod.TCP)
 				res.fromTCP.add(nl.getNodeFrom().getId().toString());
+		}
+		for (Place p : en.getPlacesHosted()) {
+			res.places.add(p.getId().toString());
+		}
+
+		return res;
+	}
+
+	public static DTOPlace getPlace(Place p) {
+		DTOPlace res = new DTOPlace();
+		res.description = p.getDescription();
+		res.id = p.getId().toString();
+		res.name = p.getName();
+		res.nodeid = p.getNode().getId().toString();
+		res.prop1 = p.getProperty1();
+		res.prop2 = p.getProperty2();
+		res.prop3 = p.getProperty3();
+		res.prop4 = p.getProperty4();
+
+		res.memberOf = new ArrayList<String>();
+		for (PlaceGroup pg : p.getMemberOfGroups()) {
+			res.memberOf.add(pg.getId().toString());
+		}
+
+		return res;
+	}
+
+	public static DTOPlaceGroup getPlaceGroup(PlaceGroup g) {
+		DTOPlaceGroup res = new DTOPlaceGroup();
+		res.description = g.getDescription();
+		res.id = g.getId().toString();
+		res.name = g.getName();
+
+		res.places = new ArrayList<String>();
+		for (Place p : g.getPlaces()) {
+			res.places.add(p.getId().toString());
 		}
 
 		return res;

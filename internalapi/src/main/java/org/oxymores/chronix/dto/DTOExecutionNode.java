@@ -7,6 +7,7 @@ public class DTOExecutionNode {
 	public boolean isConsole;
 	public int qPort, wsPort, remoteExecPort, jmxPort, x, y;
 	public ArrayList<String> toTCP, toRCTRL, fromTCP, fromRCTRL;
+	public ArrayList<String> places;
 
 	public String getId() {
 		return id;
@@ -134,6 +135,14 @@ public class DTOExecutionNode {
 
 	public void setFromRCTRL(ArrayList<String> fromRCTRL) {
 		this.fromRCTRL = fromRCTRL;
+	}
+
+	public ArrayList<String> getPlaces() {
+		return places;
+	}
+
+	public void setPlaces(ArrayList<String> places) {
+		this.places = places;
 	}
 
 }

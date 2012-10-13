@@ -1,5 +1,8 @@
 package org.oxymores.chronix.dto;
 
-public class DTOPlaceGroup {
+import java.util.ArrayList;
 
+public class DTOPlaceGroup {
+	public String id, name, description;
+	public ArrayList<String> places;
 }
