@@ -33,6 +33,7 @@ function getApplicationOK(responseObject) {
 
 	initCommandPanel(cxfShellCommands);
 	fillInPaletteData(cxfShellCommands);
+	initNetworkROPanel(aa);
 }
 
 function addChain(c) {

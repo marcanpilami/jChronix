@@ -66,6 +66,7 @@ public class DemoApplication {
 		n1.setqPort(1789);
 		n1.setX(100);
 		n1.setY(100);
+		n1.setConsole(true);
 		a.addNode(n1);
 
 		ExecutionNode n2 = new ExecutionNode();

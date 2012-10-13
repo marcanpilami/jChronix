@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.NodeLink;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -23,6 +26,8 @@ public class Frontier {
 		res.places = new ArrayList<DTOPlace>();
 		res.groups = new ArrayList<DTOPlaceGroup>();
 		res.parameters = new ArrayList<DTOParameter>();
+		
+		res.nodes = getNetwork(a);
 
 		for (ConfigurableBase o : a.getActiveElements().values()) {
 			if (o instanceof Chain) {
@@ -78,6 +83,50 @@ public class Frontier {
 			d.guard4 = (o.getGuard4() == null ? "" : o.getGuard4().toString());
 
 			res.transitions.add(d);
+		}
+
+		return res;
+	}
+
+	public static ArrayList<DTOExecutionNode> getNetwork(Application a) {
+		ArrayList<DTOExecutionNode> res = new ArrayList<DTOExecutionNode>();
+		for (ExecutionNode en : a.getNodes().values())
+			res.add(getExecutionNode(en));
+
+		return res;
+	}
+
+	public static DTOExecutionNode getExecutionNode(ExecutionNode en) {
+		DTOExecutionNode res = new DTOExecutionNode();
+		res.id = en.getId().toString();
+		res.certFilePath = en.getSshKeyFilePath();
+		res.dns = en.getDns();
+		res.isConsole = en.isConsole();
+		res.jmxPort = en.getJmxPort();
+		res.ospassword = en.getOspassword();
+		res.osusername = en.getOsusername();
+		res.qPort = en.getqPort();
+		res.remoteExecPort = en.getRemoteExecPort();
+		res.wsPort = en.getWsPort();
+		res.x = en.getX();
+		res.y = en.getY();
+
+		res.fromRCTRL = new ArrayList<String>();
+		res.fromTCP = new ArrayList<String>();
+		res.toRCTRL = new ArrayList<String>();
+		res.toTCP = new ArrayList<String>();
+
+		for (NodeLink nl : en.getCanSendTo()) {
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
+				res.toRCTRL.add(nl.getNodeTo().getId().toString());
+			if (nl.getMethod() == NodeConnectionMethod.TCP)
+				res.toTCP.add(nl.getNodeTo().getId().toString());
+		}
+		for (NodeLink nl : en.getCanReceiveFrom()) {
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
+				res.fromRCTRL.add(nl.getNodeFrom().getId().toString());
+			if (nl.getMethod() == NodeConnectionMethod.TCP)
+				res.fromTCP.add(nl.getNodeFrom().getId().toString());
 		}
 
 		return res;

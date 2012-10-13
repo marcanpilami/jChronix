@@ -16,10 +16,12 @@
 		<script type="text/javascript" src="lib/slick.grid.js"></script>
 		<script type="text/javascript" src="lib/slick.rowselectionmodel.js"></script>
 		<script type="text/javascript" src="lib/uuid.js"></script>
+		<script type="text/javascript" src="lib/arbor.js"></script>
 		<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
 		<script type="text/javascript" src="application.js"></script>
 		<script type="text/javascript" src="chain.js"></script>
 		<script type="text/javascript" src="commands.js"></script>
+		<script type="text/javascript" src="network_ro.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</head>
 	<body>
@@ -35,10 +37,10 @@
 			<div id='tabs'>
 				<ul>
 					<li>
-						<a href="#tab-commands">Commands</a>
+						<a href="#tab-pnro">Physical Network</a>
 					</li>
 					<li>
-						<a href="#tab2">Physical Network</a>
+						<a href="#tab-commands">Commands</a>
 					</li>
 					<li>
 						<a href="#tab2">Logical Network</a>
@@ -47,15 +49,16 @@
 						<a href="#tab2">Schedules</a>
 					</li>
 					<li>
-						<a href="#tab1">Chains</a>
+						<a href="#tab-chains">Chains</a>
 					</li>
 				</ul>
+				
 				<div id="tab2">
 					<p>
 						marsu
 					</p>
 				</div>
-				<div id="tab1">
+				<div id="tab-chains">
 					<div id="container1">
 						<div id="leftbar">
 							<div id="dgChainPaletteCommands">
@@ -78,6 +81,9 @@
 				</div>
 				<div id="tab-commands">
 					<div id="gridCommands"></div>
+				</div>
+				<div id="tab-pnro">
+					<div id="raphael-pnro"></div>
 				</div>
 			</div>
 		</div>

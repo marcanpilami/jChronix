@@ -14,6 +14,7 @@ public class DTOApplication {
 	public ArrayList<DTOParameter> parameters;
 	public ArrayList<DTOChain> chains;
 	public ArrayList<DTOShellCommand> shells;
+	public ArrayList<DTOExecutionNode> nodes;
 
 	protected UUID marsu;
 
@@ -88,4 +89,13 @@ public class DTOApplication {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	public ArrayList<DTOExecutionNode> getNodes() {
+		return nodes;
+	}
+
+	public void setNodes(ArrayList<DTOExecutionNode> nodes) {
+		this.nodes = nodes;
+	}
+
 }
