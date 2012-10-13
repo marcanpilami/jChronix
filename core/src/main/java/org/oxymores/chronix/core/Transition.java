@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.persistence.EntityManager;
+
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.TransitionAnalysisResult;
@@ -35,6 +37,7 @@ public class Transition extends ApplicationObject {
 	protected Integer guard1;
 	protected String guard2, guard3;
 	protected UUID guard4;
+	protected boolean calendarAware = false;
 
 	protected State stateFrom, stateTo;
 	protected Chain chain;
@@ -69,6 +72,14 @@ public class Transition extends ApplicationObject {
 
 	public void setGuard4(UUID guard4) {
 		this.guard4 = guard4;
+	}
+
+	public boolean isCalendarAware() {
+		return calendarAware;
+	}
+
+	public void setCalendarAware(boolean calendarAware) {
+		this.calendarAware = calendarAware;
 	}
 
 	public State getStateFrom() {
@@ -113,7 +124,7 @@ public class Transition extends ApplicationObject {
 		return true;
 	}
 
-	public TransitionAnalysisResult isTransitionAllowed(List<Event> events) {
+	public TransitionAnalysisResult isTransitionAllowed(List<Event> events, EntityManager em) {
 		TransitionAnalysisResult res = new TransitionAnalysisResult(this);
 
 		for (Place p : this.stateFrom.runsOn.places) {
@@ -122,7 +133,7 @@ public class Transition extends ApplicationObject {
 				if (!e.wasConsumedOnPlace(p, this.stateTo) && !virginEvents.contains(e))
 					virginEvents.add(e);
 			}
-			res.analysis.put(p.id, this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p));
+			res.analysis.put(p.id, this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p, em));
 
 			if (!this.isTransitionParallelEnabled() && !res.allowedOnAllPlaces()) {
 				res = new TransitionAnalysisResult(this); // We already know the transition is KO, so no need to continue

@@ -235,15 +235,12 @@ public class Application extends ChronixObject {
 	}
 
 	public State getState(UUID id) {
-		ArrayList<State> tmp = this.getStates();
-		State res = null;
-		for (State s : tmp) {
+		for (State s : this.getStates()) {
 			if (s.id.equals(id)) {
-				res = s;
-				break;
+				return s;
 			}
 		}
-		return res;
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")

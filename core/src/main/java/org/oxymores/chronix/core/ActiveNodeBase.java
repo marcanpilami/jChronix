@@ -23,6 +23,7 @@ package org.oxymores.chronix.core;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -94,7 +95,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Do the given events allow for a transition originating from a state
 	// representing this source?
-	public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p) {
+	public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, EntityManager em) {
 		PlaceAnalysisResult res = new PlaceAnalysisResult(p);
 		res.res = false;
 
@@ -123,6 +124,34 @@ public class ActiveNodeBase extends ConfigurableBase {
 				continue;
 			}
 
+			// Check calendar if the transition is calendar-aware
+			if (tr.calendarAware) {
+				log.debug("Checking wether an event respects a calendar transition guard");
+				if (!tr.stateTo.usesCalendar())
+					continue; // No calendar used on the target - yet the transition must make sure a calendar is enforced...
+
+				if (e.getIgnoreCalendarUpdating()) {
+					// Calendar is forced - this is deliberate from the user, he's supposed to know what he does so no checks
+				} else {
+					if (e.getCalendarOccurrenceID() == null || e.getCalendarOccurrenceID() == "")
+						continue;
+
+					try {
+						if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId())) {
+							CalendarDay cd1 = tr.stateTo.getCalendar().getDay(UUID.fromString(e.getCalendarOccurrenceID()));
+							CalendarDay cd2 = tr.stateTo.getCalendar().getDay(
+									UUID.fromString(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId()));
+							log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)", cd1.seq,
+									cd2.seq));
+							continue;
+						}
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+
 			// If here: the event is OK for the given transition on the given
 			// place.
 			res.consumedEvents.add(e);
@@ -140,7 +169,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 		// Get session events
 		TypedQuery<Event> q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2", Event.class);
 		q.setParameter(1, evt.getLevel0IdU().toString()); // The unique ID associated to a chain run instance
-		q.setParameter(2, evt.getLevel1IdU().toString()); // The chain ID 
+		q.setParameter(2, evt.getLevel1IdU().toString()); // The chain ID
 		List<Event> sessionEvents2 = q.getResultList();
 
 		// Remove consumed events (first filter: those which are completely
@@ -162,7 +191,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 			log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(), s.chain.getName(),
 					sessionEvents.size()));
 
-			TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents);
+			TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents, em);
 
 			if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND) {
 				// No need to go further - one transition will block everything
@@ -267,7 +296,7 @@ public class ActiveNodeBase extends ConfigurableBase {
 	public boolean hasExternalPayload() {
 		return false;
 	}
-	
+
 	// Should it be run locally but asynchronously?
 	public boolean hasInternalPayload() {
 		return false;

@@ -266,7 +266,7 @@ public class State extends ConfigurableBase {
 			this.calendar = null;
 		}
 	}
-	
+
 	public ArrayList<Token> getTokens() {
 		return tokens;
 	}
@@ -312,14 +312,18 @@ public class State extends ConfigurableBase {
 	}
 
 	public Transition connectTo(State target) {
-		return connectTo(target, 0, null, null, null);
+		return connectTo(target, 0, null, null, null, false);
+	}
+
+	public Transition connectTo(State target, Boolean calendarAware) {
+		return connectTo(target, 0, null, null, null, calendarAware);
 	}
 
 	public Transition connectTo(State target, Integer guard1) {
-		return connectTo(target, guard1, null, null, null);
+		return connectTo(target, guard1, null, null, null, false);
 	}
 
-	public Transition connectTo(State target, Integer guard1, String guard2, String guard3, UUID guard4) {
+	public Transition connectTo(State target, Integer guard1, String guard2, String guard3, UUID guard4, Boolean calendarAware) {
 		// Note: there can be multiple transitions between two states.
 		Transition t = new Transition();
 		t.setStateFrom(this);
@@ -328,6 +332,7 @@ public class State extends ConfigurableBase {
 		t.setGuard2(guard2);
 		t.setGuard3(guard3);
 		t.setGuard4(guard4);
+		t.setCalendarAware(calendarAware);
 		t.setApplication(this.application);
 		this.chain.addTransition(t);
 		return t;

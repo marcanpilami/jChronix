@@ -41,7 +41,7 @@ public class PipelineJob extends TranscientBase {
 
 	Boolean outOfPlan = false;
 	Integer resultCode = -1;
-	Boolean ignoreCalendarUpdating = false;
+	
 
 	public PipelineJob() {
 		super();
@@ -51,13 +51,7 @@ public class PipelineJob extends TranscientBase {
 	// ///////////////////////////////////////////////////////////////
 	// Set/Get
 
-	public Boolean getIgnoreCalendarUpdating() {
-		return ignoreCalendarUpdating;
-	}
-
-	public void setIgnoreCalendarUpdating(Boolean ignoreCalendarUpdating) {
-		this.ignoreCalendarUpdating = ignoreCalendarUpdating;
-	}
+	
 
 	public Integer getResultCode() {
 		return resultCode;

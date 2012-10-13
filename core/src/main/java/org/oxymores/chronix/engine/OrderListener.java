@@ -1,5 +1,7 @@
 package org.oxymores.chronix.engine;
 
+import java.util.UUID;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -13,7 +15,11 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
@@ -107,6 +113,55 @@ public class OrderListener implements MessageListener {
 			}
 		}
 
+		if (order.type == OrderType.EXTERNAL) {
+			// Find the external node
+			State s = null;
+			for (Application a : ctx.applicationsByName.values()) {
+				s = a.getState(((UUID) order.data));
+				if (s != null)
+					break;
+			}
+			if (s == null || !(s.getRepresents() instanceof External)) {
+				log.error(String.format("An order of type EXTERNAL was received but its data was invalid %s. Corresponding State found was %s.",
+						order.data, s));
+				commit(); // destroy message - it's corrupt
+				return;
+			}
+
+			External e = (External) s.getRepresents();
+			String d = null;
+			if (order.data2 != null)
+				d = e.getCalendarString((String) order.data2);
+			log.debug(String.format("Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
+
+			Event evt = new Event();
+			evt.setApplication(s.getApplication());
+			if (d != null && s.getCalendar() != null) {
+				evt.setCalendar(s.getCalendar());
+				evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId().toString());
+			}
+			log.debug("rrrrrrrrrr" + evt.getCalendarOccurrenceID());
+			evt.setConditionData1(0);
+			evt.setLevel1IdU(new UUID(0, 1));
+			evt.setLevel0IdU(s.getChain().getId());
+			evt.setState(s);
+
+			for (Place p : s.getRunsOn().getPlaces()) {
+				evt.setPlace(p);
+				try {
+					log.debug("Sending event for external source");
+					SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctx, false);
+				} catch (JMSException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		}
+
+		commit();
+	}
+
+	private void commit() {
 		try {
 			jmsSession.commit();
 		} catch (JMSException e) {

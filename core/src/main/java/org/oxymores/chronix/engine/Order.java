@@ -6,5 +6,5 @@ public class Order implements Serializable {
 	private static final long serialVersionUID = 6731249888476299895L;
 
 	public OrderType type;
-	public Object data;
+	public Object data, data2;
 }

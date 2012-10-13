@@ -137,14 +137,20 @@ public class TranscientListener implements MessageListener {
 
 			cp = em.merge(cp);
 
+			// Log
+			String represents = "a calendar";
+			if (cp.getPlaceID() != null)
+				represents = ss.getRepresents().getName(); 
+			log.debug(String.format("The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]",
+					cp.getNextRunOccurrenceCd(ctx).getValue(), cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastEndedOccurrenceCd(ctx)
+							.getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), represents));
+
 			// Re analyse events that may benefit from this calendar change
-			// All events still there are supposed to be waiting for a new
-			// analysis.
+			// All events still there are supposed to be waiting for a new analysis.
 			List<State> states_using_calendar = ca.getUsedInStates();
 			List<String> ids = new ArrayList<String>();
 			for (State s : states_using_calendar) {
-				// events come from states *before* the ones that use the
-				// calendar
+				// Events come from states *before* the ones that use the calendar
 				for (Transition tr : s.getTrReceivedHere()) {
 					ids.add(tr.getStateFrom().getId().toString());
 				}

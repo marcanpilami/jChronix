@@ -19,6 +19,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -335,5 +336,102 @@ public class TestSingleNode {
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(8, res.size());
 		Assert.assertEquals(0, q1.getResultList().size()); // events
+	}
+
+	@Test
+	public void testExternal() {
+		log.debug("**************************************************************************************");
+		log.debug("****CREATE PLAN***********************************************************************");
+
+		// The calendar
+		Calendar ca1 = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
+		NextOccurrence no = PlanBuilder.buildNextOccurrence(a1, ca1);
+
+		// The empty test chain that will be triggered by the external event
+		Chain c1 = PlanBuilder.buildChain(a1, "chain1", "simple chain 1", pg1);
+		c1.getStartState().connectTo(c1.getEndState()); // REALLY simple
+
+		// The plan containing everything
+		Chain p1 = PlanBuilder.buildPlan(a1, "plan 1", "description");
+		
+		// Our file object
+		External pe1 = PlanBuilder.buildExternal(a1, "file1", "^[a-zA-Z_/]*([0-9/]+).*");
+		
+		// First test case: non calendar on target
+		State sp1 = PlanBuilder.buildState(p1, pg1, pe1);
+		State sp2 = PlanBuilder.buildState(p1, pg1, c1);
+		sp1.connectTo(sp2, true);
+		sp1.setCalendar(ca1);
+
+		// Second test case: for tests with calendar
+		State sp3 = PlanBuilder.buildState(p1, pg1, pe1);
+		State sp4 = PlanBuilder.buildState(p1, pg1, c1);
+		sp3.connectTo(sp4, true);
+		sp3.setCalendar(ca1);
+		sp4.setCalendar(ca1);
+
+		// Calendar end of run state
+		State sno = PlanBuilder.buildState(p1, pg1, no);
+		sno.setCalendar(ca1);
+		sno.setEndOfOccurrence(true);
+
+		String filepath = "/meuh/pouet/aaaa_12/06/2500";
+
+		// Save plan
+		try {
+			e1.ctx.saveApplication(a1);
+			e1.ctx.setWorkingAsCurrent(a1);
+			e1.queueReloadConfiguration();
+			e1.waitForInitEnd();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// TEST 1: should block (no calendar on target state)
+		log.debug("**************************************************************************************");
+		log.debug("****START OF TEST1********************************************************************");
+		try {
+			SenderHelpers.sendOrderExternalEvent(sp1.getId(), filepath, this.en1, e1.ctx);
+		} catch (JMSException e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e3) {
+		}
+		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(0, res.size());
+
+		// TEST 2: should also block (good calendar, but wrong day)
+		log.debug("**************************************************************************************");
+		log.debug("****START OF TEST2********************************************************************");
+		try {
+			SenderHelpers.sendOrderExternalEvent(sp3.getId(), filepath, this.en1, e1.ctx);
+		} catch (JMSException e3) {
+			Assert.fail(e3.getMessage());
+		}
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e3) {
+		}
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(0, res.size());
+
+		log.debug("**************************************************************************************");
+		log.debug("****START OF TEST3********************************************************************");
+		try {
+			SenderHelpers.sendCalendarPointerShift(200, ca1, e1.ctx);
+			SenderHelpers.sendCalendarPointerShift(161, sp4, e1.ctx); // Chain1 is now at the right occurrence
+			Thread.sleep(500);
+		} catch (Exception e4) {
+			e4.printStackTrace();
+			Assert.fail(e4.getMessage());
+		}
+
+		res = LogHelpers.displayAllHistory(e1.ctx);
+		Assert.assertEquals(3, res.size());
 	}
 }

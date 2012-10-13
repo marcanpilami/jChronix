@@ -21,6 +21,7 @@ import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 
@@ -158,6 +159,20 @@ public class PlanBuilder {
 			sc1.addParameter(pa1);
 		}
 		return sc1;
+	}
+
+	public static External buildExternal(Application a, String name) {
+		return buildExternal(a, name, null);
+	}
+
+	public static External buildExternal(Application a, String name, String regExp) {
+		External e = new External();
+		e.setApplication(a);
+		e.setRegularExpression(regExp);
+		e.setName(name);
+		a.addActiveElement(e);
+
+		return e;
 	}
 
 	public static NextOccurrence buildNextOccurrence(Application a, Calendar ca) {

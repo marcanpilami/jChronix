@@ -40,6 +40,7 @@ public class TranscientBase implements Serializable {
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String calendarID;
 	protected Boolean outsideChainLaunch = false;
+	protected Boolean ignoreCalendarUpdating = false;
 
 	protected Date createdAt;
 
@@ -230,6 +231,14 @@ public class TranscientBase implements Serializable {
 
 	public void setOutsideChain(Boolean outsideChain) {
 		this.outsideChainLaunch = outsideChain;
+	}
+	
+	public Boolean getIgnoreCalendarUpdating() {
+		return ignoreCalendarUpdating;
+	}
+
+	public void setIgnoreCalendarUpdating(Boolean ignoreCalendarUpdating) {
+		this.ignoreCalendarUpdating = ignoreCalendarUpdating;
 	}
 	//
 	// //////////////////////////////////////////////

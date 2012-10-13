@@ -323,10 +323,13 @@ public class SenderHelpers {
 		d.close();
 	}
 
-	public static void sendCalendarPointerShift(EntityManager em, Integer shift, State s, Place p, ChronixContext ctx) throws Exception {
+	public static void sendCalendarPointerShift(EntityManager em, Integer shiftNext, Integer shiftCurrent, State s, Place p, ChronixContext ctx)
+			throws Exception {
 		CalendarPointer cp = s.getCurrentCalendarPointer(em, p);
-		CalendarDay next = s.getCalendar().getOccurrenceAfter(cp.getNextRunOccurrenceCd(ctx));
+		CalendarDay next = s.getCalendar().getOccurrenceShiftedBy(cp.getNextRunOccurrenceCd(ctx), shiftNext);
+		CalendarDay current = s.getCalendar().getOccurrenceShiftedBy(cp.getLastEndedOccurrenceCd(ctx), shiftCurrent);
 		cp.setNextRunOccurrenceCd(next);
+		cp.setLastEndedOccurrenceCd(current);
 
 		JmsSendData d = new JmsSendData(ctx);
 		sendCalendarPointer(cp, s.getCalendar(), d.jmsSession, d.jmsProducer, true);
@@ -334,10 +337,38 @@ public class SenderHelpers {
 		d.close();
 	}
 
-	public static void sendCalendarPointerShift(Integer shift, State s, ChronixContext ctx) throws Exception {
+	public static void sendCalendarPointerShift(Integer shiftNext, State s, ChronixContext ctx) throws Exception {
+		sendCalendarPointerShift(shiftNext, 0, s, ctx);
+	}
+
+	public static void sendCalendarPointerShift(Integer shiftNext, Integer shiftCurrent, State s, ChronixContext ctx) throws Exception {
 		EntityManager em = ctx.getTransacEM();
 		for (Place p : s.getRunsOn().getPlaces())
-			sendCalendarPointerShift(em, shift, s, p, ctx);
+			sendCalendarPointerShift(em, shiftNext, shiftCurrent, s, p, ctx);
+	}
+
+	
+	public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, ChronixContext ctx) throws Exception{
+		JmsSendData d = new JmsSendData(ctx);
+		SenderHelpers.sendCalendarPointerShift(shift, updatedCalendar, ctx.getTransacEM(), ctx, d.jmsSession, d.jmsProducer, true);
+		d.close();
+	}
+	
+	public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, EntityManager em, ChronixContext ctx,Session jmsSession, MessageProducer jmsProducer, boolean commit) throws Exception {		
+		CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(em);
+		
+		CalendarDay old_cd = updatedCalendar.getCurrentOccurrence(em);
+		CalendarDay ref_cd = updatedCalendar.getOccurrenceShiftedBy(old_cd, shift - 1);
+		
+		CalendarDay new_cd = updatedCalendar.getOccurrenceAfter(ref_cd);
+		CalendarDay next_cd = updatedCalendar.getOccurrenceAfter(new_cd);
+		
+		cp.setLastEndedOccurrenceCd(new_cd);
+		cp.setLastEndedOkOccurrenceCd(new_cd);
+		cp.setLastStartedOccurrenceCd(new_cd);
+		cp.setNextRunOccurrenceCd(next_cd);
+		
+		SenderHelpers.sendCalendarPointer(cp, cp.getCalendar(ctx), jmsSession, jmsProducer, commit);		
 	}
 
 	// /////////////////////////////////////////////////////////////////////////
@@ -394,6 +425,34 @@ public class SenderHelpers {
 	public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException {
 		JmsSendData d = new JmsSendData(ctx);
 		sendOrderForceOk(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
+		d.jmsSession.commit();
+		d.close();
+	}
+
+	public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer,
+			boolean commit) throws JMSException {
+		Order o = new Order();
+		o.type = OrderType.EXTERNAL;
+		o.data = externalStateId;
+		o.data2 = data;
+
+		// Create message
+		ObjectMessage m = jmsSession.createObjectMessage(o);
+
+		// Send the message to every client execution node
+		String qName = String.format("Q.%s.ORDER", en.getHost().getBrokerName());
+		log.info(String.format("An order will be sent on queue %s", qName));
+		Destination destination = jmsSession.createQueue(qName);
+		jmsProducer.send(destination, m);
+
+		// Send
+		if (commit)
+			jmsSession.commit();
+	}
+
+	public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws JMSException {
+		JmsSendData d = new JmsSendData(ctx);
+		sendOrderExternalEvent(externalStateId, data, en, d.jmsSession, d.jmsProducer, false);
 		d.jmsSession.commit();
 		d.close();
 	}
