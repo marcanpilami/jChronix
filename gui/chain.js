@@ -15,7 +15,6 @@ function initChainPanel() {
 	chaintabs = $("#chaintabs").tabs({
 		tabTemplate : "<li><a href='#{href}'>#{label}</a></li>", // <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
 		add : function(event, ui) {
-			var tab_content = "houba";
 			$(ui.panel).append("<div class='raph'></div>");
 		}
 	});
@@ -116,7 +115,7 @@ function fillInPaletteData(DTOShellCommandArray) {
 	});
 	$("#chaintabs").on("dropstart", ".raph", function(e, dd) {
 		alert("e");
-	})
+	});
 
 	$("#chaintabs").on("drop", ".raph", function(e, dd) {
 		var v = new dto_chronix_oxymores_org_DTOState();
@@ -128,18 +127,18 @@ function fillInPaletteData(DTOShellCommandArray) {
 		v._label = dtoDropped._name;
 
 		// Get selected tab
-		var selected = chaintabs.tabs(chaintabs.tabs('option', 'selected'));
+		//var selected = chaintabs.tabs(chaintabs.tabs('option', 'selected'));
 		var paper = this.paper;
 		addState(v, paper);
 		var dtoChain = this.dtoChain;
 		dtoChain.getStates().getDTOState().push(v);
 
-		//alert("f");
-	})
+		//alert("f" + paper + v._label + "X : " + v._x + " - " + v._y);
+	});
 
 	$("#chaintabs").on("dropend", ".raph", function(e, dd) {
 		//alert("g");
-	})
+	});
 }
 
 // Function to call to add a tab displaying a given DTOChain
@@ -152,7 +151,7 @@ function editChain(cxfObject) {
 	drawnChains[cxfObject._id] = cxfObject;
 
 	// Create a new tab
-	var ta = chaintabs.tabs("add", "#chaintab-" + cxfObject._id, cxfObject._name);
+	chaintabs.tabs("add", "#chaintab-" + cxfObject._id, cxfObject._name);
 	var r = $("div.raph", $("#chaintab-" + cxfObject._id))[0];
 	var rpaper = new Raphael(r, 1600, 600);
 	rpaper.states = new Array();
