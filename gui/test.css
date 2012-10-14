@@ -1,12 +1,12 @@
 @CHARSET "ISO-8859-1";
 
-#container1
+#container1, #container2
 {
 	 position:relative;
 }
 
-#leftbar {
-	width:150px;
+.leftbar {
+	width:180px;
 	background:#c99;
 	/*float:left;*/
 	position:absolute; 
@@ -15,9 +15,13 @@
 	left:0;
 }
 
+.rightpanel {
+	padding-left: 185px;
+}
+
 #chaintabs
 {
-	margin-left: 160px;
+	margin-left: 180px;
 }
 
 

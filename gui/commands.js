@@ -46,7 +46,7 @@ function initCommandPanel(listLikeDTOShellCommand) {
 	grid.onAddNewRow.subscribe(onNewRow);
 
 }
-var de, dargs
+var de, dargs;
 function onNewRow(e, args) {
 	de = e;
 	dargs = args;
