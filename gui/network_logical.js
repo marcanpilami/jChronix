@@ -1,4 +1,4 @@
-var dataView, dataView2, dataView3 = null;
+var dataView = null, dataView2 = null, dataView3 = null, dataView3 = null;
 var gr = null;
 
 // /////////////////////////////////////////////////////////////
@@ -105,6 +105,15 @@ function initLogicalNetworkPanel(cxfApplication)
 		// using native sort with comparer
 		// preferred method but can be very slow in IE with huge datasets
 		dataView.sort(comparer, args.sortAsc);
+	});
+
+	grid.onSelectedRowsChanged.subscribe(function()
+	{
+		dataView4.setFilterArgs(
+		{
+			searchString : this.getDataItem(this.getSelectedRows()[0])._id,
+		});
+		dataView4.refresh();
 	});
 
 	// wire up model events to drive the grid
@@ -400,8 +409,11 @@ function initLogicalNetworkPanel3(cxfApplication)
 	{
 		searchString : "",
 	});
-	dataView3.setFilter(placeGroupContentFilter); // same field names in both groups and places
+	dataView3.setFilter(placeGroupContentFilter);
 	dataView3.endUpdate();
+
+	// Final panel
+	initLogicalNetworkPanel4(cxfApplication);
 }
 
 function placeGroupContentFilter(item, args)
@@ -409,7 +421,90 @@ function placeGroupContentFilter(item, args)
 	if (args.searchString != null)
 	{
 		var mm = item.getMemberOf().getString();
-		for (var i = 0; i < mm.length; i++)
+		for ( var i = 0; i < mm.length; i++)
+		{
+			if (mm[i] === args.searchString)
+				return true;
+		}
+	}
+	return false;
+}
+
+// /////////////////////////////////////////////////////////////
+// PLACE GROUP MEMBERSHIP
+// /////////////////////////////////////////////////////////////
+function initLogicalNetworkPanel4(cxfApplication)
+{
+	var options =
+	{
+		editable : false,
+		enableAddRow : false,
+		enableCellNavigation : true,
+		enableColumnReorder : false,
+		enableRowReordering : false,
+		asyncEditorLoading : false,
+		showHeaderRow : false,
+		multiSelect : false,
+		enableTextSelectionOnCells : false, // ???
+		rowHeight : 30,
+		autoHeight : true,
+		autoEdit : false,
+		forceFitColumns : true
+	};
+
+	var columns = [
+	{
+		id : "name",
+		name : "Place is member of",
+		field : "_name",
+		width : 200,
+		cssClass : "cell-title",
+		sortable : true,
+	}, ];
+
+	dataView4 = new Slick.Data.DataView(
+	{
+		inlineFilters : true
+	});
+	var grid = new Slick.Grid("#gridLNPLCGRP", dataView4, columns, options);
+	grid.setSelectionModel(new Slick.RowSelectionModel());
+
+	grid.onSort.subscribe(function(e, args)
+	{
+		sortdir = args.sortAsc ? 1 : -1;
+		sortcol = args.sortCol.field;
+		dataView4.sort(comparer, args.sortAsc);
+	});
+
+	dataView4.onRowCountChanged.subscribe(function(e, args)
+	{
+		grid.updateRowCount();
+		grid.render();
+	});
+
+	dataView4.onRowsChanged.subscribe(function(e, args)
+	{
+		grid.invalidateRows(args.rows);
+		grid.render();
+	});
+
+	// Initialize the model after all the events have been hooked up
+	dataView4.beginUpdate();
+	dataView4.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
+	dataView4.setFilterArgs(
+	{
+		searchString : "",
+	});
+	dataView4.setFilter(placeGroupMembershipContentFilter);
+	dataView4.endUpdate();
+}
+
+function placeGroupMembershipContentFilter(item, args)
+{
+	if (args.searchString != null)
+	{
+		var mm = item.getPlaces().getString();
+		for ( var i = 0; i < mm.length; i++)
 		{
 			if (mm[i] === args.searchString)
 				return true;
