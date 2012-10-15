@@ -1,5 +1,8 @@
-var dataView = null, dataView2 = null, dataView3 = null, dataView3 = null;
-var gr = null;
+// /////////////////////////////////////////////////////////////
+// Variables
+// /////////////////////////////////////////////////////////////
+var nlDataViewPlaces = null, nlDataViewGroups = null, nlDataViewGroupContent = null, nlDataViewPlaceMembership = null;
+var nlGridPlaces = null, nlGridGroups = null, nlGridGroupContent = null, nlGridPlaceMembership = null;
 
 // /////////////////////////////////////////////////////////////
 // PLACES
@@ -83,50 +86,50 @@ function initLogicalNetworkPanel(cxfApplication)
 		cannotTriggerInsert : true,
 	}, ];
 
-	dataView = new Slick.Data.DataView(
+	nlDataViewPlaces = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	var grid = new Slick.Grid("#gridLN", dataView, columns, options);
-	grid.setSelectionModel(new Slick.RowSelectionModel());
+	nlGridPlaces = new Slick.Grid("#gridLN", nlDataViewPlaces, columns, options);
+	nlGridPlaces.setSelectionModel(new Slick.RowSelectionModel());
 
-	grid.onAddNewRow.subscribe(onNewPlaceRow);
+	nlGridPlaces.onAddNewRow.subscribe(onNewPlaceRow);
 
-	grid.onCellChange.subscribe(function(e, args)
+	nlGridPlaces.onCellChange.subscribe(function(e, args)
 	{
-		dataView.updateItem(args.item.id, args.item);
+		nlDataViewPlaces.updateItem(args.item.id, args.item);
 	});
 
-	grid.onSort.subscribe(function(e, args)
+	nlGridPlaces.onSort.subscribe(function(e, args)
 	{
 		sortdir = args.sortAsc ? 1 : -1;
 		sortcol = args.sortCol.field;
 
 		// using native sort with comparer
 		// preferred method but can be very slow in IE with huge datasets
-		dataView.sort(comparer, args.sortAsc);
+		nlDataViewPlaces.sort(comparer, args.sortAsc);
 	});
 
-	grid.onSelectedRowsChanged.subscribe(function()
+	nlGridPlaces.onSelectedRowsChanged.subscribe(function()
 	{
-		dataView4.setFilterArgs(
+		nlDataViewPlaceMembership.setFilterArgs(
 		{
 			searchString : this.getDataItem(this.getSelectedRows()[0])._id,
 		});
-		dataView4.refresh();
+		nlDataViewPlaceMembership.refresh();
 	});
 
 	// wire up model events to drive the grid
-	dataView.onRowCountChanged.subscribe(function(e, args)
+	nlDataViewPlaces.onRowCountChanged.subscribe(function(e, args)
 	{
-		grid.updateRowCount();
-		grid.render();
+		nlGridPlaces.updateRowCount();
+		nlGridPlaces.render();
 	});
 
-	dataView.onRowsChanged.subscribe(function(e, args)
+	nlDataViewPlaces.onRowsChanged.subscribe(function(e, args)
 	{
-		grid.invalidateRows(args.rows);
-		grid.render();
+		nlGridPlaces.invalidateRows(args.rows);
+		nlGridPlaces.render();
 	});
 
 	// wire up the search textbox to apply the filter to the model
@@ -140,23 +143,23 @@ function initLogicalNetworkPanel(cxfApplication)
 			this.value = "";
 		}
 		// Update filter
-		dataView.setFilterArgs(
+		nlDataViewPlaces.setFilterArgs(
 		{
 			searchString : this.value,
 		});
 		// Refresh dataview
-		dataView.refresh();
+		nlDataViewPlaces.refresh();
 	});
 
 	// Initialize the model after all the events have been hooked up
-	dataView.beginUpdate();
-	dataView.setItems(cxfApplication.getPlaces().getDTOPlace());
-	dataView.setFilterArgs(
+	nlDataViewPlaces.beginUpdate();
+	nlDataViewPlaces.setItems(cxfApplication.getPlaces().getDTOPlace());
+	nlDataViewPlaces.setFilterArgs(
 	{
 		searchString : "",
 	});
-	dataView.setFilter(placeFilter);
-	dataView.endUpdate();
+	nlDataViewPlaces.setFilter(placeFilter);
+	nlDataViewPlaces.endUpdate();
 
 	// Second panel
 	initLogicalNetworkPanel2(cxfApplication);
@@ -170,10 +173,9 @@ function placeFilter(item, args)
 	}
 	return true;
 }
-var toto = null;
+
 function comparer(a, b)
 {
-	toto = a[sortcol];
 	var x = a[sortcol], y = b[sortcol];
 	return x.toLowerCase().localeCompare(y.toLowerCase());
 }
@@ -208,7 +210,7 @@ function onNewPlaceRow(e, args)
 		v[o] = args.item[o];
 	}
 	v.id = dataView.getItems().length;
-	dataView.addItem(v);
+	nlDataViewPlaces.addItem(v);
 }
 
 // /////////////////////////////////////////////////////////////
@@ -257,47 +259,46 @@ function initLogicalNetworkPanel2(cxfApplication)
 		sortable : true,
 	}, ];
 
-	dataView2 = new Slick.Data.DataView(
+	nlDataViewGroups = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	var grid = new Slick.Grid("#gridLNGRP", dataView2, columns, options);
-	gr = grid;
-	grid.setSelectionModel(new Slick.RowSelectionModel());
+	nlGridGroups = new Slick.Grid("#gridLNGRP", nlDataViewGroups, columns, options);
+	nlGridGroups.setSelectionModel(new Slick.RowSelectionModel());
 
-	grid.onAddNewRow.subscribe(onNewGroupRow);
+	nlGridGroups.onAddNewRow.subscribe(onNewGroupRow);
 
-	grid.onCellChange.subscribe(function(e, args)
+	nlGridGroups.onCellChange.subscribe(function(e, args)
 	{
-		dataView2.updateItem(args.item.id, args.item);
+		nlDataViewGroups.updateItem(args.item.id, args.item);
 	});
 
-	grid.onSort.subscribe(function(e, args)
+	nlGridGroups.onSort.subscribe(function(e, args)
 	{
 		sortdir = args.sortAsc ? 1 : -1;
 		sortcol = args.sortCol.field;
-		dataView2.sort(comparer, args.sortAsc); // same comparer for all grids (lexicographic)
+		nlDataViewGroups.sort(comparer, args.sortAsc); // same comparer for all grids (lexicographic)
 	});
 
-	grid.onSelectedRowsChanged.subscribe(function()
+	nlGridGroups.onSelectedRowsChanged.subscribe(function()
 	{
-		dataView3.setFilterArgs(
+		nlDataViewGroupContent.setFilterArgs(
 		{
 			searchString : this.getDataItem(this.getSelectedRows()[0])._id,
 		});
-		dataView3.refresh();
+		nlDataViewGroupContent.refresh();
 	});
 
-	dataView2.onRowCountChanged.subscribe(function(e, args)
+	nlDataViewGroups.onRowCountChanged.subscribe(function(e, args)
 	{
-		grid.updateRowCount();
-		grid.render();
+		nlGridGroups.updateRowCount();
+		nlGridGroups.render();
 	});
 
-	dataView2.onRowsChanged.subscribe(function(e, args)
+	nlDataViewGroups.onRowsChanged.subscribe(function(e, args)
 	{
-		grid.invalidateRows(args.rows);
-		grid.render();
+		nlGridGroups.invalidateRows(args.rows);
+		nlGridGroups.render();
 	});
 
 	// wire up the search textbox to apply the filter to the model
@@ -316,18 +317,18 @@ function initLogicalNetworkPanel2(cxfApplication)
 			searchString : this.value,
 		});
 		// Refresh dataview
-		dataView2.refresh();
+		nlDataViewGroups.refresh();
 	});
 
 	// Initialize the model after all the events have been hooked up
-	dataView2.beginUpdate();
-	dataView2.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
-	dataView2.setFilterArgs(
+	nlDataViewGroups.beginUpdate();
+	nlDataViewGroups.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
+	nlDataViewGroups.setFilterArgs(
 	{
 		searchString : "",
 	});
-	dataView2.setFilter(placeFilter); // same field names in both groups and places
-	dataView2.endUpdate();
+	nlDataViewGroups.setFilter(placeFilter); // same field names in both groups and places
+	nlDataViewGroups.endUpdate();
 
 	initLogicalNetworkPanel3(cxfApplication);
 }
@@ -341,7 +342,7 @@ function onNewGroupRow(e, args)
 	}
 	v._id = uuid.v4();
 	v.id = v._id;
-	dataView2.addItem(v);
+	nlDataViewGroups.addItem(v);
 }
 
 // /////////////////////////////////////////////////////////////
@@ -376,41 +377,41 @@ function initLogicalNetworkPanel3(cxfApplication)
 		sortable : true,
 	}, ];
 
-	dataView3 = new Slick.Data.DataView(
+	nlDataViewGroupContent = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	var grid = new Slick.Grid("#gridLNGRPCNT", dataView3, columns, options);
-	grid.setSelectionModel(new Slick.RowSelectionModel());
+	nlGridGroupContent = new Slick.Grid("#gridLNGRPCNT", nlDataViewGroupContent, columns, options);
+	nlGridGroupContent.setSelectionModel(new Slick.RowSelectionModel());
 
-	grid.onSort.subscribe(function(e, args)
+	nlGridGroupContent.onSort.subscribe(function(e, args)
 	{
 		sortdir = args.sortAsc ? 1 : -1;
 		sortcol = args.sortCol.field;
-		dataView3.sort(comparer, args.sortAsc);
+		nlDataViewGroupContent.sort(comparer, args.sortAsc);
 	});
 
-	dataView3.onRowCountChanged.subscribe(function(e, args)
+	nlDataViewGroupContent.onRowCountChanged.subscribe(function(e, args)
 	{
-		grid.updateRowCount();
-		grid.render();
+		nlGridGroupContent.updateRowCount();
+		nlGridGroupContent.render();
 	});
 
-	dataView3.onRowsChanged.subscribe(function(e, args)
+	nlDataViewGroupContent.onRowsChanged.subscribe(function(e, args)
 	{
-		grid.invalidateRows(args.rows);
-		grid.render();
+		nlGridGroupContent.invalidateRows(args.rows);
+		nlGridGroupContent.render();
 	});
 
 	// Initialize the model after all the events have been hooked up
-	dataView3.beginUpdate();
-	dataView3.setItems(cxfApplication.getPlaces().getDTOPlace());
-	dataView3.setFilterArgs(
+	nlDataViewGroupContent.beginUpdate();
+	nlDataViewGroupContent.setItems(cxfApplication.getPlaces().getDTOPlace());
+	nlDataViewGroupContent.setFilterArgs(
 	{
 		searchString : "",
 	});
-	dataView3.setFilter(placeGroupContentFilter);
-	dataView3.endUpdate();
+	nlDataViewGroupContent.setFilter(placeGroupContentFilter);
+	nlDataViewGroupContent.endUpdate();
 
 	// Final panel
 	initLogicalNetworkPanel4(cxfApplication);
@@ -462,41 +463,41 @@ function initLogicalNetworkPanel4(cxfApplication)
 		sortable : true,
 	}, ];
 
-	dataView4 = new Slick.Data.DataView(
+	nlDataViewPlaceMembership = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	var grid = new Slick.Grid("#gridLNPLCGRP", dataView4, columns, options);
-	grid.setSelectionModel(new Slick.RowSelectionModel());
+	nlGridPlaceMembership = new Slick.Grid("#gridLNPLCGRP", nlDataViewPlaceMembership, columns, options);
+	nlGridPlaceMembership.setSelectionModel(new Slick.RowSelectionModel());
 
-	grid.onSort.subscribe(function(e, args)
+	nlGridPlaceMembership.onSort.subscribe(function(e, args)
 	{
 		sortdir = args.sortAsc ? 1 : -1;
 		sortcol = args.sortCol.field;
-		dataView4.sort(comparer, args.sortAsc);
+		nlDataViewPlaceMembership.sort(comparer, args.sortAsc);
 	});
 
-	dataView4.onRowCountChanged.subscribe(function(e, args)
+	nlDataViewPlaceMembership.onRowCountChanged.subscribe(function(e, args)
 	{
-		grid.updateRowCount();
-		grid.render();
+		nlGridPlaceMembership.updateRowCount();
+		nlGridPlaceMembership.render();
 	});
 
-	dataView4.onRowsChanged.subscribe(function(e, args)
+	nlDataViewPlaceMembership.onRowsChanged.subscribe(function(e, args)
 	{
-		grid.invalidateRows(args.rows);
-		grid.render();
+		nlGridPlaceMembership.invalidateRows(args.rows);
+		nlGridPlaceMembership.render();
 	});
 
 	// Initialize the model after all the events have been hooked up
-	dataView4.beginUpdate();
-	dataView4.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
-	dataView4.setFilterArgs(
+	nlDataViewPlaceMembership.beginUpdate();
+	nlDataViewPlaceMembership.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
+	nlDataViewPlaceMembership.setFilterArgs(
 	{
 		searchString : "",
 	});
-	dataView4.setFilter(placeGroupMembershipContentFilter);
-	dataView4.endUpdate();
+	nlDataViewPlaceMembership.setFilter(placeGroupMembershipContentFilter);
+	nlDataViewPlaceMembership.endUpdate();
 }
 
 function placeGroupMembershipContentFilter(item, args)
