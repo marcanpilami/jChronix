@@ -84,6 +84,14 @@ function initLogicalNetworkPanel(cxfApplication)
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
+	},
+	{
+		id : "del",
+		name : "Delete",
+		field : "del",
+		width : 70,
+		formatter : delBtFormatter,
+		cannotTriggerInsert : true,
 	}, ];
 
 	nlDataViewPlaces = new Slick.Data.DataView(
@@ -112,10 +120,20 @@ function initLogicalNetworkPanel(cxfApplication)
 
 	nlGridPlaces.onSelectedRowsChanged.subscribe(function()
 	{
-		nlDataViewPlaceMembership.setFilterArgs(
+		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
 		{
-			searchString : this.getDataItem(this.getSelectedRows()[0])._id,
-		});
+			nlDataViewPlaceMembership.setFilterArgs(
+			{
+				searchString : this.getDataItem(this.getSelectedRows()[0])._id,
+			});
+		}
+		else
+		{
+			nlDataViewPlaceMembership.setFilterArgs(
+			{
+				searchString : "X",
+			});
+		}
 		nlDataViewPlaceMembership.refresh();
 	});
 
@@ -149,6 +167,32 @@ function initLogicalNetworkPanel(cxfApplication)
 		});
 		// Refresh dataview
 		nlDataViewPlaces.refresh();
+	});
+
+	// Delete event
+	$('.delplace').live('click', function()
+	{
+		var me = $(this), id = me.attr('id');
+
+		// Void detail view
+		nlDataViewPlaceMembership.setFilterArgs(
+		{
+			searchString : "X",
+		});
+
+		// Clean groups of this Place
+		var gg = nlDataViewGroups.getItems();
+		for ( var i = 0; i < gg.length; i++)
+		{
+			var idx = jQuery.inArray(id, gg[i]._places.getString());
+			if (-1 !== idx)
+				gg[i]._places.getString().splice(idx, 1);
+		}
+
+		// Destroy Place through the dataview (will in turn update cxfApplication)
+		nlDataViewPlaces.deleteItem(id);
+		nlDataViewGroupContent.refresh();
+		nlDataViewPlaceMembership.refresh();
 	});
 
 	// Initialize the model after all the events have been hooked up
@@ -213,6 +257,11 @@ function onNewPlaceRow(e, args)
 	nlDataViewPlaces.addItem(v);
 }
 
+function delBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='delplace' type='button' id='" + dataContext.id + "' >DELETE</button>";
+}
+
 // /////////////////////////////////////////////////////////////
 // GROUPS
 // /////////////////////////////////////////////////////////////
@@ -232,7 +281,8 @@ function initLogicalNetworkPanel2(cxfApplication)
 		rowHeight : 30,
 		autoHeight : true,
 		autoEdit : true,
-		forceFitColumns : true
+		forceFitColumns : true,
+		resizable : true,
 	};
 
 	var columns = [
@@ -240,8 +290,8 @@ function initLogicalNetworkPanel2(cxfApplication)
 		id : "name",
 		name : "Place Group name",
 		field : "_name",
-		width : 100,
-		cssClass : "cell-title",
+		maxWidth : 150,
+		// cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		sortable : true,
@@ -250,13 +300,23 @@ function initLogicalNetworkPanel2(cxfApplication)
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 250,
+		minWidth : 250,
 		selectable : false,
 		resizable : false,
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		cannotTriggerInsert : true,
 		sortable : true,
+		resizable : true,
+	},
+	{
+		id : "del",
+		name : "Delete",
+		field : "del",
+		width : 70,
+		formatter : delGrpBtFormatter,
+		cannotTriggerInsert : true,
+		resizable : true,
 	}, ];
 
 	nlDataViewGroups = new Slick.Data.DataView(
@@ -282,10 +342,21 @@ function initLogicalNetworkPanel2(cxfApplication)
 
 	nlGridGroups.onSelectedRowsChanged.subscribe(function()
 	{
-		nlDataViewGroupContent.setFilterArgs(
+		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
 		{
-			searchString : this.getDataItem(this.getSelectedRows()[0])._id,
-		});
+			debug1 = this.getDataItem(this.getSelectedRows()[0]);
+			nlDataViewGroupContent.setFilterArgs(
+			{
+				searchString : this.getDataItem(this.getSelectedRows()[0])._id,
+			});
+		}
+		else
+		{
+			nlDataViewGroupContent.setFilterArgs(
+			{
+				searchString : "X",
+			});
+		}
 		nlDataViewGroupContent.refresh();
 	});
 
@@ -320,6 +391,33 @@ function initLogicalNetworkPanel2(cxfApplication)
 		nlDataViewGroups.refresh();
 	});
 
+	// Delete event
+	$('.delgroup').live('click', function()
+	{
+		var me = $(this);
+		var id = me.attr('id');
+
+		// Unselect Group (hide its content from the detail view)
+		nlDataViewGroupContent.setFilterArgs(
+		{
+			searchString : "X",
+		});
+
+		// Clean Places of this Group
+		var gg = nlDataViewPlaces.getItems();
+		for ( var i = 0; i < gg.length; i++)
+		{
+			var idx = jQuery.inArray(id, gg[i]._memberOf.getString());
+			if (-1 !== idx)
+				gg[i]._memberOf.getString().splice(idx, 1);
+		}
+
+		// Destroy Group through the dataview (will in turn update cxfApplication)
+		nlDataViewGroups.deleteItem(id);
+		nlDataViewGroupContent.refresh();
+		nlDataViewPlaceMembership.refresh();
+	});
+
 	// Initialize the model after all the events have been hooked up
 	nlDataViewGroups.beginUpdate();
 	nlDataViewGroups.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
@@ -343,6 +441,11 @@ function onNewGroupRow(e, args)
 	v._id = uuid.v4();
 	v.id = v._id;
 	nlDataViewGroups.addItem(v);
+}
+
+function delGrpBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='delgroup' type='button' id='" + dataContext._id + "' >DELETE</button>";
 }
 
 // /////////////////////////////////////////////////////////////
@@ -422,11 +525,8 @@ function placeGroupContentFilter(item, args)
 	if (args.searchString != null)
 	{
 		var mm = item.getMemberOf().getString();
-		for ( var i = 0; i < mm.length; i++)
-		{
-			if (mm[i] === args.searchString)
-				return true;
-		}
+		debug2 = mm;
+		return (-1 !== jQuery.inArray(args.searchString, mm));
 	}
 	return false;
 }
