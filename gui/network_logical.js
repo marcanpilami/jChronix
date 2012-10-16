@@ -675,3 +675,22 @@ function delRemPlaceFromGroupBtFormatter(row, cell, value, columnDef, dataContex
 {
 	return "<button class='retiremembership' type='button' id='" + dataContext._id + "' >X</button>";
 }
+
+// /////////////////////////////////////////////////////////////
+// ADD MEMBERSHIP
+// /////////////////////////////////////////////////////////////
+
+function nlAddPlaceToGroupClick()
+{
+	if (nlSelectedGroup == null || nlSelectedPlace == null)
+		return;
+
+	if (-1 !== jQuery.inArray(nlSelectedPlace._id, nlSelectedGroup._places.getString()))
+		return; // Don't add a place twice in the same group
+
+	nlSelectedGroup._places.getString().push(nlSelectedPlace._id);
+	nlSelectedPlace._memberOf.getString().push(nlSelectedGroup._id);
+
+	nlDataViewGroupContent.refresh();
+	nlDataViewPlaceMembership.refresh();
+}
