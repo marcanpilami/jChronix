@@ -18,12 +18,14 @@
 		<script type="text/javascript" src="lib/slick.rowselectionmodel.js"></script>
 		<script type="text/javascript" src="lib/uuid.js"></script>
 		<script type="text/javascript" src="lib/arbor.js"></script>
+		<script type='text/javascript' src='lib/knockout-2.1.0.js'></script>
 		<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
 		<script type="text/javascript" src="application.js"></script>
 		<script type="text/javascript" src="chain.js"></script>
 		<script type="text/javascript" src="commands.js"></script>
 		<script type="text/javascript" src="network_logical.js"></script>
 		<script type="text/javascript" src="network_ro.js"></script>
+		<script type="text/javascript" src="rec.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</head>
 	<body>
@@ -39,6 +41,9 @@
 			<div id='tabs'>
 				<ul>
 					<li>
+						<a href="#tab-schedule">Schedules</a>
+					</li>
+					<li>
 						<a href="#tab-commands">Commands</a>
 					</li>
 					<li>
@@ -47,18 +52,14 @@
 					<li>
 						<a href="#tab-pnro">Physical Network</a>
 					</li>
-					<li>
-						<a href="#tab2">Schedules</a>
-					</li>
+					
 					<li>
 						<a href="#tab-chains">Chains</a>
 					</li>
 				</ul>
 				
-				<div id="tab2">
-					<p>
-						marsu
-					</p>
+				<div id="tab-schedule">
+					<div id='schedule'></div>
 				</div>
 				
 				<div id="tab-chains">

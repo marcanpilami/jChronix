@@ -55,7 +55,15 @@ function initCommandPanel(cxfApplication)
 		cannotTriggerInsert : true,
 		sortable : false,
 		resizable : true,
-	} ];
+	},
+	{
+		id : "del",
+		name : "",
+		field : "del",
+		width : 30,
+		formatter : delCmdBtFormatter,
+		cannotTriggerInsert : true,
+	}, ];
 
 	cmdDataViewCmds = new Slick.Data.DataView(
 	{
@@ -102,6 +110,16 @@ function initCommandPanel(cxfApplication)
 		});
 		// Refresh dataview
 		cmdDataViewCmds.refresh();
+	});
+	$('.delcmd').live('click', function()
+	{
+		var me = $(this), id = me.attr('id');
+
+		// Clean states of this Place????
+		// TODO
+
+		// Destroy the cmd through the dataview (will in turn update cxfApplication)
+		cmdDataViewCmds.deleteItem(id);
 	});
 
 	// Populate & go
@@ -162,4 +180,9 @@ function cmdFilter(item, args)
 		return false;
 	}
 	return true;
+}
+
+function delCmdBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='delcmd' type='button' id='" + dataContext.id + "' >X</button>";
 }
