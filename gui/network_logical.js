@@ -3,6 +3,7 @@
 // /////////////////////////////////////////////////////////////
 var nlDataViewPlaces = null, nlDataViewGroups = null, nlDataViewGroupContent = null, nlDataViewPlaceMembership = null;
 var nlGridPlaces = null, nlGridGroups = null, nlGridGroupContent = null, nlGridPlaceMembership = null;
+var nlSelectedGroup = null, nlSelectedPlace = null;
 
 // /////////////////////////////////////////////////////////////
 // PLACES
@@ -23,7 +24,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		rowHeight : 30,
 		autoHeight : true,
 		autoEdit : true,
-		forceFitColumns : true
+		forceFitColumns : true,
 	};
 
 	var columns = [
@@ -122,13 +123,15 @@ function initLogicalNetworkPanel(cxfApplication)
 	{
 		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
 		{
+			nlSelectedPlace = this.getDataItem(this.getSelectedRows()[0]);
 			nlDataViewPlaceMembership.setFilterArgs(
 			{
-				searchString : this.getDataItem(this.getSelectedRows()[0])._id,
+				searchString : nlSelectedPlace._id,
 			});
 		}
 		else
 		{
+			nlSelectedPlace = null;
 			nlDataViewPlaceMembership.setFilterArgs(
 			{
 				searchString : "X",
@@ -344,14 +347,15 @@ function initLogicalNetworkPanel2(cxfApplication)
 	{
 		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
 		{
-			debug1 = this.getDataItem(this.getSelectedRows()[0]);
+			nlSelectedGroup = this.getDataItem(this.getSelectedRows()[0]);
 			nlDataViewGroupContent.setFilterArgs(
 			{
-				searchString : this.getDataItem(this.getSelectedRows()[0])._id,
+				searchString : nlSelectedGroup._id,
 			});
 		}
 		else
 		{
+			nlSelectedGroup = null;
 			nlDataViewGroupContent.setFilterArgs(
 			{
 				searchString : "X",
@@ -478,6 +482,15 @@ function initLogicalNetworkPanel3(cxfApplication)
 		width : 200,
 		cssClass : "cell-title",
 		sortable : true,
+	},
+	{
+		id : "del",
+		name : "",
+		field : "del",
+		width : 20,
+		formatter : delPlaceGrpCntBtFormatter,
+		cannotTriggerInsert : true,
+		resizable : false,
 	}, ];
 
 	nlDataViewGroupContent = new Slick.Data.DataView(
@@ -506,6 +519,21 @@ function initLogicalNetworkPanel3(cxfApplication)
 		nlGridGroupContent.render();
 	});
 
+	// Delete event
+	$('.removefromgroup').live('click', function()
+	{
+		// The given id is from the Place to remove from the currenty selected Group in grid 2
+		var me = $(this);
+		var id = me.attr('id');
+		var placeToRemove = nlDataViewPlaces.getItemById(id);
+
+		nlSelectedGroup._places.getString().splice(jQuery.inArray(id, nlSelectedGroup._places.getString()), 1);
+		placeToRemove._memberOf.getString().splice(jQuery.inArray(nlSelectedGroup._id, placeToRemove._memberOf.getString()), 1);
+
+		nlDataViewGroupContent.refresh();
+		nlDataViewPlaceMembership.refresh();
+	});
+
 	// Initialize the model after all the events have been hooked up
 	nlDataViewGroupContent.beginUpdate();
 	nlDataViewGroupContent.setItems(cxfApplication.getPlaces().getDTOPlace());
@@ -529,6 +557,11 @@ function placeGroupContentFilter(item, args)
 		return (-1 !== jQuery.inArray(args.searchString, mm));
 	}
 	return false;
+}
+
+function delPlaceGrpCntBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='removefromgroup' type='button' id='" + dataContext._id + "' >X</button>";
 }
 
 // /////////////////////////////////////////////////////////////
@@ -561,6 +594,15 @@ function initLogicalNetworkPanel4(cxfApplication)
 		width : 200,
 		cssClass : "cell-title",
 		sortable : true,
+	},
+	{
+		id : "del",
+		name : "",
+		field : "del",
+		width : 20,
+		formatter : delRemPlaceFromGroupBtFormatter,
+		cannotTriggerInsert : true,
+		resizable : false,
 	}, ];
 
 	nlDataViewPlaceMembership = new Slick.Data.DataView(
@@ -589,6 +631,21 @@ function initLogicalNetworkPanel4(cxfApplication)
 		nlGridPlaceMembership.render();
 	});
 
+	// Delete event
+	$('.retiremembership').live('click', function()
+	{
+		// The given id is from the Group to get out from the currenty selected Place
+		var me = $(this);
+		var id = me.attr('id');
+		var groupToRemove = nlDataViewGroups.getItemById(id);
+
+		nlSelectedPlace._memberOf.getString().splice(jQuery.inArray(id, nlSelectedPlace._memberOf.getString()), 1);
+		groupToRemove._places.getString().splice(jQuery.inArray(nlSelectedPlace._id, groupToRemove._places.getString()), 1);
+
+		nlDataViewGroupContent.refresh();
+		nlDataViewPlaceMembership.refresh();
+	});
+
 	// Initialize the model after all the events have been hooked up
 	nlDataViewPlaceMembership.beginUpdate();
 	nlDataViewPlaceMembership.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
@@ -612,4 +669,9 @@ function placeGroupMembershipContentFilter(item, args)
 		}
 	}
 	return false;
+}
+
+function delRemPlaceFromGroupBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='retiremembership' type='button' id='" + dataContext._id + "' >X</button>";
 }
