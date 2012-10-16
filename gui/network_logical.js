@@ -383,7 +383,7 @@ function initLogicalNetworkPanel2(cxfApplication)
 			this.value = "";
 		}
 		// Update filter
-		dataView2.setFilterArgs(
+		nlDataViewGroups.setFilterArgs(
 		{
 			searchString : this.value,
 		});
