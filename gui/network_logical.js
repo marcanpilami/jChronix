@@ -37,6 +37,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		sortable : true,
+		resizable : true,
 	},
 	{
 		id : "description",
@@ -256,7 +257,8 @@ function onNewPlaceRow(e, args)
 	{
 		v[o] = args.item[o];
 	}
-	v.id = dataView.getItems().length;
+	v._id = uuid.v4();
+	v.id = v._id;
 	nlDataViewPlaces.addItem(v);
 }
 

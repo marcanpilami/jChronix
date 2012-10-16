@@ -31,6 +31,7 @@ function getApplicationOK(responseObject)
 	var ss = cxfApplication.getShells().getDTOShellCommand();
 	for ( var i = 0; i < ss.length; i++)
 	{
+		ss[i].id = ss[i]._id;
 		addShell(ss[i]);
 	}
 
@@ -50,7 +51,7 @@ function getApplicationOK(responseObject)
 	$("#appName").text(cxfApplication._name);
 	$("#appDescr").text(cxfApplication._description);
 
-	initCommandPanel(cxfShellCommands);
+	initCommandPanel(cxfApplication);
 	fillInPaletteData(cxfShellCommands);
 	initNetworkROPanel(aa);
 	initLogicalNetworkPanel(cxfApplication);
