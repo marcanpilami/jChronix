@@ -20,20 +20,25 @@
 
 package org.oxymores.chronix.wapi;
 
+import java.util.Date;
+import java.util.List;
+
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
-public class ClientClient implements IServiceClient {
+public class ClientClient implements IServiceClient
+{
 	IServiceClient proxy;
-	
-	
+
 	public ClientClient()
 	{
 		this("http://localhost:9000/Hello");
 	}
+
 	public ClientClient(String url)
 	{
 		ClientProxyFactoryBean factory = new ClientProxyFactoryBean();
@@ -43,37 +48,55 @@ public class ClientClient implements IServiceClient {
 	}
 
 	@Override
-	public String sayHello() {
+	public String sayHello()
+	{
 		return proxy.sayHello();
 	}
-	
+
 	@Override
-	public DTOApplication getApplication(String name) {
+	public DTOApplication getApplication(String name)
+	{
 		return null;
 	}
-	//@Override
-	public DTOApplication getApplication(String name, Boolean byUuid) {
+
+	// @Override
+	public DTOApplication getApplication(String name, Boolean byUuid)
+	{
 		return null;
 	}
+
 	@Override
-	public DTOChain getChain() {
+	public DTOChain getChain()
+	{
 		return proxy.getChain();
 	}
+
 	@Override
-	public void stageApplication(DTOApplication app) {
+	public void stageApplication(DTOApplication app)
+	{
 		// TODO Auto-generated method stub
-		
+
 	}
+
 	@Override
-	public void storeApplication(String uuid) {
+	public void storeApplication(String uuid)
+	{
 		// TODO Auto-generated method stub
-		
+
 	}
+
 	@Override
-	public void resetStage() {
+	public void resetStage()
+	{
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
+	@Override
+	public List<Date> getNextRRuleOccurrences(DTORRule rule, String low, String high)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

@@ -20,17 +20,28 @@
 
 package org.oxymores.chronix.internalapi;
 
+import java.util.Date;
+import java.util.List;
+
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.DTORRule;
 
-public interface IServiceClient {
+public interface IServiceClient
+{
 	String sayHello();
+
 	DTOApplication getApplication(String name);
-	//DTOApplication getApplication(String uuid, Boolean byUuid);
-	
+
+	// DTOApplication getApplication(String uuid, Boolean byUuid);
+
 	void stageApplication(DTOApplication app);
+
 	void storeApplication(String uuid);
+
 	void resetStage();
-	
+
+	List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound);
+
 	DTOChain getChain();
 }

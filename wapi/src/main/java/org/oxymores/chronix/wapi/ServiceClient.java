@@ -20,30 +20,47 @@
 
 package org.oxymores.chronix.wapi;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.PeriodList;
+
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.active.Clock;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.Frontier;
+import org.oxymores.chronix.dto.Frontier2;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
-public class ServiceClient implements IServiceClient {
+public class ServiceClient implements IServiceClient
+{
 
 	private static Logger log = Logger.getLogger(ChronixContext.class);
 
 	@Override
-	public String sayHello() {
+	public String sayHello()
+	{
 		log.debug("Ping service was called");
 		return "houba hop";
 	}
 
 	@Override
-	public DTOApplication getApplication(String name) {
-		log.debug(String.format("getApplication service was called for app %s",
-				name));
+	public DTOApplication getApplication(String name)
+	{
+		log.debug(String.format("getApplication service was called for app %s", name));
 		Application a = DemoApplication.getNewDemoApplication();
 		// TODO: really look for the application instead of test one
 
@@ -53,13 +70,13 @@ public class ServiceClient implements IServiceClient {
 	}
 
 	/*
-	 * @Override public DTOApplication getApplication(String name, Boolean
-	 * byUuid) { // TODO Auto-generated method stub System.err.println("oups2");
-	 * return null;// DemoApplication.getNewDemoApplication(); }
+	 * @Override public DTOApplication getApplication(String name, Boolean byUuid) { // TODO Auto-generated method stub
+	 * System.err.println("oups2"); return null;// DemoApplication.getNewDemoApplication(); }
 	 */
 
 	@Override
-	public DTOChain getChain() {
+	public DTOChain getChain()
+	{
 		log.debug("getChain service was called");
 		Application a = DemoApplication.getNewDemoApplication();
 		Chain c = a.getChains().get(0);
@@ -69,7 +86,8 @@ public class ServiceClient implements IServiceClient {
 	}
 
 	@Override
-	public void stageApplication(DTOApplication app) {
+	public void stageApplication(DTOApplication app)
+	{
 		// TODO Replace test code with true persistence and reboot engine
 		// context
 		log.debug("stageApplication service was called");
@@ -84,17 +102,49 @@ public class ServiceClient implements IServiceClient {
 	}
 
 	@Override
-	public void storeApplication(String uuid) {
+	public void storeApplication(String uuid)
+	{
 		// TODO Auto-generated method stub
 		log.debug("storeApplication service was called");
 		log.debug("End of storeApplication call.");
 	}
 
 	@Override
-	public void resetStage() {
+	public void resetStage()
+	{
 		// TODO Auto-generated method stub
 		log.debug("resetStage service was called");
 		log.debug("End of resetStage call.");
 	}
 
+	@Override
+	public List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound)
+	{
+		ClockRRule r = Frontier2.getRRule(rule);
+		Clock tmp = new Clock();
+		tmp.addRRuleADD(r);
+		PeriodList pl = null;
+
+		DateTimeFormatter df = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm");
+		DateTime start = DateTime.parse(lowerBound, df);
+		DateTime end = DateTime.parse(higherBound, df);
+
+		try
+		{
+			pl = tmp.getOccurrences(start, end);
+		} catch (ParseException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		ArrayList<Date> res = new ArrayList<Date>();
+		for (Object pe : pl)
+		{
+			Period p = (Period) pe;
+			res.add(p.getStart());
+		}
+
+		return res;
+	}
 }

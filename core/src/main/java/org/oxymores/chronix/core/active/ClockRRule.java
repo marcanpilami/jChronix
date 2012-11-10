@@ -4,30 +4,34 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
+import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.util.Configurator;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ApplicationObject;
 
-public class ClockRRule extends ApplicationObject {
+public class ClockRRule extends ApplicationObject
+{
 	private static final long serialVersionUID = 1092625083715354537L;
 	private static Logger log = Logger.getLogger(ClockRRule.class);
 
-	String PERIOD;
-	Integer INTERVAL;
+	String PERIOD = "DAILY";
+	Integer INTERVAL = 1;
 
 	String Name, Description;
 
-	String BYSECOND, BYMINUTE, BYHOUR, BYDAY, BYMONTHDAY, BYMONTH, BYYEAR,
-			BYSETPOS;
+	String BYSECOND = "", BYMINUTE = "", BYHOUR = "", BYDAY = "", BYMONTHDAY = "", BYMONTH = "", BYYEAR = "", BYSETPOS = "";
 
 	// ///////////////////////////////////////////////////////
 	// iCal functions
-	public String getICalString() {
+	public String getICalString()
+	{
 		String res = "";// "RRULE:";
 
 		// PERIOD
-		res += "FREQ=" + PERIOD + ";";
+		res += "FREQ=" + PERIOD + ";" + "INTERVAL=" + INTERVAL + ";";
 
 		// BYxxxxxx
 		res += normalizeByElement(BYSECOND, "BYSECOND");
@@ -45,9 +49,11 @@ public class ClockRRule extends ApplicationObject {
 		return res;
 	}
 
-	private String normalizeByElement(String elt, String name) {
+	private String normalizeByElement(String elt, String name)
+	{
 		String tmp = "";
-		if (elt != null && elt != "") {
+		if (elt != null && elt != "")
+		{
 			if (elt.substring(elt.length() - 1).equals(","))
 				tmp = elt.substring(0, elt.length() - 1);
 			else
@@ -57,8 +63,12 @@ public class ClockRRule extends ApplicationObject {
 		return tmp;
 	}
 
-	public Recur getRecur() throws ParseException {
-		return new Recur(this.getICalString());
+	public Recur getRecur() throws ParseException
+	{
+		Recur res = new Recur(this.getICalString());
+		res.setUntil(null); // Forever
+		res.setCount(-1); // Forever
+		return res;
 	}
 
 	// iCal functions
@@ -66,9 +76,9 @@ public class ClockRRule extends ApplicationObject {
 
 	// ///////////////////////////////////////////////////////
 	// Not so stupid GET/SET
-	public void setPeriod(String period) {
-		List<String> allowed = Arrays.asList(Recur.DAILY, Recur.HOURLY,
-				Recur.MINUTELY, Recur.MONTHLY, Recur.SECONDLY, Recur.WEEKLY,
+	public void setPeriod(String period)
+	{
+		List<String> allowed = Arrays.asList(Recur.DAILY, Recur.HOURLY, Recur.MINUTELY, Recur.MONTHLY, Recur.SECONDLY, Recur.WEEKLY,
 				Recur.YEARLY);
 		if (allowed.contains(period))
 			this.PERIOD = period;
@@ -76,96 +86,124 @@ public class ClockRRule extends ApplicationObject {
 			this.PERIOD = Recur.DAILY;
 	}
 
+	public String getPeriod()
+	{
+		return this.PERIOD;
+	}
+
 	// Not so stupid GET/SET
 	// ///////////////////////////////////////////////////////
 
 	// ///////////////////////////////////////////////////////
 	// Stupid GET/SET
-	public String getName() {
+	public String getName()
+	{
 		return Name;
 	}
 
-	public void setName(String name) {
+	public void setName(String name)
+	{
 		Name = name;
 	}
 
-	public String getDescription() {
+	public String getDescription()
+	{
 		return Description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(String description)
+	{
 		Description = description;
 	}
 
-	public Integer getINTERVAL() {
+	public Integer getINTERVAL()
+	{
 		return INTERVAL;
 	}
 
-	public void setINTERVAL(Integer iNTERVAL) {
+	public void setINTERVAL(Integer iNTERVAL)
+	{
 		INTERVAL = iNTERVAL;
 	}
 
-	public String getBYSECOND() {
+	public String getBYSECOND()
+	{
 		return BYSECOND;
 	}
 
-	public void setBYSECOND(String bYSECOND) {
+	public void setBYSECOND(String bYSECOND)
+	{
 		BYSECOND = bYSECOND;
 	}
 
-	public String getBYMINUTE() {
+	public String getBYMINUTE()
+	{
 		return BYMINUTE;
 	}
 
-	public void setBYMINUTE(String bYMINUTE) {
+	public void setBYMINUTE(String bYMINUTE)
+	{
 		BYMINUTE = bYMINUTE;
 	}
 
-	public String getBYHOUR() {
+	public String getBYHOUR()
+	{
 		return BYHOUR;
 	}
 
-	public void setBYHOUR(String bYHOUR) {
+	public void setBYHOUR(String bYHOUR)
+	{
+		log.debug("DEBUG BYHOUR SET : " + bYHOUR);
 		BYHOUR = bYHOUR;
 	}
 
-	public String getBYDAY() {
+	public String getBYDAY()
+	{
 		return BYDAY;
 	}
 
-	public void setBYDAY(String bYDAY) {
+	public void setBYDAY(String bYDAY)
+	{
 		BYDAY = bYDAY;
 	}
 
-	public String getBYMONTHDAY() {
+	public String getBYMONTHDAY()
+	{
 		return BYMONTHDAY;
 	}
 
-	public void setBYMONTHDAY(String bYMONTHDAY) {
+	public void setBYMONTHDAY(String bYMONTHDAY)
+	{
 		BYMONTHDAY = bYMONTHDAY;
 	}
 
-	public String getBYMONTH() {
+	public String getBYMONTH()
+	{
 		return BYMONTH;
 	}
 
-	public void setBYMONTH(String bYMONTH) {
+	public void setBYMONTH(String bYMONTH)
+	{
 		BYMONTH = bYMONTH;
 	}
 
-	public String getBYYEAR() {
+	public String getBYYEAR()
+	{
 		return BYYEAR;
 	}
 
-	public void setBYYEAR(String bYYEAR) {
+	public void setBYYEAR(String bYYEAR)
+	{
 		BYYEAR = bYYEAR;
 	}
 
-	public String getBYSETPOS() {
+	public String getBYSETPOS()
+	{
 		return BYSETPOS;
 	}
 
-	public void setBYSETPOS(String bYSETPOS) {
+	public void setBYSETPOS(String bYSETPOS)
+	{
 		BYSETPOS = bYSETPOS;
 	}
 

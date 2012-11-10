@@ -1,111 +1,196 @@
 @CHARSET "ISO-8859-1";
 
-#container1, #container2
-{
-	 position:relative;
+#container1,#container2 {
+	position: relative;
 }
 
 .leftbar {
-	width:180px;
-	background:#c99;
+	width: 180px;
+	background: #c99;
 	/*float:left;*/
-	position:absolute; 
-	top:0; 
-	bottom:0; 
-	left:0;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
 }
 
 .rightpanel {
 	padding-left: 185px;
 }
 
-#chaintabs
-{
+#chaintabs {
 	margin-left: 180px;
 }
 
+.recPanel {
+	width: 750px;
+	height: auto;
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	z-index: 10;
+	margin-left: -300px;
+	background-color: silver;
+	border: solid 2px black;
+}
+
+.subPanel1 {
+	border: solid 2px red;
+	margin: 2px;
+}
+
+.subPanel2 {
+	border: solid 1px black;
+	margin: 2px;
+}
+
+.cbListLabel {
+	margin-right: 4px;
+}
+
+.cbList {
+	overflow: scroll;
+}
+
+.cbxListPair {
+	display: inline-block;
+}
+
+.cbxListTitle {
+	display: block;
+}
+
+.txtPair {
+	display: inline-block;
+}
+
+.txtLabel {
+	width: 80px;
+	display: inline-block;
+	padding-right: 5px;
+}
 
 /**********************************
 
 Use: Reset Styles for all browsers
 
 ***********************************/
-	
-body, p, blockquote {
+body,p,blockquote {
 	margin: 0;
 	padding: 0;
 }
 
-a img, iframe { border: none; }
-	
+a img,iframe {
+	border: none;
+}
+
 /* Headers
 ------------------------------*/
-
-h1, h2, h3, h4, h5, h6 {
+h1,h2,h3,h4,h5,h6 {
 	margin: 0;
 	padding: 0;
 }
 
-h1 { font-size: 150%; }
-h2 { font-size: 140%; }
-h3 { font-size: 130%; }
-h4 { font-size: 120%; }
-h5 { font-size: 110%; }
-	
+h1 {
+	font-size: 150%;
+}
+
+h2 {
+	font-size: 140%;
+}
+
+h3 {
+	font-size: 130%;
+}
+
+h4 {
+	font-size: 120%;
+}
+
+h5 {
+	font-size: 110%;
+}
+
 /* Lists
 ------------------------------*/
-	
-ul, ol, dl, li, dt, dd {
+ul,ol,dl,li,dt,dd {
 	margin: 0;
 	padding: 0;
 }
-	
+
 /* Links
 ------------------------------*/
+a,a:link {
+	
+}
 
-a, a:link {}
-a:visited {}
-a:hover {}
-a:active {}
+a:visited {
+	
+}
+
+a:hover {
+	
+}
+
+a:active {
+	
+}
 
 /* Forms
 ------------------------------*/
-
-form, fieldset {
+form,fieldset {
 	margin: 0;
 	padding: 0;
 }
-	
-fieldset { border: 1px solid #000; }
+
+fieldset {
+	border: 1px solid #000;
+}
 
 legend {
 	padding: 0;
 	color: #000;
 }
 
-input, textarea, select {
+input,textarea,select {
 	margin: 0;
 	padding: 1px;
 	font-size: 100%;
 	font-family: inherit;
 }
-	
-select { padding: 0; }
+
+select {
+	padding: 0;
+}
 
 body {
 	padding: 0 10px;
 	font: normal 82.5% "Lucida Grande", Helvetica, Verdana, Arial;
 }
-	
-p { margin: 10px 0; }
 
-li { margin-left: 10px; }
+p {
+	margin: 10px 0;
+}
 
-h3 { margin: 5px 0; }
+li {
+	margin-left: 10px;
+}
 
-.red { background-color: red; }
-.blue { color: blue; }
-.green { color: green; }
+h3 {
+	margin: 5px 0;
+}
+
+.red {
+	background-color: red;
+}
+
+.blue {
+	color: blue;
+}
+
+.green {
+	color: green;
+}
 
 #rating {
 	border: 1px solid black;
@@ -118,7 +203,7 @@ table {
 	margin: 20px 0 20px 0 !important;
 }
 
-th, td {
+th,td {
 	padding: 2px 4px 2px 4px !important;
 	text-align: left;
 	vertical-align: top;
@@ -140,6 +225,7 @@ tr a {
 	color: rgb(102, 102, 102);
 	text-decoration: none;
 }
+
 tr a:hover {
 	text-decoration: underline;
 }
@@ -165,111 +251,110 @@ dl {
 	background-color: #fee;
 }
 
-
-
-
-
 /*
 IMPORTANT:
 In order to preserve the uniform grid appearance, all cell styles need to have padding, margin and border sizes.
 No built-in (selected, editable, highlight, flashing, invalid, loading, :focus) or user-specified CSS
 classes should alter those!
 */
-
 .slick-header-columns {
-  background: url('../images/header-columns-bg.gif') repeat-x center bottom;
-  border-bottom: 1px solid silver;
+	background: url('../images/header-columns-bg.gif') repeat-x center
+		bottom;
+	border-bottom: 1px solid silver;
 }
 
 .slick-header-column {
-  background: url('../images/header-columns-bg.gif') repeat-x center bottom;
-  border-right: 1px solid silver;
+	background: url('../images/header-columns-bg.gif') repeat-x center
+		bottom;
+	border-right: 1px solid silver;
 }
 
-.slick-header-column:hover, .slick-header-column-active {
-  background: white url('../images/header-columns-over-bg.gif') repeat-x center bottom;
+.slick-header-column:hover,.slick-header-column-active {
+	background: white url('../images/header-columns-over-bg.gif') repeat-x
+		center bottom;
 }
 
 .slick-headerrow {
-  background: #fafafa;
+	background: #fafafa;
 }
 
 .slick-headerrow-column {
-  background: #fafafa;
-  border-bottom: 0;
-  height: 100%;
+	background: #fafafa;
+	border-bottom: 0;
+	height: 100%;
 }
 
 .slick-row.ui-state-active {
-  background: #F5F7D7;
+	background: #F5F7D7;
 }
 
 .slick-row {
-  position: absolute;
-  background: white;
-  border: 0px;
-  line-height: 20px;
+	position: absolute;
+	background: white;
+	border: 0px;
+	line-height: 20px;
 }
 
 .slick-row.selected {
-  z-index: 10;
-  background: #DFE8F6;
+	z-index: 10;
+	background: #DFE8F6;
 }
 
 .slick-cell {
-  padding-left: 4px;
-  padding-right: 4px;
+	padding-left: 4px;
+	padding-right: 4px;
 }
 
 .slick-group {
-  border-bottom: 2px solid silver;
+	border-bottom: 2px solid silver;
 }
 
 .slick-group-toggle {
-  width: 9px;
-  height: 9px;
-  margin-right: 5px;
+	width: 9px;
+	height: 9px;
+	margin-right: 5px;
 }
 
 .slick-group-toggle.expanded {
-  background: url(../images/collapse.gif) no-repeat center center;
+	background: url(../images/collapse.gif) no-repeat center center;
 }
 
 .slick-group-toggle.collapsed {
-  background: url(../images/expand.gif) no-repeat center center;
+	background: url(../images/expand.gif) no-repeat center center;
 }
 
 .slick-group-totals {
-  color: gray;
-  background: white;
+	color: gray;
+	background: white;
 }
 
 .slick-cell.selected {
-  background-color: #F5F7D7;
+	background-color: #F5F7D7;
 }
 
 .slick-cell.active {
-  border-color: gray;
-  border-style: solid;
+	border-color: gray;
+	border-style: solid;
 }
 
 .slick-sortable-placeholder {
-  background: silver !important;
+	background: silver !important;
 }
 
-.slick-row[row$="1"], .slick-row[row$="3"], .slick-row[row$="5"], .slick-row[row$="7"], .slick-row[row$="9"] {
-  background: #fafafa;
+.slick-row[row$="1"],.slick-row[row$="3"],.slick-row[row$="5"],.slick-row[row$="7"],.slick-row[row$="9"]
+	{
+	background: #fafafa;
 }
 
 .slick-row.ui-state-active {
-  background: #F5F7D7;
+	background: #F5F7D7;
 }
 
 .slick-row.loading {
-  opacity: 0.5;
-  filter: alpha(opacity = 50);
+	opacity: 0.5;
+	filter: alpha(opacity =                     50);
 }
 
 .slick-cell.invalid {
-  border-color: red;
+	border-color: red;
 }

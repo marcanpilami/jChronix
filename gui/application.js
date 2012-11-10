@@ -55,7 +55,7 @@ function getApplicationOK(responseObject)
 	fillInPaletteData(cxfShellCommands);
 	initNetworkROPanel(aa);
 	initLogicalNetworkPanel(cxfApplication);
-	ReccurrencePanel("schedule", cxfApplication);
+	RecurrencePanel("schedule", cxfApplication);
 }
 
 function addChain(c)

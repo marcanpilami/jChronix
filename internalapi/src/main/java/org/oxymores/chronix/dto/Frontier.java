@@ -1,6 +1,7 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -12,11 +13,15 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.Clock;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
 
-public class Frontier {
+public class Frontier
+{
 
-	public static DTOApplication getApplication(Application a) {
+	public static DTOApplication getApplication(Application a)
+	{
 		DTOApplication res = new DTOApplication();
 
 		res.id = a.getId().toString();
@@ -28,6 +33,8 @@ public class Frontier {
 		res.places = new ArrayList<DTOPlace>();
 		res.groups = new ArrayList<DTOPlaceGroup>();
 		res.parameters = new ArrayList<DTOParameter>();
+		res.rrules = new ArrayList<DTORRule>();
+		res.clocks = new ArrayList<DTOClock>();
 
 		res.nodes = getNetwork(a);
 
@@ -37,13 +44,25 @@ public class Frontier {
 		for (PlaceGroup pg : a.getGroupsList())
 			res.groups.add(getPlaceGroup(pg));
 
-		for (ConfigurableBase o : a.getActiveElements().values()) {
-			if (o instanceof Chain) {
+		for (ClockRRule r : a.getRRulesList())
+			res.rrules.add(getRRule(r));
+
+		for (ConfigurableBase o : a.getActiveElements().values())
+		{
+			if (o instanceof Chain)
+			{
 				Chain c = (Chain) o;
 				res.chains.add(getChain(c));
 			}
 
-			if (o instanceof ShellCommand) {
+			if (o instanceof Clock)
+			{
+				Clock c = (Clock) o;
+				res.clocks.add(getClock(c));
+			}
+
+			if (o instanceof ShellCommand)
+			{
 				ShellCommand s = (ShellCommand) o;
 				DTOShellCommand d = new DTOShellCommand();
 				d.id = s.getId().toString();
@@ -57,7 +76,8 @@ public class Frontier {
 		return res;
 	}
 
-	public static DTOChain getChain(Chain c) {
+	public static DTOChain getChain(Chain c)
+	{
 		DTOChain res = new DTOChain();
 		res.id = c.getId().toString();
 		res.name = c.getName();
@@ -65,22 +85,26 @@ public class Frontier {
 		res.states = new ArrayList<DTOState>();
 		res.transitions = new ArrayList<DTOTransition>();
 
-		for (State s : c.getStates()) {
+		for (State s : c.getStates())
+		{
 			DTOState t = new DTOState();
 			t.id = s.getId().toString();
 			t.x = s.getX();
 			t.y = s.getY();
 			t.label = s.getRepresents().getName();
 			t.representsId = s.getRepresents().getId().toString();
-			try {
+			try
+			{
 				t.runsOnName = s.getRunsOn().getName();
 				t.runsOnId = s.getRunsOn().getId().toString();
-			} catch (Exception e) {
+			} catch (Exception e)
+			{
 			}
 			res.states.add(t);
 		}
 
-		for (Transition o : c.getTransitions()) {
+		for (Transition o : c.getTransitions())
+		{
 			DTOTransition d = new DTOTransition();
 			d.id = o.getId().toString();
 			d.from = o.getStateFrom().getId().toString();
@@ -96,7 +120,8 @@ public class Frontier {
 		return res;
 	}
 
-	public static ArrayList<DTOExecutionNode> getNetwork(Application a) {
+	public static ArrayList<DTOExecutionNode> getNetwork(Application a)
+	{
 		ArrayList<DTOExecutionNode> res = new ArrayList<DTOExecutionNode>();
 		for (ExecutionNode en : a.getNodes().values())
 			res.add(getExecutionNode(en));
@@ -104,7 +129,8 @@ public class Frontier {
 		return res;
 	}
 
-	public static DTOExecutionNode getExecutionNode(ExecutionNode en) {
+	public static DTOExecutionNode getExecutionNode(ExecutionNode en)
+	{
 		DTOExecutionNode res = new DTOExecutionNode();
 		res.id = en.getId().toString();
 		res.certFilePath = en.getSshKeyFilePath();
@@ -125,26 +151,30 @@ public class Frontier {
 		res.toTCP = new ArrayList<String>();
 		res.places = new ArrayList<String>();
 
-		for (NodeLink nl : en.getCanSendTo()) {
+		for (NodeLink nl : en.getCanSendTo())
+		{
 			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
 				res.toRCTRL.add(nl.getNodeTo().getId().toString());
 			if (nl.getMethod() == NodeConnectionMethod.TCP)
 				res.toTCP.add(nl.getNodeTo().getId().toString());
 		}
-		for (NodeLink nl : en.getCanReceiveFrom()) {
+		for (NodeLink nl : en.getCanReceiveFrom())
+		{
 			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
 				res.fromRCTRL.add(nl.getNodeFrom().getId().toString());
 			if (nl.getMethod() == NodeConnectionMethod.TCP)
 				res.fromTCP.add(nl.getNodeFrom().getId().toString());
 		}
-		for (Place p : en.getPlacesHosted()) {
+		for (Place p : en.getPlacesHosted())
+		{
 			res.places.add(p.getId().toString());
 		}
 
 		return res;
 	}
 
-	public static DTOPlace getPlace(Place p) {
+	public static DTOPlace getPlace(Place p)
+	{
 		DTOPlace res = new DTOPlace();
 		res.description = p.getDescription();
 		res.id = p.getId().toString();
@@ -156,24 +186,287 @@ public class Frontier {
 		res.prop4 = p.getProperty4();
 
 		res.memberOf = new ArrayList<String>();
-		for (PlaceGroup pg : p.getMemberOfGroups()) {
+		for (PlaceGroup pg : p.getMemberOfGroups())
+		{
 			res.memberOf.add(pg.getId().toString());
 		}
 
 		return res;
 	}
 
-	public static DTOPlaceGroup getPlaceGroup(PlaceGroup g) {
+	public static DTOPlaceGroup getPlaceGroup(PlaceGroup g)
+	{
 		DTOPlaceGroup res = new DTOPlaceGroup();
 		res.description = g.getDescription();
 		res.id = g.getId().toString();
 		res.name = g.getName();
 
 		res.places = new ArrayList<String>();
-		for (Place p : g.getPlaces()) {
+		for (Place p : g.getPlaces())
+		{
 			res.places.add(p.getId().toString());
 		}
 
+		return res;
+	}
+
+	public static DTOClock getClock(Clock c)
+	{
+		DTOClock res = new DTOClock();
+		res.description = c.getDescription();
+		res.id = c.getId().toString();
+		res.name = c.getName();
+		res.nextOccurrences = new ArrayList<Date>();
+		res.rulesADD = new ArrayList<String>();
+		res.rulesEXC = new ArrayList<String>();
+
+		for (ClockRRule r : c.getRulesADD())
+			res.rulesADD.add(r.getId().toString());
+		for (ClockRRule r : c.getRulesEXC())
+			res.rulesEXC.add(r.getId().toString());
+
+		return res;
+	}
+
+	public static DTORRule getRRule(ClockRRule r)
+	{
+		DTORRule res = new DTORRule();
+
+		// Identification
+		res.id = r.getId().toString();
+		res.name = r.getName();
+		res.description = r.getDescription();
+
+		// Period
+		res.period = r.getPeriod();
+		res.interval = r.getINTERVAL();
+
+		// ByDay
+		for (String d : r.getBYDAY().split(","))
+		{
+			if (d.equals("MO"))
+				res.bd_01 = true;
+			else if (d.equals("TU"))
+				res.bd_02 = true;
+			else if (d.equals("WE"))
+				res.bd_03 = true;
+			else if (d.equals("TH"))
+				res.bd_04 = true;
+			else if (d.equals("FR"))
+				res.bd_05 = true;
+			else if (d.equals("SA"))
+				res.bd_06 = true;
+			else if (d.equals("SU"))
+				res.bd_07 = true;
+		}
+		// ByMonthDay
+		for (String d : r.getBYMONTHDAY().split(","))
+		{
+			if (d.equals("01"))
+				res.bmd_01 = true;
+			else if (d.equals("-01"))
+				res.bmdn_01 = true;
+			else if (d.equals("02"))
+				res.bmd_02 = true;
+			else if (d.equals("-02"))
+				res.bmdn_02 = true;
+			else if (d.equals("03"))
+				res.bmd_03 = true;
+			else if (d.equals("-03"))
+				res.bmdn_03 = true;
+			else if (d.equals("04"))
+				res.bmd_04 = true;
+			else if (d.equals("-04"))
+				res.bmdn_04 = true;
+			else if (d.equals("05"))
+				res.bmd_05 = true;
+			else if (d.equals("-05"))
+				res.bmdn_05 = true;
+			else if (d.equals("06"))
+				res.bmd_06 = true;
+			else if (d.equals("-06"))
+				res.bmdn_06 = true;
+			else if (d.equals("07"))
+				res.bmd_07 = true;
+			else if (d.equals("-07"))
+				res.bmdn_07 = true;
+			else if (d.equals("08"))
+				res.bmd_08 = true;
+			else if (d.equals("-08"))
+				res.bmdn_08 = true;
+			else if (d.equals("09"))
+				res.bmd_09 = true;
+			else if (d.equals("-09"))
+				res.bmdn_09 = true;
+			else if (d.equals("10"))
+				res.bmd_10 = true;
+			else if (d.equals("-10"))
+				res.bmdn_10 = true;
+			else if (d.equals("11"))
+				res.bmd_11 = true;
+			else if (d.equals("-11"))
+				res.bmdn_11 = true;
+			else if (d.equals("12"))
+				res.bmd_12 = true;
+			else if (d.equals("-12"))
+				res.bmdn_12 = true;
+			else if (d.equals("13"))
+				res.bmd_13 = true;
+			else if (d.equals("-13"))
+				res.bmdn_13 = true;
+			else if (d.equals("14"))
+				res.bmd_14 = true;
+			else if (d.equals("-14"))
+				res.bmdn_14 = true;
+			else if (d.equals("15"))
+				res.bmd_15 = true;
+			else if (d.equals("-15"))
+				res.bmdn_15 = true;
+			else if (d.equals("16"))
+				res.bmd_16 = true;
+			else if (d.equals("-16"))
+				res.bmdn_16 = true;
+			else if (d.equals("17"))
+				res.bmd_17 = true;
+			else if (d.equals("-17"))
+				res.bmdn_17 = true;
+			else if (d.equals("18"))
+				res.bmd_18 = true;
+			else if (d.equals("-18"))
+				res.bmdn_18 = true;
+			else if (d.equals("19"))
+				res.bmd_19 = true;
+			else if (d.equals("-19"))
+				res.bmdn_19 = true;
+			else if (d.equals("20"))
+				res.bmd_20 = true;
+			else if (d.equals("-20"))
+				res.bmdn_20 = true;
+			else if (d.equals("21"))
+				res.bmd_21 = true;
+			else if (d.equals("-21"))
+				res.bmdn_21 = true;
+			else if (d.equals("22"))
+				res.bmd_22 = true;
+			else if (d.equals("-22"))
+				res.bmdn_22 = true;
+			else if (d.equals("23"))
+				res.bmd_23 = true;
+			else if (d.equals("-23"))
+				res.bmdn_23 = true;
+			else if (d.equals("24"))
+				res.bmd_24 = true;
+			else if (d.equals("-24"))
+				res.bmdn_24 = true;
+			else if (d.equals("25"))
+				res.bmd_25 = true;
+			else if (d.equals("-25"))
+				res.bmdn_25 = true;
+			else if (d.equals("26"))
+				res.bmd_26 = true;
+			else if (d.equals("-26"))
+				res.bmdn_26 = true;
+			else if (d.equals("27"))
+				res.bmd_27 = true;
+			else if (d.equals("-27"))
+				res.bmdn_27 = true;
+			else if (d.equals("28"))
+				res.bmd_28 = true;
+			else if (d.equals("-28"))
+				res.bmdn_29 = true;
+			else if (d.equals("29"))
+				res.bmd_29 = true;
+			else if (d.equals("-29"))
+				res.bmdn_29 = true;
+			else if (d.equals("30"))
+				res.bmd_30 = true;
+			else if (d.equals("-30"))
+				res.bmdn_30 = true;
+			else if (d.equals("31"))
+				res.bmd_31 = true;
+			else if (d.equals("-31"))
+				res.bmdn_31 = true;
+		}
+		// ByMonth
+		for (String d : r.getBYMONTH().split(","))
+		{
+			if (d.equals("01"))
+				res.bm_01 = true;
+			else if (d.equals("02"))
+				res.bm_02 = true;
+			else if (d.equals("03"))
+				res.bm_03 = true;
+			else if (d.equals("04"))
+				res.bm_04 = true;
+			else if (d.equals("05"))
+				res.bm_05 = true;
+			else if (d.equals("06"))
+				res.bm_06 = true;
+			else if (d.equals("07"))
+				res.bm_07 = true;
+			else if (d.equals("08"))
+				res.bm_08 = true;
+			else if (d.equals("09"))
+				res.bm_09 = true;
+			else if (d.equals("10"))
+				res.bm_10 = true;
+			else if (d.equals("11"))
+				res.bm_11 = true;
+			else if (d.equals("12"))
+				res.bm_12 = true;
+		}
+		// ByHour
+		for (String d : r.getBYHOUR().split(","))
+		{
+			if (d.equals("00"))
+				res.bh_00 = true;
+			else if (d.equals("01"))
+				res.bh_01 = true;
+			else if (d.equals("02"))
+				res.bh_02 = true;
+			else if (d.equals("03"))
+				res.bh_03 = true;
+			else if (d.equals("04"))
+				res.bh_04 = true;
+			else if (d.equals("05"))
+				res.bh_05 = true;
+			else if (d.equals("06"))
+				res.bh_06 = true;
+			else if (d.equals("07"))
+				res.bh_07 = true;
+			else if (d.equals("08"))
+				res.bh_08 = true;
+			else if (d.equals("09"))
+				res.bh_09 = true;
+			else if (d.equals("10"))
+				res.bh_10 = true;
+			else if (d.equals("11"))
+				res.bh_11 = true;
+			else if (d.equals("12"))
+				res.bh_12 = true;
+			else if (d.equals("13"))
+				res.bh_13 = true;
+			else if (d.equals("14"))
+				res.bh_14 = true;
+			else if (d.equals("15"))
+				res.bh_15 = true;
+			else if (d.equals("16"))
+				res.bh_16 = true;
+			else if (d.equals("17"))
+				res.bh_17 = true;
+			else if (d.equals("18"))
+				res.bh_18 = true;
+			else if (d.equals("19"))
+				res.bh_19 = true;
+			else if (d.equals("20"))
+				res.bh_20 = true;
+			else if (d.equals("21"))
+				res.bh_21 = true;
+			else if (d.equals("22"))
+				res.bh_22 = true;
+			else if (d.equals("23"))
+				res.bh_23 = true;
+		}
 		return res;
 	}
 }

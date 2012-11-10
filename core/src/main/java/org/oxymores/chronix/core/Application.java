@@ -32,7 +32,8 @@ import org.oxymores.chronix.core.active.*;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 @XmlRootElement
-public class Application extends ChronixObject {
+public class Application extends ChronixObject
+{
 	private static final long serialVersionUID = 338399439626386055L;
 	private static Logger log = Logger.getLogger(Application.class);
 
@@ -50,7 +51,8 @@ public class Application extends ChronixObject {
 	private transient ExecutionNode localNode;
 	public transient ExecutionNode consoleNode;
 
-	public Application() {
+	public Application()
+	{
 		super();
 		this.places = new Hashtable<UUID, Place>();
 		this.groups = new Hashtable<UUID, PlaceGroup>();
@@ -76,9 +78,12 @@ public class Application extends ChronixObject {
 		this.activeElements.put(tmp.getId(), tmp);
 	}
 
-	public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode {
-		for (ExecutionNode n : this.nodes.values()) {
-			if (n.dns.toUpperCase().equals(dns.toUpperCase()) && n.qPort.equals(port)) {
+	public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode
+	{
+		for (ExecutionNode n : this.nodes.values())
+		{
+			if (n.dns.toUpperCase().equals(dns.toUpperCase()) && n.qPort.equals(port))
+			{
 				this.localNode = n;
 				log.info(String.format("Application %s now considers that it is running on node %s (%s - %s)", this.name, n.id, dns, port));
 				return;
@@ -87,156 +92,195 @@ public class Application extends ChronixObject {
 		throw new ChronixNoLocalNode(dns + ":" + port);
 	}
 
-	public ExecutionNode getConsoleNode() {
+	public ExecutionNode getConsoleNode()
+	{
 		for (ExecutionNode n : this.nodes.values())
 			if (n.isConsole())
 				return n;
 		return null;
 	}
 
-	public void setname(String name) {
+	public void setname(String name)
+	{
 		this.name = name;
 	}
 
-	public void addRRule(ClockRRule r) {
-		if (!this.rrules.contains(r)) {
+	public void addRRule(ClockRRule r)
+	{
+		if (!this.rrules.contains(r))
+		{
 			this.rrules.put(r.id, r);
 			r.setApplication(this);
 		}
 	}
 
-	public void addCalendar(Calendar c) {
-		if (!this.calendars.contains(c)) {
+	public void addCalendar(Calendar c)
+	{
+		if (!this.calendars.contains(c))
+		{
 			this.calendars.put(c.id, c);
 			c.setApplication(this);
 		}
 	}
 
-	public void removeACalendar(Calendar c) {
+	public void removeACalendar(Calendar c)
+	{
 		this.calendars.remove(c.id);
 		c.setApplication(null);
 	}
 
-	public void addToken(Token t) {
-		if (!this.tokens.contains(t)) {
+	public void addToken(Token t)
+	{
+		if (!this.tokens.contains(t))
+		{
 			this.tokens.put(t.id, t);
 			t.setApplication(this);
 		}
 	}
 
-	public void removeToken(Token t) {
+	public void removeToken(Token t)
+	{
 		this.tokens.remove(t.id);
 		t.setApplication(null);
 	}
 
-	public void addPlace(Place place) {
-		if (!this.places.contains(place)) {
+	public void addPlace(Place place)
+	{
+		if (!this.places.contains(place))
+		{
 			this.places.put(place.id, place);
 			place.setApplication(this);
 		}
 	}
 
-	public void removePlace(Place place) {
+	public void removePlace(Place place)
+	{
 		this.places.remove(place.id);
 		place.setApplication(null);
 	}
 
-	public void addGroup(PlaceGroup o) {
-		if (!this.groups.contains(o)) {
+	public void addGroup(PlaceGroup o)
+	{
+		if (!this.groups.contains(o))
+		{
 			this.groups.put(o.id, o);
 			o.setApplication(this);
 		}
 	}
 
-	public void removeGroup(PlaceGroup o) {
+	public void removeGroup(PlaceGroup o)
+	{
 		this.groups.remove(o.id);
 		o.setApplication(null);
 	}
 
-	public void addNode(ExecutionNode o) {
-		if (!this.nodes.contains(o)) {
+	public void addNode(ExecutionNode o)
+	{
+		if (!this.nodes.contains(o))
+		{
 			this.nodes.put(o.id, o);
 			o.setApplication(this);
 		}
 	}
 
-	public void removeNode(ExecutionNode o) {
+	public void removeNode(ExecutionNode o)
+	{
 		this.nodes.remove(o.id);
 		o.setApplication(null);
 	}
 
-	public void addActiveElement(ActiveNodeBase o) {
-		if (!this.activeElements.contains(o)) {
+	public void addActiveElement(ActiveNodeBase o)
+	{
+		if (!this.activeElements.contains(o))
+		{
 			this.activeElements.put(o.id, o);
 			o.setApplication(this);
 		}
 	}
 
-	public void removeActiveElement(ConfigurableBase o) {
+	public void removeActiveElement(ConfigurableBase o)
+	{
 		this.activeElements.remove(o.id);
 		o.setApplication(null);
 	}
 
-	public void addParameter(Parameter o) {
-		if (!this.parameters.contains(o)) {
+	public void addParameter(Parameter o)
+	{
+		if (!this.parameters.contains(o))
+		{
 			this.parameters.put(o.id, o);
 			o.setApplication(this);
 		}
 	}
 
-	public void removeParameter(Parameter o) {
+	public void removeParameter(Parameter o)
+	{
 		this.parameters.remove(o.id);
 		o.setApplication(null);
 	}
 
-	public String getName() {
+	public String getName()
+	{
 		return name;
 	}
 
-	public Hashtable<UUID, Place> getPlaces() {
+	public Hashtable<UUID, Place> getPlaces()
+	{
 		return places;
 	}
 
-	public Hashtable<UUID, PlaceGroup> getGroups() {
+	public Hashtable<UUID, PlaceGroup> getGroups()
+	{
 		return groups;
 	}
 
-	public Hashtable<UUID, ExecutionNode> getNodes() {
+	public Hashtable<UUID, ExecutionNode> getNodes()
+	{
 		return nodes;
 	}
 
-	public Hashtable<UUID, ActiveNodeBase> getActiveElements() {
+	public Hashtable<UUID, ActiveNodeBase> getActiveElements()
+	{
 		return activeElements;
 	}
 
-	public String getDescription() {
+	public String getDescription()
+	{
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(String description)
+	{
 		this.description = description;
 	}
 
-	public ArrayList<Chain> getChains() {
+	public ArrayList<Chain> getChains()
+	{
 		ArrayList<Chain> res = new ArrayList<Chain>();
-		for (ActiveNodeBase n : this.activeElements.values()) {
+		for (ActiveNodeBase n : this.activeElements.values())
+		{
 			if (n instanceof Chain)
 				res.add((Chain) n);
 		}
 		return res;
 	}
 
-	public ArrayList<State> getStates() {
+	public ArrayList<State> getStates()
+	{
 		ArrayList<State> res = new ArrayList<State>();
-		for (Chain c : this.getChains()) {
+		for (Chain c : this.getChains())
+		{
 			res.addAll(c.getStates());
 		}
 		return res;
 	}
 
-	public State getState(UUID id) {
-		for (State s : this.getStates()) {
-			if (s.id.equals(id)) {
+	public State getState(UUID id)
+	{
+		for (State s : this.getStates())
+		{
+			if (s.id.equals(id))
+			{
 				return s;
 			}
 		}
@@ -244,65 +288,85 @@ public class Application extends ChronixObject {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> ArrayList<T> getActiveElements(Class<T> tClass) {
+	public <T> ArrayList<T> getActiveElements(Class<T> tClass)
+	{
 		ArrayList<T> res = new ArrayList<T>();
-		for (ActiveNodeBase a : this.activeElements.values()) {
+		for (ActiveNodeBase a : this.activeElements.values())
+		{
 			if (a.getClass().isAssignableFrom(tClass))
 				res.add((T) a);
 		}
 		return res;
 	}
 
-	public Place getPlace(UUID id) {
+	public Place getPlace(UUID id)
+	{
 		return this.places.get(id);
 	}
 
-	public PlaceGroup getPlaceGroup(UUID id) {
+	public PlaceGroup getPlaceGroup(UUID id)
+	{
 		return this.groups.get(id);
 	}
 
-	public ExecutionNode getNode(UUID id) {
+	public ExecutionNode getNode(UUID id)
+	{
 		return this.nodes.get(id);
 	}
 
-	public Token getToken(UUID id) {
+	public Token getToken(UUID id)
+	{
 		return this.tokens.get(id);
 	}
 
-	public ActiveNodeBase getActiveNode(UUID id) {
+	public ActiveNodeBase getActiveNode(UUID id)
+	{
 		return this.activeElements.get(id);
 	}
 
-	public Calendar getCalendar(UUID id) {
+	public Calendar getCalendar(UUID id)
+	{
 		return this.calendars.get(id);
 	}
 
-	public Parameter getParameter(UUID id) {
+	public Parameter getParameter(UUID id)
+	{
 		return this.parameters.get(id);
 	}
 
-	public List<ExecutionNode> getNodesList() {
+	public List<ExecutionNode> getNodesList()
+	{
 		return new ArrayList<ExecutionNode>(this.nodes.values());
 	}
 
-	public List<Place> getPlacesList() {
+	public List<Place> getPlacesList()
+	{
 		return new ArrayList<Place>(this.places.values());
 	}
 
-	public List<PlaceGroup> getGroupsList() {
+	public List<ClockRRule> getRRulesList()
+	{
+		return new ArrayList<ClockRRule>(this.rrules.values());
+	}
+
+	public List<PlaceGroup> getGroupsList()
+	{
 		return new ArrayList<PlaceGroup>(this.groups.values());
 	}
 
-	public ExecutionNode getLocalNode() {
+	public ExecutionNode getLocalNode()
+	{
 		return localNode;
 	}
 
-	public ArrayList<Calendar> getCalendars() {
+	public ArrayList<Calendar> getCalendars()
+	{
 		return new ArrayList<Calendar>(this.calendars.values());
 	}
 
 	@SuppressWarnings("unused")
-	private void setLocalNode(ExecutionNode localNode) {
+	private void setLocalNode(ExecutionNode localNode)
+	{
 		this.localNode = localNode;
 	}
 }
