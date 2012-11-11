@@ -28,7 +28,8 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.demo.CalendarBuilder;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestSingleNode {
+public class TestSingleNode
+{
 	private static Logger log = Logger.getLogger(TestSingleNode.class);
 
 	private String db1;
@@ -39,33 +40,35 @@ public class TestSingleNode {
 	PlaceGroup pg1, pg2;
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
 	}
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		db1 = "C:\\TEMP\\db1";
 
 		/************************************************
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile(); // default is 1789/localhost
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Single node test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
 
 		// Logical network
@@ -77,16 +80,20 @@ public class TestSingleNode {
 		// Chains and other stuff depends on the test
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
-		try {
+		try
+		{
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -102,7 +109,8 @@ public class TestSingleNode {
 	}
 
 	@Test
-	public void mainScenario() throws Exception {
+	public void mainScenario() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -125,12 +133,14 @@ public class TestSingleNode {
 		s3.setCalendar(ca1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -157,7 +167,8 @@ public class TestSingleNode {
 
 		EntityManager em2 = e1.ctx.getTransacEM();
 		TypedQuery<CalendarPointer> q2 = em2.createQuery("SELECT r FROM CalendarPointer r", CalendarPointer.class);
-		for (CalendarPointer c : q2.getResultList()) {
+		for (CalendarPointer c : q2.getResultList())
+		{
 			log.debug(c.getRunning());
 		}
 
@@ -202,7 +213,8 @@ public class TestSingleNode {
 	}
 
 	@Test
-	public void testAND() {
+	public void testAND()
+	{
 		EntityManager em = e1.ctx.getTransacEM();
 
 		log.debug("**************************************************************************************");
@@ -223,12 +235,14 @@ public class TestSingleNode {
 		s3.connectTo(c1.getEndState());
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -236,22 +250,27 @@ public class TestSingleNode {
 		// Run the chain
 		log.debug("**************************************************************************************");
 		log.debug("****START OF CHAIN1*******************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
 	}
 
 	@Test
-	public void testANDWithBarrier() {
+	public void testANDWithBarrier()
+	{
 		EntityManager em = e1.ctx.getTransacEM();
 
 		log.debug("**************************************************************************************");
@@ -285,12 +304,14 @@ public class TestSingleNode {
 		s9.connectTo(c2.getEndState());
 
 		// Save to file & recycle
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -298,10 +319,12 @@ public class TestSingleNode {
 		// Shift the state by 1 so that it cannot start (well, shouldn't)
 		log.debug("**************************************************************************************");
 		log.debug("****SHIFT CALENDAR********************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendCalendarPointerShift(1, s2, e1.ctx);
 			Thread.sleep(500);
-		} catch (Exception e4) {
+		} catch (Exception e4)
+		{
 			e4.printStackTrace();
 			Assert.fail(e4.getMessage());
 		}
@@ -309,10 +332,12 @@ public class TestSingleNode {
 		// Run the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START OF CHAIN1*************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
 			Thread.sleep(2000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -325,10 +350,12 @@ public class TestSingleNode {
 		// Run second chain - should unlock the first chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START SECOND CHAIN**********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(4000); // Process events
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -339,7 +366,8 @@ public class TestSingleNode {
 	}
 
 	@Test
-	public void testExternal() {
+	public void testExternal()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -353,10 +381,10 @@ public class TestSingleNode {
 
 		// The plan containing everything
 		Chain p1 = PlanBuilder.buildPlan(a1, "plan 1", "description");
-		
+
 		// Our file object
 		External pe1 = PlanBuilder.buildExternal(a1, "file1", "^[a-zA-Z_/]*([0-9/]+).*");
-		
+
 		// First test case: non calendar on target
 		State sp1 = PlanBuilder.buildState(p1, pg1, pe1);
 		State sp2 = PlanBuilder.buildState(p1, pg1, c1);
@@ -378,12 +406,14 @@ public class TestSingleNode {
 		String filepath = "/meuh/pouet/aaaa_12/06/2500";
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -391,15 +421,19 @@ public class TestSingleNode {
 		// TEST 1: should block (no calendar on target state)
 		log.debug("**************************************************************************************");
 		log.debug("****START OF TEST1********************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderExternalEvent(sp1.getId(), filepath, this.en1, e1.ctx);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(0, res.size());
@@ -407,26 +441,32 @@ public class TestSingleNode {
 		// TEST 2: should also block (good calendar, but wrong day)
 		log.debug("**************************************************************************************");
 		log.debug("****START OF TEST2********************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderExternalEvent(sp3.getId(), filepath, this.en1, e1.ctx);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(0, res.size());
 
 		log.debug("**************************************************************************************");
 		log.debug("****START OF TEST3********************************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendCalendarPointerShift(200, ca1, e1.ctx);
 			SenderHelpers.sendCalendarPointerShift(161, sp4, e1.ctx); // Chain1 is now at the right occurrence
 			Thread.sleep(500);
-		} catch (Exception e4) {
+		} catch (Exception e4)
+		{
 			e4.printStackTrace();
 			Assert.fail(e4.getMessage());
 		}

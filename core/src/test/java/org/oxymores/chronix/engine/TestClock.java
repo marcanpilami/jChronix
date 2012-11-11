@@ -23,11 +23,14 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestClock {
+public class TestClock
+{
 	private static Logger log = Logger.getLogger(TestClock.class);
 
-	private void displayLogPeriods(PeriodList pl) {
-		for (Object p : pl) {
+	private void displayLogPeriods(PeriodList pl)
+	{
+		for (Object p : pl)
+		{
 			DateTime from = new DateTime(((Period) p).getStart());
 			DateTime to = new DateTime(((Period) p).getEnd());
 			log.info(String.format("from %s to %s", from.toString("yyyy/MM/dd HH:mm:ss"), to.toString("yyyy/MM/dd HH:mm:ss")));
@@ -35,10 +38,11 @@ public class TestClock {
 	}
 
 	@Test
-	public void testSimpleRec() throws ParseException {
+	public void testSimpleRec() throws ParseException
+	{
 		log.info("********** Testing basic reccurrences with clocks");
 
-		Application a = DemoApplication.getNewDemoApplication();
+		Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
 		Clock ck1 = a.getActiveElements(Clock.class).get(0);
 		ClockRRule rr1 = ck1.getRulesADD().get(0);
 
@@ -78,16 +82,16 @@ public class TestClock {
 	}
 
 	@Test
-	public void testClockTrigger() throws Exception {
+	public void testClockTrigger() throws Exception
+	{
 		String dbPath = "C:\\TEMP\\db1";
-		ChronixEngine e = new ChronixEngine(dbPath);
+		ChronixEngine e = new ChronixEngine(dbPath, "localhost:1789");
 		e.emptyDb();
-		e.ctx.createNewConfigFile();
 		LogHelpers.clearAllTranscientElements(e.ctx);
 
 		// Create test application
 		Application a = PlanBuilder.buildApplication("testing clocks", "no description for tests");
-		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a);
+		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, 1789, "localhost");
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
 		ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);

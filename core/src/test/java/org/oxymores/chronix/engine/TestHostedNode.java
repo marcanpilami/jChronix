@@ -22,7 +22,8 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestHostedNode {
+public class TestHostedNode
+{
 	private static Logger log = Logger.getLogger(TestHostedNode.class);
 
 	private String db1, db2;
@@ -33,21 +34,25 @@ public class TestHostedNode {
 	PlaceGroup pg1, pg2, pg3;
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
-		if (e2 != null && e2.run) {
+		if (e2 != null && e2.run)
+		{
 			e2.stopEngine();
 			e2.waitForStopEnd();
 		}
 	}
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		db1 = "C:\\TEMP\\db1";
 		db2 = "C:\\TEMP\\db3";
 
@@ -55,18 +60,17 @@ public class TestHostedNode {
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile();
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Hosted node test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
-		en2 = PlanBuilder.buildExecutionNode(a1, 1804);
+		en2 = PlanBuilder.buildExecutionNode(a1, "localhost", 1804);
 		en1.connectTo(en2, NodeConnectionMethod.RCTRL);
 
 		// Logical network
@@ -80,10 +84,12 @@ public class TestHostedNode {
 		// Chains and other stuff depend are created by the tests themselves
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -91,9 +97,8 @@ public class TestHostedNode {
 		/************************************************
 		 * Create an empty test configuration db for second node
 		 ***********************************************/
-		e2 = new ChronixEngine(db2, true);
+		e2 = new ChronixEngine(db2, "localhost:1804", "TransacUnitXXX", "HistoryUnitXXX", true);
 		e2.emptyDb();
-		e2.ctx.createNewConfigFile(1804, "TransacUnitXXX", "HistoryUnitXXX");
 
 		/************************************************
 		 * Start the engines
@@ -108,7 +113,8 @@ public class TestHostedNode {
 	}
 
 	@Test
-	public void testSimpleChain() {
+	public void testSimpleChain()
+	{
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build a very simple chain
@@ -118,33 +124,40 @@ public class TestHostedNode {
 		c1.getStartState().connectTo(s1);
 		s1.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
 		// Run the chain
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(3000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(3, res.size());
 	}
 
 	@Test
-	public void testMasterAndSlaveChain() {
+	public void testMasterAndSlaveChain()
+	{
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build the test chain
@@ -163,33 +176,40 @@ public class TestHostedNode {
 		s2.connectTo(s3);
 		s3.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
 		// Run the chain
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(3000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
 	}
 
 	@Test
-	public void testMixedConditionChain() {
+	public void testMixedConditionChain()
+	{
 		EntityManager em = e1.ctx.getTransacEM();
 
 		// Build the test chain
@@ -207,26 +227,32 @@ public class TestHostedNode {
 		s2.connectTo(s3);
 		s3.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
 		// Run the chain
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(3000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());

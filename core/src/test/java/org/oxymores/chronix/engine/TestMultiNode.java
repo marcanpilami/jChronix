@@ -27,7 +27,8 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.demo.CalendarBuilder;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestMultiNode {
+public class TestMultiNode
+{
 	private static Logger log = Logger.getLogger(TestMultiNode.class);
 
 	private String db1, db2, db3;
@@ -38,25 +39,30 @@ public class TestMultiNode {
 	PlaceGroup pg1, pg2, pg3, pg4;
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
-		if (e2 != null && e2.run) {
+		if (e2 != null && e2.run)
+		{
 			e2.stopEngine();
 			e2.waitForStopEnd();
 		}
-		if (e3 != null && e3.run) {
+		if (e3 != null && e3.run)
+		{
 			e3.stopEngine();
 			e3.waitForStopEnd();
 		}
 	}
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		if (a1 != null)
 			return;
 
@@ -68,19 +74,18 @@ public class TestMultiNode {
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile();
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Multinode test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
-		en2 = PlanBuilder.buildExecutionNode(a1, 1400);
-		en3 = PlanBuilder.buildExecutionNode(a1, 1804);
+		en2 = PlanBuilder.buildExecutionNode(a1, "localhost", 1400);
+		en3 = PlanBuilder.buildExecutionNode(a1, "localhost", 1804);
 		en1.connectTo(en2, NodeConnectionMethod.TCP);
 		en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
@@ -97,16 +102,20 @@ public class TestMultiNode {
 		// Chains and other stuff depends on the test
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
-		try {
+		try
+		{
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -114,17 +123,15 @@ public class TestMultiNode {
 		/************************************************
 		 * Create an empty test configuration db for second node
 		 ***********************************************/
-		e2 = new ChronixEngine(db2);
+		e2 = new ChronixEngine(db2, "localhost:1400", "TransacUnit2", "HistoryUnit2");
 		e2.emptyDb();
-		e2.ctx.createNewConfigFile(1400, "TransacUnit2", "HistoryUnit2");
 		LogHelpers.clearAllTranscientElements(e2.ctx);
 
 		/************************************************
 		 * Create an empty test configuration db for third node
 		 ***********************************************/
-		e3 = new ChronixEngine(db3, true);
+		e3 = new ChronixEngine(db3, "localhost:1804", "TransacUnitXXX", "HistoryUnitXXX", true);
 		e3.emptyDb();
-		e3.ctx.createNewConfigFile(1804, "TransacUnitXXX", "HistoryUnitXXX");
 
 		/************************************************
 		 * Start the engines
@@ -145,32 +152,38 @@ public class TestMultiNode {
 		log.debug("All engines inits done");
 	}
 
-	public void sendA(Application a) throws JMSException {
+	public void sendA(Application a) throws JMSException
+	{
 		log.debug("**************************************************************************************");
 		SenderHelpers.sendApplication(a, en2, e1.ctx);
 	}
 
 	@Test
-	public void testSend() {
+	public void testSend()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 1****************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 
-		try {
+		try
+		{
 			sendA(e1.ctx.applicationsByName.get("Multinode test"));
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
 
 		Application a2 = null;
-		try {
+		try
+		{
 			a2 = e2.ctx.applicationsByName.get("Multinode test");
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail();
 		}
 
@@ -180,7 +193,8 @@ public class TestMultiNode {
 	}
 
 	@Test
-	public void testSimpleChain() {
+	public void testSimpleChain()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 2****************************************************************************");
@@ -193,23 +207,27 @@ public class TestMultiNode {
 		State s1 = PlanBuilder.buildState(c1, pg2, sc1);
 		c1.getStartState().connectTo(s1);
 		s1.connectTo(c1.getEndState());
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
 		// Send the chain to node 2
-		try {
+		try
+		{
 			prepare();
 			sendA(a1);
 			Thread.sleep(500); // integrate the application, restart node...
 			e1.waitForInitEnd();
 			e2.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -224,22 +242,27 @@ public class TestMultiNode {
 		Assert.assertEquals(1, a2.getChains().size());
 
 		// Run the chain
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlanWithoutCalendarUpdating(c1.getStartState(), p1, e1.ctx);
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(3, res.size());
 	}
 
 	@Test
-	public void testCalendarTransmission() {
+	public void testCalendarTransmission()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 3****************************************************************************");
@@ -269,11 +292,13 @@ public class TestMultiNode {
 
 		log.debug("**************************************************************************************");
 		log.debug("****SAVE CHAIN************************************************************************");
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -281,13 +306,15 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN************************************************************************");
 		// Send the chain to node 2
-		try {
+		try
+		{
 			prepare();
 			sendA(a1);
 			e1.waitForInitEnd();
 			e2.waitForInitEnd();
 			log.debug("Application integration should be over by now...");
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -304,10 +331,12 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("****SHIFT CALENDAR********************************************************************");
 		// Shift the state by 1 so that it cannot start (well, shouldn't)
-		try {
+		try
+		{
 			SenderHelpers.sendCalendarPointerShift(1, s1, e1.ctx);
 			Thread.sleep(500);
-		} catch (Exception e4) {
+		} catch (Exception e4)
+		{
 			e4.printStackTrace();
 			Assert.fail(e4.getMessage());
 		}
@@ -318,15 +347,19 @@ public class TestMultiNode {
 		// Run the first chain - should be blocked after starting State
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START FIRST CHAIN***********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(1, res.size());
@@ -334,15 +367,19 @@ public class TestMultiNode {
 		// Run second chain - should unlock the first chain on the other node
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START SECOND CHAIN**********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000); // Process events
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 
 		// Have all jobs run?
@@ -358,7 +395,8 @@ public class TestMultiNode {
 	}
 
 	@Test
-	public void testRemoteHostedAgent() {
+	public void testRemoteHostedAgent()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 4****************************************************************************");
@@ -405,11 +443,13 @@ public class TestMultiNode {
 
 		log.debug("**************************************************************************************");
 		log.debug("****SAVE CHAIN************************************************************************");
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -417,12 +457,14 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN************************************************************************");
 		// Send the chain to node 2
-		try {
+		try
+		{
 			prepare();
 			sendA(a1);
 			e1.waitForInitEnd();
 			e2.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -439,10 +481,12 @@ public class TestMultiNode {
 		log.debug("**************************************************************************************");
 		log.debug("****SHIFT CALENDAR********************************************************************");
 		// Shift the state by 1 so that it cannot start (well, shouldn't)
-		try {
+		try
+		{
 			SenderHelpers.sendCalendarPointerShift(1, s4, e1.ctx);
 			Thread.sleep(500);
-		} catch (Exception e4) {
+		} catch (Exception e4)
+		{
 			e4.printStackTrace();
 			Assert.fail(e4.getMessage());
 		}
@@ -453,15 +497,19 @@ public class TestMultiNode {
 		// Run the first chain - should be blocked after the AND
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START FIRST CHAIN***********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000);
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(5, res.size());
@@ -469,15 +517,19 @@ public class TestMultiNode {
 		// Run second chain - should unlock the first chain on the other node
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER START SECOND CHAIN**********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-		} catch (JMSException e3) {
+		} catch (JMSException e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
-		try {
+		try
+		{
 			Thread.sleep(2000); // Process events
-		} catch (InterruptedException e3) {
+		} catch (InterruptedException e3)
+		{
 		}
 
 		// Have all jobs run?

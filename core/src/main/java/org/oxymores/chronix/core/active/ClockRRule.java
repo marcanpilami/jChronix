@@ -49,7 +49,7 @@ public class ClockRRule extends ApplicationObject
 	private String normalizeByElement(String elt, String name)
 	{
 		String tmp = "";
-		if (elt != null && elt != "")
+		if (elt != null && elt != "" && elt.length() > 0)
 		{
 			if (elt.substring(elt.length() - 1).equals(","))
 				tmp = elt.substring(0, elt.length() - 1);

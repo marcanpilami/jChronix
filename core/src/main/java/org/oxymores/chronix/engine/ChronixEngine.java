@@ -8,32 +8,60 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.demo.MaintenanceApplication;
 import org.oxymores.chronix.demo.OperationsApplication;
-import org.oxymores.chronix.exceptions.IncorrectConfigurationException;
 
-public class ChronixEngine extends Thread {
+public class ChronixEngine extends Thread
+{
 	private static Logger log = Logger.getLogger(ChronixEngine.class);
 
 	private boolean runnerMode;
 
 	public ChronixContext ctx;
 	public String dbPath;
+	public String brokerInterface, transacUnitName, historyUnitName;
+	public int brokerPort;
+	public String brokerInterfaceNoPort;
 
 	public Broker broker;
 	public SelfTriggerAgent stAgent;
 
 	private Semaphore startCritical, stop, threadInit, stopped;
 	boolean run = true;
+	int nbRunner;
 
-	public ChronixEngine(String dbPath) {
-		this(dbPath, false);
+	// ///////////////////////////////////////////////////////////////
+	// Construction
+	public ChronixEngine(String dbPath, String mainInterface)
+	{
+		this(dbPath, mainInterface, "TransacUnit", "HistoryUnit");
 	}
 
-	public ChronixEngine(String dbPath, boolean runnerMode) {
+	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName)
+	{
+		this(dbPath, mainInterface, TransacUnitName, HistoryUnitName, false, 1);
+	}
+
+	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName, boolean runnerMode)
+	{
+		this(dbPath, mainInterface, TransacUnitName, HistoryUnitName, runnerMode, 1);
+	}
+
+	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName, boolean runnerMode,
+			int nbRunner)
+	{
 		this.dbPath = dbPath;
 		this.runnerMode = runnerMode;
+		this.transacUnitName = TransacUnitName;
+		this.historyUnitName = HistoryUnitName;
+		this.brokerInterface = mainInterface;
 		this.ctx = new ChronixContext(); // to allow some basic config
 		this.ctx.configurationDirectoryPath = dbPath; // before starting
 		this.ctx.configurationDirectory = new File(dbPath);
+		this.ctx.localUrl = mainInterface;
+		this.ctx.transacUnitName = TransacUnitName;
+		this.ctx.historyUnitName = HistoryUnitName;
+		this.brokerInterfaceNoPort = this.brokerInterface.split(":")[0];
+		this.brokerPort = Integer.parseInt(this.brokerInterface.split(":")[1]);
+		this.nbRunner = nbRunner;
 
 		this.startCritical = new Semaphore(1);
 		this.stop = new Semaphore(0);
@@ -41,26 +69,33 @@ public class ChronixEngine extends Thread {
 		this.stopped = new Semaphore(0);
 	}
 
-	private void startEngine(boolean blocking, boolean purgeQueues) {
+	//
+	// ///////////////////////////////////////////////////////////////
+
+	private void startEngine(boolean blocking, boolean purgeQueues)
+	{
 		log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
-		try {
+		try
+		{
 			this.startCritical.acquire();
 			this.threadInit.release(1);
 
 			// Context
 			preContextLoad();
-			this.ctx = ChronixContext.loadContext(this.dbPath);
+			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface);
 			postContextLoad();
 
 			// Broker with all the consumer threads
 			this.broker = new Broker(this, purgeQueues);
+			this.broker.setNbRunners(this.nbRunner);
 			if (!runnerMode)
 				this.broker.registerListeners(this);
 			else
 				this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
 
 			// Active sources agent
-			if (!this.runnerMode && broker.getEmf() != null) {
+			if (!this.runnerMode && broker.getEmf() != null)
+			{
 				this.stAgent = new SelfTriggerAgent();
 				this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
 			}
@@ -68,25 +103,30 @@ public class ChronixEngine extends Thread {
 			// Done
 			this.startCritical.release();
 
-			if (blocking) {
+			if (blocking)
+			{
 				stop.wait();
 			} /*
 			 * else this.start();
 			 */
 
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			log.error("The engine has failed to start", e);
 			this.run = false;
 		}
 	}
 
 	@Override
-	public void run() {
+	public void run()
+	{
 		// Only does one thing: reload configuration and stop on trigger
-		while (this.run) {
+		while (this.run)
+		{
 			// First : start!
 			startEngine(false, false);
-			if (!run) {
+			if (!run)
+			{
 				this.startCritical.release();
 				this.stop.release();
 				this.threadInit.release();
@@ -94,9 +134,11 @@ public class ChronixEngine extends Thread {
 			}
 
 			// Then, wait for the end signal
-			try {
+			try
+			{
 				this.stop.acquire();
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e)
+			{
 				log.error("big problem here", e);
 			}
 
@@ -105,9 +147,11 @@ public class ChronixEngine extends Thread {
 				this.stAgent.stopAgent();
 			this.broker.stop();
 
-			try {
+			try
+			{
 				Thread.sleep(1000);
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e)
+			{
 			} // Port release is not immediate, sad.
 
 			// Done. If 'run' is still true, will restart the engine
@@ -116,83 +160,85 @@ public class ChronixEngine extends Thread {
 		log.info("The scheduler has stopped");
 	}
 
-	public void waitForInitEnd() {
-		try {
+	public void waitForInitEnd()
+	{
+		try
+		{
 			this.threadInit.acquire();
 			this.startCritical.acquire();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 		}
 		this.startCritical.release();
 		this.threadInit.release();
 	}
 
-	public void waitForStopEnd() {
-		try {
+	public void waitForStopEnd()
+	{
+		try
+		{
 			this.stopped.acquire();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 		}
 		this.stop.release();
 	}
 
-	public void queueReloadConfiguration() {
-		try {
+	public void queueReloadConfiguration()
+	{
+		try
+		{
 			this.startCritical.acquire();
 			threadInit.acquire();
 			this.run = true;
 			this.stop.release();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 		}
 		this.startCritical.release();
 	}
 
-	public void stopEngine() {
+	public void stopEngine()
+	{
 		log.info("The main engine has received a stop request");
-		try {
+		try
+		{
 			this.startCritical.acquire();
 			this.run = false;
 			this.stop.release();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 		}
 		this.startCritical.release();
 	}
 
-	protected void preContextLoad() throws Exception {
-		File[] fileList = new File(this.dbPath).listFiles();
-		Boolean found = false;
-		if (fileList != null) {
-			for (File f : fileList) {
-				if (f.isFile() && f.getName().equals("listener.crn")) {
-					found = true;
-					break;
-				}
-			}
-		}
-		if (!found) {
-			log.error("The listener.crn file was not found in folder " + dbPath + " - scheduler cannot start");
-			this.run = false;
-			throw new IncorrectConfigurationException("listener.crn file missing from configuration database");
-		}
+	protected void preContextLoad() throws Exception
+	{
+
 	}
 
-	protected void postContextLoad() throws Exception {
+	protected void postContextLoad() throws Exception
+	{
 		// First start?
-		if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode) {
+		if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode)
+		{
 			// Create OPERATIONS application
-			Application a = OperationsApplication.getNewApplication();
+			Application a = OperationsApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
 			this.ctx.saveApplication(a);
 			this.ctx.setWorkingAsCurrent(a);
 
 			// Create CHRONIX_MAINTENANCE application
-			a = MaintenanceApplication.getNewApplication();
+			a = MaintenanceApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
 			this.ctx.saveApplication(a);
 			this.ctx.setWorkingAsCurrent(a);
 
 			// Reload context to load new applications
-			this.ctx = ChronixContext.loadContext(this.dbPath);
+			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface);
 		}
 	}
 
-	public void emptyDb() {
+	public void emptyDb()
+	{
 		// Clear test db directory
 		File[] fileList = new File(this.dbPath).listFiles();
 		for (int i = 0; i < fileList.length; i++)

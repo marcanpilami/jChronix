@@ -25,9 +25,11 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 
-public class PlanBuilder {
+public class PlanBuilder
+{
 
-	public static Application buildApplication(String name, String description) {
+	public static Application buildApplication(String name, String description)
+	{
 		Application a = new Application();
 		a.setname(name);
 		a.setDescription("test application auto created");
@@ -35,7 +37,8 @@ public class PlanBuilder {
 		return a;
 	}
 
-	public static Chain buildChain(Application a, String name, String description, PlaceGroup targets) {
+	public static Chain buildChain(Application a, String name, String description, PlaceGroup targets)
+	{
 		Chain c1 = new Chain();
 		c1.setDescription(description);
 		c1.setName(name);
@@ -43,12 +46,14 @@ public class PlanBuilder {
 
 		// Start & end retrieval
 		ChainStart cs = null;
-		for (ConfigurableBase nb : a.getActiveElements().values()) {
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
 			if (nb instanceof ChainStart)
 				cs = (ChainStart) nb;
 		}
 		ChainEnd ce = null;
-		for (ConfigurableBase nb : a.getActiveElements().values()) {
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
 			if (nb instanceof ChainEnd)
 				ce = (ChainEnd) nb;
 		}
@@ -72,7 +77,8 @@ public class PlanBuilder {
 		return c1;
 	}
 
-	public static Chain buildPlan(Application a, String name, String description) {
+	public static Chain buildPlan(Application a, String name, String description)
+	{
 		Chain c1 = new Chain();
 		c1.setDescription(description);
 		c1.setName(name);
@@ -80,17 +86,21 @@ public class PlanBuilder {
 		return c1;
 	}
 
-	public static ExecutionNode buildExecutionNode(Application a, int port) {
+	public static ExecutionNode buildExecutionNode(Application a, int port)
+	{
 		String hostname;
-		try {
+		try
+		{
 			hostname = InetAddress.getLocalHost().getCanonicalHostName();
-		} catch (UnknownHostException e) {
+		} catch (UnknownHostException e)
+		{
 			hostname = "localhost";
 		}
 		return buildExecutionNode(a, hostname, port);
 	}
 
-	public static ExecutionNode buildExecutionNode(Application a, String dns, int port) {
+	public static ExecutionNode buildExecutionNode(Application a, String dns, int port)
+	{
 		ExecutionNode n1 = new ExecutionNode();
 		n1.setDns(dns);
 		n1.setOspassword("");
@@ -102,7 +112,8 @@ public class PlanBuilder {
 		return n1;
 	}
 
-	public static Place buildPlace(Application a, String name, String description, ExecutionNode en) {
+	public static Place buildPlace(Application a, String name, String description, ExecutionNode en)
+	{
 		Place p1 = new Place();
 		p1.setDescription(description);
 		p1.setName(name);
@@ -112,7 +123,8 @@ public class PlanBuilder {
 		return p1;
 	}
 
-	public static PlaceGroup buildPlaceGroup(Application a, String name, String description, Place... places) {
+	public static PlaceGroup buildPlaceGroup(Application a, String name, String description, Place... places)
+	{
 		PlaceGroup pg1 = new PlaceGroup();
 		pg1.setDescription(description);
 		pg1.setName(name);
@@ -124,33 +136,45 @@ public class PlanBuilder {
 		return pg1;
 	}
 
-	public static PlaceGroup buildDefaultLocalNetwork(Application a) {
+	public static PlaceGroup buildDefaultLocalNetwork(Application a)
+	{
 		// Execution node (the local sever)
 		String hostname;
-		try {
+		try
+		{
 			hostname = InetAddress.getLocalHost().getCanonicalHostName();
-		} catch (UnknownHostException e) {
+		} catch (UnknownHostException e)
+		{
 			hostname = "localhost";
 		}
-		ExecutionNode n1 = buildExecutionNode(a, hostname, 1789);
+
+		return buildDefaultLocalNetwork(a, 1789, hostname);
+	}
+
+	public static PlaceGroup buildDefaultLocalNetwork(Application a, int port, String linterface)
+	{
+		// Execution node (the local sever)
+		ExecutionNode n1 = buildExecutionNode(a, linterface, 1789);
 
 		// Place
-		Place p1 = buildPlace(a, hostname, "the local server", n1);
+		Place p1 = buildPlace(a, linterface, "the local server", n1);
 
 		// Group with only this place
-		PlaceGroup pg1 = buildPlaceGroup(a, hostname, "the local server", p1);
+		PlaceGroup pg1 = buildPlaceGroup(a, linterface, "the local server", p1);
 
 		return pg1;
 	}
 
-	public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues) {
+	public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
+	{
 		ShellCommand sc1 = new ShellCommand();
 		sc1.setCommand(command);
 		sc1.setDescription(description);
 		sc1.setName(name);
 		a.addActiveElement(sc1);
 
-		for (int i = 0; i < prmsandvalues.length / 2; i++) {
+		for (int i = 0; i < prmsandvalues.length / 2; i++)
+		{
 			Parameter pa1 = new Parameter();
 			pa1.setDescription("param " + i + " of command " + name);
 			pa1.setKey(prmsandvalues[i * 2]);
@@ -161,11 +185,13 @@ public class PlanBuilder {
 		return sc1;
 	}
 
-	public static External buildExternal(Application a, String name) {
+	public static External buildExternal(Application a, String name)
+	{
 		return buildExternal(a, name, null);
 	}
 
-	public static External buildExternal(Application a, String name, String regExp) {
+	public static External buildExternal(Application a, String name, String regExp)
+	{
 		External e = new External();
 		e.setApplication(a);
 		e.setRegularExpression(regExp);
@@ -175,7 +201,8 @@ public class PlanBuilder {
 		return e;
 	}
 
-	public static NextOccurrence buildNextOccurrence(Application a, Calendar ca) {
+	public static NextOccurrence buildNextOccurrence(Application a, Calendar ca)
+	{
 		NextOccurrence no1 = new NextOccurrence();
 		no1.setName("End of calendar occurrence");
 		no1.setDescription(no1.getName());
@@ -185,11 +212,13 @@ public class PlanBuilder {
 		return no1;
 	}
 
-	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target) {
+	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target)
+	{
 		return buildState(c1, pg1, target, false);
 	}
 
-	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target, boolean parallel) {
+	public static State buildState(Chain c1, PlaceGroup pg1, ActiveNodeBase target, boolean parallel)
+	{
 		State s1 = new State();
 		s1.setChain(c1);
 		s1.setRunsOn(pg1);
@@ -200,12 +229,14 @@ public class PlanBuilder {
 		return s1;
 	}
 
-	public static State buildStateAND(Chain c1, PlaceGroup pg1) {
+	public static State buildStateAND(Chain c1, PlaceGroup pg1)
+	{
 		ActiveNodeBase target = c1.getApplication().getActiveElements(And.class).get(0);
 		return buildState(c1, pg1, target, true);
 	}
 
-	public static Clock buildClock(Application a, String name, String description, ClockRRule... rulesADD) {
+	public static Clock buildClock(Application a, String name, String description, ClockRRule... rulesADD)
+	{
 		Clock ck1 = new Clock();
 		ck1.setDescription(description);
 		ck1.setName(name);
@@ -216,7 +247,8 @@ public class PlanBuilder {
 		return ck1;
 	}
 
-	public static ClockRRule buildRRuleWeekDays(Application a) {
+	public static ClockRRule buildRRuleWeekDays(Application a)
+	{
 		ClockRRule rr1 = new ClockRRule();
 		rr1.setName("Monday-Friday days");
 		rr1.setDescription("Every day from monday to friday included, every week");
@@ -229,7 +261,8 @@ public class PlanBuilder {
 		return rr1;
 	}
 
-	public static ClockRRule buildRRule10Seconds(Application a) {
+	public static ClockRRule buildRRule10Seconds(Application a)
+	{
 		ClockRRule rr1 = new ClockRRule();
 		rr1.setName("Every 10 second");
 		rr1.setDescription("Every 10 second");
@@ -240,15 +273,18 @@ public class PlanBuilder {
 		return rr1;
 	}
 
-	public static Token buildToken(Application a, String name) {
+	public static Token buildToken(Application a, String name)
+	{
 		return buildToken(a, name, 1);
 	}
 
-	public static Token buildToken(Application a, String name, int count) {
+	public static Token buildToken(Application a, String name, int count)
+	{
 		return buildToken(a, name, count, false);
 	}
 
-	public static Token buildToken(Application a, String name, int count, boolean byPlace) {
+	public static Token buildToken(Application a, String name, int count, boolean byPlace)
+	{
 		Token t = new Token();
 		t.setApplication(a);
 		t.setByPlace(byPlace);

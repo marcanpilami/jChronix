@@ -22,7 +22,8 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestToken {
+public class TestToken
+{
 	private static Logger log = Logger.getLogger(TestToken.class);
 
 	private String db1;
@@ -33,23 +34,23 @@ public class TestToken {
 	PlaceGroup pg1, pg2;
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		db1 = "C:\\TEMP\\db1";
 
 		/************************************************
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile(); // default is 1789/localhost
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Single node test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
 
 		// Logical network
@@ -62,16 +63,20 @@ public class TestToken {
 		// Chains and other stuff depends on the test
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
-		try {
+		try
+		{
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -87,17 +92,20 @@ public class TestToken {
 	}
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
 	}
 
 	@Test
-	public void testAlone() throws Exception {
+	public void testAlone() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -119,12 +127,14 @@ public class TestToken {
 		State sp = PlanBuilder.buildState(p1, pg1, c1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -148,7 +158,8 @@ public class TestToken {
 	}
 
 	@Test
-	public void testAloneBlocking() throws Exception {
+	public void testAloneBlocking() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -170,12 +181,14 @@ public class TestToken {
 		State sp = PlanBuilder.buildState(p1, pg1, c1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -192,7 +205,8 @@ public class TestToken {
 	}
 
 	@Test
-	public void testTwoWithOne() throws Exception {
+	public void testTwoWithOne() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -214,12 +228,14 @@ public class TestToken {
 		State sp = PlanBuilder.buildState(p1, pg1, c1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -242,7 +258,8 @@ public class TestToken {
 	}
 
 	@Test
-	public void testTwoWithOnePerPlace() throws Exception {
+	public void testTwoWithOnePerPlace() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -264,12 +281,14 @@ public class TestToken {
 		State sp = PlanBuilder.buildState(p1, pg1, c1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}

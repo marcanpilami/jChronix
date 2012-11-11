@@ -19,7 +19,8 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestParallelism {
+public class TestParallelism
+{
 	private static Logger log = Logger.getLogger(TestParallelism.class);
 
 	private String db1, db2, db3;
@@ -32,25 +33,30 @@ public class TestParallelism {
 	PlaceGroup groupOneEach, groupAllNodes, groupnode1, groupnode2, groupnode3;
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
-		if (e2 != null && e2.run) {
+		if (e2 != null && e2.run)
+		{
 			e2.stopEngine();
 			e2.waitForStopEnd();
 		}
-		if (e3 != null && e3.run) {
+		if (e3 != null && e3.run)
+		{
 			e3.stopEngine();
 			e3.waitForStopEnd();
 		}
 	}
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		if (a1 != null)
 			return;
 
@@ -62,19 +68,18 @@ public class TestParallelism {
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile();
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Multinode test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
-		en2 = PlanBuilder.buildExecutionNode(a1, 1400);
-		en3 = PlanBuilder.buildExecutionNode(a1, 1804);
+		en2 = PlanBuilder.buildExecutionNode(a1, "localhost", 1400);
+		en3 = PlanBuilder.buildExecutionNode(a1, "localhost", 1804);
 		en1.connectTo(en2, NodeConnectionMethod.TCP);
 		en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
@@ -104,16 +109,20 @@ public class TestParallelism {
 		// Chains and other stuff depends on the test
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
-		try {
+		try
+		{
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -121,17 +130,15 @@ public class TestParallelism {
 		/************************************************
 		 * Create an empty test configuration db for second node
 		 ***********************************************/
-		e2 = new ChronixEngine(db2);
+		e2 = new ChronixEngine(db2, "localhost:1400", "TransacUnit2", "HistoryUnit2");
 		e2.emptyDb();
-		e2.ctx.createNewConfigFile(1400, "TransacUnit2", "HistoryUnit2");
 		LogHelpers.clearAllTranscientElements(e2.ctx);
 
 		/************************************************
 		 * Create an empty test configuration db for third node
 		 ***********************************************/
-		e3 = new ChronixEngine(db3, true);
+		e3 = new ChronixEngine(db3, "localhost:1804", "TransacUnitXXX", "HistoryUnitXXX", true);
 		e3.emptyDb();
-		e3.ctx.createNewConfigFile(1804, "TransacUnitXXX", "HistoryUnitXXX");
 
 		/************************************************
 		 * Start the engines
@@ -153,7 +160,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testEnvVars() {
+	public void testEnvVars()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 1****************************************************************************");
@@ -187,12 +195,14 @@ public class TestParallelism {
 		s4.connectTo(s5);
 		s5.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -201,11 +211,13 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -214,17 +226,20 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(2000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
 		// Test finished OK
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(7, res.size());
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			log.info(rl.shortLog);
 		}
 
@@ -239,7 +254,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testTestJob() {
+	public void testTestJob()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("****TEST 2 - preparatory *************************************************************");
@@ -257,11 +273,13 @@ public class TestParallelism {
 		c1.getStartState().connectTo(s1);
 		s1.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -269,12 +287,14 @@ public class TestParallelism {
 		// Send the chain to node 2
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -283,10 +303,12 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(5000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -294,7 +316,8 @@ public class TestParallelism {
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(7, res.size());
 		RunLog failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			log.info(rl.shortLog);
 			if (rl.placeName.startsWith("P21"))
 				failedLog = rl;
@@ -303,10 +326,12 @@ public class TestParallelism {
 		// Restart failed job
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO RESTART*******************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderRestartAfterFailure(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
@@ -315,10 +340,12 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
@@ -326,7 +353,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testCaseP1() {
+	public void testCaseP1()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**** TEST 3 - case P1 ****************************************************************");
@@ -348,11 +376,13 @@ public class TestParallelism {
 		s1.connectTo(s2);
 		s2.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -360,12 +390,14 @@ public class TestParallelism {
 		// Send the chain to node 2
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -374,10 +406,12 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(5000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -385,7 +419,8 @@ public class TestParallelism {
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(12, res.size());
 		RunLog failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			if (rl.placeName.startsWith("P21"))
 				failedLog = rl;
 		}
@@ -393,10 +428,12 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
@@ -404,7 +441,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testCaseP2() {
+	public void testCaseP2()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**** TEST 4 - case P2 ****************************************************************");
@@ -431,11 +469,13 @@ public class TestParallelism {
 		s4.connectTo(s2);
 		s2.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -443,12 +483,14 @@ public class TestParallelism {
 		// Send the chain to node 2
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -457,10 +499,12 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(5000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -468,7 +512,8 @@ public class TestParallelism {
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(9, res.size());
 		RunLog failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			if (rl.placeName.startsWith("P21"))
 				failedLog = rl;
 		}
@@ -476,10 +521,12 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
@@ -487,7 +534,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testCaseP5() {
+	public void testCaseP5()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**** TEST 5 - case P5 ****************************************************************");
@@ -511,11 +559,13 @@ public class TestParallelism {
 		s2.connectTo(s3);
 		s3.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -523,12 +573,14 @@ public class TestParallelism {
 		// Send the chain to node 2
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -537,10 +589,12 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(5000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 
@@ -548,7 +602,8 @@ public class TestParallelism {
 		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(7, res.size());
 		RunLog failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			log.debug(rl.stateId);
 			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s1.getId().toString()))
 				failedLog = rl;
@@ -557,17 +612,20 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			log.error("oups", e);
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(13, res.size());
 		failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s2.getId().toString()))
 				failedLog = rl;
 		}
@@ -575,16 +633,19 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 2*********************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
 		Assert.assertEquals(19, res.size());
 		failedLog = null;
-		for (RunLog rl : res) {
+		for (RunLog rl : res)
+		{
 			if (rl.placeName.startsWith("P21") && rl.stateId.equals(s3.getId().toString()))
 				failedLog = rl;
 		}
@@ -592,10 +653,12 @@ public class TestParallelism {
 		// Ask the failed job to free the rest of the chain
 		log.debug("**************************************************************************************");
 		log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 3*********************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
 			Thread.sleep(2000);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			Assert.fail(e.getMessage());
 		}
 		res = LogHelpers.displayAllHistory(e1.ctx);
@@ -603,7 +666,8 @@ public class TestParallelism {
 	}
 
 	@Test
-	public void testCaseP1Prime() {
+	public void testCaseP1Prime()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("**************************************************************************************");
 		log.debug("**** TEST 6 - case P1' ***************************************************************");
@@ -630,11 +694,13 @@ public class TestParallelism {
 		s4.connectTo(s5);
 		s5.connectTo(c1.getEndState());
 
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -642,12 +708,14 @@ public class TestParallelism {
 		// Send the chain to node 2
 		log.debug("**************************************************************************************");
 		log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
-		try {
+		try
+		{
 			SenderHelpers.sendApplication(a1, en2, e1.ctx);
 			Thread.sleep(500); // integrate the application, restart node...
 			e2.waitForInitEnd();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail();
 		}
@@ -656,10 +724,12 @@ public class TestParallelism {
 		log.debug("**************************************************************************************");
 		log.debug("****START CHAIN***********************************************************************");
 
-		try {
+		try
+		{
 			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
 			Thread.sleep(5000);
-		} catch (Exception e3) {
+		} catch (Exception e3)
+		{
 			Assert.fail(e3.getMessage());
 		}
 

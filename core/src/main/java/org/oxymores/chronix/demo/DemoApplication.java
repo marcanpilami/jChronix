@@ -46,31 +46,41 @@ import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.active.ShellParameter;
 
-public class DemoApplication {
+public class DemoApplication
+{
 
-	public static Application getNewDemoApplication() {
+	public static Application getNewDemoApplication()
+	{
+		String hostname;
+		try
+		{
+			hostname = InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e)
+		{
+			hostname = "localhost";
+		}
+		return getNewDemoApplication(hostname, 1789);
+	}
+
+	public static Application getNewDemoApplication(String brokerInterface, int brokerPort)
+	{
 		Application a = new Application();
 		a.setname("Demo");
 		a.setDescription("test application auto created");
 
 		// Physical network
-		String hostname;
-		try {
-			hostname = InetAddress.getLocalHost().getCanonicalHostName();
-		} catch (UnknownHostException e) {
-			hostname = "localhost";
-		}
+
 		ExecutionNode n1 = new ExecutionNode();
-		n1.setDns(hostname);
+		n1.setDns(brokerInterface);
 		n1.setOspassword("");
-		n1.setqPort(1789);
+		n1.setqPort(brokerPort);
 		n1.setX(100);
 		n1.setY(100);
 		n1.setConsole(true);
 		a.addNode(n1);
 
 		ExecutionNode n2 = new ExecutionNode();
-		n2.setDns(hostname);
+		n2.setDns(brokerInterface);
 		n2.setOspassword("");
 		n2.setqPort(1400);
 		n2.setX(200);
@@ -125,7 +135,8 @@ public class DemoApplication {
 		a.addCalendar(cal1);
 
 		DateTime d = new DateTime(2029, 12, 31, 0, 0);
-		for (int i = 0; i <= 365; i++) {
+		for (int i = 0; i <= 365; i++)
+		{
 			d = d.plusDays(1);
 			if (d.getDayOfWeek() > 5)
 				continue;
@@ -208,12 +219,14 @@ public class DemoApplication {
 		// ////////////////////
 		// Auto elements retrieval
 		ChainStart cs = null;
-		for (ConfigurableBase nb : a.getActiveElements().values()) {
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
 			if (nb instanceof ChainStart)
 				cs = (ChainStart) nb;
 		}
 		ChainEnd ce = null;
-		for (ConfigurableBase nb : a.getActiveElements().values()) {
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
 			if (nb instanceof ChainEnd)
 				ce = (ChainEnd) nb;
 		}

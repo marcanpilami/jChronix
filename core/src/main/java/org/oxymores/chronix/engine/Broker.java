@@ -264,4 +264,14 @@ public class Broker {
 			log.warn("An error occurend while purging queues. Not a real problem", e1);
 		}
 	}
+
+	public int getNbRunners()
+	{
+		return nbRunners;
+	}
+
+	public void setNbRunners(int nbRunners)
+	{
+		this.nbRunners = nbRunners;
+	}
 }

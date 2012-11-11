@@ -21,40 +21,47 @@
 package org.oxymores.chronix.wapi;
 
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
+import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
 import org.apache.cxf.transport.http_jetty.JettyHTTPDestination;
 import org.apache.cxf.transport.http_jetty.JettyHTTPServerEngine;
 import org.apache.cxf.transport.http_jetty.ServerEngine;
-import org.oxymores.chronix.internalapi.IServer;
-import org.oxymores.chronix.internalapi.IServiceClient;
-import org.apache.cxf.endpoint.Server;
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.oxymores.chronix.internalapi.IServer;
+import org.oxymores.chronix.internalapi.IServiceClient;
 
-public class JettyServer implements IServer {
+public class JettyServer implements IServer
+{
+	private static Logger log = Logger.getLogger(JettyServer.class);
 
 	protected Server cxfServer;
 	protected org.eclipse.jetty.server.Server jettyServer;
 	protected String interfaceToListenOn;
 	protected Integer portToListenOn;
 
-	public JettyServer() {
+	public JettyServer()
+	{
 		this("localhost", 9000);
 	}
 
-	public JettyServer(String hostname, Integer Port) {
+	public JettyServer(String hostname, Integer Port)
+	{
 		this.interfaceToListenOn = hostname;
 		this.portToListenOn = Port;
 	}
 
-	private String getURL() {
-		return "http://" + this.interfaceToListenOn + ":" + this.portToListenOn
-				+ "/Hello";
+	private String getURL()
+	{
+		return "http://" + this.interfaceToListenOn + ":" + this.portToListenOn + "/Hello";
 	}
 
 	@Override
-	public void start() {
+	public void start()
+	{
+		log.info("Web service server is starting");
 		ServiceClient serviceImpl = new ServiceClient();
 		ServerFactoryBean svrFactory = new ServerFactoryBean();
 
@@ -63,7 +70,8 @@ public class JettyServer implements IServer {
 		svrFactory.setServiceBean(serviceImpl);
 		svrFactory.getServiceFactory().setDataBinding(new AegisDatabinding());
 
-		try {
+		try
+		{
 			// svrFactory.setStart(false);
 
 			// Start the server (so as to init all jetty objects with CXF
@@ -71,8 +79,7 @@ public class JettyServer implements IServer {
 			cxfServer = svrFactory.create();
 
 			// Get the Jetty server from destination
-			JettyHTTPDestination destination = (JettyHTTPDestination) cxfServer
-					.getDestination();
+			JettyHTTPDestination destination = (JettyHTTPDestination) cxfServer.getDestination();
 			ServerEngine engine = destination.getEngine();
 			JettyHTTPServerEngine jengine = (JettyHTTPServerEngine) engine;
 			jettyServer = jengine.getServer();
@@ -83,31 +90,34 @@ public class JettyServer implements IServer {
 
 			// Get (save) existing CXF handler
 			Handler serverHandler = jettyServer.getHandler();
-			
+
 			// Create static resource handler
 			ResourceHandler resourceHandler = new ResourceHandler();
-			resourceHandler.setDirectoriesListed(true); 
-			
-            resourceHandler.setWelcomeFiles(new String[] {"index.html"}); 
-            //resourceHandler.setResourceBase(".");
-            resourceHandler.setResourceBase("..\\gui\\");  //TODO: for debug only.
-            
-            // Add both handlers to server (static first)
-            HandlerList handlerList = new HandlerList();
+			resourceHandler.setDirectoriesListed(true);
+
+			resourceHandler.setWelcomeFiles(new String[] { "index.html" });
+			// resourceHandler.setResourceBase(".");
+			resourceHandler.setResourceBase("..\\gui\\"); // TODO: for debug only.
+
+			// Add both handlers to server (static first)
+			HandlerList handlerList = new HandlerList();
 			handlerList.addHandler(resourceHandler);
 			handlerList.addHandler(serverHandler);
 			jettyServer.setHandler(handlerList);
-			
+
 			// Restart the server and go!
 			jettyServer.start();
-			jettyServer.join();
-		} catch (Exception e) {
+			// jettyServer.join();
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 		}
+		log.info("Web service server has started");
 	}
 
 	@Override
-	public void stop() {
+	public void stop()
+	{
 		cxfServer.stop();
 	}
 

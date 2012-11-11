@@ -14,25 +14,30 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.demo.DemoApplication;
 
-public class TestStart {
+public class TestStart
+{
 	private static Logger log = Logger.getLogger(TestStart.class);
 
 	public static String db1;
 
 	@Before
-	public void init() throws Exception {
+	public void init() throws Exception
+	{
 		db1 = "C:\\TEMP\\db1";
 	}
 
 	@Test
-	public void testNoDb() throws Exception {
+	public void testNoDb() throws Exception
+	{
 		log.info("***** Test: without a db, the scheduler fails with a adequate exception");
 		ChronixEngine e = null;
-		try {
-			e = new ChronixEngine("C:\\WONTEXISTEVER");
+		try
+		{
+			e = new ChronixEngine("C:\\WONTEXISTEVER", "localhost:1789");
 			e.start();
 			e.waitForInitEnd();
-		} catch (Exception ex) {
+		} catch (Exception ex)
+		{
 			return;
 		}
 		Assert.assertEquals(false, e.run); // engine should not have been able
@@ -40,12 +45,12 @@ public class TestStart {
 	}
 
 	@Test
-	public void testCreateAutoApplications() throws Exception {
+	public void testCreateAutoApplications() throws Exception
+	{
 		log.info("***** Test: with an empty db, the scheduler creates two auto applications");
 
-		ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1");
+		ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
 		e.emptyDb();
-		e.ctx.createNewConfigFile();
 		e.start();
 		e.waitForInitEnd();
 		e.stopEngine();
@@ -63,15 +68,14 @@ public class TestStart {
 	}
 
 	@Test
-	public void testCalendarPointerCreationAtStartup() throws Exception {
-		String dbPath = "C:\\TEMP\\db1";
-		ChronixEngine e = new ChronixEngine(dbPath);
+	public void testCalendarPointerCreationAtStartup() throws Exception
+	{
+		ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
 		e.emptyDb();
-		e.ctx.createNewConfigFile();
 
-		Application a = DemoApplication.getNewDemoApplication();
+		Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
 		ChronixContext ctx = new ChronixContext();
-		ctx.configurationDirectory = new File(dbPath);
+		ctx.configurationDirectory = new File("C:\\TEMP\\db1");
 		ctx.saveApplication(a);
 		ctx.setWorkingAsCurrent(a);
 		e.start();

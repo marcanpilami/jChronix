@@ -21,7 +21,8 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.demo.PlanBuilder;
 
-public class TestChain {
+public class TestChain
+{
 	private static Logger log = Logger.getLogger(TestChain.class);
 
 	private String db1;
@@ -32,23 +33,23 @@ public class TestChain {
 	PlaceGroup pg1, pg2;
 
 	@Before
-	public void prepare() throws Exception {
+	public void prepare() throws Exception
+	{
 		db1 = "C:\\TEMP\\db1";
 
 		/************************************************
 		 * Create a test configuration db
 		 ***********************************************/
 
-		e1 = new ChronixEngine(db1);
+		e1 = new ChronixEngine(db1, "localhost:1789");
 		e1.emptyDb();
-		e1.ctx.createNewConfigFile(); // default is 1789/localhost
 		LogHelpers.clearAllTranscientElements(e1.ctx);
 
 		// Create a test application and save it inside context
 		a1 = PlanBuilder.buildApplication("Single node test", "test");
 
 		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, 1789);
+		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
 		en1.setConsole(true);
 
 		// Logical network
@@ -60,16 +61,20 @@ public class TestChain {
 		// Chains and other stuff depends on the test
 
 		// Save app in node 1
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 
-		try {
+		try
+		{
 			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -85,17 +90,20 @@ public class TestChain {
 	}
 
 	@After
-	public void cleanup() {
+	public void cleanup()
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run) {
+		if (e1 != null && e1.run)
+		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
 	}
 
 	@Test
-	public void testChainLaunch() throws Exception {
+	public void testChainLaunch() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -114,12 +122,14 @@ public class TestChain {
 		State sp = PlanBuilder.buildState(p1, pg1, c1);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -143,7 +153,8 @@ public class TestChain {
 	}
 
 	@Test
-	public void testCompletePlan() throws Exception {
+	public void testCompletePlan() throws Exception
+	{
 		log.debug("**************************************************************************************");
 		log.debug("****CREATE PLAN***********************************************************************");
 
@@ -186,12 +197,14 @@ public class TestChain {
 		spA.connectTo(sp4);
 
 		// Save plan
-		try {
+		try
+		{
 			e1.ctx.saveApplication(a1);
 			e1.ctx.setWorkingAsCurrent(a1);
 			e1.queueReloadConfiguration();
 			e1.waitForInitEnd();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
