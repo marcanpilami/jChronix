@@ -16,13 +16,11 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.RRule;
 
 import org.apache.log4j.Logger;
-import org.joda.time.Duration;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;

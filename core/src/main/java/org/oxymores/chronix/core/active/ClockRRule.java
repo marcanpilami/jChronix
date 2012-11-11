@@ -4,12 +4,9 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
-import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Recur;
-import net.fortuna.ical4j.util.Configurator;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ApplicationObject;
 
 public class ClockRRule extends ApplicationObject
