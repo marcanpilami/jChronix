@@ -30,27 +30,31 @@ import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.internalapi.IServer;
 import org.oxymores.chronix.internalapi.IServiceClient;
+import org.oxymores.chronix.internalapi.IServiceConsole;
 
 public class JettyServer implements IServer
 {
 	private static Logger log = Logger.getLogger(JettyServer.class);
 
-	protected Server cxfServer;
+	protected Server cxfServer, cxfServer2;
 	protected org.eclipse.jetty.server.Server jettyServer;
 	protected String interfaceToListenOn;
 	protected Integer portToListenOn;
+	protected ChronixContext ctx;
 
-	public JettyServer()
+	public JettyServer(ChronixContext ctx)
 	{
-		this("localhost", 9000);
+		this(ctx, "localhost", 9000);
 	}
 
-	public JettyServer(String hostname, Integer Port)
+	public JettyServer(ChronixContext ctx, String hostname, Integer Port)
 	{
 		this.interfaceToListenOn = hostname;
 		this.portToListenOn = Port;
+		this.ctx = ctx;
 	}
 
 	private String getURL()
@@ -112,6 +116,14 @@ public class JettyServer implements IServer
 		{
 			e.printStackTrace();
 		}
+
+		ServerFactoryBean svrFactory2 = new ServerFactoryBean();
+		svrFactory2.setServiceClass(IServiceConsole.class);
+		svrFactory2.setAddress(this.getURL() + "2");
+		svrFactory2.setServiceBean(new ServiceConsole(this.ctx));
+		svrFactory2.getServiceFactory().setDataBinding(new AegisDatabinding());
+		cxfServer2 = svrFactory2.create();
+
 		log.info("Web service server has started");
 	}
 

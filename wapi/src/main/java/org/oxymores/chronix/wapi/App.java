@@ -4,7 +4,7 @@ public class App
 {
     public static void main( String[] args )
     {
-        JettyServer server = new JettyServer();
+        JettyServer server = new JettyServer(null);
         server.start();
         try {
 			Thread.sleep(60000000);

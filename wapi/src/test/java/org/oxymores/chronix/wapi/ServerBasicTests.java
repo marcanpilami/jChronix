@@ -30,7 +30,7 @@ public class ServerBasicTests extends TestCase {
 	public void testStartStop() throws InterruptedException
 	{
 		// Create server
-		JettyServer server = new JettyServer();
+		JettyServer server = new JettyServer(null);
 		
 		// Start server
 		server.start();
@@ -50,7 +50,7 @@ public class ServerBasicTests extends TestCase {
 	public void testGetApp() throws InterruptedException
 	{
 		// Create server
-		JettyServer server = new JettyServer();
+		JettyServer server = new JettyServer(null);
 		
 		// Start server
 		server.start();
