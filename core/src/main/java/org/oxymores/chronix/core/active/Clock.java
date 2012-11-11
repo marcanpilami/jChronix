@@ -103,7 +103,7 @@ public class Clock extends ActiveNodeBase
 		VEvent evt = this.getEvent();
 
 		evt.getProperties().add(new DtStart(new DateTime(start.minusDays(1).toDate())));
-		//evt.getProperties().add(new DtEnd(new DateTime(end.plusDays(5).toDate())));
+		// evt.getProperties().add(new DtEnd(new DateTime(end.plusDays(5).toDate())));
 
 		log.debug(String.format("Event start time is %s - creation is %s", evt.getStartDate(), evt.getCreated()));
 		Period p = new Period(from, to);
@@ -220,7 +220,7 @@ public class Clock extends ActiveNodeBase
 		log.debug(String.format("There are %s clock ticks that really are active", real.size()));
 
 		// Select the ones that will have to be created
-		List<org.joda.time.DateTime> toCreate = theory.subList(real.size(), theory.size());
+		List<org.joda.time.DateTime> toCreate = theory.subList(Math.min(real.size(), theory.size()), theory.size());
 		log.debug(String.format("%s ticks will have to be created", toCreate.size()));
 
 		// //////////////////////////
