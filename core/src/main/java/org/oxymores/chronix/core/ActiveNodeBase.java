@@ -41,7 +41,8 @@ import org.oxymores.chronix.engine.RunResult;
 import org.oxymores.chronix.engine.Runner;
 import org.oxymores.chronix.engine.PlaceAnalysisResult;
 
-public class ActiveNodeBase extends ConfigurableBase {
+public class ActiveNodeBase extends ConfigurableBase
+{
 	private static final long serialVersionUID = 2317281646089939267L;
 	private static Logger log = Logger.getLogger(ActiveNodeBase.class);
 
@@ -50,25 +51,30 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// ////////////////////////////////////////////////////////////////////////////
 	// Stupid get/set
-	public String getDescription() {
+	public String getDescription()
+	{
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(String description)
+	{
 		this.description = description;
 	}
 
-	public String getName() {
+	public String getName()
+	{
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(String name)
+	{
 		this.name = name;
 	}
 
 	// Helper function (could be overloaded) returning something intelligible
 	// designating the element that is run by this source
-	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx) {
+	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
+	{
 		return null;
 	}
 
@@ -78,9 +84,11 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// ////////////////////////////////////////////////////////////////////////////
 	// Relationship traversing
 
-	public ArrayList<State> getClientStates() {
+	public ArrayList<State> getClientStates()
+	{
 		ArrayList<State> res = new ArrayList<State>();
-		for (State s : this.application.getStates()) {
+		for (State s : this.application.getStates())
+		{
 			if (s.represents == this)
 				res.add(s);
 		}
@@ -95,57 +103,72 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// Do the given events allow for a transition originating from a state
 	// representing this source?
-	public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, EntityManager em) {
+	public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, EntityManager em)
+	{
 		PlaceAnalysisResult res = new PlaceAnalysisResult(p);
 		res.res = false;
 
-		for (Event e : events) {
-			if (!e.getPlaceID().equals(p.id.toString())) {
+		for (Event e : events)
+		{
+			if (!e.getPlaceID().equals(p.id.toString()))
+			{
 				// Only accept events from the analyzed place
 				continue;
 			}
 
-			if (!e.getStateID().equals(tr.stateFrom.id.toString())) {
+			if (!e.getStateID().equals(tr.stateFrom.id.toString()))
+			{
 				// Only accept events from the analyzed state
 				continue;
 			}
 
 			// Check guards
-			if (tr.guard1 != null && !tr.guard1.equals(e.getConditionData1())) {
+			if (tr.guard1 != null && !tr.guard1.equals(e.getConditionData1()))
+			{
 				continue;
 			}
-			if (tr.guard2 != null && !tr.guard2.equals(e.getConditionData2())) {
+			if (tr.guard2 != null && !tr.guard2.equals(e.getConditionData2()))
+			{
 				continue;
 			}
-			if (tr.guard3 != null && !tr.guard3.equals(e.getConditionData3())) {
+			if (tr.guard3 != null && !tr.guard3.equals(e.getConditionData3()))
+			{
 				continue;
 			}
-			if (tr.guard4 != null && !tr.guard4.equals(e.getConditionData4U())) {
+			if (tr.guard4 != null && !tr.guard4.equals(e.getConditionData4U()))
+			{
 				continue;
 			}
 
 			// Check calendar if the transition is calendar-aware
-			if (tr.calendarAware) {
+			if (tr.calendarAware)
+			{
 				log.debug("Checking wether an event respects a calendar transition guard");
 				if (!tr.stateTo.usesCalendar())
 					continue; // No calendar used on the target - yet the transition must make sure a calendar is enforced...
 
-				if (e.getIgnoreCalendarUpdating()) {
+				if (e.getIgnoreCalendarUpdating())
+				{
 					// Calendar is forced - this is deliberate from the user, he's supposed to know what he does so no checks
-				} else {
+				}
+				else
+				{
 					if (e.getCalendarOccurrenceID() == null || e.getCalendarOccurrenceID() == "")
 						continue;
 
-					try {
-						if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId())) {
+					try
+					{
+						if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId()))
+						{
 							CalendarDay cd1 = tr.stateTo.getCalendar().getDay(UUID.fromString(e.getCalendarOccurrenceID()));
 							CalendarDay cd2 = tr.stateTo.getCalendar().getDay(
 									UUID.fromString(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId()));
-							log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)", cd1.seq,
-									cd2.seq));
+							log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)",
+									cd1.seq, cd2.seq));
 							continue;
 						}
-					} catch (Exception e1) {
+					} catch (Exception e1)
+					{
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
@@ -163,7 +186,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 	}
 
 	public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, EntityManager em, MessageProducer pjProducer, Session session,
-			ChronixContext ctx) {
+			ChronixContext ctx)
+	{
 		EventAnalysisResult res = new EventAnalysisResult(s);
 
 		// Get session events
@@ -175,8 +199,10 @@ public class ActiveNodeBase extends ConfigurableBase {
 		// Remove consumed events (first filter: those which are completely
 		// consumed)
 		List<Event> sessionEvents = new ArrayList<Event>();
-		for (Event e : sessionEvents2) {
-			for (Place p : s.runsOn.places) {
+		for (Event e : sessionEvents2)
+		{
+			for (Place p : s.runsOn.places)
+			{
 				if (!e.wasConsumedOnPlace(p, s) && !sessionEvents.contains(e))
 					sessionEvents.add(e);
 			}
@@ -187,13 +213,15 @@ public class ActiveNodeBase extends ConfigurableBase {
 			sessionEvents.add(evt);
 
 		// Check every incoming transition: are they allowed?
-		for (Transition tr : s.getTrReceivedHere()) {
-			log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(), s.chain.getName(),
-					sessionEvents.size()));
+		for (Transition tr : s.getTrReceivedHere())
+		{
+			log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(),
+					s.chain.getName(), sessionEvents.size()));
 
 			TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents, em);
 
-			if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND) {
+			if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND)
+			{
 				// No need to go further - one transition will block everything
 				log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
 						s.represents.getName(), s.chain.getName(), tr.stateFrom.represents.name));
@@ -208,7 +236,8 @@ public class ActiveNodeBase extends ConfigurableBase {
 				s.chain.getName(), places.size()));
 
 		// Check calendar
-		for (Place p : places.toArray(new Place[0])) {
+		for (Place p : places.toArray(new Place[0]))
+		{
 			if (!s.canRunAccordingToCalendarOnPlace(em, p))
 				places.remove(p);
 		}
@@ -216,18 +245,21 @@ public class ActiveNodeBase extends ConfigurableBase {
 				s.represents.getName(), s.chain.getName(), places.size()));
 
 		// Go
-		if (places.size() > 0) {
-			log.debug(String.format(
-					"State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
-					s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
+		if (places.size() > 0)
+		{
+			log.debug(String
+					.format("State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
+							s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
 
 			s.consumeEvents(res.consumedEvents, places, em);
-			for (Place p : places) {
+			for (Place p : places)
+			{
 				if (p.node.getHost() == s.application.getLocalNode())
 					s.runFromEngine(p, em, pjProducer, session, evt);
 			}
 			return res;
-		} else
+		}
+		else
 			return new EventAnalysisResult(s);
 
 	}
@@ -242,14 +274,17 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Responsible for parameters resolution.
 	// Default implementation resolves all parameters. Should usually be called
 	// by overloads.
-	public void prepareRun(PipelineJob pj, Runner sender, ChronixContext ctx) {
-		for (Parameter p : this.parameters) {
+	public void prepareRun(PipelineJob pj, Runner sender, ChronixContext ctx)
+	{
+		for (Parameter p : this.parameters)
+		{
 			p.resolveValue(ctx, sender, pj);
 		}
 	}
 
 	// ?
-	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx, EntityManager em) {
+	public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx, EntityManager em)
+	{
 		log.info("end of run");
 	}
 
@@ -258,15 +293,19 @@ public class ActiveNodeBase extends ConfigurableBase {
 	// Used by active nodes which influence the scheduling itself rather than
 	// run a payload.
 	// Not called within an open JPA transaction.
-	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession) {
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+	{
 		return; // Do nothing by default.
 	}
 
-	public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em) throws Exception {
+	public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em, DateTime present)
+			throws Exception
+	{
 		throw new NotImplementedException();
 	}
 
-	public RunResult forceOK() {
+	public RunResult forceOK()
+	{
 		RunResult rr = new RunResult();
 		rr.returnCode = 0;
 		rr.conditionData2 = null;
@@ -288,32 +327,38 @@ public class ActiveNodeBase extends ConfigurableBase {
 
 	// How should the runner agent run this source? (shell command, sql through
 	// JDBC, ...)
-	public String getActivityMethod() {
+	public String getActivityMethod()
+	{
 		return "None";
 	}
 
 	// Should it be run by a runner agent?
-	public boolean hasExternalPayload() {
+	public boolean hasExternalPayload()
+	{
 		return false;
 	}
 
 	// Should it be run locally but asynchronously?
-	public boolean hasInternalPayload() {
+	public boolean hasInternalPayload()
+	{
 		return false;
 	}
 
 	// Should the node execution results be visible in the history table?
-	public boolean visibleInHistory() {
+	public boolean visibleInHistory()
+	{
 		return true;
 	}
 
 	// Should it be executed by the self-trigger agent?
-	public boolean selfTriggered() {
+	public boolean selfTriggered()
+	{
 		return false;
 	}
 
 	// How should it behave when multiple transition point on a single State?
-	public MultipleTransitionsHandlingMode multipleTransitionHandling() {
+	public MultipleTransitionsHandlingMode multipleTransitionHandling()
+	{
 		return MultipleTransitionsHandlingMode.AND;
 	}
 	//

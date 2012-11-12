@@ -14,12 +14,13 @@ import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.Seconds;
+import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 
-public class SelfTriggerAgent extends Thread {
+public class SelfTriggerAgent extends Thread
+{
 	private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
 
 	private Semaphore loop;
@@ -32,22 +33,28 @@ public class SelfTriggerAgent extends Thread {
 	private EntityTransaction jpaTransaction;
 	private Semaphore triggering;
 
-	public void stopAgent() {
-		try {
+	public void stopAgent()
+	{
+		try
+		{
 			this.triggering.acquire();
-		} catch (InterruptedException e1) {
+		} catch (InterruptedException e1)
+		{
 		}
-		try {
+		try
+		{
 			this.producerEvents.close();
 			this.jmsSession.close();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			e.printStackTrace();
 		}
 		run = false;
 		loop.release();
 	}
 
-	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException {
+	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
+	{
 		log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
 
 		// Save pointers
@@ -61,35 +68,47 @@ public class SelfTriggerAgent extends Thread {
 
 		// Get all self triggered nodes
 		this.nodes = new ArrayList<ActiveNodeBase>();
-		for (Application a : this.ctx.applicationsById.values()) {
-			for (ActiveNodeBase n : a.getActiveElements().values()) {
+		for (Application a : this.ctx.applicationsById.values())
+		{
+			for (ActiveNodeBase n : a.getActiveElements().values())
+			{
 				if (n.selfTriggered())
 					this.nodes.add(n);
 			}// TODO: select only clocks with local consequences
 		}
+		log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.configurationDirectoryPath,
+				this.nodes.size()));
+		for (int i = 0; i < this.nodes.size(); i++)
+			log.debug(String.format("\t\t" + this.nodes.get(i).getName()));
 
 		// Start thread
 		this.start();
 	}
 
 	@Override
-	public void run() {
+	public void run()
+	{
 		DateTime nextLoopTime = DateTime.now();
-		long sToWait = 0;
+		long msToWait = 0;
 
-		while (run) {
+		while (run)
+		{
 			// Wait for the required number of seconds
-			try {
-				loop.tryAcquire(sToWait, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
+			try
+			{
+				loop.tryAcquire(msToWait, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e)
+			{
 				return;
 			}
 			if (!run)
 				break; // Don't bother doing the final loop
 
-			try {
+			try
+			{
 				this.triggering.acquire();
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException e1)
+			{
 			}
 
 			// Log
@@ -97,16 +116,20 @@ public class SelfTriggerAgent extends Thread {
 
 			// Init the next loop time at a huge value
 			DateTime now = DateTime.now();
+			DateTime loopTime = nextLoopTime;
 			nextLoopTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
 			// Loop through all the self triggered nodes and get their next loop
 			// time
 			jpaTransaction.begin();
 			DateTime tmp = null;
-			for (ActiveNodeBase n : this.nodes) {
-				try {
-					tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em);
-				} catch (Exception e) {
+			for (ActiveNodeBase n : this.nodes)
+			{
+				try
+				{
+					tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopTime);
+				} catch (Exception e)
+				{
 					log.error("Error triggering clocks and the like", e);
 				}
 				if (tmp.compareTo(nextLoopTime) < 0)
@@ -114,18 +137,21 @@ public class SelfTriggerAgent extends Thread {
 			}
 
 			// Commit
-			try {
+			try
+			{
 				jmsSession.commit();
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error("Oups", e);
 				return;
 			}
 			jpaTransaction.commit();
 
 			this.triggering.release();
-
-			sToWait = Seconds.secondsBetween(DateTime.now(), nextLoopTime).getSeconds();
-			log.debug(String.format("Self trigger agent will loop again in %s seconds", sToWait));
+			Interval i = new Interval(DateTime.now(), nextLoopTime);
+			msToWait = i.toDurationMillis();
+			// sToWait = Seconds.secondsBetween(DateTime.now(), nextLoopTime).getSeconds();
+			log.debug(String.format("Self trigger agent will loop again in %s milliseconds", msToWait));
 		}
 	}
 }

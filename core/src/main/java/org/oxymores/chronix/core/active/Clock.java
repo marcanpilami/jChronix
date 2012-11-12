@@ -21,6 +21,7 @@ import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.RRule;
 
 import org.apache.log4j.Logger;
+import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
@@ -79,7 +80,7 @@ public class Clock extends ActiveNodeBase
 
 		// evt.getProperties().add(new DtStart(new DateTime(this.CREATED.toDate())));
 		// evt.getProperties().add(new DtEnd(new DateTime(this.CREATED.plusYears(1).toDate()))); // DEBUG
-		evt.getProperties().add(new net.fortuna.ical4j.model.property.Duration(new Dur(0, 0, 0, 1)));
+		evt.getProperties().add(new net.fortuna.ical4j.model.property.Duration(new Dur(0, 0, this.DURATION, 0)));
 
 		for (ClockRRule r : rulesADD)
 		{
@@ -188,14 +189,20 @@ public class Clock extends ActiveNodeBase
 	}
 
 	@Override
-	public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em)
-			throws Exception
+	public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em,
+			org.joda.time.DateTime present) throws Exception
 	{
 		org.joda.time.DateTime now = org.joda.time.DateTime.now();
-		org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.DURATION + 60);
+		if ((now.compareTo(present) >= 0 && (new Interval(present, now)).toDurationMillis() > 1000)
+				|| (now.compareTo(present) < 0 && (new Interval(now, present)).toDurationMillis() > 1000))
+			log.warn("There is more than one second between internal time and clock time - performance issue? (discard if simulation)");
+		now = present;
+		org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.DURATION);
+
 		if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear())
 		{
 			occurrenceCache = this.getOccurrences(nowminusgrace, now.plusDays(1));
+			log.debug(String.format("%s ocurrences were added to cache", occurrenceCache.size()));
 		}
 
 		// Select the occurrences that should be active
@@ -276,7 +283,7 @@ public class Clock extends ActiveNodeBase
 				break;
 			}
 		}
-		log.debug(String.format("The clock asks to be awaken at %s", res.toString("dd/MM/YYYY hh:mm:ss")));
+		log.debug(String.format("The clock asks to be awoken at %s", res.toString("dd/MM/YYYY hh:mm:ss")));
 		return res;
 	}
 	//
