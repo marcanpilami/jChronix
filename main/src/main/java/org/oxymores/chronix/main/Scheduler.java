@@ -58,8 +58,8 @@ public class Scheduler
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
 		ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
-		Clock ck1 = PlanBuilder.buildClock(a, "every second", "every second", rr1);
-		ck1.setDURATION(1);
+		Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
+		ck1.setDURATION(0);
 		ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa", "should display 'aa'");
 
 		State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
@@ -68,6 +68,8 @@ public class Scheduler
 
 		ChronixContext ctx = new ChronixContext();
 		ctx.configurationDirectory = new File(repoPath);
+		ChronixEngine tmp = new ChronixEngine(repoPath, mainDataInterface + ":" + mainDataPort);
+		tmp.emptyDb();
 		ctx.saveApplication(a);
 		ctx.setWorkingAsCurrent(a);
 
