@@ -57,6 +57,7 @@ $(document).ready(function()
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
+		minWidth: 200,
 	},
 	{
 		id : "_stoppedRunningAt",
