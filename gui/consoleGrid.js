@@ -57,7 +57,7 @@ $(document).ready(function()
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
-		minWidth: 200,
+		minWidth : 200,
 	},
 	{
 		id : "_stoppedRunningAt",
@@ -143,10 +143,50 @@ $(document).ready(function()
 	proxy.getLog(getLogsOK, getLogsKO, null, null);
 });
 
+var obj = null;
+function getItemMetadata(index)
+{
+	obj = logs[index];
+	var res =
+	{
+		cssClasses : "consoleRowUnkwown"
+	};
+
+	if (typeof (obj._lastKnownStatus) == 'string' && obj._lastKnownStatus.substring(0, 4) !== 'DONE')
+	{
+		res =
+		{
+			cssClasses : "consoleRowNotEnded"
+		};
+		return res;
+	}
+
+	if (obj._resultCode === 0)
+	{
+		res =
+		{
+			cssClasses : "consoleRowOK"
+		};
+		return res;
+	}
+	else
+	{
+		res =
+		{
+			cssClasses : "consoleRowKO"
+		};
+		return res;
+	}
+
+	return res;
+}
+
 function getLogsOK(responseObject)
 {
 	logs = responseObject.getReturn().getRunLog();
+	logs.getItemMetadata = getItemMetadata;
 	histGrid = new Slick.Grid("#mainGrid", logs, columns, options);
+	histGrid.setSelectionModel(new Slick.RowSelectionModel());
 }
 
 function getLogsKO(httpStatus, httpStatusText)

@@ -70,6 +70,26 @@
 	padding-right: 5px;
 }
 
+.slick-row.consoleRowKO {
+	background-color: rgb(232, 44, 44);
+	background-image: none;
+}
+
+.slick-row.consoleRowOK {
+	background-color: rgb(55, 186, 50);
+	background-image: none;
+}
+
+.slick-row.consoleRowNotEnded {
+	background-color: rgb(149, 156, 245);
+	background-image: none;
+}
+
+.slick-row.consoleRowUnkwown {
+	background-color: orange;
+	background-image: none;
+}
+
 /**********************************
 
 Use: Reset Styles for all browsers
@@ -352,7 +372,7 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =                     50);
+	filter: alpha(opacity =                           50);
 }
 
 .slick-cell.invalid {
