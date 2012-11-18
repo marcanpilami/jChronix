@@ -1,7 +1,6 @@
 package org.oxymores.chronix.main;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,7 +14,6 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
-import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.wapi.JettyServer;
@@ -60,7 +58,9 @@ public class Scheduler
 		ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
 		Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
 		ck1.setDURATION(0);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
+				"powershell.exe -Command \"$a=Get-Random 5; if ($a -eq 4) {echo 'argh'; exit 1;} else {echo 'aa';exit 0}\"", "aa",
+				"should display 'aa'");
 
 		State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
 		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
