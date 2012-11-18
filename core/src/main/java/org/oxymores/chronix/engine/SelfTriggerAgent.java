@@ -148,9 +148,13 @@ public class SelfTriggerAgent extends Thread
 			jpaTransaction.commit();
 
 			this.triggering.release();
-			Interval i = new Interval(DateTime.now(), nextLoopTime);
-			msToWait = i.toDurationMillis();
-			// sToWait = Seconds.secondsBetween(DateTime.now(), nextLoopTime).getSeconds();
+			if (DateTime.now().compareTo(nextLoopTime) < 0)
+			{
+				Interval i = new Interval(DateTime.now(), nextLoopTime);
+				msToWait = i.toDurationMillis();
+			}
+			else
+				msToWait = 0;
 			log.debug(String.format("Self trigger agent will loop again in %s milliseconds", msToWait));
 		}
 	}
