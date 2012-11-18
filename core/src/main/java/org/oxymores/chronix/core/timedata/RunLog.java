@@ -57,6 +57,7 @@ public class RunLog implements Serializable
 	public Boolean visible = true;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	public String chainLaunchId;
+	public Date lastLocallyModified;
 
 	public static String getTitle()
 	{

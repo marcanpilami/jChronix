@@ -1,5 +1,7 @@
 package org.oxymores.chronix.engine;
 
+import java.util.Date;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -85,6 +87,7 @@ public class LogListener implements MessageListener {
 				rlog.placeName, rlog.stateId));
 		log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
 		emHistory.merge(rlog);
+		rlog.lastLocallyModified = new Date();
 		RunStats.storeMetrics(rlog, emTransac);
 		trHistory.commit();
 		trTransac.commit();
