@@ -93,6 +93,9 @@ button.chrConsoleButton {
 	padding-right: 5px;
 }
 
+/**************************************
+* Console grid formating 
+**************************************/
 .slick-row.consoleRowKO {
 	background-color: rgb(232, 44, 44);
 	background-image: none;
@@ -124,6 +127,49 @@ button.chrConsoleButton {
 	background-image: none;
 	border-top: 2px solid #373799;
 	border-bottom: 2px solid #373799;
+}
+
+/**********************************
+* css for timepicker
+**********************************/
+.ui-timepicker-div .ui-widget-header {
+	margin-bottom: 8px;
+}
+
+.ui-timepicker-div dl {
+	text-align: left;
+}
+
+.ui-timepicker-div dl dt {
+	height: 25px;
+	margin-bottom: -25px;
+}
+
+.ui-timepicker-div dl dd {
+	margin: 0 10px 10px 65px;
+}
+
+.ui-timepicker-div td {
+	font-size: 90%;
+}
+
+.ui-tpicker-grid-label {
+	background: none;
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ui-timepicker-rtl {
+	direction: rtl;
+}
+
+.ui-timepicker-rtl dl {
+	text-align: right;
+}
+
+.ui-timepicker-rtl dl dd {
+	margin: 0 65px 10px 10px;
 }
 
 /**********************************
@@ -408,7 +454,7 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =                   50);
+	filter: alpha(opacity =                     50);
 }
 
 .slick-cell.invalid {

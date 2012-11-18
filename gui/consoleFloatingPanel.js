@@ -2,6 +2,7 @@ function ConsoleFloatingPanel(containerDiv)
 {
 	this.cxfRunLog = null;
 	this.container = null;
+	this.viewportHeight, this.viewportWidth;
 
 	if (typeof containerDiv === 'string')
 		this.container = $("#" + containerDiv);
@@ -11,6 +12,9 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv = $("<div id='test'></div>").addClass("floatingPanel");
 	this.mainDiv.hide();
 	this.container.append(this.mainDiv);
+
+	// Dimensions
+	this.setViewport($(window).width(), $(window).height());
 
 	// add buttons
 	this.btSameLaunch = $("<button type='button'>new launch for this job</button>").click($.proxy(this.copyLaunch, this))
@@ -26,6 +30,12 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv.append(this.btGiveUp);
 }
 
+ConsoleFloatingPanel.prototype.setViewport = function(width, height)
+{
+	this.viewportHeight = height;
+	this.viewportWidth = width;
+};
+
 ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeToContainer, cxfRunLogToDisplay)
 {
 	// Select buttons to display
@@ -38,7 +48,7 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 		this.btKill.show();
 		this.btGiveUp.hide();
 	}
-	else if (obj._resultCode === 0)
+	else if (this.cxfRunLog._resultCode === 0)
 	{
 		this.btSameLaunch.show();
 		this.btRestart.hide();
@@ -46,9 +56,9 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 		this.btKill.hide();
 		this.btGiveUp.hide();
 	}
-	else if (obj._resultCode !== 0)
+	else if (this.cxfRunLog._resultCode !== 0)
 	{
-		this.btSameLaunch.show();
+		this.btSameLaunch.hide();
 		this.btRestart.show();
 		this.btDlLog.show();
 		this.btKill.hide();
@@ -59,33 +69,31 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 	this.mainDiv.css("left", 0);
 	this.mainDiv.css("top", 0);
 
-	cw = this.container.width();
-	ch = this.container.height();
+	var cw = this.container.width();
+	//var ch = this.container.height();
 
-	ww = $(window).width();
-	wh = $(window).height();
+	var ww = $(window).width();
+	//var wh = $(window).height();
 
-	vpX = xRelativeToContainer - $(window).scrollLeft();
-	vpY = yRelativeToContainer - $(window).scrollTop();
+	var vpX = xRelativeToContainer - $(window).scrollLeft();
+	var vpY = yRelativeToContainer - $(window).scrollTop();
 
-	bw = this.mainDiv.width();
-	bh = this.mainDiv.height();
+	var ctX = this.container.position().left;
+	var ctY = this.container.position().top;
 
-	u = xRelativeToContainer;
-	v = yRelativeToContainer;
+	var bw = this.mainDiv.width();
+	var bh = this.mainDiv.height();
 
-	posX = xRelativeToContainer;
-	posY = yRelativeToContainer;
+	var posX = xRelativeToContainer;
+	var posY = yRelativeToContainer;
 
 	if (vpX + bw > ww)
-		posX = cw - bw - 20;
+		posX = cw - bw - 20 - ctX;
 
-	if (vpY < bh)
-		posY = yRelativeToContainer + bh + 2;
-	// else if (vpY + bh + 2 > wh)
-	// posY = yRelativeToContainer - bh - 10;
+	if (vpY < bh + 2)
+		posY = yRelativeToContainer + bh + 8 - ctY;
 	else
-		posY = yRelativeToContainer - bh - 2;
+		posY = yRelativeToContainer - bh - 2 - ctY;
 
 	this.mainDiv.css("left", posX);
 	this.mainDiv.css("top", posY);

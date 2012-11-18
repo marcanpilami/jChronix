@@ -1,18 +1,15 @@
-var proxy = null;
-var logs = null;
-var histGrid = null;
-var options, columns;
-var dataView = null;
-var toolbar = null;
-var container = null;
-var test1, test2;
-var obj = null;
-
-$(document).ready(function()
+function ConsoleGrid(cxfProxy, divId)
 {
-	proxy = new internalapi_chronix_oxymores_org__IServiceConsolePortType();
+	this.proxy = cxfProxy;
+	this.logs = null;
+	this.histGrid = null;
+	this.options = null;
+	this.columns = null;
+	this.dataView = null;
+	this.toolbar = null;
+	this.container = null;
 
-	options =
+	this.options =
 	{
 		editable : false,
 		enableAddRow : false,
@@ -29,7 +26,7 @@ $(document).ready(function()
 		forceFitColumns : true,
 	};
 
-	columns = [
+	this.columns = [
 	{
 		id : "_activeNodeName",
 		name : "Node",
@@ -67,14 +64,6 @@ $(document).ready(function()
 		id : "_stoppedRunningAt",
 		name : "Stopped",
 		field : "_stoppedRunningAt",
-		cssClass : "cell-title",
-		sortable : true,
-		resizable : true,
-	},
-	{
-		id : "_lastKnownStatus",
-		name : "Status",
-		field : "_lastKnownStatus",
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
@@ -145,51 +134,46 @@ $(document).ready(function()
 	}, ];
 
 	// Create DataView (empty for now)
-	dataView = new Slick.Data.DataView(
+	this.dataView = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	dataView.getItemMetadata = getItemMetadata;
+	this.dataView.getItemMetadata = $.proxy(this.getItemMetadata, this);
 
-	dataView.onRowCountChanged.subscribe(function(e, args)
+	this.dataView.onRowCountChanged.subscribe($.proxy(function(e, args)
 	{
-		histGrid.updateRowCount();
-		histGrid.render();
-	});
+		this.histGrid.updateRowCount();
+		this.histGrid.render();
+	}, this));
 
-	dataView.onRowsChanged.subscribe(function(e, args)
+	this.dataView.onRowsChanged.subscribe($.proxy(function(e, args)
 	{
-		histGrid.invalidateRows(args.rows);
-		histGrid.render();
-	});
+		this.histGrid.invalidateRows(args.rows);
+		this.histGrid.render();
+	}, this));
 
 	// Create Grid
-	histGrid = new Slick.Grid("#mainGrid", dataView, columns, options);
-	histGrid.setSelectionModel(new Slick.RowSelectionModel());
+	this.histGrid = new Slick.Grid("#" + divId, this.dataView, this.columns, this.options);
+	this.histGrid.setSelectionModel(new Slick.RowSelectionModel());
 
 	// Call web service to get initial data
-	proxy.getLog(getLogsOK, getLogsKO, null, null);
+	this.proxy.getLog($.proxy(this.getLogsOK, this), $.proxy(this.getLogsKO, this), null, null);
 
 	// Init floating toolbar
-	container = $("#mainGrid").after($("<div/>"));
-	toolbar = new ConsoleFloatingPanel($("#mainGrid"));
+	this.container = $("#mainGrid").after($("<div/>"));
+	this.toolbar = new ConsoleFloatingPanel($("#mainGrid"));
 
 	// Events
-	histGrid.onSelectedRowsChanged.subscribe(function(e, args)
+	this.histGrid.onSelectedRowsChanged.subscribe($.proxy(function(e, args)
 	{
-		var pos = histGrid.getActiveCellPosition();
-		toolbar.show(pos.left, pos.top, logs[args.rows[0]]);
-	});
+		var pos = this.histGrid.getActiveCellPosition();
+		this.toolbar.show(pos.left, pos.top, this.logs[args.rows[0]]);
+	}, this));
+}
 
-	/*
-	 * histGrid.onScroll.subscribe(function(e, args) { toolbar.hide(); });
-	 */
-
-});
-
-function getItemMetadata(index)
+ConsoleGrid.prototype.getItemMetadata = function(index)
 {
-	obj = logs[index];
+	var obj = this.logs[index];
 	var res =
 	{
 		cssClasses : "consoleRowUnkwown"
@@ -222,22 +206,18 @@ function getItemMetadata(index)
 	}
 
 	return res;
-}
+};
 
-function getLogsOK(responseObject)
+ConsoleGrid.prototype.getLogsOK = function(responseObject)
 {
-	logs = responseObject.getReturn().getRunLog();
+	this.logs = responseObject.getReturn().getRunLog();
 
-	dataView.beginUpdate();
-	dataView.setItems(logs, "_id");
-	/*
-	 * dataView.setFilterArgs( { searchString : "", });
-	 */
-	// dataView.setFilter(placeFilter);
-	dataView.endUpdate();
-}
+	this.dataView.beginUpdate();
+	this.dataView.setItems(this.logs, "_id");
+	this.dataView.endUpdate();
+};
 
-function getLogsKO(httpStatus, httpStatusText)
+ConsoleGrid.prototype.getLogsKO = function(httpStatus, httpStatusText)
 {
 	alert('error HTTP ' + httpStatus + "\n" + httpStatusText);
-}
+};
