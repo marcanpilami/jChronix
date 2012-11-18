@@ -1,8 +1,12 @@
 var proxy = null;
-var logs =
-{};
+var logs = null;
 var histGrid = null;
 var options, columns;
+var dataView = null;
+var toolbar = null;
+var container = null;
+var test1, test2;
+var obj = null;
 
 $(document).ready(function()
 {
@@ -140,10 +144,49 @@ $(document).ready(function()
 		resizable : true,
 	}, ];
 
+	// Create DataView (empty for now)
+	dataView = new Slick.Data.DataView(
+	{
+		inlineFilters : true
+	});
+	dataView.getItemMetadata = getItemMetadata;
+
+	dataView.onRowCountChanged.subscribe(function(e, args)
+	{
+		histGrid.updateRowCount();
+		histGrid.render();
+	});
+
+	dataView.onRowsChanged.subscribe(function(e, args)
+	{
+		histGrid.invalidateRows(args.rows);
+		histGrid.render();
+	});
+
+	// Create Grid
+	histGrid = new Slick.Grid("#mainGrid", dataView, columns, options);
+	histGrid.setSelectionModel(new Slick.RowSelectionModel());
+
+	// Call web service to get initial data
 	proxy.getLog(getLogsOK, getLogsKO, null, null);
+
+	// Init floating toolbar
+	container = $("#mainGrid").after($("<div/>"));
+	toolbar = new ConsoleFloatingPanel($("#mainGrid"));
+
+	// Events
+	histGrid.onSelectedRowsChanged.subscribe(function(e, args)
+	{
+		var pos = histGrid.getActiveCellPosition();
+		toolbar.show(pos.left, pos.top, logs[args.rows[0]]);
+	});
+
+	/*
+	 * histGrid.onScroll.subscribe(function(e, args) { toolbar.hide(); });
+	 */
+
 });
 
-var obj = null;
 function getItemMetadata(index)
 {
 	obj = logs[index];
@@ -184,9 +227,14 @@ function getItemMetadata(index)
 function getLogsOK(responseObject)
 {
 	logs = responseObject.getReturn().getRunLog();
-	logs.getItemMetadata = getItemMetadata;
-	histGrid = new Slick.Grid("#mainGrid", logs, columns, options);
-	histGrid.setSelectionModel(new Slick.RowSelectionModel());
+
+	dataView.beginUpdate();
+	dataView.setItems(logs, "_id");
+	/*
+	 * dataView.setFilterArgs( { searchString : "", });
+	 */
+	// dataView.setFilter(placeFilter);
+	dataView.endUpdate();
 }
 
 function getLogsKO(httpStatus, httpStatusText)
