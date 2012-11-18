@@ -8,7 +8,16 @@ function ConsoleGrid(cxfProxy, divId)
 	this.dataView = null;
 	this.toolbar = null;
 	this.container = null;
+	this.extendOnRefresh = true;
 
+	// Divisions
+	this.mainDiv = $("#" + divId);
+	this.commandPanelDiv = $("<div/>");
+	this.mainDiv.append(this.commandPanelDiv);
+	this.gridDiv = $("<div></div>");
+	this.mainDiv.append(this.gridDiv);
+
+	// Grid options & columns
 	this.options =
 	{
 		editable : false,
@@ -58,7 +67,8 @@ function ConsoleGrid(cxfProxy, divId)
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
-		minWidth : 200,
+		minWidth : 70,
+		formatter : this.dateFormatter,
 	},
 	{
 		id : "_stoppedRunningAt",
@@ -67,6 +77,7 @@ function ConsoleGrid(cxfProxy, divId)
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
+		formatter : this.dateFormatter,
 	},
 	{
 		id : "_placeName",
@@ -123,6 +134,7 @@ function ConsoleGrid(cxfProxy, divId)
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
+		maxWidth : 65,
 	},
 	{
 		id : "_dataOut",
@@ -131,6 +143,7 @@ function ConsoleGrid(cxfProxy, divId)
 		cssClass : "cell-title",
 		sortable : true,
 		resizable : true,
+		maxWidth : 75,
 	}, ];
 
 	// Create DataView (empty for now)
@@ -153,14 +166,14 @@ function ConsoleGrid(cxfProxy, divId)
 	}, this));
 
 	// Create Grid
-	this.histGrid = new Slick.Grid("#" + divId, this.dataView, this.columns, this.options);
+	this.histGrid = new Slick.Grid(this.gridDiv, this.dataView, this.columns, this.options);
 	this.histGrid.setSelectionModel(new Slick.RowSelectionModel());
 
 	// Call web service to get initial data
 	this.proxy.getLog($.proxy(this.getLogsOK, this), $.proxy(this.getLogsKO, this), null, null);
 
 	// Init floating toolbar
-	this.container = $("#mainGrid").after($("<div/>"));
+	this.container = this.mainDiv.after($("<div/>"));
 	this.toolbar = new ConsoleFloatingPanel($("#mainGrid"));
 
 	// Events
@@ -169,7 +182,59 @@ function ConsoleGrid(cxfProxy, divId)
 		var pos = this.histGrid.getActiveCellPosition();
 		this.toolbar.show(pos.left, pos.top, this.logs[args.rows[0]]);
 	}, this));
+
+	// Create panel
+	this.startTime = $("<input id='" + divId + "from' type='text'/>");
+	this.commandPanelDiv.append($("<label for='" + divId + "from'>From: </label>"));
+	this.commandPanelDiv.append(this.startTime);
+	this.startTime.datetimepicker(
+	{
+		timeFormat : "HH:mm",
+		dateFormat : 'dd/mm/yy',
+	});
+	this.endTime = $("<input id='" + divId + "to' type='text'/>");
+	this.commandPanelDiv.append($("<label for='" + divId + "to'>To: </label>"));
+	this.commandPanelDiv.append(this.endTime);
+	this.endTime.datetimepicker(
+	{
+		timeFormat : "HH:mm",
+		dateFormat : 'dd/mm/yy',
+	});
+	this.startTime.val(new Date().addHours(-24).toString("dd/MM/yyyy HH:mm"));
+	this.endTime.val(new Date().toString("dd/MM/yyyy HH:mm"));
+	this.upperRefreshDate = new Date();
+
+	var btRefresh = $("<button type='button'>Refresh</button>");
+	this.commandPanelDiv.append(btRefresh);
+	btRefresh.click(this.refreshData.bind(this));
+
+	this.endTime.change(this.dateChange.bind(this));
 }
+
+ConsoleGrid.prototype.dateFormatter = function(row, cell, value, columnDef, dataContext)
+{
+	if (value == null || value === "")
+	{
+		return "-";
+	}
+	return new Date(value).toString("dd/MM HH:mm:ss");
+};
+
+ConsoleGrid.prototype.dateChange = function()
+{
+	this.extendOnRefresh = false;
+};
+
+ConsoleGrid.prototype.refreshData = function()
+{
+	var from = this.startTime.datetimepicker('getDate');
+	var to = this.endTime.datetimepicker('getDate');
+
+	if (to.isAfter(new Date().addMinutes(-10)))
+		this.extendOnRefresh = true;
+
+	this.proxy.getLog(this.getLogsOK.bind(this), this.getLogsKO.bind(this), from.toJSON(), to.toJSON());
+};
 
 ConsoleGrid.prototype.getItemMetadata = function(index)
 {
