@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -22,6 +23,9 @@ public class Scheduler
 {
 	public static void main(String[] args) throws Exception
 	{
+		// Scheduler only uses & stores UTC dates.
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
 		// Load properties
 		Properties applicationProps = new Properties();
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("scheduler.properties");
@@ -55,7 +59,7 @@ public class Scheduler
 		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, mainDataPort, mainDataInterface);
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
-		ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
+		ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 1);
 		Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
 		ck1.setDURATION(0);
 		ShellCommand sc1 = PlanBuilder.buildShellCommand(a,

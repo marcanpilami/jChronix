@@ -23,6 +23,7 @@ package org.oxymores.chronix.wapi;
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
+import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.transport.http_jetty.JettyHTTPDestination;
 import org.apache.cxf.transport.http_jetty.JettyHTTPServerEngine;
 import org.apache.cxf.transport.http_jetty.ServerEngine;
@@ -33,7 +34,6 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.internalapi.IServer;
 import org.oxymores.chronix.internalapi.IServiceClient;
-import org.oxymores.chronix.internalapi.IServiceConsole;
 
 public class JettyServer implements IServer
 {
@@ -60,6 +60,11 @@ public class JettyServer implements IServer
 	private String getURL()
 	{
 		return "http://" + this.interfaceToListenOn + ":" + this.portToListenOn + "/Hello";
+	}
+
+	private String getURL(String sub)
+	{
+		return "http://" + this.interfaceToListenOn + ":" + this.portToListenOn + sub;
 	}
 
 	@Override
@@ -102,6 +107,7 @@ public class JettyServer implements IServer
 			resourceHandler.setWelcomeFiles(new String[] { "index.html" });
 			// resourceHandler.setResourceBase(".");
 			resourceHandler.setResourceBase("..\\gui\\"); // TODO: for debug only.
+			resourceHandler.setCacheControl("public, max-age=3600");
 
 			// Add both handlers to server (static first)
 			HandlerList handlerList = new HandlerList();
@@ -117,12 +123,21 @@ public class JettyServer implements IServer
 			e.printStackTrace();
 		}
 
+		// SOAP console service
 		ServerFactoryBean svrFactory2 = new ServerFactoryBean();
-		svrFactory2.setServiceClass(IServiceConsole.class);
-		svrFactory2.setAddress(this.getURL() + "2");
+		svrFactory2.setServiceClass(IServiceConsoleSoap.class);
+		svrFactory2.setAddress(this.getURL("/console/soap"));
 		svrFactory2.setServiceBean(new ServiceConsole(this.ctx));
 		svrFactory2.getServiceFactory().setDataBinding(new AegisDatabinding());
 		cxfServer2 = svrFactory2.create();
+
+		// REST console service
+		JAXRSServerFactoryBean svrFactory3 = new JAXRSServerFactoryBean();
+		svrFactory3.setServiceBean(new ServiceConsole(this.ctx));
+		svrFactory3.getServiceFactory().setDataBinding(new AegisDatabinding());
+		svrFactory3.setAddress(this.getURL("/console/rest"));
+		svrFactory3.setProvider(new DateHandler());
+		svrFactory3.create();
 
 		log.info("Web service server has started");
 	}

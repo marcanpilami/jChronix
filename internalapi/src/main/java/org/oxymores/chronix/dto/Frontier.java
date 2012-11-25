@@ -16,6 +16,7 @@ import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.timedata.RunLog;
 
 public class Frontier
 {
@@ -467,6 +468,34 @@ public class Frontier
 			else if (d.equals("23"))
 				res.bh_23 = true;
 		}
+		return res;
+	}
+
+	public static DTORunLog getDTORunLog(RunLog rl)
+	{
+		DTORunLog res = new DTORunLog();
+		res.id = rl.id;
+		res.activeNodeName = rl.activeNodeName;
+		res.applicationName = rl.applicationName;
+		res.beganRunningAt = rl.beganRunningAt;
+		res.calendarName = rl.calendarName;
+		res.calendarOccurrence = rl.calendarOccurrence;
+		res.chainLev1Name = rl.chainLev1Name;
+		res.chainName = rl.chainName;
+		res.dataIn = rl.dataIn;
+		res.dataOut = rl.dataOut;
+		res.dns = rl.dns;
+		res.enteredPipeAt = rl.enteredPipeAt;
+		res.executionNodeName = rl.executionNodeName;
+		res.lastKnownStatus = rl.lastKnownStatus;
+		res.markedForUnAt = rl.markedForUnAt;
+		res.osAccount = rl.osAccount;
+		res.placeName = rl.placeName;
+		res.resultCode = rl.resultCode;
+		res.sequence = rl.sequence;
+		res.stoppedRunningAt = rl.stoppedRunningAt;
+		res.whatWasRun = rl.whatWasRun;
+
 		return res;
 	}
 }
