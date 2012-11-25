@@ -265,9 +265,21 @@ public class PlanBuilder
 	{
 		ClockRRule rr1 = new ClockRRule();
 		rr1.setName("Every 10 second");
-		rr1.setDescription("Every 10 second");
+		rr1.setDescription("Every 10 seconds");
 		rr1.setBYSECOND("00,10,20,30,40,50");
 		rr1.setPeriod(Recur.MINUTELY);
+		a.addRRule(rr1);
+
+		return rr1;
+	}
+
+	public static ClockRRule buildRRuleSeconds(Application a, int stepInSeconds)
+	{
+		ClockRRule rr1 = new ClockRRule();
+		rr1.setName("Every " + stepInSeconds + " seconds");
+		rr1.setDescription("Every " + stepInSeconds + " second");
+		rr1.setPeriod(Recur.SECONDLY);
+		rr1.setINTERVAL(stepInSeconds);
 		a.addRRule(rr1);
 
 		return rr1;
