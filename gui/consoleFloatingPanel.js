@@ -40,7 +40,7 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 {
 	// Select buttons to display
 	this.cxfRunLog = cxfRunLogToDisplay;
-	if (this.cxfRunLog._lastKnownStatus.substring(0, 4) !== 'DONE')
+	if (this.cxfRunLog.lastKnownStatus.substring(0, 4) !== 'DONE')
 	{
 		this.btSameLaunch.show();
 		this.btRestart.hide();
@@ -48,7 +48,7 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 		this.btKill.show();
 		this.btGiveUp.hide();
 	}
-	else if (this.cxfRunLog._resultCode === 0)
+	else if (this.cxfRunLog.resultCode === 0)
 	{
 		this.btSameLaunch.show();
 		this.btRestart.hide();
@@ -56,7 +56,7 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 		this.btKill.hide();
 		this.btGiveUp.hide();
 	}
-	else if (this.cxfRunLog._resultCode !== 0)
+	else if (this.cxfRunLog.resultCode !== 0)
 	{
 		this.btSameLaunch.hide();
 		this.btRestart.show();
