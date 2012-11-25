@@ -18,7 +18,8 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 
-public class LogListener implements MessageListener {
+public class LogListener implements MessageListener
+{
 
 	private static Logger log = Logger.getLogger(LogListener.class);
 
@@ -30,7 +31,8 @@ public class LogListener implements MessageListener {
 	private EntityTransaction trHistory, trTransac;
 	private ChronixContext ctx;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	{
 		log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
 		// Save pointers
@@ -54,28 +56,35 @@ public class LogListener implements MessageListener {
 
 	}
 
-	public void stopListening() throws JMSException {
+	public void stopListening() throws JMSException
+	{
 		this.jmsLogConsumer.close();
 		this.jmsSession.close();
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 		ObjectMessage omsg = (ObjectMessage) msg;
 		RunLog rlog;
-		try {
+		try
+		{
 			Object o = omsg.getObject();
-			if (!(o instanceof RunLog)) {
+			if (!(o instanceof RunLog))
+			{
 				log.warn("An object was received on the log queue but was not a log! Ignored.");
 				jmsSession.commit();
 				return;
 			}
 			rlog = (RunLog) o;
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("An error occurred during log reception. BAD. Message will stay in queue and will be analysed later", e);
-			try {
+			try
+			{
 				jmsSession.rollback();
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				e1.printStackTrace();
 			}
 			return;
@@ -86,14 +95,16 @@ public class LogListener implements MessageListener {
 		log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.id, rlog.activeNodeName,
 				rlog.placeName, rlog.stateId));
 		log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
-		emHistory.merge(rlog);
 		rlog.lastLocallyModified = new Date();
+		emHistory.merge(rlog);
 		RunStats.storeMetrics(rlog, emTransac);
 		trHistory.commit();
 		trTransac.commit();
-		try {
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
