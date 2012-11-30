@@ -13,6 +13,10 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv.hide();
 	this.container.append(this.mainDiv);
 
+	this.secondaryDiv = $("<div></div>").addClass("floatingPanel");
+	this.secondaryDiv.hide();
+	this.container.append(this.secondaryDiv);
+
 	// Dimensions
 	this.setViewport($(window).width(), $(window).height());
 
@@ -34,6 +38,18 @@ ConsoleFloatingPanel.prototype.setViewport = function(width, height)
 {
 	this.viewportHeight = height;
 	this.viewportWidth = width;
+};
+
+ConsoleFloatingPanel.prototype.receiveDetails = function(text)
+{
+	this.secondaryDiv.css("left", 10);
+	this.secondaryDiv.css("top", 55 + parseInt(this.mainDiv.css("top").replace("px", "")));
+
+	con = $("<span class='log'/>");
+	this.secondaryDiv.html(con);
+	con.html("Log starts with: " + text);
+
+	this.secondaryDiv.show();
 };
 
 ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeToContainer, cxfRunLogToDisplay)
@@ -70,10 +86,10 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 	this.mainDiv.css("top", 0);
 
 	var cw = this.container.width();
-	//var ch = this.container.height();
+	// var ch = this.container.height();
 
 	var ww = $(window).width();
-	//var wh = $(window).height();
+	// var wh = $(window).height();
 
 	var vpX = xRelativeToContainer - $(window).scrollLeft();
 	var vpY = yRelativeToContainer - $(window).scrollTop();
@@ -98,6 +114,8 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 	this.mainDiv.css("left", posX);
 	this.mainDiv.css("top", posY);
 	this.mainDiv.show();
+
+	$.get("console/rest/main/shortlog/" + this.cxfRunLog.id, this.receiveDetails.bind(this));
 };
 
 ConsoleFloatingPanel.prototype.hide = function()

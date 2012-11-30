@@ -112,6 +112,15 @@ button.chrConsoleButton {
 	width: 100%;
 }
 
+.log {
+	font-family: monospace;
+	font-size: 10pt;
+	font-weight: lighter;
+	font-stretch: wider;
+	color: white;
+	border: none;
+}
+
 /**************************************
 * Column picker
 **************************************/
@@ -553,7 +562,8 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =                                                     50);
+	filter: alpha(opacity =                                                       50
+		);
 }
 
 .slick-cell.invalid {

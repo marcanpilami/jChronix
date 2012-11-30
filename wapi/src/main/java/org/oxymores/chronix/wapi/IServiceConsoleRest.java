@@ -30,6 +30,6 @@ public interface IServiceConsoleRest
 
 	@GET
 	@Path("/shortlog/{id}")
-	@Produces("application/json")
+	@Produces("text/plain")
 	public String getShortLog(@PathParam("id") UUID id);
 }

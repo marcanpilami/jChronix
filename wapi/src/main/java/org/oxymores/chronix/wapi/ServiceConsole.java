@@ -31,7 +31,8 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 	@Override
 	public List<DTORunLog> getLog(Date from, Date to, Date since)
 	{
-		log.debug(String.format("Service getLog was called between %s and %s (received since %s)", from, (since.after(from) ? new Date() : to), since));
+		log.debug(String.format("Service getLog was called between %s and %s (received since %s)", from, (since.after(from) ? new Date()
+				: to), since));
 		EntityManager em = emfHistory.createEntityManager();
 		TypedQuery<RunLog> q = em
 				.createQuery(
@@ -67,13 +68,20 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 	@Override
 	public String getShortLog(UUID id)
 	{
+		log.debug("Service getShortLog was called for ID " + id.toString());
 		EntityManager em = emfHistory.createEntityManager();
 		RunLog rl = em.find(RunLog.class, id);
 
 		if (rl == null)
-			return "";
+		{
+			log.debug("Service getShortLog has ended without finding the log");
+			return "notfound";
+		}
 		else
+		{
+			log.debug("Service getShortLog has ended - the log was found");
 			return rl.shortLog;
+		}
 	}
 
 	@Override
