@@ -125,5 +125,5 @@ ConsoleFloatingPanel.prototype.hide = function()
 
 ConsoleFloatingPanel.prototype.copyLaunch = function()
 {
-	alert(this.cxfRunLog._id);
+	alert(this.cxfRunLog.id);
 };
