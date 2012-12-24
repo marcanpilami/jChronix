@@ -122,10 +122,6 @@ public class RunnerAgent implements MessageListener {
 		res.id2 = rd.id2;
 		res.outOfPlan = rd.outOfPlan;
 
-		// Env var analysis is done here, so as to enable the remote engine to
-		// know them without waiting for the log file
-		// TODO: env var analysis
-
 		// Send the result!
 		Message response;
 		if (!rd.helperExecRequest) {
