@@ -18,6 +18,7 @@ public class RunResult implements Serializable {
 	public String conditionData4 = null; // Actually UUID
 	public HashMap<String, String> newEnvVars = new HashMap<String, String>();
 	public Date start, end;
+	public String envtUser, envtServer,envtOther;
 
 	// Data below is from and for the engine - not created by the run
 	public String id1 = null;

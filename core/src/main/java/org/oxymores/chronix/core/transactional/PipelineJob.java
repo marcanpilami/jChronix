@@ -364,14 +364,14 @@ public class PipelineJob extends TranscientBase {
 		rlog.chainName = a.getActiveNode(UUID.fromString(this.level0Id)).getName();
 		// rlog.dataIn =
 		// rlog.dataOut =
-		rlog.dns = ctx.dns;
+		rlog.dns = rr.envtServer;
 		rlog.enteredPipeAt = this.enteredPipeAt;
 		rlog.executionNodeId = p.getNode().getId().toString();
 		rlog.executionNodeName = p.getNode().getBrokerUrl();
 		rlog.id = this.id.toString();
 		rlog.lastKnownStatus = this.status;
 		rlog.markedForUnAt = this.markedForRunAt;
-		rlog.osAccount = "whocares";
+		rlog.osAccount = rr.envtUser;
 		rlog.placeId = this.placeID;
 		rlog.placeName = p.getName();
 		rlog.resultCode = this.resultCode;

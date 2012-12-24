@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -132,6 +134,12 @@ public class RunnerShell {
 		// Return
 		res.returnCode = p.exitValue();
 		res.logPath = logFilePath;
+		res.envtUser = System.getProperty("user.name");
+		try {
+			res.envtServer = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			res.envtServer = "unknown";
+		}
 		log.info(String.format("Job ended, RC is %s", res.returnCode));
 		return res;
 	}
