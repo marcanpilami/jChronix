@@ -1,10 +1,14 @@
 package org.oxymores.chronix.engine;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -87,6 +91,7 @@ public class RunnerAgent implements MessageListener {
 
 		// Log file (only if true run)
 		String logFilePath = null;
+		String logFileName = null;
 		Date start = new Date();
 		if (!rd.helperExecRequest) {
 
@@ -97,7 +102,7 @@ public class RunnerAgent implements MessageListener {
 			if (!(new File(logFileDateDir)).exists()) {
 				(new File(logFileDateDir)).mkdir();
 			}
-			String logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.placeName.replace(" ", "-"),
+			logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.placeName.replace(" ", "-"),
 					rd.activeSourceName.replace(" ", "-"), rd.id1);
 			logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
 		}
@@ -129,9 +134,31 @@ public class RunnerAgent implements MessageListener {
 				response = jmsSession.createObjectMessage(res);
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
 				jmsProducer.send(msg.getJMSReplyTo(), response);
+				
+				if (res.logSizeBytes <= 500000)
+				{
+					response = jmsSession.createBytesMessage();
+					byte[] bytes = new byte[(int) res.logSizeBytes];
+					InputStream is = new FileInputStream(res.logPath);
+					is.read(bytes);
+					is.close();
+					
+					((BytesMessage) response).writeBytes(bytes);
+					response.setJMSCorrelationID(msg.getJMSCorrelationID());
+					response.setStringProperty("FileName", logFileName);
+					jmsProducer.send(msg.getJMSReplyTo(), response);
+				}
+				else
+					log.warn("A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
 			} catch (JMSException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		} else {
 			try {

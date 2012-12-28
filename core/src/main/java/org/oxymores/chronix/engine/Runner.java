@@ -1,9 +1,15 @@
 package org.oxymores.chronix.engine;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -18,6 +24,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -43,6 +51,8 @@ public class Runner implements MessageListener {
 	private Destination destEndJob, destLogFile, destRequest;
 	private Connection jmsConnection;
 	private MessageConsumer jmsPipelineConsumer;
+	
+	private String logDbPath;
 
 	EntityManagerFactory emf;
 	EntityManager em;
@@ -52,12 +62,19 @@ public class Runner implements MessageListener {
 
 	private MessageProducer producerRunDescription, producerHistory, producerEvents;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf, String logDbPath) throws JMSException {
 		// Save contexts
 		this.ctx = ctx;
 		this.jmsConnection = cnx;
 		this.emf = emf;
 
+		// Log repository
+		this.logDbPath = FilenameUtils.normalize(logDbPath);
+		if (!(new File(this.logDbPath)).exists()) 
+		{
+			(new File(this.logDbPath)).mkdir();
+		}
+				
 		// Internal queue
 		resolving = new ArrayList<PipelineJob>();
 
@@ -167,6 +184,29 @@ public class Runner implements MessageListener {
 
 			} catch (JMSException e) {
 
+			}
+		}
+		else if (msg instanceof BytesMessage)
+		{
+			BytesMessage bmsg = (BytesMessage)msg;
+			String fn = "dump.txt";
+			try {
+				fn = bmsg.getStringProperty("FileName");
+			} catch (JMSException e) {
+			}
+			
+			try
+			{
+				int l = (int)bmsg.getBodyLength();	
+				byte[] r = new byte[l];
+				bmsg.readBytes(r);
+				IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
+				commit();
+			}
+			catch (Exception e)
+			{
+				log.error("An error has occured while receiving a log file. It will be lost. Will not impact the scheduler itself.", e);
+				commit();
 			}
 		}
 	}

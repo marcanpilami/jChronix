@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -123,7 +124,11 @@ public class RunnerShell {
 
 			// Done: close log file
 			if (storeLogFile)
+			{
 				output.close();
+				File f = new File(logFilePath);
+				res.logSizeBytes = f.length();
+			}
 		} catch (IOException e) {
 			log.error("error occurred while running job", e);
 			res.logStart = e.getMessage();

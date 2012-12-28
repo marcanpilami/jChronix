@@ -166,7 +166,7 @@ public class Broker {
 		if (startRunnerAgent) {
 			for (int i = 0; i < this.nbRunners; i++) {
 				RunnerAgent thrRA = new RunnerAgent();
-				thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "JOBLOG"));
+				thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "LOCALJOBLOG"));
 				this.thrsRA.add(thrRA);
 			}
 		}
@@ -183,7 +183,7 @@ public class Broker {
 
 		if (startRunner && this.emf != null) {
 			this.thrRU = new Runner();
-			this.thrRU.startListening(this.connection, brokerName, ctx, emf);
+			this.thrRU.startListening(this.connection, brokerName, ctx, emf, FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));
 		}
 
 		if (startLog) {

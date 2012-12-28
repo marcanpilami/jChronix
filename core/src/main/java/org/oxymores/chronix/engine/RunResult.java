@@ -12,6 +12,8 @@ public class RunResult implements Serializable {
 	public String logStart = "";
 	public String fullerLog = "";
 	public String logPath = "";
+	public String logFileName = "";
+	public long logSizeBytes = 0;
 	public int returnCode = -1;
 	public String conditionData2 = null;
 	public String conditionData3 = null;
