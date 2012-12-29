@@ -30,7 +30,7 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv.append(this.btDlLog);
 	this.btKill = $("<button type='button'>kill</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btKill);
-	this.btGiveUp = $("<button type='button'>override failure</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
+	this.btGiveUp = $("<button type='button'>override failure</button>").click($.proxy(this.forceOK, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btGiveUp);
 }
 
@@ -126,4 +126,18 @@ ConsoleFloatingPanel.prototype.hide = function()
 ConsoleFloatingPanel.prototype.copyLaunch = function()
 {
 	alert(this.cxfRunLog.id);
+};
+
+ConsoleFloatingPanel.prototype.forceOK = function()
+{
+	$.getJSON('/console/rest/main/order/forceok/' + this.cxfRunLog.id, this.forceOKDone.bind(this));
+};
+
+ConsoleFloatingPanel.prototype.forceOKDone = function(json)
+{
+	var res = json.ResOrder;
+	if (res.success)
+		uinfo("Override order was delivered successfuly", 5000);
+	else
+		alert(res.message);
 };

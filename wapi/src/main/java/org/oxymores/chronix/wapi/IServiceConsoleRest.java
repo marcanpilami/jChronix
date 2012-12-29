@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.oxymores.chronix.dto.DTORunLog;
+import org.oxymores.chronix.dto.ResOrder;
 
 @Path("/main")
 public interface IServiceConsoleRest
@@ -32,4 +33,9 @@ public interface IServiceConsoleRest
 	@Path("/shortlog/{id}")
 	@Produces("text/plain")
 	public String getShortLog(@PathParam("id") UUID id);
+	
+	@GET
+	@Path("/order/forceok/{launchId}")
+	@Produces("application/json")
+	public ResOrder orderForceOK(@PathParam("launchId") String launchId);
 }

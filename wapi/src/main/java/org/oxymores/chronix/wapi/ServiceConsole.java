@@ -14,6 +14,9 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.Frontier;
+import org.oxymores.chronix.dto.ResOrder;
+import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.exceptions.ChronixException;
 
 public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 {
@@ -99,6 +102,19 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 
 		log.debug("End of call to getLogSince - returning " + res.size());
 		return res;
+	}
+
+	@Override
+	public ResOrder orderForceOK(String launchId) 
+	{
+		try {
+			EntityManager em = emfHistory.createEntityManager();
+			RunLog rl = em.find(RunLog.class, launchId);
+			SenderHelpers.sendOrderForceOk(rl.applicationId, rl.id, rl.executionNodeId, ctx);
+		} catch (ChronixException e) {
+			return new ResOrder("ForceOK", false, e.toString());
+		}
+		return new ResOrder("ForceOK", true, "The order was sent successfuly");
 	}
 
 }

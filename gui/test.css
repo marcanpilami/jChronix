@@ -121,6 +121,15 @@ button.chrConsoleButton {
 	border: none;
 }
 
+.info {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 999;
+	margin: 3px;
+	font-style: italic;
+}
+
 /**************************************
 * Column picker
 **************************************/

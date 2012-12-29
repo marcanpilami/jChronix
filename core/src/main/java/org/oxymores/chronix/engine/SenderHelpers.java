@@ -25,6 +25,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.exceptions.ChronixException;
 
 public class SenderHelpers {
 	private static Logger log = Logger.getLogger(SenderHelpers.class);
@@ -59,7 +60,6 @@ public class SenderHelpers {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -422,6 +422,18 @@ public class SenderHelpers {
 			jmsSession.commit();
 	}
 
+	public static void sendOrderForceOk(String appId, String pipelineJobId, String execNodeId, ChronixContext ctx) throws ChronixException {
+		try
+		{
+			ExecutionNode en = ctx.applicationsById.get(UUID.fromString(appId)).getNode(UUID.fromString(execNodeId));
+			sendOrderForceOk(pipelineJobId, en, ctx);
+		}
+		catch(Exception e)
+		{
+			throw new ChronixException("Cannot comply.", e);
+		}
+	}
+	
 	public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException {
 		JmsSendData d = new JmsSendData(ctx);
 		sendOrderForceOk(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
