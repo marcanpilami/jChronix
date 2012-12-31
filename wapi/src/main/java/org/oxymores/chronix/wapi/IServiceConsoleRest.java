@@ -1,5 +1,6 @@
 package org.oxymores.chronix.wapi;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,4 +39,9 @@ public interface IServiceConsoleRest
 	@Path("/order/forceok/{launchId}")
 	@Produces("application/json")
 	public ResOrder orderForceOK(@PathParam("launchId") String launchId);
+	
+	@GET
+	@Path("/logfile/{launchId}")
+	@Produces("text/plain")
+	public File getLogFile(@PathParam("launchId") String launchId);
 }

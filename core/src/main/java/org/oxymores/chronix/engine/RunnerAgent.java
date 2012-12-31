@@ -70,6 +70,8 @@ public class RunnerAgent implements MessageListener {
 		log.info("Run request received");
 		ObjectMessage omsg = (ObjectMessage) msg;
 		RunDescription rd;
+		RunResult res = null;
+		
 		try {
 			Object o = omsg.getObject();
 			if (!(o instanceof RunDescription)) {
@@ -108,8 +110,6 @@ public class RunnerAgent implements MessageListener {
 		}
 
 		// Run the command according to its method
-		RunResult res = null;
-
 		if (rd.Method.equals("Shell"))
 			res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest, rd.shouldSendLogFile);
 		else {
@@ -120,6 +120,8 @@ public class RunnerAgent implements MessageListener {
 		}
 		res.start = start;
 		res.end = new Date();
+		res.logFileName = logFileName;
+		res.logPath = logFilePath;
 
 		// Copy the engine ids - that way it will be able to identify the launch
 		// Part of the ids are in the JMS correlation id too

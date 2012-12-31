@@ -1,10 +1,7 @@
 package org.oxymores.chronix.engine;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
@@ -296,6 +293,8 @@ public class Runner implements MessageListener {
 			return; // Means its a debug job - without PipelineJob (impossible in normal operations)
 		}
 		log.info(String.format(String.format("Job %s has ended", rr.id1)));
+		
+		rr.logPath = FilenameUtils.concat(this.logDbPath, rr.logFileName);
 
 		PipelineJob pj = null;
 		for (PipelineJob pj2 : this.resolving) {

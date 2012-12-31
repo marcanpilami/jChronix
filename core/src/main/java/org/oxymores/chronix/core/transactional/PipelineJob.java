@@ -381,7 +381,7 @@ public class PipelineJob extends TranscientBase {
 		rlog.stoppedRunningAt = this.stoppedRunningAt;
 		rlog.visible = act.visibleInHistory();
 		rlog.whatWasRun = this.runThis;
-		rlog.logPath = "to be set";
+		rlog.logPath = rr.logPath;
 
 		// Calendar
 		if (this.calendarID != null) {

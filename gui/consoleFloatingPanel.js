@@ -26,7 +26,7 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv.append(this.btSameLaunch);
 	this.btRestart = $("<button type='button'>restart after crash</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btRestart);
-	this.btDlLog = $("<button type='button'>download log</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
+	this.btDlLog = $("<button type='button'>download log</button>").click($.proxy(this.dlLogFile, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btDlLog);
 	this.btKill = $("<button type='button'>kill</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btKill);
@@ -141,3 +141,14 @@ ConsoleFloatingPanel.prototype.forceOKDone = function(json)
 	else
 		alert(res.message);
 };
+
+ConsoleFloatingPanel.prototype.dlLogFile = function()
+{
+	var NWin = window.open('/console/rest/main/logfile/' + this.cxfRunLog.id);
+	if (window.focus)
+	{
+		NWin.focus();
+	}
+};
+
+

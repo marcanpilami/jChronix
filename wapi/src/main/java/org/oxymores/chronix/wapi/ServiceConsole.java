@@ -1,5 +1,6 @@
 package org.oxymores.chronix.wapi;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,6 +9,10 @@ import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
@@ -117,4 +122,16 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 		return new ResOrder("ForceOK", true, "The order was sent successfuly");
 	}
 
+	@Override
+	@GET
+	@Path("/logfile/{launchId}")
+	@Produces("text/plain")
+	public File getLogFile(@PathParam("launchId") String launchId) 
+	{
+		EntityManager em = emfHistory.createEntityManager();
+		RunLog rl = em.find(RunLog.class, launchId);
+		
+		File f = new File(rl.logPath);
+		return f;
+	}
 }
