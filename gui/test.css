@@ -130,6 +130,27 @@ button.chrConsoleButton {
 	font-style: italic;
 }
 
+.alert {
+	width: 100%;
+	height: 60%;
+	margin-top: 10%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 999;
+	background-color: DodgerBlue;
+	/*padding: 40px;*/
+}
+
+.alertcontent {
+	margin: 10px auto;
+	width: 400px;
+}
+
+.alerttitle {
+	font-size: 30pt;
+}
+
 /**************************************
 * Column picker
 **************************************/
