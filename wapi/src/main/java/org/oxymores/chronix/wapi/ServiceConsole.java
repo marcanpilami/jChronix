@@ -15,7 +15,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.Frontier;
@@ -133,5 +136,34 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 		
 		File f = new File(rl.logPath);
 		return f;
+	}
+	
+	@GET
+	@Path("/order/launch/outofplan/{appId}/{stateId}/{placeId}")
+	@Produces("application/json")
+	public ResOrder orderLaunchOutOfPlan(@PathParam("appId") UUID appId, @PathParam("stateId") UUID stateId, @PathParam("placeId") UUID placeId)
+	{
+		try
+		{
+			Application a = ctx.applicationsById.get(appId);
+			Place p = a.getPlace(placeId);
+			State s = a.getState(stateId);
+			SenderHelpers.runStateAlone(s, p, ctx);
+		}
+		catch (Exception e)
+		{
+			return new ResOrder("LaunchOutOfPlan", false, e.getMessage());
+		}
+		return new ResOrder("LaunchOutOfPlan", true, "The order was sent successfuly");
+	}
+	
+	@GET
+	@Path("/order/launch/outofplan/duplicatelaunch/{launchId}")
+	@Produces("application/json")
+	public ResOrder orderLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
+	{
+		EntityManager em = emfHistory.createEntityManager();
+		RunLog rl = em.find(RunLog.class, launchId);
+		return orderLaunchOutOfPlan(UUID.fromString(rl.applicationId), UUID.fromString(rl.stateId), UUID.fromString(rl.getPlaceId()));
 	}
 }

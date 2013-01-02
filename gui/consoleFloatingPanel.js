@@ -21,14 +21,14 @@ function ConsoleFloatingPanel(containerDiv)
 	this.setViewport($(window).width(), $(window).height());
 
 	// add buttons
-	this.btSameLaunch = $("<button type='button'>new launch for this job</button>").click($.proxy(this.copyLaunch, this))
+	this.btSameLaunch = $("<button type='button'>new launch for this job</button>").click($.proxy(this.relaunch, this))
 			.addClass('chrConsoleButton');
 	this.mainDiv.append(this.btSameLaunch);
-	this.btRestart = $("<button type='button'>restart after crash</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
+	this.btRestart = $("<button type='button'>restart after crash</button>").click($.proxy(this.todo, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btRestart);
 	this.btDlLog = $("<button type='button'>download log</button>").click($.proxy(this.dlLogFile, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btDlLog);
-	this.btKill = $("<button type='button'>kill</button>").click($.proxy(this.copyLaunch, this)).addClass('chrConsoleButton');
+	this.btKill = $("<button type='button'>kill</button>").click($.proxy(this.todo, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btKill);
 	this.btGiveUp = $("<button type='button'>override failure</button>").click($.proxy(this.forceOK, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btGiveUp);
@@ -123,7 +123,7 @@ ConsoleFloatingPanel.prototype.hide = function()
 	this.mainDiv.hide();
 };
 
-ConsoleFloatingPanel.prototype.copyLaunch = function()
+ConsoleFloatingPanel.prototype.todo = function()
 {
 	alert(this.cxfRunLog.id);
 };
@@ -139,7 +139,7 @@ ConsoleFloatingPanel.prototype.forceOKDone = function(json)
 	if (res.success)
 		uinfo("Override order was delivered successfuly", 5000);
 	else
-		alert(res.message);
+		ualert(res.message);
 };
 
 ConsoleFloatingPanel.prototype.dlLogFile = function()
@@ -149,6 +149,20 @@ ConsoleFloatingPanel.prototype.dlLogFile = function()
 	{
 		NWin.focus();
 	}
+};
+
+ConsoleFloatingPanel.prototype.relaunch = function()
+{
+	$.getJSON('/console/rest/main/order/launch/outofplan/duplicatelaunch/' + this.cxfRunLog.id, this.relaunchDone.bind(this));
+};
+
+ConsoleFloatingPanel.prototype.relaunchDone = function(json)
+{
+	var res = json.ResOrder;
+	if (res.success)
+		uinfo("New launch (out of plan) order was delivered successfuly", 5000);
+	else
+		ualert(res.message);
 };
 
 
