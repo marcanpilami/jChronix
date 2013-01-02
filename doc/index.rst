@@ -8,4 +8,6 @@ doc here.
 
    plandev/funcperiod
    plandev/parallelism 
+   
+   code/style
 
