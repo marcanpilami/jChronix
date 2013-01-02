@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.oxymores.chronix.engine.TestChain;
 
+@SuppressWarnings("unused")
 public class TestXml {
 	private static Logger log = Logger.getLogger(TestXml.class);
 
