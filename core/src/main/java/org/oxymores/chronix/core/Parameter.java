@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.
@@ -27,57 +27,65 @@ import javax.jms.JMSException;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Runner;
 
-public class Parameter extends ApplicationObject {
-
+public class Parameter extends ApplicationObject
+{
 	private static final long serialVersionUID = 8017529181151172909L;
 
 	protected String key, value, description;
 	protected Boolean reusable = false;
-	
 	protected ArrayList<ConfigurableBase> elements;
-	
+
 	public Parameter()
 	{
 		super();
 		elements = new ArrayList<ConfigurableBase>();
 	}
 
-	public String getKey() {
+	public String getKey()
+	{
 		return key;
 	}
 
-	public void setKey(String key) {
+	public void setKey(String key)
+	{
 		this.key = key;
 	}
 
-	public String getValue() {
+	public String getValue()
+	{
 		return value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(String value)
+	{
 		this.value = value;
 	}
 
-	public String getDescription() {
+	public String getDescription()
+	{
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(String description)
+	{
 		this.description = description;
 	}
 
-	public Boolean getReusable() {
+	public Boolean getReusable()
+	{
 		return reusable;
 	}
 
-	public void setReusable(Boolean reusable) {
+	public void setReusable(Boolean reusable)
+	{
 		this.reusable = reusable;
 	}
 
-	public ArrayList<ConfigurableBase> getElements() {
+	public ArrayList<ConfigurableBase> getElements()
+	{
 		return elements;
 	}
-	
+
 	public void addElement(ConfigurableBase element)
 	{
 		if (!elements.contains(element))
@@ -86,12 +94,14 @@ public class Parameter extends ApplicationObject {
 			element.addParameter(this);
 		}
 	}
-	
+
 	public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
 	{
-		try {
+		try
+		{
 			sender.sendParameterValue(this.getValue(), this.getId(), pj);
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

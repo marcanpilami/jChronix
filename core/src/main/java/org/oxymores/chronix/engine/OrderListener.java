@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.util.UUID;
@@ -23,7 +43,8 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
-public class OrderListener implements MessageListener {
+public class OrderListener implements MessageListener
+{
 	private static Logger log = Logger.getLogger(OrderListener.class);
 
 	private Session jmsSession;
@@ -35,7 +56,8 @@ public class OrderListener implements MessageListener {
 	private ChronixContext ctx;
 	private String brokerName;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	{
 		log.debug(String.format("(%s) Initializing OrderListener", ctx.configurationDirectory));
 
 		// Save pointers
@@ -54,28 +76,35 @@ public class OrderListener implements MessageListener {
 		this.jmsOrderConsumer.setMessageListener(this);
 	}
 
-	public void stopListening() throws JMSException {
+	public void stopListening() throws JMSException
+	{
 		this.jmsOrderConsumer.close();
 		this.jmsSession.close();
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 		ObjectMessage omsg = (ObjectMessage) msg;
 		Order order;
-		try {
+		try
+		{
 			Object o = omsg.getObject();
-			if (!(o instanceof Order)) {
+			if (!(o instanceof Order))
+			{
 				log.warn("An object was received on the order queue but was not an order! Ignored.");
 				jmsSession.commit();
 				return;
 			}
 			order = (Order) o;
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("An error occurred during order reception. BAD. Message will stay in queue and will be analysed later", e);
-			try {
+			try
+			{
 				jmsSession.rollback();
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				e1.printStackTrace();
 			}
 			return;
@@ -83,46 +112,56 @@ public class OrderListener implements MessageListener {
 
 		log.info(String.format("An order was received. Type: %s", order.type));
 
-		if (order.type == OrderType.RESTARTPJ) {
+		if (order.type == OrderType.RESTARTPJ)
+		{
 			// Find the PipelineJob
 			PipelineJob pj = emTransac.find(PipelineJob.class, (String) order.data);
 
 			// Put the pipeline job inside the local pipeline
-			try {
+			try
+			{
 				String qName = String.format("Q.%s.PJ", brokerName);
 				log.info(String.format("A relaunch PJ will be sent for execution on queue %s", qName));
 				Destination destination = this.jmsSession.createQueue(qName);
 				ObjectMessage m = jmsSession.createObjectMessage(pj);
 				jmsProducer.send(destination, m);
-			} catch (Exception e) {
+			} catch (Exception e)
+			{
 				log.error("An error occurred while processing a relaunch order. The order will be ignored", e);
 			}
 		}
 
-		if (order.type == OrderType.FORCEOK) {
+		if (order.type == OrderType.FORCEOK)
+		{
 			// Find the PipelineJob
 			PipelineJob pj = emTransac.find(PipelineJob.class, (String) order.data);
 
-			try {
+			try
+			{
 				ActiveNodeBase a = pj.getActive(ctx);
 				RunResult rr = a.forceOK();
 				Event e = pj.createEvent(rr);
 				SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
-			} catch (Exception e) {
+			} catch (Exception e)
+			{
 				log.error("An error occurred while processing a force OK order. The order will be ignored", e);
 			}
 		}
 
-		if (order.type == OrderType.EXTERNAL) {
+		if (order.type == OrderType.EXTERNAL)
+		{
 			// Find the external node
 			State s = null;
-			for (Application a : ctx.applicationsByName.values()) {
+			for (Application a : ctx.applicationsByName.values())
+			{
 				s = a.getState(((UUID) order.data));
 				if (s != null)
 					break;
 			}
-			if (s == null || !(s.getRepresents() instanceof External)) {
-				log.error(String.format("An order of type EXTERNAL was received but its data was invalid %s. Corresponding State found was %s.",
+			if (s == null || !(s.getRepresents() instanceof External))
+			{
+				log.error(String.format(
+						"An order of type EXTERNAL was received but its data was invalid %s. Corresponding State found was %s.",
 						order.data, s));
 				commit(); // destroy message - it's corrupt
 				return;
@@ -136,7 +175,8 @@ public class OrderListener implements MessageListener {
 
 			Event evt = new Event();
 			evt.setApplication(s.getApplication());
-			if (d != null && s.getCalendar() != null) {
+			if (d != null && s.getCalendar() != null)
+			{
 				evt.setCalendar(s.getCalendar());
 				evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId().toString());
 			}
@@ -146,12 +186,15 @@ public class OrderListener implements MessageListener {
 			evt.setLevel0IdU(s.getChain().getId());
 			evt.setState(s);
 
-			for (Place p : s.getRunsOn().getPlaces()) {
+			for (Place p : s.getRunsOn().getPlaces())
+			{
 				evt.setPlace(p);
-				try {
+				try
+				{
 					log.debug("Sending event for external source");
 					SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctx, false);
-				} catch (JMSException e1) {
+				} catch (JMSException e1)
+				{
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
@@ -161,10 +204,13 @@ public class OrderListener implements MessageListener {
 		commit();
 	}
 
-	private void commit() {
-		try {
+	private void commit()
+	{
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.core.timedata;
 
 import java.io.Serializable;
@@ -15,7 +35,8 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 @Entity
-public class RunStats implements Serializable {
+public class RunStats implements Serializable
+{
 	private static final long serialVersionUID = -3318147581838188039L;
 	private static Logger log = Logger.getLogger(RunStats.class);
 
@@ -27,28 +48,29 @@ public class RunStats implements Serializable {
 	public float maxDuration;
 	public float minDuration;
 
-	private static RunStats getRS(EntityManager em, String stateId,
-			String placeId) {
+	private static RunStats getRS(EntityManager em, String stateId, String placeId)
+	{
 		RunStats rs = null;
-		TypedQuery<RunStats> q = em
-				.createQuery(
-						"SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2",
-						RunStats.class);
+		TypedQuery<RunStats> q = em.createQuery("SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2", RunStats.class);
 		q.setParameter(1, placeId);
 		q.setParameter(2, stateId);
-		try {
+		try
+		{
 			rs = q.getSingleResult();
-		} catch (NoResultException e) {
+		} catch (NoResultException e)
+		{
 		}
 		return rs;
 	}
 
-	public static float getMean(EntityManager em, String stateId, String placeId) {
+	public static float getMean(EntityManager em, String stateId, String placeId)
+	{
 		// Retrieve the statistics object
 		RunStats rs = RunStats.getRS(em, stateId, placeId);
 
 		// If it does not exist, return default time - 1 minute
-		if (rs == null) {
+		if (rs == null)
+		{
 			return 60000;
 		}
 
@@ -57,8 +79,10 @@ public class RunStats implements Serializable {
 	}
 
 	// Must be called inside open transaction
-	public static void storeMetrics(RunLog rlog, EntityManager em) {
-		if (rlog.stoppedRunningAt != null && rlog.resultCode == 0) {
+	public static void storeMetrics(RunLog rlog, EntityManager em)
+	{
+		if (rlog.stoppedRunningAt != null && rlog.resultCode == 0)
+		{
 			DateTime s = new DateTime(rlog.beganRunningAt);
 			DateTime e = new DateTime(rlog.stoppedRunningAt);
 			Interval i = new Interval(s, e);
@@ -73,12 +97,14 @@ public class RunStats implements Serializable {
 	}
 
 	// Must be called inside open transaction
-	public static void updateStats(RunLog rlog, EntityManager em) {
+	public static void updateStats(RunLog rlog, EntityManager em)
+	{
 		// Retrieve the statistics object
 		RunStats rs = RunStats.getRS(em, rlog.stateId, rlog.placeId);
 
 		// If it does not exist, create it
-		if (rs == null) {
+		if (rs == null)
+		{
 			rs = new RunStats();
 			rs.placeId = rlog.placeId;
 			rs.stateId = rlog.stateId;
@@ -96,18 +122,16 @@ public class RunStats implements Serializable {
 		rs.maxDuration = (Long) o[1];
 		rs.minDuration = (Long) o[2];
 
-		log.debug(String.format("New run duration mean is now %s ms",
-				rs.meanDuration));
+		log.debug(String.format("New run duration mean is now %s ms", rs.meanDuration));
 
 		// Purge all old entries
-		TypedQuery<RunMetrics> q3 = em
-				.createQuery(
-						"SELECT rr FROM RunMetrics rr where rr.placeId = ?1 AND rr.stateId = ?2 ORDER BY rr.startTime asc",
-						RunMetrics.class);
+		TypedQuery<RunMetrics> q3 = em.createQuery(
+				"SELECT rr FROM RunMetrics rr where rr.placeId = ?1 AND rr.stateId = ?2 ORDER BY rr.startTime asc", RunMetrics.class);
 		q3.setParameter(1, rlog.placeId);
 		q3.setParameter(2, rlog.stateId);
 		List<RunMetrics> res = q3.getResultList();
-		if (res.size() > 10) {
+		if (res.size() > 10)
+		{
 			for (RunMetrics rm : res.subList(10, res.size()))
 				em.remove(rm);
 		}

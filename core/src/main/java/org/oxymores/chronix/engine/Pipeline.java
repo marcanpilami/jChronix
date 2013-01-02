@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
@@ -31,8 +51,8 @@ import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
-public class Pipeline extends Thread implements MessageListener {
-
+public class Pipeline extends Thread implements MessageListener
+{
 	private static Logger log = Logger.getLogger(Pipeline.class);
 
 	private ChronixContext ctx;
@@ -56,7 +76,8 @@ public class Pipeline extends Thread implements MessageListener {
 	private Boolean run = true;
 	private Semaphore analyze;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
+	{
 		// Pointers
 		this.ctx = ctx;
 		this.jmsConnection = cnx;
@@ -100,10 +121,13 @@ public class Pipeline extends Thread implements MessageListener {
 		this.start();
 	}
 
-	public void stopListening() throws JMSException {
-		try {
+	public void stopListening() throws JMSException
+	{
+		try
+		{
 			this.analyze.acquire(); // wait for end of analysis
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 			// Do nothing
 		}
 		this.run = false;
@@ -114,36 +138,48 @@ public class Pipeline extends Thread implements MessageListener {
 	}
 
 	@Override
-	public void run() {
-		while (this.run) {
+	public void run()
+	{
+		while (this.run)
+		{
 			// Poll for a job
-			try {
+			try
+			{
 				PipelineJob pj = entering.poll(1, TimeUnit.MINUTES);
-				if (pj != null && pj.getAppID() != null) {
+				if (pj != null && pj.getAppID() != null)
+				{
 					Place p = null;
 					org.oxymores.chronix.core.State s = null;
 					Application a = null;
-					try {
+					try
+					{
 						a = pj.getApplication(ctx);
 						p = pj.getPlace(ctx);
 						s = pj.getState(ctx);
-					} catch (Exception e) {
+					} catch (Exception e)
+					{
 					}
-					if (s == null || p == null || a == null) {
+					if (s == null || p == null || a == null)
+					{
 						log.error("A job was received in the pipeline without any corresponding local application data - ignored");
-					} else {
+					}
+					else
+					{
 						waiting_sequence.add(pj);
 						log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
 					}
 				}
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e)
+			{
 				// Interruption is all right - we want to loop from time to time
 			}
 
 			// Synchro - helps to stop properly
-			try {
+			try
+			{
 				this.analyze.acquire();
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException e1)
+			{
 				// Do nothing
 			}
 			if (!this.run)
@@ -154,25 +190,29 @@ public class Pipeline extends Thread implements MessageListener {
 
 			toAnalyse.clear();
 			toAnalyse.addAll(waiting_sequence);
-			for (PipelineJob j : toAnalyse) {
+			for (PipelineJob j : toAnalyse)
+			{
 				anSequence(j);
 			}
 
 			toAnalyse.clear();
 			toAnalyse.addAll(waiting_token);
-			for (PipelineJob j : toAnalyse) {
+			for (PipelineJob j : toAnalyse)
+			{
 				anToken(j);
 			}
 
 			toAnalyse.clear();
 			toAnalyse.addAll(waiting_exclusion);
-			for (PipelineJob j : toAnalyse) {
+			for (PipelineJob j : toAnalyse)
+			{
 				anExclusion(j);
 			}
 
 			toAnalyse.clear();
 			toAnalyse.addAll(waiting_run);
-			for (PipelineJob j : toAnalyse) {
+			for (PipelineJob j : toAnalyse)
+			{
 				runPJ(j);
 			}
 			this.analyze.release();
@@ -180,29 +220,38 @@ public class Pipeline extends Thread implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 		ObjectMessage omsg = (ObjectMessage) msg;
 		PipelineJob pj = null;
 		TokenRequest rq = null;
-		try {
+		try
+		{
 			Object o = omsg.getObject();
-			if (o instanceof PipelineJob) {
+			if (o instanceof PipelineJob)
+			{
 				pj = (PipelineJob) o;
-			} else if (o instanceof TokenRequest) {
+			}
+			else if (o instanceof TokenRequest)
+			{
 				rq = (TokenRequest) o;
-			} else {
+			}
+			else
+			{
 				log.warn("An object was received on the pipeline queue but was not a job or a token request answer! Ignored.");
 				commit();
 				return;
 			}
 
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
 			rollback();
 			return;
 		}
 
-		if (pj != null) {
+		if (pj != null)
+		{
 			transac_injector.begin();
 
 			pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a crash/stop
@@ -216,19 +265,24 @@ public class Pipeline extends Thread implements MessageListener {
 			entering.add(pj);
 		}
 
-		if (rq != null) {
+		if (rq != null)
+		{
 			log.debug("Token message received");
-			try {
+			try
+			{
 				this.analyze.acquire();
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException e1)
+			{
 			}
 
 			pj = null;
-			for (PipelineJob jj : waiting_token_answer) {
+			for (PipelineJob jj : waiting_token_answer)
+			{
 				if (jj.getIdU().equals(rq.pipelineJobID))
 					pj = jj;
 			}
-			if (pj == null) {
+			if (pj == null)
+			{
 				log.warn("A token was given to an unexisting PJ. Ignored");
 				this.analyze.release();
 				commit();
@@ -244,13 +298,15 @@ public class Pipeline extends Thread implements MessageListener {
 			entering.add(new PipelineJob());
 		}
 
-		
 	}
 
-	private void commit() {
-		try {
+	private void commit()
+	{
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
@@ -258,10 +314,13 @@ public class Pipeline extends Thread implements MessageListener {
 		}
 	}
 
-	private void rollback() {
-		try {
+	private void rollback()
+	{
+		try
+		{
 			jmsSession.rollback();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
@@ -269,17 +328,21 @@ public class Pipeline extends Thread implements MessageListener {
 		}
 	}
 
-	private void anSequence(PipelineJob pj) {
+	private void anSequence(PipelineJob pj)
+	{
 		// TODO: really check sequences
 		waiting_sequence.remove(pj);
 		waiting_token.add(pj);
 		log.debug(String.format("Job %s has finished sequence analysis - on to token analysis", pj.getId()));
 	}
 
-	private void anToken(PipelineJob pj) {
+	private void anToken(PipelineJob pj)
+	{
 		org.oxymores.chronix.core.State s = pj.getState(ctx);
-		if (s.getTokens().size() > 0) {
-			for (Token tk : s.getTokens()) {
+		if (s.getTokens().size() > 0)
+		{
+			for (Token tk : s.getTokens())
+			{
 				TokenRequest tr = new TokenRequest();
 				tr.applicationID = UUID.fromString(pj.getAppID());
 				tr.local = true;
@@ -291,9 +354,11 @@ public class Pipeline extends Thread implements MessageListener {
 				tr.type = TokenRequestType.REQUEST;
 				tr.pipelineJobID = pj.getIdU();
 
-				try {
+				try
+				{
 					SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, jmsJRProducer, true);
-				} catch (JMSException e) {
+				} catch (JMSException e)
+				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -301,7 +366,9 @@ public class Pipeline extends Thread implements MessageListener {
 				waiting_token.remove(pj);
 				waiting_token_answer.add(pj);
 			}
-		} else {
+		}
+		else
+		{
 			// No tokens to analyse - continue advancing in the pipeline
 			waiting_token.remove(pj);
 			waiting_exclusion.add(pj);
@@ -309,25 +376,29 @@ public class Pipeline extends Thread implements MessageListener {
 		}
 	}
 
-	private void anExclusion(PipelineJob pj) {
+	private void anExclusion(PipelineJob pj)
+	{
 		// TODO: really check exclusions
 		waiting_exclusion.remove(pj);
 		waiting_run.add(pj);
 		log.debug(String.format("Job %s has finished exclusion analysis - on to run", pj.getId()));
 	}
 
-	private void runPJ(PipelineJob pj) {
+	private void runPJ(PipelineJob pj)
+	{
 		// Remove from queue
 		waiting_run.remove(pj);
 
 		transac_mainloop.begin(); // JPA transaction
 
 		String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getHost().getBrokerName());
-		try {
+		try
+		{
 			Destination d = jmsSession.createQueue(qName);
 			ObjectMessage om = jmsSession.createObjectMessage(pj);
 			jmsJRProducer.send(d, om);
-		} catch (JMSException e1) {
+		} catch (JMSException e1)
+		{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}

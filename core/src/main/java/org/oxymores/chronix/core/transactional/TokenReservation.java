@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
@@ -11,7 +31,8 @@ import org.oxymores.chronix.engine.TokenRequest;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
 @Entity
-public class TokenReservation implements Serializable {
+public class TokenReservation implements Serializable
+{
 	private static final long serialVersionUID = 4126830397920944723L;
 
 	public String applicationId;
@@ -28,25 +49,29 @@ public class TokenReservation implements Serializable {
 	public boolean localRenew = false;
 	public boolean pending = false;
 
-	public TokenRequest getRenewalRequest() {
+	public TokenRequest getRenewalRequest()
+	{
 		TokenRequest tr = getRequest();
 		tr.type = TokenRequestType.RENEW;
 		return tr;
 	}
 
-	public TokenRequest getReleaseRequest() {
+	public TokenRequest getReleaseRequest()
+	{
 		TokenRequest tr = getRequest();
 		tr.type = TokenRequestType.RELEASE;
 		return tr;
 	}
 
-	public TokenRequest getAgreeRequest() {
+	public TokenRequest getAgreeRequest()
+	{
 		TokenRequest tr = getRequest();
 		tr.type = TokenRequestType.AGREE;
 		return tr;
 	}
 
-	private TokenRequest getRequest() {
+	private TokenRequest getRequest()
+	{
 		TokenRequest tr = new TokenRequest();
 		tr.applicationID = UUID.fromString(this.applicationId);
 		tr.placeID = UUID.fromString(this.placeId);

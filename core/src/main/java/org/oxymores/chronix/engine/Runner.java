@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.io.File;
@@ -39,8 +59,8 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
-public class Runner implements MessageListener {
-
+public class Runner implements MessageListener
+{
 	private static Logger log = Logger.getLogger(Runner.class);
 
 	private ChronixContext ctx;
@@ -48,7 +68,7 @@ public class Runner implements MessageListener {
 	private Destination destEndJob, destLogFile, destRequest;
 	private Connection jmsConnection;
 	private MessageConsumer jmsPipelineConsumer;
-	
+
 	private String logDbPath;
 
 	EntityManagerFactory emf;
@@ -59,7 +79,9 @@ public class Runner implements MessageListener {
 
 	private MessageProducer producerRunDescription, producerHistory, producerEvents;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf, String logDbPath) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf, String logDbPath)
+			throws JMSException
+	{
 		// Save contexts
 		this.ctx = ctx;
 		this.jmsConnection = cnx;
@@ -67,11 +89,11 @@ public class Runner implements MessageListener {
 
 		// Log repository
 		this.logDbPath = FilenameUtils.normalize(logDbPath);
-		if (!(new File(this.logDbPath)).exists()) 
+		if (!(new File(this.logDbPath)).exists())
 		{
 			(new File(this.logDbPath)).mkdir();
 		}
-				
+
 		// Internal queue
 		resolving = new ArrayList<PipelineJob>();
 
@@ -107,19 +129,24 @@ public class Runner implements MessageListener {
 		this.producerEvents = this.jmsSession.createProducer(null);
 	}
 
-	public void stopListening() throws JMSException {
+	public void stopListening() throws JMSException
+	{
 		this.jmsPipelineConsumer.close();
 		this.jmsSession.close();
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 
-		if (msg instanceof ObjectMessage) {
+		if (msg instanceof ObjectMessage)
+		{
 			ObjectMessage omsg = (ObjectMessage) msg;
-			try {
+			try
+			{
 				Object o = omsg.getObject();
-				if ((o instanceof PipelineJob)) {
+				if ((o instanceof PipelineJob))
+				{
 					PipelineJob pj = (PipelineJob) o;
 					log.warn(String.format("Job execution %s request was received", pj.getId()));
 					recvPJ(pj);
@@ -127,22 +154,27 @@ public class Runner implements MessageListener {
 					return;
 				}
 
-				if ((o instanceof RunResult)) {
+				if ((o instanceof RunResult))
+				{
 					RunResult rr = (RunResult) o;
 					recvRR(rr);
 					commit();
 					return;
 				}
 
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
 				rollback();
 				return;
 			}
-		} else if (msg instanceof TextMessage) {
+		}
+		else if (msg instanceof TextMessage)
+		{
 			TextMessage tmsg = (TextMessage) msg;
 
-			try {
+			try
+			{
 				String res = tmsg.getText();
 				String cid = msg.getJMSCorrelationID();
 
@@ -150,8 +182,10 @@ public class Runner implements MessageListener {
 				String paramid = cid.split("\\|")[1];
 
 				PipelineJob resolvedJob = null;
-				for (PipelineJob pj : this.resolving) {
-					if (pj.getId().toString().equals(pjid)) {
+				for (PipelineJob pj : this.resolving)
+				{
+					if (pj.getId().toString().equals(pjid))
+					{
 						resolvedJob = pj;
 						break;
 					}
@@ -159,14 +193,17 @@ public class Runner implements MessageListener {
 
 				int paramIndex = -1;
 				ArrayList<Parameter> prms = resolvedJob.getActive(ctx).getParameters();
-				for (int i = 0; i < prms.size(); i++) {
-					if (prms.get(i).getId().toString().equals(paramid)) {
+				for (int i = 0; i < prms.size(); i++)
+				{
+					if (prms.get(i).getId().toString().equals(paramid))
+					{
 						paramIndex = i;
 						break;
 					}
 				}
 
-				if (paramIndex == -1 || resolvedJob == null) {
+				if (paramIndex == -1 || resolvedJob == null)
+				{
 					log.error("received a param resolution for a job that is not in queue - ignored");
 					return;
 				}
@@ -175,32 +212,35 @@ public class Runner implements MessageListener {
 				resolvedJob.setParamValue(paramIndex, res);
 				tr.commit();
 
-				if (resolvedJob.isReady(ctx)) {
+				if (resolvedJob.isReady(ctx))
+				{
 					this.sendRunDescription(resolvedJob.getRD(ctx), resolvedJob.getPlace(ctx), resolvedJob);
 				}
 
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 
 			}
 		}
 		else if (msg instanceof BytesMessage)
 		{
-			BytesMessage bmsg = (BytesMessage)msg;
+			BytesMessage bmsg = (BytesMessage) msg;
 			String fn = "dump.txt";
-			try {
-				fn = bmsg.getStringProperty("FileName");
-			} catch (JMSException e) {
-			}
-			
 			try
 			{
-				int l = (int)bmsg.getBodyLength();	
+				fn = bmsg.getStringProperty("FileName");
+			} catch (JMSException e)
+			{
+			}
+
+			try
+			{
+				int l = (int) bmsg.getBodyLength();
 				byte[] r = new byte[l];
 				bmsg.readBytes(r);
 				IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
 				commit();
-			}
-			catch (Exception e)
+			} catch (Exception e)
 			{
 				log.error("An error has occured while receiving a log file. It will be lost. Will not impact the scheduler itself.", e);
 				commit();
@@ -208,9 +248,11 @@ public class Runner implements MessageListener {
 		}
 	}
 
-	private void recvPJ(PipelineJob job) {
+	private void recvPJ(PipelineJob job)
+	{
 		PipelineJob j = em.find(PipelineJob.class, job.getId());
-		if (j == null) {
+		if (j == null)
+		{
 			tr.begin();
 			em.persist(job);
 			tr.commit();
@@ -220,14 +262,17 @@ public class Runner implements MessageListener {
 		// Check the job is OK
 		ActiveNodeBase toRun = null;
 		State s = null;
-		try {
+		try
+		{
 			toRun = j.getActive(ctx);
 			s = j.getState(ctx);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			log.error("A pipeline job was received with no corresponding application data - thrown out");
 			return;
 		}
-		if (s == null) {
+		if (s == null)
+		{
 			log.error("A pipeline job was received with no corresponding application data - thrown out");
 			return;
 		}
@@ -239,11 +284,12 @@ public class Runner implements MessageListener {
 		j.setBeganRunningAt(new Date());
 		tr.commit();
 
-		if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload()) {
+		if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload())
+		{
 			// No payload - direct to analysis and event throwing
 			log.debug(String.format(
-					"Job execution request %s corresponds to an element (%s) with only internal execution - no asynchronous operations", j.getId(),
-					toRun.getClass()));
+					"Job execution request %s corresponds to an element (%s) with only internal execution - no asynchronous operations",
+					j.getId(), toRun.getClass()));
 			RunResult res = new RunResult();
 			res.returnCode = 0;
 			res.id1 = j.getId();
@@ -252,31 +298,43 @@ public class Runner implements MessageListener {
 			res.outOfPlan = j.getOutOfPlan();
 			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
 			recvRR(res);
-		} else if (toRun.hasInternalPayload()) {
+		}
+		else if (toRun.hasInternalPayload())
+		{
 			// Asynchronous local run
-			log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution", j.getId(),
-					toRun.getClass()));
+			log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution",
+					j.getId(), toRun.getClass()));
 			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
-		} else if (j.isReady(ctx)) {
+		}
+		else if (j.isReady(ctx))
+		{
 			// It has an active part, but no need for dynamic parameters -> just
 			// run it (i.e. send it to a runner agent)
 			log.debug(String.format(
-					"Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run", j.getId()));
-			try {
+					"Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run",
+					j.getId()));
+			try
+			{
 				SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
 				this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
+		}
+		else
+		{
 			// Active part, and dynamic parameters -> resolve parameters.
 			// The run will occur at parameter value reception
-			log.debug(String.format("Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
+			log.debug(String.format(
+					"Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
 					j.getId()));
-			try {
+			try
+			{
 				SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -284,26 +342,32 @@ public class Runner implements MessageListener {
 		}
 	}
 
-	private void recvRR(RunResult rr) {
-		if (rr.outOfPlan) {
+	private void recvRR(RunResult rr)
+	{
+		if (rr.outOfPlan)
+		{
 			log.info("An out of plan job run has just finished - it won't throw events");
 		}
-		if (rr.id1 == null) {
+		if (rr.id1 == null)
+		{
 			log.warn("Test RR received");
 			return; // Means its a debug job - without PipelineJob (impossible in normal operations)
 		}
 		log.info(String.format(String.format("Job %s has ended", rr.id1)));
-		
+
 		rr.logPath = FilenameUtils.concat(this.logDbPath, rr.logFileName);
 
 		PipelineJob pj = null;
-		for (PipelineJob pj2 : this.resolving) {
-			if (pj2.getId().equals(rr.id1)) {
+		for (PipelineJob pj2 : this.resolving)
+		{
+			if (pj2.getId().equals(rr.id1))
+			{
 				pj = pj2;
 				break;
 			}
 		}
-		if (pj == null) {
+		if (pj == null)
+		{
 			log.error("A result was received that was not waited for - thrown out");
 			return;
 		}
@@ -311,11 +375,13 @@ public class Runner implements MessageListener {
 		State s = null;
 		Place p = null;
 		Application a = null;
-		if (!rr.outOfPlan) {
+		if (!rr.outOfPlan)
+		{
 			s = pj.getState(ctx);
 			p = pj.getPlace(ctx);
 			a = pj.getApplication(ctx);
-			if (s == null) {
+			if (s == null)
+			{
 				log.error("A result was received for a pipeline job without state - thrown out");
 				resolving.remove(pj);
 				return;
@@ -323,11 +389,14 @@ public class Runner implements MessageListener {
 		}
 
 		// Event throwing
-		if (!rr.outOfPlan) {
+		if (!rr.outOfPlan)
+		{
 			Event e = pj.createEvent(rr);
-			try {
+			try
+			{
 				SenderHelpers.sendEvent(e, producerEvents, jmsSession, ctx, true);
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
@@ -343,22 +412,27 @@ public class Runner implements MessageListener {
 		tr.commit();
 
 		// Send history
-		try {
+		try
+		{
 			SenderHelpers.sendHistory(pj.getEventLog(ctx, rr), ctx, producerHistory, jmsSession, true);
-		} catch (JMSException e1) {
+		} catch (JMSException e1)
+		{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		// Calendar progress
-		if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating()) {
+		if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating())
+		{
 			Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
 			CalendarDay justDone = c.getDay(UUID.fromString(pj.getCalendarOccurrenceID()));
 			CalendarDay next = c.getOccurrenceAfter(justDone);
 			CalendarPointer cp = null;
-			try {
+			try
+			{
 				cp = s.getCurrentCalendarPointer(em, p);
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
@@ -366,7 +440,8 @@ public class Runner implements MessageListener {
 			tr.begin();
 			cp.setLastEndedOccurrenceCd(justDone);
 			cp.setRunning(false);
-			if (pj.getResultCode() == 0) {
+			if (pj.getResultCode() == 0)
+			{
 				cp.setLastEndedOkOccurrenceCd(justDone);
 				cp.setNextRunOccurrenceCd(next);
 			}
@@ -379,8 +454,10 @@ public class Runner implements MessageListener {
 		}
 
 		// Free tokens
-		if (s.getTokens().size() > 0) {
-			for (Token tk : s.getTokens()) {
+		if (s.getTokens().size() > 0)
+		{
+			for (Token tk : s.getTokens())
+			{
 				TokenRequest tr = new TokenRequest();
 				tr.applicationID = UUID.fromString(pj.getAppID());
 				tr.local = true;
@@ -391,10 +468,12 @@ public class Runner implements MessageListener {
 				tr.tokenID = tk.getId();
 				tr.type = TokenRequestType.RELEASE;
 				tr.pipelineJobID = pj.getIdU();
-				
-				try {
+
+				try
+				{
 					SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, producerEvents, true);
-				} catch (JMSException e) {
+				} catch (JMSException e)
+				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -405,10 +484,13 @@ public class Runner implements MessageListener {
 		resolving.remove(pj);
 	}
 
-	private void commit() {
-		try {
+	private void commit()
+	{
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
@@ -416,10 +498,13 @@ public class Runner implements MessageListener {
 		}
 	}
 
-	private void rollback() {
-		try {
+	private void rollback()
+	{
+		try
+		{
 			jmsSession.rollback();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
@@ -427,7 +512,8 @@ public class Runner implements MessageListener {
 		}
 	}
 
-	public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj) throws JMSException {
+	public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj) throws JMSException
+	{
 		// Always send to the node, not its hosting node.
 		String qName = String.format("Q.%s.RUNNER", p.getNode().getBrokerName());
 		log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.command));
@@ -440,11 +526,13 @@ public class Runner implements MessageListener {
 		jmsSession.commit();
 	}
 
-	public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException {
+	public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException
+	{
 		SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true);
 	}
 
-	public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException {
+	public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException
+	{
 		// Always send to the node, not its hosting node.
 		Place p = pj.getPlace(ctx);
 		String qName = String.format("Q.%s.RUNNER", p.getNode().getBrokerName());
@@ -458,7 +546,8 @@ public class Runner implements MessageListener {
 		jmsSession.commit();
 	}
 
-	public void sendParameterValue(String value, UUID paramID, PipelineJob pj) throws JMSException {
+	public void sendParameterValue(String value, UUID paramID, PipelineJob pj) throws JMSException
+	{
 		// This is a loopback send (used by static parameter value mostly)
 		log.debug(String.format("A param value resolved locally (static) will be sent to the local engine ( value is %s)", value));
 

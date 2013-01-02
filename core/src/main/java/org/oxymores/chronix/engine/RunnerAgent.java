@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.io.File;
@@ -22,7 +42,8 @@ import javax.jms.Session;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
-public class RunnerAgent implements MessageListener {
+public class RunnerAgent implements MessageListener
+{
 	private static Logger log = Logger.getLogger(RunnerAgent.class);
 
 	private Session jmsSession;
@@ -33,7 +54,8 @@ public class RunnerAgent implements MessageListener {
 
 	private String logDbPath;
 
-	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException {
+	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException
+	{
 		log.info(String.format("(%s) Starting a runner agent", brokerName));
 
 		// Pointers
@@ -41,7 +63,8 @@ public class RunnerAgent implements MessageListener {
 
 		// Log repository
 		this.logDbPath = FilenameUtils.normalize(logDbPath);
-		if (!(new File(this.logDbPath)).exists()) {
+		if (!(new File(this.logDbPath)).exists())
+		{
 			(new File(this.logDbPath)).mkdir();
 		}
 
@@ -59,28 +82,33 @@ public class RunnerAgent implements MessageListener {
 		this.jmsRequestConsumer.setMessageListener(this);
 	}
 
-	public void stopListening() throws JMSException {
+	public void stopListening() throws JMSException
+	{
 		this.jmsProducer.close();
 		this.jmsRequestConsumer.close();
 		this.jmsSession.close();
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 		log.info("Run request received");
 		ObjectMessage omsg = (ObjectMessage) msg;
 		RunDescription rd;
 		RunResult res = null;
-		
-		try {
+
+		try
+		{
 			Object o = omsg.getObject();
-			if (!(o instanceof RunDescription)) {
+			if (!(o instanceof RunDescription))
+			{
 				log.warn("An object was received on the runner queue but was not a RunDescription! Ignored.");
 				commit();
 				return;
 			}
 			rd = (RunDescription) o;
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("An error occurred during RunDescription reception. BAD. Message will stay in queue and will be analysed later", e);
 			rollback();
 			return;
@@ -95,13 +123,15 @@ public class RunnerAgent implements MessageListener {
 		String logFilePath = null;
 		String logFileName = null;
 		Date start = new Date();
-		if (!rd.helperExecRequest) {
+		if (!rd.helperExecRequest)
+		{
 
 			SimpleDateFormat myFormatDir = new SimpleDateFormat("yyyyMMdd");
 			SimpleDateFormat myFormatFile = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 			String dd = myFormatDir.format(start);
 			String logFileDateDir = FilenameUtils.concat(this.logDbPath, dd);
-			if (!(new File(logFileDateDir)).exists()) {
+			if (!(new File(logFileDateDir)).exists())
+			{
 				(new File(logFileDateDir)).mkdir();
 			}
 			logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.placeName.replace(" ", "-"),
@@ -112,7 +142,8 @@ public class RunnerAgent implements MessageListener {
 		// Run the command according to its method
 		if (rd.Method.equals("Shell"))
 			res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest, rd.shouldSendLogFile);
-		else {
+		else
+		{
 			res = new RunResult();
 			res.returnCode = -1;
 			res.logStart = String.format("An unimplemented exec method (%s) was called!", rd.Method);
@@ -131,12 +162,14 @@ public class RunnerAgent implements MessageListener {
 
 		// Send the result!
 		Message response;
-		if (!rd.helperExecRequest) {
-			try {
+		if (!rd.helperExecRequest)
+		{
+			try
+			{
 				response = jmsSession.createObjectMessage(res);
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
 				jmsProducer.send(msg.getJMSReplyTo(), response);
-				
+
 				if (res.logSizeBytes <= 500000)
 				{
 					response = jmsSession.createBytesMessage();
@@ -144,7 +177,7 @@ public class RunnerAgent implements MessageListener {
 					InputStream is = new FileInputStream(res.logPath);
 					is.read(bytes);
 					is.close();
-					
+
 					((BytesMessage) response).writeBytes(bytes);
 					response.setJMSCorrelationID(msg.getJMSCorrelationID());
 					response.setStringProperty("FileName", logFileName);
@@ -152,39 +185,51 @@ public class RunnerAgent implements MessageListener {
 				}
 				else
 					log.warn("A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			} catch (FileNotFoundException e) {
+			} catch (FileNotFoundException e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (IOException e) {
+			} catch (IOException e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
-			try {
+		}
+		else
+		{
+			try
+			{
 				response = jmsSession.createTextMessage(res.logStart);
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
 				jmsProducer.send(msg.getJMSReplyTo(), response);
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 
-		try {
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("oups", e);
 			System.exit(1);
 		}
 	}
 
-	private void commit() {
-		try {
+	private void commit()
+	{
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.
@@ -192,10 +237,13 @@ public class RunnerAgent implements MessageListener {
 		}
 	}
 
-	private void rollback() {
-		try {
+	private void rollback()
+	{
+		try
+		{
 			jmsSession.rollback();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
 			// TODO: stop the engine. Well, as soon as we HAVE an engine to
 			// stop.

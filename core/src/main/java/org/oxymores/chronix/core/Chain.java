@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.
@@ -31,51 +31,62 @@ import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
-public class Chain extends ActiveNodeBase {
-
+public class Chain extends ActiveNodeBase
+{
 	private static final long serialVersionUID = -5369294333404575011L;
 
 	protected ArrayList<State> states;
 	protected ArrayList<Transition> transitions;
 
-	public Chain() {
+	public Chain()
+	{
 		super();
 		states = new ArrayList<State>();
 		transitions = new ArrayList<Transition>();
 	}
 
-	public void addState(State state) {
-		if (!this.states.contains(state)) {
+	public void addState(State state)
+	{
+		if (!this.states.contains(state))
+		{
 			this.states.add(state);
 			state.chain = this;
 		}
 	}
 
-	public ArrayList<State> getStates() {
+	public ArrayList<State> getStates()
+	{
 		return states;
 	}
 
-	public void addTransition(Transition tr) {
-		if (!this.transitions.contains(tr)) {
+	public void addTransition(Transition tr)
+	{
+		if (!this.transitions.contains(tr))
+		{
 			this.transitions.add(tr);
 			tr.chain = this;
 		}
 	}
 
-	public ArrayList<Transition> getTransitions() {
+	public ArrayList<Transition> getTransitions()
+	{
 		return transitions;
 	}
 
-	public State getStartState() {
-		for (State s : states) {
+	public State getStartState()
+	{
+		for (State s : states)
+		{
 			if (s.represents instanceof ChainStart)
 				return s;
 		}
 		return null;
 	}
 
-	public State getEndState() {
-		for (State s : states) {
+	public State getEndState()
+	{
+		for (State s : states)
+		{
 			if (s.represents instanceof ChainEnd)
 				return s;
 		}
@@ -85,7 +96,8 @@ public class Chain extends ActiveNodeBase {
 	// ///////////////////////////////////////////////////////////////////
 	// Run methods
 	@Override
-	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession) {
+	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+	{
 		// Create a new run for the chain.
 		pj.setBeganRunningAt(new DateTime());
 		State s = this.getStartState();
@@ -93,16 +105,17 @@ public class Chain extends ActiveNodeBase {
 	}
 
 	@Override
-	public boolean hasInternalPayload() {
+	public boolean hasInternalPayload()
+	{
 		return true;
 	}
 
 	@Override
-	public boolean visibleInHistory() {
+	public boolean visibleInHistory()
+	{
 		return true;
 	}
 
 	// Run methods
 	// ///////////////////////////////////////////////////////////////////
-
 }

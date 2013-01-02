@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.
@@ -25,33 +25,37 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Runner;
 
-public class ShellCommand extends ActiveNodeBase {
-
+public class ShellCommand extends ActiveNodeBase
+{
 	private static final long serialVersionUID = 3340501935290198518L;
 
 	protected String command;
 
-	public String getCommand() {
+	public String getCommand()
+	{
 		return command;
 	}
 
-	public void setCommand(String command) {
+	public void setCommand(String command)
+	{
 		this.command = command;
 	}
 
 	@Override
-	public String getActivityMethod() {
+	public String getActivityMethod()
+	{
 		return "Shell";
 	}
 
 	@Override
-	public String getCommandName(PipelineJob pj, Runner sender,
-			ChronixContext ctx) {
+	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
+	{
 		return this.command;
 	}
 
 	@Override
-	public boolean hasExternalPayload() {
+	public boolean hasExternalPayload()
+	{
 		return true;
 	}
 }

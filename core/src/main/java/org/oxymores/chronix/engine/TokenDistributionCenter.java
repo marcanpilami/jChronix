@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
@@ -30,7 +50,8 @@ import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
-public class TokenDistributionCenter extends Thread implements MessageListener {
+public class TokenDistributionCenter extends Thread implements MessageListener
+{
 	private static Logger log = Logger.getLogger(TokenDistributionCenter.class);
 
 	private Session jmsSession;
@@ -50,7 +71,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 
 	private ArrayList<TokenReservation> shouldRenew;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException {
+	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	{
 		log.debug(String.format("(%s) Initializing TokenDistributionCenter", ctx.configurationDirectory));
 
 		// Save pointers
@@ -79,7 +101,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		this.start();
 	}
 
-	public void stopListening() throws Exception {
+	public void stopListening() throws Exception
+	{
 		running = false;
 		mainLoop.release();
 		localResource.acquire();
@@ -88,23 +111,31 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(Message msg) {
+	public void onMessage(Message msg)
+	{
 		ObjectMessage omsg = (ObjectMessage) msg;
 		TokenRequest request;
-		try {
+		try
+		{
 			Object o = omsg.getObject();
-			if (o instanceof TokenRequest) {
+			if (o instanceof TokenRequest)
+			{
 				request = (TokenRequest) o;
-			} else {
+			}
+			else
+			{
 				log.warn("An object was received on the token queue but was not a token request or token request ack! Ignored.");
 				jmsSession.commit();
 				return;
 			}
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			log.error("An error occurred during token reception. BAD. Message will stay in queue and will be analysed later", e);
-			try {
+			try
+			{
 				jmsSession.rollback();
-			} catch (JMSException e1) {
+			} catch (JMSException e1)
+			{
 				e1.printStackTrace();
 			}
 			return;
@@ -112,15 +143,20 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 
 		// Check.
 		Application a = null;
-		try {
+		try
+		{
 			a = ctx.applicationsById.get(request.applicationID);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 		}
-		if (a == null) {
+		if (a == null)
+		{
 			log.warn("A token for an application that does not run locally was received. Ignored.");
-			try {
+			try
+			{
 				jmsSession.commit();
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 			}
 			return;
 		}
@@ -130,11 +166,12 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		org.oxymores.chronix.core.State s = a.getState(request.stateID);
 		ExecutionNode en = a.getNode(request.requestingNodeID);
 
-		log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s", request.type,
-				tk.getName(), p.getName(), s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
+		log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
+				request.type, tk.getName(), p.getName(), s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
 
 		// Case 1: TDC proxy: local request.
-		if (request.local && request.type == TokenRequestType.REQUEST) {
+		if (request.local && request.type == TokenRequestType.REQUEST)
+		{
 			// Should be stored locally, so as to refresh the request every 5 minutes
 			TokenReservation tr = new TokenReservation();
 			tr.applicationId = request.applicationID.toString();
@@ -155,13 +192,17 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 
 			// Request should be sent to the node responsible for the distribution of this token
 			request.local = false;
-			try {
+			try
+			{
 				SenderHelpers.sendTokenRequest(request, ctx, jmsSession, jmsProducer, false);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error(e.getMessage(), e);
-				try {
+				try
+				{
 					jmsSession.rollback();
-				} catch (JMSException e1) {
+				} catch (JMSException e1)
+				{
 				}
 				return;
 			}
@@ -169,27 +210,35 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// Case 2: TDC proxy: local release
-		if (request.local && request.type == TokenRequestType.RELEASE) {
+		if (request.local && request.type == TokenRequestType.RELEASE)
+		{
 			// Delete the local element
 			TokenReservation toRemove = null;
-			for (TokenReservation tr : shouldRenew) {
-				if (tr.stateId == request.stateID.toString() && tr.placeId == request.placeID.toString()) {
+			for (TokenReservation tr : shouldRenew)
+			{
+				if (tr.stateId == request.stateID.toString() && tr.placeId == request.placeID.toString())
+				{
 					toRemove = tr;
 				}
 			}
-			if (toRemove != null) {
+			if (toRemove != null)
+			{
 				shouldRenew.remove(toRemove);
 			}
 
 			// Request should be sent to the node responsible for the distribution of this token
 			request.local = false;
-			try {
+			try
+			{
 				SenderHelpers.sendTokenRequest(request, ctx, jmsSession, jmsProducer, false);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error(e.getMessage(), e);
-				try {
+				try
+				{
 					jmsSession.rollback();
-				} catch (JMSException e1) {
+				} catch (JMSException e1)
+				{
 				}
 				return;
 			}
@@ -197,7 +246,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// Case 3: TDC: request
-		if (!request.local && request.type == TokenRequestType.REQUEST) {
+		if (!request.local && request.type == TokenRequestType.REQUEST)
+		{
 			emTransac.begin();
 			log.debug(String.format("Analysing token request for PJ %s", request.pipelineJobID));
 			processRequest(request);
@@ -205,7 +255,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// Case 4: TDC: release
-		if (!request.local && request.type == TokenRequestType.RELEASE) {
+		if (!request.local && request.type == TokenRequestType.RELEASE)
+		{
 			// Data
 
 			// Log
@@ -221,7 +272,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// Case 5: TDC: RENEW
-		if (!request.local && request.type == TokenRequestType.RENEW) {
+		if (!request.local && request.type == TokenRequestType.RENEW)
+		{
 			// Log
 			log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(),
 					p.getName(), a.getName(), en.getBrokerName(), s.getRepresents().getName()));
@@ -235,32 +287,39 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// Case 6: TDC proxy: AGREE
-		if (!request.local && request.type == TokenRequestType.AGREE) {
+		if (!request.local && request.type == TokenRequestType.AGREE)
+		{
 			// Just forward it to the pipeline
 			ObjectMessage response;
-			try {
+			try
+			{
 				response = jmsSession.createObjectMessage(request);
 				String qName = String.format("Q.%s.PJ", a.getLocalNode().getHost().getBrokerName());
 				Destination d = jmsSession.createQueue(qName);
 				log.debug(String.format("A message will be sent to queue %s", qName));
 				jmsProducer.send(d, response);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error(e.getMessage(), e);
-				try {
+				try
+				{
 					jmsSession.rollback();
-				} catch (JMSException e1) {
+				} catch (JMSException e1)
+				{
 				}
 				return;
 			}
 		}
 
 		// TDC: Step 1: Purge granted requests that are too old
-		if (!request.local) {
+		if (!request.local)
+		{
 			emTransac.begin();
-			TypedQuery<TokenReservation> q = em.createQuery("SELECT q from TokenReservation q where q.renewedOn < ?1 AND q.pending = FALSE",
-					TokenReservation.class);
+			TypedQuery<TokenReservation> q = em.createQuery(
+					"SELECT q from TokenReservation q where q.renewedOn < ?1 AND q.pending = FALSE", TokenReservation.class);
 			q.setParameter(1, DateTime.now().minusMinutes(10).toDate());
-			for (TokenReservation tr : q.getResultList()) {
+			for (TokenReservation tr : q.getResultList())
+			{
 				Application aa = ctx.applicationsById.get(tr.applicationId);
 				org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.stateId));
 				Place pp = aa.getPlace(UUID.fromString(tr.placeId));
@@ -275,10 +334,12 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// TDC: Step 2: Now that the purge is gone, analyse pending requests again - tokens may have freed
-		if (!request.local) {
-			TypedQuery<TokenReservation> q = em.createQuery("SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE",
-					TokenReservation.class);
-			for (TokenReservation tr : q.getResultList()) {
+		if (!request.local)
+		{
+			TypedQuery<TokenReservation> q = em.createQuery(
+					"SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE", TokenReservation.class);
+			for (TokenReservation tr : q.getResultList())
+			{
 				log.debug(String.format("Re-analysing token request for PJ %s", tr.pipelineJobId));
 				processRequest(tr);
 			}
@@ -286,25 +347,29 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 
 		// The end: commit JMS
-		try {
+		try
+		{
 			jmsSession.commit();
-		} catch (JMSException e) {
+		} catch (JMSException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		log.debug("Commit successful");
 	}
 
-	private TokenReservation getTR(TokenRequest request) {
-		TypedQuery<TokenReservation> q = em.createQuery("SELECT q from TokenReservation q where q.pipelineJobId = ?1 AND q.localRenew = FALSE",
-				TokenReservation.class);
+	private TokenReservation getTR(TokenRequest request)
+	{
+		TypedQuery<TokenReservation> q = em.createQuery(
+				"SELECT q from TokenReservation q where q.pipelineJobId = ?1 AND q.localRenew = FALSE", TokenReservation.class);
 		q.setParameter(1, request.pipelineJobID.toString());
 
 		TokenReservation tr = q.getSingleResult();
 		return tr;
 	}
 
-	private void processRequest(TokenRequest request) {
+	private void processRequest(TokenRequest request)
+	{
 		// Get data
 		Application a = ctx.applicationsById.get(request.applicationID);
 		Token tk = a.getToken(request.tokenID);
@@ -315,7 +380,8 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		processRequest(a, tk, p, request.requestedAt, s, null, request.pipelineJobID.toString(), request.requestingNodeID.toString());
 	}
 
-	private void processRequest(TokenReservation tr) {
+	private void processRequest(TokenReservation tr)
+	{
 		// Get data
 		Application a = ctx.applicationsById.get(UUID.fromString(tr.applicationId));
 		Token tk = a.getToken(UUID.fromString(tr.tokenId));
@@ -326,19 +392,23 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		processRequest(a, tk, p, new DateTime(tr.requestedOn), s, tr, tr.pipelineJobId, tr.requestedBy);
 	}
 
-	private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s, TokenReservation existing,
-			String pipelineJobId, String requestingNodeId) {
+	private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
+			TokenReservation existing, String pipelineJobId, String requestingNodeId)
+	{
 
 		// Locate all the currently allocated tokens on this Token/Place
 		TypedQuery<TokenReservation> q = null;
-		if (tk.isByPlace()) {
+		if (tk.isByPlace())
+		{
 			q = em.createQuery(
 					"SELECT q from TokenReservation q where q.tokenId = ?1 AND q.renewedOn > ?2 AND q.placeId = ?3 AND q.pending = FALSE AND q.localRenew = FALSE",
 					TokenReservation.class);
 			q.setParameter(1, tk.getId().toString());
 			q.setParameter(2, DateTime.now().minusMinutes(5).toDate());
 			q.setParameter(3, p.getId().toString());
-		} else {
+		}
+		else
+		{
 			q = em.createQuery(
 					"SELECT q from TokenReservation q where q.tokenId = ?1 AND q.renewedOn > ?2 AND q.pending = FALSE AND q.localRenew = FALSE",
 					TokenReservation.class);
@@ -347,12 +417,15 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 		}
 		List<TokenReservation> res = q.getResultList();
 
-		if (res.size() >= tk.getCount()) {
+		if (res.size() >= tk.getCount())
+		{
 			// No available token
-			log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(), res.size()));
+			log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(),
+					res.size()));
 
 			// Store the request if not done already
-			if (existing == null) {
+			if (existing == null)
+			{
 				TokenReservation trs = new TokenReservation();
 				trs.grantedOn = null;
 				trs.localRenew = false;
@@ -367,17 +440,22 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 				trs.requestedBy = requestingNodeId;
 
 				em.persist(trs);
-			} else {
+			}
+			else
+			{
 				existing.renewedOn = new Date();
 			}
 
 			// Don't send an answer to the caller.
-		} else {
+		}
+		else
+		{
 			// Available token
 			log.debug(String.format("A token was requested and one can be issued (%s taken out of %s)", res.size(), tk.getCount()));
 
 			TokenRequest answer = null;
-			if (existing == null) {
+			if (existing == null)
+			{
 				TokenReservation trs = new TokenReservation();
 				trs.grantedOn = new Date();
 				trs.localRenew = false;
@@ -393,7 +471,9 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 
 				em.persist(trs);
 				answer = trs.getAgreeRequest();
-			} else {
+			}
+			else
+			{
 				existing.pending = false;
 				existing.grantedOn = new Date();
 				existing.renewedOn = existing.grantedOn;
@@ -402,15 +482,19 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 
 			// Send an answer
 			ObjectMessage response;
-			try {
+			try
+			{
 				response = jmsSession.createObjectMessage(answer);
 				Destination d = jmsSession.createQueue(String.format("Q.%s.TOKEN", p.getNode().getHost().getBrokerName()));
 				jmsProducer.send(d, response);
-			} catch (JMSException e) {
+			} catch (JMSException e)
+			{
 				log.error(e.getMessage(), e);
-				try {
+				try
+				{
 					jmsSession.rollback();
-				} catch (JMSException e1) {
+				} catch (JMSException e1)
+				{
 				}
 				return;
 			}
@@ -419,23 +503,31 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 	}
 
 	@Override
-	public void run() {
-		do {
+	public void run()
+	{
+		do
+		{
 			DateTime now = DateTime.now();
 
 			// Sync
-			try {
+			try
+			{
 				localResource.acquire();
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException e1)
+			{
 			}
 
 			// Renew token location for all boring
-			for (TokenReservation tr : shouldRenew) {
-				if (now.minusMinutes(5).compareTo(new DateTime(tr.renewedOn)) <= 0) {
-					try {
+			for (TokenReservation tr : shouldRenew)
+			{
+				if (now.minusMinutes(5).compareTo(new DateTime(tr.renewedOn)) <= 0)
+				{
+					try
+					{
 						log.debug("Sending a renewal request for token state");
 						SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctx, jmsSession, jmsProducer, false);
-					} catch (JMSException e) {
+					} catch (JMSException e)
+					{
 					}
 				}
 			}
@@ -443,9 +535,11 @@ public class TokenDistributionCenter extends Thread implements MessageListener {
 			// Sync
 			localResource.release();
 
-			try {
+			try
+			{
 				mainLoop.tryAcquire(60, TimeUnit.SECONDS); // Loop every minute or so. No need to be precise here.
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e)
+			{
 			}
 		} while (running);
 	}

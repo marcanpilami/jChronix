@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.

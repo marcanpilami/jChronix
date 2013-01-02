@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.io.BufferedReader;
@@ -18,11 +38,13 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-public class RunnerShell {
+public class RunnerShell
+{
 	// RunnerAgent logger, yes.
 	private static Logger log = Logger.getLogger(RunnerAgent.class);
 
-	public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog) {
+	public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)
+	{
 		RunResult res = new RunResult();
 		Process p;
 		String nl = System.getProperty("line.separator");
@@ -34,7 +56,8 @@ public class RunnerShell {
 		argsStrings.add("cmd.exe");
 		argsStrings.add("/C");
 		argsStrings.add(rd.command);
-		for (int i = 0; i < rd.paramNames.size(); i++) {
+		for (int i = 0; i < rd.paramNames.size(); i++)
+		{
 			String key = rd.paramNames.get(i);
 			String value = rd.paramValues.get(i);
 			String arg = "";
@@ -56,12 +79,14 @@ public class RunnerShell {
 
 		// Create array containing environment
 		Map<String, String> env = pb.environment();
-		for (int i = 0; i < rd.envNames.size(); i++) {
+		for (int i = 0; i < rd.envNames.size(); i++)
+		{
 			env.put(rd.envNames.get(i), rd.envValues.get(i));
 		}
 		// pb.directory("myDir");
 
-		try {
+		try
+		{
 			// Start!
 			log.debug("GO");
 			p = pb.start();
@@ -72,18 +97,21 @@ public class RunnerShell {
 
 			String line = null;
 			int i = 0;
-			LinkedHashMap<Integer, String> endBuffer = new LinkedHashMap<Integer, String>() {
+			LinkedHashMap<Integer, String> endBuffer = new LinkedHashMap<Integer, String>()
+			{
 				private static final long serialVersionUID = -6773540176968046737L;
 
 				@Override
-				protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest) {
+				protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest)
+				{
 					return this.size() > 1000;
 				}
 			};
 			Writer output = null;
 			if (storeLogFile)
 				output = new BufferedWriter(new FileWriter(logFilePath));
-			while ((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null)
+			{
 				i++;
 
 				// Local log file gets all lines
@@ -100,7 +128,8 @@ public class RunnerShell {
 					log.debug(String.format("Job running. First line of output is: %s", line));
 
 				// Fuller log gets first 10k lines, then last 1k lines.
-				if (returnFullerLog) {
+				if (returnFullerLog)
+				{
 					if (i < 10000)
 						res.fullerLog += line;
 					if (i >= 10000)
@@ -109,7 +138,8 @@ public class RunnerShell {
 
 				// Analyse: there may be a new variable definition in the line
 				matcher.reset(line);
-				if (matcher.find()) {
+				if (matcher.find())
+				{
 					log.debug("Key detected :" + matcher.group(1));
 					log.debug("Value detected :" + matcher.group(2));
 					res.newEnvVars.put(matcher.group(1), matcher.group(2));
@@ -129,7 +159,8 @@ public class RunnerShell {
 				File f = new File(logFilePath);
 				res.logSizeBytes = f.length();
 			}
-		} catch (IOException e) {
+		} catch (IOException e)
+		{
 			log.error("error occurred while running job", e);
 			res.logStart = e.getMessage();
 			res.returnCode = -1;
@@ -140,9 +171,11 @@ public class RunnerShell {
 		res.returnCode = p.exitValue();
 		res.logPath = logFilePath;
 		res.envtUser = System.getProperty("user.name");
-		try {
+		try
+		{
 			res.envtServer = InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e) {
+		} catch (UnknownHostException e)
+		{
 			res.envtServer = "unknown";
 		}
 		log.info(String.format("Job ended, RC is %s", res.returnCode));

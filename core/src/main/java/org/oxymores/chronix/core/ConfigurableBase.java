@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.
@@ -22,35 +22,43 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class ConfigurableBase extends ApplicationObject {
+public class ConfigurableBase extends ApplicationObject
+{
 	private static final long serialVersionUID = 4288408733877784921L;
 
 	protected ArrayList<Parameter> parameters;
 	protected ArrayList<EnvironmentParameter> envParams;
 
-	public ConfigurableBase() {
+	public ConfigurableBase()
+	{
 		super();
 		parameters = new ArrayList<Parameter>();
 		envParams = new ArrayList<EnvironmentParameter>();
 	}
 
-	public ArrayList<Parameter> getParameters() {
+	public ArrayList<Parameter> getParameters()
+	{
 		return this.parameters;
 	}
 
-	public void addParameter(Parameter parameter) {
-		if (!parameters.contains(parameter)) {
+	public void addParameter(Parameter parameter)
+	{
+		if (!parameters.contains(parameter))
+		{
 			parameters.add(parameter);
 			parameter.addElement(this);
 		}
 	}
 
-	public void addEnvVar(String key, String value) {
+	public void addEnvVar(String key, String value)
+	{
 		this.envParams.add(new EnvironmentParameter(key, value));
 	}
 
-	public void removeEnvVar(String key) {
-		for (EnvironmentParameter p : envParams) {
+	public void removeEnvVar(String key)
+	{
+		for (EnvironmentParameter p : envParams)
+		{
 			if (p.key == key)
 				envParams.remove(p);
 		}

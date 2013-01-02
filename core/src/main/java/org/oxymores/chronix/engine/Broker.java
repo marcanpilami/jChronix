@@ -1,3 +1,23 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.oxymores.chronix.engine;
 
 import java.io.File;
@@ -31,7 +51,8 @@ import org.oxymores.chronix.core.NodeLink;
  * 					 .EXCLREQUEST
  */
 
-public class Broker {
+public class Broker
+{
 	private static Logger log = Logger.getLogger(Broker.class);
 
 	// JMS
@@ -57,20 +78,25 @@ public class Broker {
 	TokenDistributionCenter thrTC;
 	int nbRunners = 4;
 
-	public Broker(ChronixEngine engine) throws Exception {
+	public Broker(ChronixEngine engine) throws Exception
+	{
 		this(engine, false);
 	}
 
-	public Broker(ChronixContext ctx) throws Exception {
+	public Broker(ChronixContext ctx) throws Exception
+	{
 		this(ctx, false);
 	}
 
-	public Broker(ChronixEngine engine, boolean purge) throws Exception {
+	public Broker(ChronixEngine engine, boolean purge) throws Exception
+	{
 		this(engine.ctx, purge);
 	}
 
-	public Broker(ChronixContext ctx, boolean purge) throws Exception {
-		log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl, ctx.configurationDirectory));
+	public Broker(ChronixContext ctx, boolean purge) throws Exception
+	{
+		log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl,
+				ctx.configurationDirectory));
 		this.ctx = ctx;
 		brokerName = this.ctx.getBrokerName();
 		if (ctx.applicationsById.values().size() > 0)
@@ -108,8 +134,10 @@ public class Broker {
 
 		// Add channels to other nodes
 		ArrayList<String> opened = new ArrayList<String>();
-		for (Application a : this.ctx.applicationsById.values()) {
-			for (NodeLink nl : a.getLocalNode().getCanSendTo()) {
+		for (Application a : this.ctx.applicationsById.values())
+		{
+			for (NodeLink nl : a.getLocalNode().getCanSendTo())
+			{
 				if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL)))
 					break;
 				if (opened.contains(nl.getNodeTo().getBrokerUrl()))
@@ -123,7 +151,8 @@ public class Broker {
 				tc.setNetworkTTL(20);
 			}
 
-			for (NodeLink nl : a.getLocalNode().getCanReceiveFrom()) {
+			for (NodeLink nl : a.getLocalNode().getCanReceiveFrom())
+			{
 				if (!nl.getMethod().equals(NodeConnectionMethod.TCP))
 					break;
 
@@ -134,9 +163,11 @@ public class Broker {
 
 		// Start
 		log.info(String.format("(%s) The message broker will now start", ctx.configurationDirectoryPath));
-		try {
+		try
+		{
 			broker.start();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			log.error("Failed to star the broker", e);
 			throw e; // a little stupid...
 		}
@@ -149,70 +180,86 @@ public class Broker {
 		this.connection.start();
 	}
 
-	public void registerListeners(ChronixEngine engine) throws JMSException, IOException {
+	public void registerListeners(ChronixEngine engine) throws JMSException, IOException
+	{
 		registerListeners(engine, true, true, true, true, true, true, true, true, true);
 	}
 
-	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
-			boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener, boolean startTokenDistributionCenter)
-			throws JMSException, IOException {
+	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline,
+			boolean startRunner, boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener,
+			boolean startTokenDistributionCenter) throws JMSException, IOException
+	{
 		this.engine = engine;
 
-		if (startMeta) {
+		if (startMeta)
+		{
 			this.thrML = new MetadataListener();
 			this.thrML.startListening(this.connection, brokerName, ctx, this.engine);
 		}
 
-		if (startRunnerAgent) {
-			for (int i = 0; i < this.nbRunners; i++) {
+		if (startRunnerAgent)
+		{
+			for (int i = 0; i < this.nbRunners; i++)
+			{
 				RunnerAgent thrRA = new RunnerAgent();
 				thrRA.startListening(this.connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "LOCALJOBLOG"));
 				this.thrsRA.add(thrRA);
 			}
 		}
 
-		if (startEventListener && this.emf != null) {
+		if (startEventListener && this.emf != null)
+		{
 			this.thrEL = new EventListener();
 			this.thrEL.startListening(this.connection, brokerName, ctx, emf);
 		}
 
-		if (startPipeline && this.emf != null) {
+		if (startPipeline && this.emf != null)
+		{
 			this.thrPL = new Pipeline();
 			this.thrPL.startListening(this.connection, brokerName, ctx, emf);
 		}
 
-		if (startRunner && this.emf != null) {
+		if (startRunner && this.emf != null)
+		{
 			this.thrRU = new Runner();
-			this.thrRU.startListening(this.connection, brokerName, ctx, emf, FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));
+			this.thrRU.startListening(this.connection, brokerName, ctx, emf,
+					FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));
 		}
 
-		if (startLog) {
+		if (startLog)
+		{
 			this.thrLL = new LogListener();
 			this.thrLL.startListening(this.connection, brokerName, ctx);
 		}
 
-		if (startTranscient && this.emf != null) {
+		if (startTranscient && this.emf != null)
+		{
 			this.thrTL = new TranscientListener();
 			this.thrTL.startListening(this.connection, brokerName, ctx, emf);
 		}
 
-		if (startOrderListener && this.emf != null) {
+		if (startOrderListener && this.emf != null)
+		{
 			this.thrOL = new OrderListener();
 			this.thrOL.startListening(this.connection, brokerName, ctx);
 		}
 
-		if (startTokenDistributionCenter && this.emf != null) {
+		if (startTokenDistributionCenter && this.emf != null)
+		{
 			this.thrTC = new TokenDistributionCenter();
 			this.thrTC.startListening(this.connection, brokerName, ctx);
 		}
 	}
 
-	public void stop() {
+	public void stop()
+	{
 		log.info(String.format("(%s) The message broker will now stop", this.ctx.configurationDirectoryPath));
-		try {
+		try
+		{
 			if (this.thrML != null)
 				this.thrML.stopListening();
-			if (this.thrsRA.size() > 0) {
+			if (this.thrsRA.size() > 0)
+			{
 				for (RunnerAgent ra : this.thrsRA)
 					ra.stopListening();
 			}
@@ -231,35 +278,43 @@ public class Broker {
 			if (this.thrTC != null)
 				this.thrTC.stopListening();
 
-			for (NetworkConnector nc : this.broker.getNetworkConnectors()) {
+			for (NetworkConnector nc : this.broker.getNetworkConnectors())
+			{
 				this.broker.removeNetworkConnector(nc);
 			}
 
 			this.connection.close();
 			broker.stop();
 			broker.waitUntilStopped();
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			log.warn("an error occured while trying to stop the broker", e);
 		}
 	}
 
-	public BrokerService getBroker() {
+	public BrokerService getBroker()
+	{
 		return this.broker;
 	}
 
-	public EntityManagerFactory getEmf() {
+	public EntityManagerFactory getEmf()
+	{
 		return emf;
 	}
 
-	public Connection getConnection() {
+	public Connection getConnection()
+	{
 		return connection;
 	}
 
-	public void purgeAllQueues() throws JMSException {
+	public void purgeAllQueues() throws JMSException
+	{
 		log.warn("purge all queues on broker was called");
-		try {
+		try
+		{
 			broker.deleteAllMessages();
-		} catch (IOException e1) {
+		} catch (IOException e1)
+		{
 			// TODO Auto-generated catch block
 			log.warn("An error occurend while purging queues. Not a real problem", e1);
 		}

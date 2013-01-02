@@ -1,5 +1,5 @@
 /**
- * @author Marc-Antoine Gouillart
+ * By Marc-Antoine Gouillart, 2012
  * 
  * See the NOTICE file distributed with this work for 
  * information regarding copyright ownership.
@@ -40,7 +40,8 @@ import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.SenderHelpers;
 
-public class State extends ConfigurableBase {
+public class State extends ConfigurableBase
+{
 	private static Logger log = Logger.getLogger(State.class);
 	private static final long serialVersionUID = -2640644872229489081L;
 
@@ -84,7 +85,8 @@ public class State extends ConfigurableBase {
 
 	// /////////////////////////////////////////////////////////////////////////////////
 	// Construction / destruction
-	public State() {
+	public State()
+	{
 		super();
 		this.exclusiveStates = new ArrayList<State>();
 		this.trFromHere = new ArrayList<Transition>();
@@ -98,180 +100,225 @@ public class State extends ConfigurableBase {
 
 	// /////////////////////////////////////////////////////////////////////////////////
 	// Stupid GET/SET
-	public int getCalendarShift() {
+	public int getCalendarShift()
+	{
 		return calendarShift;
 	}
 
-	public void setCalendarShift(int shift) {
+	public void setCalendarShift(int shift)
+	{
 		this.calendarShift = shift;
 	}
 
-	public Boolean getLoopMissedOccurrences() {
+	public Boolean getLoopMissedOccurrences()
+	{
 		return loopMissedOccurrences;
 	}
 
-	public void setLoopMissedOccurrences(Boolean loopMissedOccurrences) {
+	public void setLoopMissedOccurrences(Boolean loopMissedOccurrences)
+	{
 		this.loopMissedOccurrences = loopMissedOccurrences;
 	}
 
-	public Boolean getEndOfOccurrence() {
+	public Boolean getEndOfOccurrence()
+	{
 		return endOfOccurrence;
 	}
 
-	public void setEndOfOccurrence(Boolean endOfOccurrence) {
+	public void setEndOfOccurrence(Boolean endOfOccurrence)
+	{
 		this.endOfOccurrence = endOfOccurrence;
 	}
 
-	public PlaceGroup getRunsOn() {
+	public PlaceGroup getRunsOn()
+	{
 		return this.runsOn;
 	}
 
-	public ArrayList<Place> getRunsOnPlaces() {
+	public ArrayList<Place> getRunsOnPlaces()
+	{
 		return this.runsOn.getPlaces();
 	}
 
-	public void setRunsOn(PlaceGroup group) {
+	public void setRunsOn(PlaceGroup group)
+	{
 		this.runsOn = group;
 	}
 
-	public ArrayList<Transition> getTrFromHere() {
+	public ArrayList<Transition> getTrFromHere()
+	{
 		return trFromHere;
 	}
 
-	public ArrayList<Transition> getTrReceivedHere() {
+	public ArrayList<Transition> getTrReceivedHere()
+	{
 		return trReceivedHere;
 	}
 
-	public ArrayList<AutoSequence> getSequences() {
+	public ArrayList<AutoSequence> getSequences()
+	{
 		return sequences;
 	}
 
-	public Calendar getCalendar() {
+	public Calendar getCalendar()
+	{
 		return calendar;
 	}
 
-	public Boolean getParallel() {
+	public Boolean getParallel()
+	{
 		return parallel;
 	}
 
-	public void setParallel(Boolean parallel) {
+	public void setParallel(Boolean parallel)
+	{
 		this.parallel = parallel;
 	}
 
-	public Integer getX() {
+	public Integer getX()
+	{
 		return x;
 	}
 
-	public void setX(Integer x) {
+	public void setX(Integer x)
+	{
 		this.x = x;
 	}
 
-	public Integer getY() {
+	public Integer getY()
+	{
 		return y;
 	}
 
-	public void setY(Integer y) {
+	public void setY(Integer y)
+	{
 		this.y = y;
 	}
 
-	public Integer getWarnAfterMn() {
+	public Integer getWarnAfterMn()
+	{
 		return warnAfterMn;
 	}
 
-	public void setWarnAfterMn(Integer warnAfterMn) {
+	public void setWarnAfterMn(Integer warnAfterMn)
+	{
 		this.warnAfterMn = warnAfterMn;
 	}
 
-	public Integer getKillAfterMn() {
+	public Integer getKillAfterMn()
+	{
 		return killAfterMn;
 	}
 
-	public void setKillAfterMn(Integer killAfterMn) {
+	public void setKillAfterMn(Integer killAfterMn)
+	{
 		this.killAfterMn = killAfterMn;
 	}
 
-	public Integer getMaxPipeWaitTime() {
+	public Integer getMaxPipeWaitTime()
+	{
 		return maxPipeWaitTime;
 	}
 
-	public void setMaxPipeWaitTime(Integer maxPipeWaitTime) {
+	public void setMaxPipeWaitTime(Integer maxPipeWaitTime)
+	{
 		this.maxPipeWaitTime = maxPipeWaitTime;
 	}
 
-	public Integer getEventValidityMn() {
+	public Integer getEventValidityMn()
+	{
 		return eventValidityMn;
 	}
 
-	public void setEventValidityMn(Integer eventValidityMn) {
+	public void setEventValidityMn(Integer eventValidityMn)
+	{
 		this.eventValidityMn = eventValidityMn;
 	}
 
-	public ActiveNodeBase getRepresents() {
+	public ActiveNodeBase getRepresents()
+	{
 		return represents;
 	}
 
-	public void setRepresents(ActiveNodeBase represents) {
+	public void setRepresents(ActiveNodeBase represents)
+	{
 		this.represents = represents;
 	}
 
-	public Chain getChain() {
+	public Chain getChain()
+	{
 		return chain;
 	}
 
-	public void setChain(Chain chain) {
+	public void setChain(Chain chain)
+	{
 		this.chain = chain;
 		this.application = chain.getApplication();
 		if (chain != null)
 			chain.addState(this);
 	}
 
-	public ArrayList<State> getExclusiveStates() {
+	public ArrayList<State> getExclusiveStates()
+	{
 		return exclusiveStates;
 	}
 
-	public void addSequence(AutoSequence s) {
+	public void addSequence(AutoSequence s)
+	{
 		s.s_addStateUsing(this);
 		this.sequences.add(s);
 	}
 
-	public void removeSequence(AutoSequence s) {
-		try {
+	public void removeSequence(AutoSequence s)
+	{
+		try
+		{
 			this.sequences.remove(s);
-		} finally {
+		} finally
+		{
 			s.s_removeStateUsing(this);
 		}
 	}
 
-	public void addToken(Token t) {
+	public void addToken(Token t)
+	{
 		t.s_addStateUsing(this);
 		this.tokens.add(t);
 	}
 
-	public void removeToken(Token t) {
-		try {
+	public void removeToken(Token t)
+	{
+		try
+		{
 			this.tokens.remove(t);
-		} finally {
+		} finally
+		{
 			t.s_removeStateUsing(this);
 		}
 	}
 
-	public void setCalendar(Calendar c) {
+	public void setCalendar(Calendar c)
+	{
 		c.s_addStateUsing(this);
 		this.calendar = c;
 	}
 
-	public void removeCalendar() {
-		if (this.calendar != null) {
+	public void removeCalendar()
+	{
+		if (this.calendar != null)
+		{
 			this.calendar.s_removeStateUsing(this);
 			this.calendar = null;
 		}
 	}
 
-	public ArrayList<Token> getTokens() {
+	public ArrayList<Token> getTokens()
+	{
 		return tokens;
 	}
 
-	public void setTokens(ArrayList<Token> tokens) {
+	public void setTokens(ArrayList<Token> tokens)
+	{
 		this.tokens = tokens;
 	}
 
@@ -281,49 +328,61 @@ public class State extends ConfigurableBase {
 	// /////////////////////////////////////////////////////////////////////////////////
 	// Relationship handling
 
-	public ArrayList<State> getClientStates() {
+	public ArrayList<State> getClientStates()
+	{
 		ArrayList<State> res = new ArrayList<State>();
-		for (Transition t : trFromHere) {
+		for (Transition t : trFromHere)
+		{
 			res.add(t.stateTo);
 		}
 		return res;
 	}
 
-	public ArrayList<State> getParentStates() {
+	public ArrayList<State> getParentStates()
+	{
 		ArrayList<State> res = new ArrayList<State>();
-		for (Transition t : trReceivedHere) {
+		for (Transition t : trReceivedHere)
+		{
 			res.add(t.stateFrom);
 		}
 		return res;
 	}
 
-	public void addTransitionFromHere(Transition tr) {
-		if (!this.trFromHere.contains(tr)) {
+	public void addTransitionFromHere(Transition tr)
+	{
+		if (!this.trFromHere.contains(tr))
+		{
 			this.trFromHere.add(tr);
 			tr.setStateFrom(this);
 		}
 	}
 
-	public void addTransitionReceivedHere(Transition tr) {
-		if (!this.trReceivedHere.contains(tr)) {
+	public void addTransitionReceivedHere(Transition tr)
+	{
+		if (!this.trReceivedHere.contains(tr))
+		{
 			this.trReceivedHere.add(tr);
 			tr.setStateTo(this);
 		}
 	}
 
-	public Transition connectTo(State target) {
+	public Transition connectTo(State target)
+	{
 		return connectTo(target, 0, null, null, null, false);
 	}
 
-	public Transition connectTo(State target, Boolean calendarAware) {
+	public Transition connectTo(State target, Boolean calendarAware)
+	{
 		return connectTo(target, 0, null, null, null, calendarAware);
 	}
 
-	public Transition connectTo(State target, Integer guard1) {
+	public Transition connectTo(State target, Integer guard1)
+	{
 		return connectTo(target, guard1, null, null, null, false);
 	}
 
-	public Transition connectTo(State target, Integer guard1, String guard2, String guard3, UUID guard4, Boolean calendarAware) {
+	public Transition connectTo(State target, Integer guard1, String guard2, String guard3, UUID guard4, Boolean calendarAware)
+	{
 		// Note: there can be multiple transitions between two states.
 		Transition t = new Transition();
 		t.setStateFrom(this);
@@ -338,24 +397,32 @@ public class State extends ConfigurableBase {
 		return t;
 	}
 
-	public ArrayList<ExecutionNode> getRunsOnExecutionNodes() {
+	public ArrayList<ExecutionNode> getRunsOnExecutionNodes()
+	{
 		ArrayList<ExecutionNode> res = new ArrayList<ExecutionNode>();
-		for (Place p : this.runsOn.getPlaces()) {
-			if (!res.contains(p.getNode())) {
+		for (Place p : this.runsOn.getPlaces())
+		{
+			if (!res.contains(p.getNode()))
+			{
 				res.add(p.getNode());
 			}
 		}
 		return res;
 	}
 
-	public ArrayList<ExecutionNode> getRunsOnPhysicalNodes() {
+	public ArrayList<ExecutionNode> getRunsOnPhysicalNodes()
+	{
 		ArrayList<ExecutionNode> all = getRunsOnExecutionNodes();
 		ArrayList<ExecutionNode> res = getRunsOnExecutionNodes();
-		for (ExecutionNode n : all) {
-			if (n.isHosted()) {
+		for (ExecutionNode n : all)
+		{
+			if (n.isHosted())
+			{
 				if (!res.contains(n.getHost()))
 					res.add(n.getHost());
-			} else {
+			}
+			else
+			{
 				// Not hosted - true Physical Node
 				if (!res.contains(n))
 					res.add(n);
@@ -367,9 +434,12 @@ public class State extends ConfigurableBase {
 	// Relationship handling
 	// /////////////////////////////////////////////////////////////////////////////////
 
-	public void consumeEvents(List<Event> events, List<Place> places, EntityManager em) {
-		for (Event e : events) {
-			for (Place p : places) {
+	public void consumeEvents(List<Event> events, List<Place> places, EntityManager em)
+	{
+		for (Event e : events)
+		{
+			for (Place p : places)
+			{
 				EventConsumption ec = new EventConsumption();
 				ec.setEvent(e);
 				ec.setPlace(p);
@@ -384,46 +454,59 @@ public class State extends ConfigurableBase {
 
 	// /////////////////////////////////////////////////////////////////////////////////
 	// Create and post PJ for run
-	public void runAlone(Place p, MessageProducer pjProducer, Session session) {
+	public void runAlone(Place p, MessageProducer pjProducer, Session session)
+	{
 		run(p, pjProducer, session, null, false, true, true, this.chain.id, UUID.randomUUID(), null, null, null);
 	}
 
-	public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session) {
+	public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session)
+	{
 		run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null);
 	}
 
-	public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession) {
+	public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession)
+	{
 		for (Place p : this.runsOn.places)
 			runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), null, null);
 	}
 
-	public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id) {
+	public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id)
+	{
 		for (Place p : this.runsOn.places)
 			runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id);
 	}
 
-	public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession) {
+	public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession)
+	{
 		runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), null, null);
 	}
 
-	public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id) {
+	public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id,
+			UUID level3Id)
+	{
 		// Calendar update
 		String CalendarOccurrenceID = null;
-		if (this.usesCalendar()) {
-			try {
+		if (this.usesCalendar())
+		{
+			try
+			{
 				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
 				CalendarOccurrenceID = cp.getNextRunOccurrenceId();
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 
 		CalendarPointer cpToUpdate = null;
-		if (this.usesCalendar()) {
-			try {
+		if (this.usesCalendar())
+		{
+			try
+			{
 				cpToUpdate = this.getCurrentCalendarPointer(em, p);
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
@@ -432,36 +515,44 @@ public class State extends ConfigurableBase {
 		run(p, pjProducer, jmsSession, CalendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate);
 	}
 
-	public void runFromEngine(Place p, EntityManager em, MessageProducer pjProducer, Session session, Event e) {
+	public void runFromEngine(Place p, EntityManager em, MessageProducer pjProducer, Session session, Event e)
+	{
 		// Calendar update
 		String CalendarOccurrenceID = null;
-		if (this.usesCalendar()) {
-			try {
+		if (this.usesCalendar())
+		{
+			try
+			{
 				CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
 				CalendarOccurrenceID = cp.getNextRunOccurrenceId();
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 
 		CalendarPointer cpToUpdate = null;
-		if (this.usesCalendar()) {
-			try {
+		if (this.usesCalendar())
+		{
+			try
+			{
 				cpToUpdate = this.getCurrentCalendarPointer(em, p);
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 
-		run(p, pjProducer, session, CalendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(), e.getLevel2IdU(),
-				e.getLevel3IdU(), cpToUpdate, e.getEnvParams().toArray(new EnvironmentValue[0]));
+		run(p, pjProducer, session, CalendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(),
+				e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate, e.getEnvParams().toArray(new EnvironmentValue[0]));
 	}
 
 	public void run(Place p, MessageProducer pjProducer, Session session, String CalendarOccurrenceID, boolean updateCalendarPointer,
-			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id, CalendarPointer cpToUpdate,
-			EnvironmentValue... params) {
+			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id,
+			CalendarPointer cpToUpdate, EnvironmentValue... params)
+	{
 		DateTime now = DateTime.now();
 
 		PipelineJob pj = new PipelineJob();
@@ -490,13 +581,15 @@ public class State extends ConfigurableBase {
 			pj.setKillAt(now.plusMinutes(this.killAfterMn).toDate());
 
 		// Environment variables from the State itself
-		for (EnvironmentParameter ep : this.envParams) {
+		for (EnvironmentParameter ep : this.envParams)
+		{
 			pj.addValue(ep.key, ep.value);
 		}
 
 		// Environment variables passed from other jobs through the event (or
 		// manually set)
-		for (EnvironmentValue ep : params) {
+		for (EnvironmentValue ep : params)
+		{
 			if (ep.getKey().startsWith("CHR_"))
 				continue; // Don't propagate auto variables
 			pj.addValue(ep.getKey(), ep.getValue());
@@ -513,8 +606,10 @@ public class State extends ConfigurableBase {
 		pj.addValue("CHR_PLACEID", this.runsOn.name);
 
 		// Calendar update
-		if (this.usesCalendar()) {
-			try {
+		if (this.usesCalendar())
+		{
+			try
+			{
 				pj.setCalendarOccurrenceID(CalendarOccurrenceID);
 				pj.setCalendar(calendar);
 
@@ -526,20 +621,25 @@ public class State extends ConfigurableBase {
 				pj.addValue("CHR_CALENDAR", this.calendar.name);
 				pj.addValue("CHR_CALENDARID", this.calendar.id.toString());
 				pj.addValue("CHR_CALENDARDATE", cpToUpdate.getNextRunOccurrenceId());
-			} catch (Exception e1) {
+			} catch (Exception e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-		} else {
+		}
+		else
+		{
 			pj.addValue("CHR_CALENDAR", "NONE");
 			pj.addValue("CHR_CALENDARDATE", "NONE");
 		}
 
 		// Send it (commit is done by main engine later)
 		String qName = String.format("Q.%s.PJ", p.getNode().getBrokerName());
-		try {
+		try
+		{
 			SenderHelpers.sendPipelineJobToRunner(pj, p.getNode().getHost(), pjProducer, session, false);
-		} catch (JMSException e1) {
+		} catch (JMSException e1)
+		{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
@@ -556,7 +656,8 @@ public class State extends ConfigurableBase {
 	// Calendar stuff
 
 	// Called within an open transaction. Won't be committed here.
-	public void createPointers(EntityManager em) {
+	public void createPointers(EntityManager em)
+	{
 		if (!this.usesCalendar())
 			return;
 
@@ -567,18 +668,22 @@ public class State extends ConfigurableBase {
 
 		// A pointer should exist on all places
 		int i = 0;
-		for (Place p : this.runsOn.places) {
+		for (Place p : this.runsOn.places)
+		{
 			// Is there a existing pointer on this place?
 			CalendarPointer existing = null;
-			for (CalendarPointer retrieved : ptrs) {
-				if (retrieved.getPlaceID().equals(p.id.toString())) {
+			for (CalendarPointer retrieved : ptrs)
+			{
+				if (retrieved.getPlaceID().equals(p.id.toString()))
+				{
 					existing = retrieved;
 					break;
 				}
 			}
 
 			// If not, create one
-			if (existing == null) {
+			if (existing == null)
+			{
 				// A pointer should be created on this place!
 				CalendarDay cd = this.calendar.getCurrentOccurrence(em);
 				CalendarDay cdLast = this.calendar.getOccurrenceShiftedBy(cd, this.calendarShift - 1);
@@ -598,19 +703,21 @@ public class State extends ConfigurableBase {
 			}
 		}
 		if (i != 0)
-			log.debug(String
-					.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id, this.represents.name, this.chain.name, i));
+			log.debug(String.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id, this.represents.name,
+					this.chain.name, i));
 		// Commit is done by the calling method
 	}
 
-	public boolean canRunAccordingToCalendarOnPlace(EntityManager em, Place p) {
-		if (!this.usesCalendar()) {
+	public boolean canRunAccordingToCalendarOnPlace(EntityManager em, Place p)
+	{
+		if (!this.usesCalendar())
+		{
 			log.debug("Does not use a calendar - crontab mode");
 			return true; // no calendar = no calendar constraints
 		}
 
-		log.debug(String
-				.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id, this.represents.name, this.chain.name));
+		log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id, this.represents.name,
+				this.chain.name));
 
 		// Get the pointer
 		Query q = em.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2");
@@ -618,14 +725,17 @@ public class State extends ConfigurableBase {
 		q.setParameter(2, p.getId().toString());
 
 		CalendarPointer cp = null;
-		try {
+		try
+		{
 			cp = this.getCurrentCalendarPointer(em, p);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		if (cp == null) {
+		if (cp == null)
+		{
 			log.error(String.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.", this.id,
 					this.represents.name, this.chain.name));
 			return false;
@@ -640,13 +750,15 @@ public class State extends ConfigurableBase {
 		CalendarDay nextRunOccurrence = this.calendar.getDay(UUID.fromString(cp.getNextRunOccurrenceId()));
 
 		// Only one occurrence can run at the same time
-		if (cp.getRunning()) {
+		if (cp.getRunning())
+		{
 			log.debug("Previous run has not ended - it must end for a new run to occur");
 			return false;
 		}
 
 		// Only run if previous run was OK (unless asked for)
-		if (cp.getLatestFailed() && this.blockIfPreviousFailed) {
+		if (cp.getLatestFailed() && this.blockIfPreviousFailed)
+		{
 			log.debug("Previous run has ended incorrectly - it must end correctly for a new run to occur");
 			return false;
 		}
@@ -663,7 +775,8 @@ public class State extends ConfigurableBase {
 
 		// Shift: -1 means that the State will run at D-1 when the reference is
 		// D. Therefore it should stop one occurrence before the others.
-		if (!this.calendar.isBeforeOrSame(nextRunOccurrence, shiftedLimit)) {
+		if (!this.calendar.isBeforeOrSame(nextRunOccurrence, shiftedLimit))
+		{
 			log.debug(String
 					.format("This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
 							baseLimit.seq, shiftedLimit.seq, nextRunOccurrence.seq));
@@ -671,16 +784,20 @@ public class State extends ConfigurableBase {
 		}
 
 		// If here, alles gut.
-		log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id, this.represents.name, this.chain.name));
+		log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id, this.represents.name,
+				this.chain.name));
 		return true;
 	}
 
-	public boolean isLate(EntityManager em, Place p) {
+	public boolean isLate(EntityManager em, Place p)
+	{
 		// LATE MEANS: State Latest OK < Calendar current + State shift
 		CalendarDay cd = null;
-		try {
+		try
+		{
 			cd = this.getCurrentCalendarOccurrence(em, p);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -689,15 +806,18 @@ public class State extends ConfigurableBase {
 		return this.calendar.isBefore(cd, limit);
 	}
 
-	public Boolean usesCalendar() {
+	public Boolean usesCalendar()
+	{
 		return this.calendar != null;
 	}
 
-	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p) throws Exception {
+	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p) throws Exception
+	{
 		return this.calendar.getDay(this.getCurrentCalendarPointer(em, p).getLastEndedOkOccurrenceUuid());
 	}
 
-	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p) throws Exception {
+	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p) throws Exception
+	{
 		if (!usesCalendar())
 			throw new Exception("A state without calendar has no current occurrence");
 
