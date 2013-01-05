@@ -20,6 +20,7 @@
 
 package org.oxymores.chronix.engine;
 
+import java.util.Date;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -32,6 +33,7 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -40,6 +42,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
@@ -52,7 +55,7 @@ public class OrderListener implements MessageListener
 	private Connection jmsConnection;
 	private MessageProducer jmsProducer;
 	private MessageConsumer jmsOrderConsumer;
-	private EntityManager emTransac;
+	private EntityManager emTransac, emHistory;
 	private ChronixContext ctx;
 	private String brokerName;
 
@@ -65,6 +68,7 @@ public class OrderListener implements MessageListener
 		this.ctx = ctx;
 		this.brokerName = brokerName;
 		this.emTransac = this.ctx.getTransacEM();
+		this.emHistory = this.ctx.getHistoryEM();
 
 		// Register current object as a listener on ORDER queue
 		String qName = String.format("Q.%s.ORDER", brokerName);
@@ -135,16 +139,40 @@ public class OrderListener implements MessageListener
 		{
 			// Find the PipelineJob
 			PipelineJob pj = emTransac.find(PipelineJob.class, (String) order.data);
+			if (pj != null && pj.getStatus().equals("DONE"))
+			{
+				try
+				{
+					ActiveNodeBase a = pj.getActive(ctx);
+					RunResult rr = a.forceOK();
+					Event e = pj.createEvent(rr);
+					SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
 
-			try
+					// Update history & PJ
+					EntityTransaction t1 = emTransac.getTransaction();
+					EntityTransaction t2 = emHistory.getTransaction();
+					t1.begin();
+					t2.begin();
+					pj.setStatus("OVERRIDEN");
+					RunLog rl = emHistory.find(RunLog.class, (String) order.data);
+					if (rl != null)
+					{
+						rl.setLastKnownStatus("OVERRIDEN");
+						rl.setLastLocallyModified(new Date());
+					}
+					t1.commit();
+					t2.commit();
+				} catch (Exception e)
+				{
+					log.error("An error occurred while processing a force OK order. The order will be ignored", e);
+				}
+			}
+			else
 			{
-				ActiveNodeBase a = pj.getActive(ctx);
-				RunResult rr = a.forceOK();
-				Event e = pj.createEvent(rr);
-				SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
-			} catch (Exception e)
-			{
-				log.error("An error occurred while processing a force OK order. The order will be ignored", e);
+				if (pj == null)
+					log.error("Job does not exist - cannot be forced!");
+				else
+					log.error("The job cannot be forced: it is not in state DONE (current state: " + pj.getStatus() + ")");
 			}
 		}
 

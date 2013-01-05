@@ -429,4 +429,14 @@ public class RunLog implements Serializable
 	{
 		this.chainLaunchId = chainLaunchId;
 	}
+
+	public Date getLastLocallyModified()
+	{
+		return lastLocallyModified;
+	}
+
+	public void setLastLocallyModified(Date lastLocallyModified)
+	{
+		this.lastLocallyModified = lastLocallyModified;
+	}
 }

@@ -50,7 +50,7 @@ public class PipelineJob extends TranscientBase
 	@SuppressWarnings("unused")
 	private static Logger log = Logger.getLogger(PipelineJob.class);
 
-	@Column(columnDefinition = "CHAR(20)", length = 20)
+	@Column(length = 20)
 	String status;
 	@Column(length = 255)
 	String runThis;

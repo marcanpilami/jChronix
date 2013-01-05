@@ -249,6 +249,11 @@ button.chrConsoleButton {
 	background-image: none;
 }
 
+.slick-row.consoleRowUser {
+	background-color: orange;
+	background-image: none;
+}
+
 .slick-row.consoleRowUnkwown {
 	background-color: orange;
 	background-image: none;

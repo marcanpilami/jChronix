@@ -35,6 +35,7 @@
 		<description>Persistence Unit used for storing Chronix history</description>
 		<provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 		<class>org.oxymores.chronix.core.timedata.RunLog</class>
+		<class>org.oxymores.chronix.core.timedata.UserTrace</class>
 
 		<properties>
 			<property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhist" />

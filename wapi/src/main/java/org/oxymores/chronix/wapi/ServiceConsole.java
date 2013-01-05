@@ -115,13 +115,16 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 	@Override
 	public ResOrder orderForceOK(String launchId) 
 	{
+		log.debug("Service orderForceOK was called");
 		try {
 			EntityManager em = emfHistory.createEntityManager();
 			RunLog rl = em.find(RunLog.class, launchId);
 			SenderHelpers.sendOrderForceOk(rl.applicationId, rl.id, rl.executionNodeId, ctx);
 		} catch (ChronixException e) {
+			log.debug("End of call to orderForceOK - failure");
 			return new ResOrder("ForceOK", false, e.toString());
 		}
+		log.debug("End of call to orderForceOK - success");
 		return new ResOrder("ForceOK", true, "The order was sent successfuly");
 	}
 

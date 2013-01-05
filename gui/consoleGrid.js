@@ -47,6 +47,9 @@ function ConsoleGrid(divId)
 		resizable : true,
 		withFilter : true,
 	},
+	/*
+	 * { id : "id", name : "ID", field : "id", cssClass : "cell-title", sortable : true, resizable : true, withFilter : true, },
+	 */
 	{
 		id : "applicationName",
 		name : "Application",
@@ -104,7 +107,7 @@ function ConsoleGrid(divId)
 	},
 	{
 		id : "osAccount",
-		name : "Os account",
+		name : "User account",
 		field : "osAccount",
 		cssClass : "cell-title",
 		sortable : true,
@@ -112,7 +115,7 @@ function ConsoleGrid(divId)
 	},
 	{
 		id : "executionNodeName",
-		name : "ExecNodeName",
+		name : "Node",
 		field : "executionNodeName",
 		cssClass : "cell-title",
 		sortable : true,
@@ -185,13 +188,21 @@ function ConsoleGrid(divId)
 
 	// Initialize floating panel
 	this.container = this.mainDiv.after($("<div/>"));
-	this.toolbar = new ConsoleFloatingPanel($("#mainGrid"));
+	this.toolbar = new ConsoleFloatingPanel($("#mainGrid"), this);
 
 	// Events
+	marsu = null;
 	this.histGrid.onSelectedRowsChanged.subscribe($.proxy(function(e, args)
 	{
-		var pos = this.histGrid.getActiveCellPosition();
-		this.toolbar.show(pos.left, pos.top, this.logs[args.rows[0]]);
+		marsu = e;
+		marsu2 = args;
+		if (args.rows.length >= 1)
+		{
+			var pos = this.histGrid.getActiveCellPosition();
+			this.toolbar.show(pos.left, pos.top, this.logs[args.rows[0]]);
+		}
+		else
+			this.toolbar.hide();
 	}, this));
 	this.histGrid.onScroll.subscribe((function()
 	{
@@ -342,6 +353,14 @@ ConsoleGrid.prototype.getItemMetadata = function(index)
 		cssClasses : "consoleRowUnkwown"
 	};
 
+	if (typeof (obj.lastKnownStatus) == 'string' && obj.lastKnownStatus.substring(0, 9) === 'OVERRIDEN')
+	{
+		res =
+		{
+			cssClasses : "consoleRowUser"
+		};
+		return res;
+	}
 	if (typeof (obj.lastKnownStatus) == 'string' && obj.lastKnownStatus.substring(0, 4) !== 'DONE')
 	{
 		res =

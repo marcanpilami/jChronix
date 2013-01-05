@@ -1,8 +1,9 @@
-function ConsoleFloatingPanel(containerDiv)
+function ConsoleFloatingPanel(containerDiv, parent)
 {
 	this.cxfRunLog = null;
 	this.container = null;
 	this.viewportHeight, this.viewportWidth;
+	this.parent = parent;
 
 	if (typeof containerDiv === 'string')
 		this.container = $("#" + containerDiv);
@@ -66,12 +67,20 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 {
 	// Select buttons to display
 	this.cxfRunLog = cxfRunLogToDisplay;
-	if (this.cxfRunLog.lastKnownStatus.substring(0, 4) !== 'DONE')
+	if (this.cxfRunLog.lastKnownStatus.substring(0, 4) === 'RUNNING')
 	{
 		this.btSameLaunch.show();
 		this.btRestart.hide();
 		this.btDlLog.hide();
 		this.btKill.show();
+		this.btGiveUp.hide();
+	}
+	if (this.cxfRunLog.lastKnownStatus.substring(0, 9) === 'OVERRIDEN')
+	{
+		this.btSameLaunch.show();
+		this.btRestart.hide();
+		this.btDlLog.show();
+		this.btKill.hide();
 		this.btGiveUp.hide();
 	}
 	else if (this.cxfRunLog.resultCode === 0)
@@ -148,7 +157,14 @@ ConsoleFloatingPanel.prototype.forceOKDone = function(json)
 {
 	var res = json.ResOrder;
 	if (res.success)
+	{
 		uinfo("Override order was delivered successfuly", 5000);
+		if (this.parent !== null)
+		{
+			this.parent.dataView.deleteItem(this.cxfRunLog.id); // Will be updated at next refresh, so remove it for now
+			this.hide();
+		}
+	}
 	else
 		ualert(res.message);
 };
