@@ -372,6 +372,7 @@ public class PipelineJob extends TranscientBase
 
 		// Execution method is determined by the source
 		rd.Method = this.getActive(ctx).getActivityMethod();
+		rd.subMethod = this.getActive(ctx).getSubActivityMethod();
 
 		// Run description is complete, on to the actual execution!
 		return rd;

@@ -186,10 +186,17 @@ public class PlanBuilder
 
 	public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
 	{
+		return buildShellCommand("cmd.exe", a, command, name, description, prmsandvalues);
+	}
+
+	public static ShellCommand buildShellCommand(String shell, Application a, String command, String name, String description,
+			String... prmsandvalues)
+	{
 		ShellCommand sc1 = new ShellCommand();
 		sc1.setCommand(command);
 		sc1.setDescription(description);
 		sc1.setName(name);
+		sc1.setShell(shell);
 		a.addActiveElement(sc1);
 
 		for (int i = 0; i < prmsandvalues.length / 2; i++)

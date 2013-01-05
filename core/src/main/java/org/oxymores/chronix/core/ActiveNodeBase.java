@@ -331,6 +331,10 @@ public class ActiveNodeBase extends ConfigurableBase
 	{
 		return "None";
 	}
+	public String getSubActivityMethod()
+	{
+		return "None";
+	}
 
 	// Should it be run by a runner agent?
 	public boolean hasExternalPayload()

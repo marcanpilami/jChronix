@@ -525,7 +525,7 @@ public class SenderHelpers
 			jmsSession.commit();
 	}
 
-	public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
+	public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws Exception
 	{
 		JmsSendData d = new JmsSendData(ctx);
 		sendOrderExternalEvent(externalStateId, data, en, d.jmsSession, d.jmsProducer, false);

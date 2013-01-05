@@ -424,7 +424,7 @@ public class TestSingleNode
 		try
 		{
 			SenderHelpers.sendOrderExternalEvent(sp1.getId(), filepath, this.en1, e1.ctx);
-		} catch (JMSException e3)
+		} catch (Exception e3)
 		{
 			Assert.fail(e3.getMessage());
 		}
@@ -444,7 +444,7 @@ public class TestSingleNode
 		try
 		{
 			SenderHelpers.sendOrderExternalEvent(sp3.getId(), filepath, this.en1, e1.ctx);
-		} catch (JMSException e3)
+		} catch (Exception e3)
 		{
 			Assert.fail(e3.getMessage());
 		}

@@ -30,6 +30,7 @@ public class ShellCommand extends ActiveNodeBase
 	private static final long serialVersionUID = 3340501935290198518L;
 
 	protected String command;
+	protected String shell = "cmd.exe";
 
 	public String getCommand()
 	{
@@ -48,6 +49,12 @@ public class ShellCommand extends ActiveNodeBase
 	}
 
 	@Override
+	public String getSubActivityMethod()
+	{
+		return this.shell;
+	}
+
+	@Override
 	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
 	{
 		return this.command;
@@ -57,5 +64,15 @@ public class ShellCommand extends ActiveNodeBase
 	public boolean hasExternalPayload()
 	{
 		return true;
+	}
+
+	public String getShell()
+	{
+		return shell;
+	}
+
+	public void setShell(String shell)
+	{
+		this.shell = shell;
 	}
 }

@@ -40,6 +40,7 @@ public class RunDescription implements Serializable
 	public Boolean shouldSendLogFile = false;
 
 	public String Method = "Shell";
+	public String subMethod = "powershell.exe";
 
 	// Helper for log file naming
 	public String placeName = "";

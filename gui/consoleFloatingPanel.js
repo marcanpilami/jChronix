@@ -21,8 +21,7 @@ function ConsoleFloatingPanel(containerDiv)
 	this.setViewport($(window).width(), $(window).height());
 
 	// add buttons
-	this.btSameLaunch = $("<button type='button'>new launch for this job</button>").click($.proxy(this.relaunch, this))
-			.addClass('chrConsoleButton');
+	this.btSameLaunch = $("<button type='button'>new launch for this job</button>").click($.proxy(this.relaunch, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btSameLaunch);
 	this.btRestart = $("<button type='button'>restart after crash</button>").click($.proxy(this.todo, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btRestart);
@@ -32,6 +31,8 @@ function ConsoleFloatingPanel(containerDiv)
 	this.mainDiv.append(this.btKill);
 	this.btGiveUp = $("<button type='button'>override failure</button>").click($.proxy(this.forceOK, this)).addClass('chrConsoleButton');
 	this.mainDiv.append(this.btGiveUp);
+	this.btHide = $("<button type='button'>hide toolbar</button>").click($.proxy(this.hide, this)).addClass('chrConsoleButton');
+	this.mainDiv.append(this.btHide);
 }
 
 ConsoleFloatingPanel.prototype.setViewport = function(width, height)
@@ -47,7 +48,16 @@ ConsoleFloatingPanel.prototype.receiveDetails = function(text)
 
 	con = $("<span class='log'/>");
 	this.secondaryDiv.html(con);
-	con.html("Log starts with: " + text);
+	if (text !== "")
+	{
+		con.html("Log starts with: " + text.replace(/\n/g, '<br />'));
+		this.btDlLog.show();
+	}
+	else
+	{
+		con.html("No log");
+		this.btDlLog.hide();
+	}
 
 	this.secondaryDiv.show();
 };
@@ -121,6 +131,7 @@ ConsoleFloatingPanel.prototype.show = function(xRelativeToContainer, yRelativeTo
 ConsoleFloatingPanel.prototype.hide = function()
 {
 	this.mainDiv.hide();
+	this.secondaryDiv.hide();
 };
 
 ConsoleFloatingPanel.prototype.todo = function()
@@ -164,5 +175,3 @@ ConsoleFloatingPanel.prototype.relaunchDone = function(json)
 	else
 		ualert(res.message);
 };
-
-

@@ -454,7 +454,7 @@ public class Runner implements MessageListener
 		}
 
 		// Free tokens
-		if (s.getTokens().size() > 0)
+		if (!rr.outOfPlan && s.getTokens().size() > 0)
 		{
 			for (Token tk : s.getTokens())
 			{

@@ -23,9 +23,10 @@ package org.oxymores.chronix.engine;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -50,12 +51,52 @@ public class RunnerShell
 		String nl = System.getProperty("line.separator");
 		Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
 		Matcher matcher = pat.matcher("Testing123Testing");
+		String encoding = System.getProperty("file.encoding");
 
-		// Create array containing arguments
+		// ///////////////////////////
+		// Build command
 		ArrayList<String> argsStrings = new ArrayList<String>();
-		argsStrings.add("cmd.exe");
-		argsStrings.add("/C");
+
+		// First line is the shell name
+		argsStrings.add(rd.subMethod);
+
+		// Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
+		if (rd.subMethod.equals("cmd.exe"))
+		{
+			argsStrings.add("/U");
+			argsStrings.add("/C");
+			try
+			{
+				encoding = "cp"
+						+ WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
+								"OEMCP");
+			} catch (Exception e)
+			{
+				// nothing - keep default system-wide encoding
+			}
+		}
+		else if (rd.subMethod.equals("powershell.exe"))
+		{
+			argsStrings.add("-NoLogo");
+			argsStrings.add("-NonInteractive");
+			argsStrings.add("-WindowStyle");
+			argsStrings.add("Hidden");
+			argsStrings.add("-Command");
+			try
+			{
+				encoding = "cp"
+						+ WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
+								"OEMCP");
+			} catch (Exception e)
+			{
+				// nothing - keep default system-wide encoding
+			}
+		}
+
+		// Then add the command itself
 		argsStrings.add(rd.command);
+
+		// Finally add parameters (if any - there may be none or they may be contained inside the command itself)
 		for (int i = 0; i < rd.paramNames.size(); i++)
 		{
 			String key = rd.paramNames.get(i);
@@ -71,6 +112,7 @@ public class RunnerShell
 			argsStrings.add(arg);
 		}
 
+		// /////////////////////////////////////////////////////////////////////////
 		// Create a process builder with the command line contained in the array
 		ProcessBuilder pb = new ProcessBuilder(argsStrings);
 
@@ -92,7 +134,7 @@ public class RunnerShell
 			p = pb.start();
 
 			// Read output (err & out), write it to file
-			InputStreamReader isr = new InputStreamReader(p.getInputStream());
+			InputStreamReader isr = new InputStreamReader(p.getInputStream(), encoding);
 			BufferedReader br = new BufferedReader(isr);
 
 			String line = null;
@@ -109,14 +151,14 @@ public class RunnerShell
 			};
 			Writer output = null;
 			if (storeLogFile)
-				output = new BufferedWriter(new FileWriter(logFilePath));
+				output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFilePath), "UTF-8"));
 			while ((line = br.readLine()) != null)
 			{
 				i++;
 
 				// Local log file gets all lines
 				if (storeLogFile)
-					output.write(line);
+					output.write(line + nl);
 
 				// Small log gets first 500 lines or 10000 characters (the
 				// smaller of the two)

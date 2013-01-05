@@ -91,7 +91,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 		else
 		{
 			log.debug("Service getShortLog has ended - the log was found");
-			return rl.shortLog;
+			return rl.shortLog.substring(Math.min(rl.shortLog.length(),  2), rl.shortLog.length());
 		}
 	}
 
@@ -128,7 +128,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
 	@Override
 	@GET
 	@Path("/logfile/{launchId}")
-	@Produces("text/plain")
+	@Produces("text/plain; charset=utf-8")
 	public File getLogFile(@PathParam("launchId") String launchId) 
 	{
 		EntityManager em = emfHistory.createEntityManager();
