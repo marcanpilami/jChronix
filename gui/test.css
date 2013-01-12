@@ -1,11 +1,17 @@
 @CHARSET "ISO-8859-1";
 
+html,body {
+	height: 100%;
+	display: block;
+}
+
 #container1,#container2 {
 	position: relative;
 }
 
 .leftbar {
-	width: 180px;
+	/*width: 180px;*/
+	width: 13%;
 	background: #c99;
 	/*float:left;*/
 	position: absolute;
@@ -15,7 +21,9 @@
 }
 
 .rightpanel {
-	padding-left: 185px;
+	/*padding-left: 185px;*/
+	padding-left: 14%;
+	width: 80%;
 }
 
 #chaintabs {
@@ -101,12 +109,6 @@ button.chrConsoleButton {
 	background-color: infobackground;
 }
 
-/*#mainGrid {
-	position: relative;
-	top: 0;
-	left: 0;
-	width: 100%;
-}*/
 .consoleGridDiv {
 	padding-top: 28px;
 	width: 100%;
@@ -234,38 +236,38 @@ button.chrConsoleButton {
 /**************************************
 * Console grid formating 
 **************************************/
-.slick-row.consoleRowKO {
+#mainGrid>.slick-row.consoleRowKO {
 	background-color: rgb(232, 44, 44);
 	background-image: none;
 }
 
-.slick-row.consoleRowOK {
+#mainGrid>.slick-row.consoleRowOK {
 	background-color: rgb(55, 186, 50);
 	background-image: none;
 }
 
-.slick-row.consoleRowNotEnded {
+#mainGrid>.slick-row.consoleRowNotEnded {
 	background-color: rgb(149, 156, 245);
 	background-image: none;
 }
 
-.slick-row.consoleRowUser {
+#mainGrid>.slick-row.consoleRowUser {
 	background-color: orange;
 	background-image: none;
 }
 
-.slick-row.consoleRowUnkwown {
+#mainGrid>.slick-row.consoleRowUnkwown {
 	background-color: orange;
 	background-image: none;
 }
 
-.slick-row.ui-widget-content.active {
+#mainGrid>.slick-row.ui-widget-content.active {
 	background-image: none;
 	color: white;
 	font-weight: bold;
 }
 
-.slick-cell.cell-title.selected {
+#mainGrid>.slick-cell.cell-title.selected {
 	background-color: transparent;
 	background-image: none;
 	border-top: 2px solid #373799;
@@ -316,9 +318,7 @@ button.chrConsoleButton {
 }
 
 /**********************************
-
 Use: Reset Styles for all browsers
-
 ***********************************/
 body,p,blockquote {
 	margin: 0;
@@ -597,8 +597,9 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =                                                       50
-		);
+	filter: alpha(opacity =   
+		                                                         
+		     50);
 }
 
 .slick-cell.invalid {

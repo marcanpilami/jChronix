@@ -1,127 +1,112 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title>Chronix administration console</title>
-		<link rel="stylesheet" type="text/css" media="screen" href="test.css" />
-		<link type="text/css" href="lib/ui-lightness/jquery-ui-1.8.19.custom.css" rel="Stylesheet"/>
-		<link type="text/css" href="lib/slick.grid.css" rel="Stylesheet"/>
-		<script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
-		<script type="text/javascript" src="lib/jquery-ui-1.8.19.custom.min.js"></script>
-		<script type="text/javascript" src="lib/raphael.js"></script>
-		<script type="text/javascript" src="lib/jquery.event.drag-2.0.min.js"></script>
-		<script type="text/javascript" src="lib/jquery.event.drop-2.0.min.js"></script>
-		<script type="text/javascript" src="lib/slick.core.js"></script>
-		<script type="text/javascript" src="lib/slick.editors.js"></script>
-		<script type="text/javascript" src="lib/slick.grid.js"></script>
-		<script type="text/javascript" src="lib/slick.dataview.js"></script>
-		<script type="text/javascript" src="lib/slick.rowselectionmodel.js"></script>
-		<script type="text/javascript" src="lib/uuid.js"></script>
-		<script type="text/javascript" src="lib/arbor.js"></script>
-		<script type="text/javascript" src="lib/date.js"></script>
-	<!-- <script type='text/javascript' src='lib/knockout-2.1.0.js'></script> -->
-		<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
-		<script type="text/javascript" src="application.js"></script>
-		<script type="text/javascript" src="chain.js"></script>
-		<script type="text/javascript" src="commands.js"></script>
-		<script type="text/javascript" src="network_logical.js"></script>
-		<script type="text/javascript" src="network_ro.js"></script>
-		<script type="text/javascript" src="rec.js"></script>
-		<script type="text/javascript" src="main.js"></script>
-	</head>
-	<body>
-		<div>
-			<div id="alert"></div>
-			<div id='greetings'></div>
-			<div id='title'>
-				Currently editing application <span id="appName"></span> (<span id="appDescr"></span>)
-				<button onclick="send();">
-					Send to server
-				</button>
+<head>
+<meta charset="utf-8" />
+<title>Chronix administration console</title>
+<link rel="stylesheet" type="text/css" media="screen" href="test.css" />
+<link type="text/css"
+	href="lib/ui-lightness/jquery-ui-1.8.19.custom.css" rel="Stylesheet" />
+<link type="text/css" href="lib/slick.grid.css" rel="Stylesheet" />
+<script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
+<script type="text/javascript" src="lib/jquery-ui-1.8.19.custom.min.js"></script>
+<script type="text/javascript" src="lib/raphael.js"></script>
+<script type="text/javascript" src="lib/jquery.event.drag-2.0.min.js"></script>
+<script type="text/javascript" src="lib/jquery.event.drop-2.0.min.js"></script>
+<script type="text/javascript" src="lib/slick.core.js"></script>
+<script type="text/javascript" src="lib/slick.editors.js"></script>
+<script type="text/javascript" src="lib/slick.grid.js"></script>
+<script type="text/javascript" src="lib/slick.dataview.js"></script>
+<script type="text/javascript" src="lib/slick.rowselectionmodel.js"></script>
+<script type="text/javascript" src="lib/uuid.js"></script>
+<script type="text/javascript" src="lib/arbor.js"></script>
+<script type="text/javascript" src="lib/date.js"></script>
+<!-- <script type='text/javascript' src='lib/knockout-2.1.0.js'></script> -->
+<script type="text/javascript" src="http://localhost:9000/Hello?js"></script>
+<script type="text/javascript" src="application.js"></script>
+<script type="text/javascript" src="chain.js"></script>
+<script type="text/javascript" src="commands.js"></script>
+<script type="text/javascript" src="network_logical.js"></script>
+<script type="text/javascript" src="network_ro.js"></script>
+<script type="text/javascript" src="rec.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+<body>
+	<div id="alert"></div>
+	<div id='greetings'></div>
+	<div id='title'>
+		Currently editing application <span id="appName"></span> (<span
+			id="appDescr"></span>)
+		<button onclick="send();">Send to server</button>
+	</div>
+
+	<div id='tabs' style="width: 100%; height: 80%; display: block;">
+		<ul>
+			<li><a href="#tab-commands">Commands</a></li>
+			<li><a href="#tab-schedule">Schedules</a></li>
+			<li><a href="#tab-logicalnetwork">Logical Network</a></li>
+			<li><a href="#tab-pnro">Physical Network</a></li>
+			<li><a href="#tab-chains">Chains</a></li>
+		</ul>
+
+		<div id="tab-commands">
+			<label>Filter (name or description):</label> <input type=text
+				id="txtSearchCmd" style="width: 200px;">
+			<div style="margin: 0px; padding: 0px;">
+				<div id="gridCommands" style="padding: 0px;"></div>
 			</div>
-			<div id='tabs'>
-				<ul>
-					<li>
-						<a href="#tab-schedule">Schedules</a>
-					</li>
-					<li>
-						<a href="#tab-commands">Commands</a>
-					</li>
-					<li>
-						<a href="#tab-logicalnetwork">Logical Network</a>
-					</li>
-					<li>
-						<a href="#tab-pnro">Physical Network</a>
-					</li>
-					
-					<li>
-						<a href="#tab-chains">Chains</a>
-					</li>
-				</ul>
-				
-				<div id="tab-schedule">
-					<div id='schedule'></div>
+		</div>
+
+		<div id="tab-schedule" style="height: 100%;">
+			<div style="height: 100%;">
+				<div id='schedule' style="width: 100%; height: 100%;"></div>
+			</div>
+		</div>
+
+		<div id="tab-chains">
+			<div id="container1">
+				<div id="leftbar" class="leftbar">
+					<div id="dgChainPaletteCommands">OUPS1</div>
+					<div>OUPS2</div>
+					<div>OUPS3</div>
+					<div>OUPS4</div>
 				</div>
-				
-				<div id="tab-chains">
-					<div id="container1">
-						<div id="leftbar" class="leftbar">
-							<div id="dgChainPaletteCommands">
-								OUPS1
-							</div>
-							<div>
-								OUPS2
-							</div>
-							<div>
-								OUPS3
-							</div>
-							<div>
-								OUPS4
-							</div>
-						</div>
-						<div id='chaintabs'>
-							<ul></ul>
-						</div>
-					</div>
-				</div>
-				
-				<div id="tab-commands">
-					<label >Filter (name or description):</label>
-					<input type=text id="txtSearchCmd" style="width:200px;">
-					<div id="gridCommands"></div>
-				</div>
-				
-				<div id="tab-pnro">
-					<div id="raphael-pnro"></div>
-				</div>
-				
-				<div id="tab-logicalnetwork">
-					<div id="container2">
-						<div id=lngroupcontent class="leftbar">
-							<div id="gridLNGRPCNT"></div>
-							<div id="gridLNPLCGRP"></div>
-						</div>
-						<div class="rightpanel">
-							<div id='lngroups'>
-								<label >Only show <strong>place groups</strong> which name or description contains:</label>
-								<input type=text id="txtSearchLNGRP" style="width:100px;">
-								<div id="gridLNGRP"></div>
-							</div>
-							<div id=lnplaces>
-								<label >Only show <strong>places</strong> which name or description contains:</label>
-								<input type=text id="txtSearchLN" style="width:100px;">
-								<div id="gridLN"></div>
-							</div>
-						</div>
-					</div>
-					<div>
-						<button onclick="nlAddPlaceToGroupClick();">Add place to group</button>
-					</div>
+				<div id='chaintabs'>
+					<ul></ul>
 				</div>
 			</div>
 		</div>
-		<div id="meuh">
-			<canvas id="cnMain" width="150" height="150"></canvas>
+
+		<div id="tab-pnro">
+			<div id="raphael-pnro"></div>
 		</div>
-	</body>
+
+		<div id="tab-logicalnetwork">
+			<div id="container2">
+				<div id=lngroupcontent class="leftbar">
+					<div id="gridLNGRPCNT"></div>
+					<div id="gridLNPLCGRP"></div>
+				</div>
+				<div class="rightpanel">
+					<div id='lngroups'>
+						<label>Only show <strong>place groups</strong> which name
+							or description contains:
+						</label> <input type=text id="txtSearchLNGRP" style="width: 100px;">
+						<div id="gridLNGRP" style='height:300px;'></div>
+					</div>
+					<div id=lnplaces style='width:100%;'>
+						<label>Only show <strong>places</strong> which name or
+							description contains:
+						</label> <input type=text id="txtSearchLN" style="width: 100px;">
+						<div id="gridLN" style='height:300px;'></div>
+					</div>
+				</div>
+			</div>
+			<div>
+				<button onclick="nlAddPlaceToGroupClick();">Add place to
+					group</button>
+			</div>
+		</div>
+	</div>
+
+</body>
 </html>

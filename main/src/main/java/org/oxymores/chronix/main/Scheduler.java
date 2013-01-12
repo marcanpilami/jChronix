@@ -14,9 +14,11 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.engine.ChronixEngine;
+import org.oxymores.chronix.engine.SenderHelpers;
 import org.oxymores.chronix.wapi.JettyServer;
 
 public class Scheduler
@@ -59,16 +61,24 @@ public class Scheduler
 		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, mainDataPort, mainDataInterface);
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
-		ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 1);
+		ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 200);
+		External ex = PlanBuilder.buildExternal(a, "External");
 		Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
 		ck1.setDURATION(0);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
-				"powershell.exe -Command \"$a=Get-Random 5; if ($a -eq 4) {echo 'argh'; exit 1;} else {echo 'aa';exit 0}\"", "aa",
-				"should display 'aa'");
+		ShellCommand sc1 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc2 = PlanBuilder.buildShellCommand("powershell.exe", a, "echooooooo bb", "bb", "should display 'bb'");
+		ShellCommand sc3 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo fin", "FIN", "should display 'fin'");
 
-		State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
+		State s1 = PlanBuilder.buildState(c, pgLocal, ex);
 		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
+		State s3 = PlanBuilder.buildState(c, pgLocal, sc2);
+		State s4 = PlanBuilder.buildStateAND(c, pgLocal);
+		State s5 = PlanBuilder.buildState(c, pgLocal, sc3);
 		s1.connectTo(s2);
+		s1.connectTo(s3);
+		s2.connectTo(s4);
+		s3.connectTo(s4, 0);
+		s4.connectTo(s5);
 
 		ChronixContext ctx = new ChronixContext();
 		ctx.configurationDirectory = new File(repoPath);
@@ -95,6 +105,8 @@ public class Scheduler
 			JettyServer server = new JettyServer(e.ctx);
 			server.start();
 		}
+		
+		SenderHelpers.sendOrderExternalEvent(s1.getId(), null, pgLocal.getPlaces().get(0).getNode(), e.ctx);
 
 		Thread.sleep(1000000); // 1000s, debug
 	}

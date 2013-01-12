@@ -53,7 +53,7 @@ function getApplicationOK(responseObject)
 
 	initCommandPanel(cxfApplication);
 	fillInPaletteData(cxfShellCommands);
-	initNetworkROPanel(aa);
+	//initNetworkROPanel(aa);
 	initLogicalNetworkPanel(cxfApplication);
 	RecurrencePanel("schedule", cxfApplication);
 }

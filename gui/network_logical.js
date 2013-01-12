@@ -20,11 +20,11 @@ function initLogicalNetworkPanel(cxfApplication)
 		asyncEditorLoading : false,
 		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
+		enableTextSelectionOnCells : false,
+		autoHeight : false,
 		autoEdit : true,
 		forceFitColumns : true,
+		fullWidthRows : true,
 	};
 
 	var columns = [
@@ -32,8 +32,9 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "name",
 		name : "Place name",
 		field : "_name",
-		width : 200,
-		cssClass : "cell-title",
+		minWidth : 50,
+		maxWidth : 300,
+		//cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		sortable : true,
@@ -43,9 +44,9 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 250,
+		minWidth : 200,
 		selectable : false,
-		resizable : false,
+		resizable : true,
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		cannotTriggerInsert : true,
@@ -55,7 +56,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop1",
 		name : "Prop1",
 		field : "_prop1",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -64,7 +65,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop2",
 		name : "Prop2",
 		field : "_prop2",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -73,7 +74,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop3",
 		name : "Prop3",
 		field : "_prop3",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -82,7 +83,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop4",
 		name : "Prop4",
 		field : "_prop4",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -91,7 +92,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "del",
 		name : "Delete",
 		field : "del",
-		width : 70,
+		maxWidth : 70,
 		formatter : delBtFormatter,
 		cannotTriggerInsert : true,
 	}, ];
@@ -100,8 +101,14 @@ function initLogicalNetworkPanel(cxfApplication)
 	{
 		inlineFilters : true
 	});
+	//$("#gridLN").width($("div.rightpanel").width());
+	//alert($("div.rightpanel").width());
 	nlGridPlaces = new Slick.Grid("#gridLN", nlDataViewPlaces, columns, options);
 	nlGridPlaces.setSelectionModel(new Slick.RowSelectionModel());
+	
+	$("#gridLN").width($("div.rightpanel").width());
+	//alert($("div.rightpanel").width());
+	nlGridPlaces.resizeCanvas();
 
 	nlGridPlaces.onAddNewRow.subscribe(onNewPlaceRow);
 

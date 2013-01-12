@@ -13,11 +13,12 @@ function initCommandPanel(cxfApplication)
 		asyncEditorLoading : false,
 		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
 		autoEdit : true,
+		enableTextSelectionOnCells : false,
+		autoHeight : true,
 		forceFitColumns : true,
+		fullWidthRows : true,
+		explicitInitialization : true,
 	};
 
 	var columns = [
@@ -25,7 +26,7 @@ function initCommandPanel(cxfApplication)
 		id : "name",
 		name : "Command short name",
 		field : "_name",
-		width : 200,
+		minWidth : 70,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidatorCmd,
@@ -36,7 +37,7 @@ function initCommandPanel(cxfApplication)
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 250,
+		minWidth : 150,
 		// selectable : false,
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidatorCmd,
@@ -48,7 +49,7 @@ function initCommandPanel(cxfApplication)
 		id : "cmde",
 		name : "Shell command line to run",
 		field : "_command",
-		width : 600,
+		minWidth : 100,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidatorCmd,
@@ -60,7 +61,7 @@ function initCommandPanel(cxfApplication)
 		id : "del",
 		name : "",
 		field : "del",
-		width : 30,
+		maxWidth : 35,
 		formatter : delCmdBtFormatter,
 		cannotTriggerInsert : true,
 	}, ];
@@ -121,6 +122,8 @@ function initCommandPanel(cxfApplication)
 		// Destroy the cmd through the dataview (will in turn update cxfApplication)
 		cmdDataViewCmds.deleteItem(id);
 	});
+
+	cmdGrid.init();
 
 	// Populate & go
 	cmdDataViewCmds.beginUpdate();

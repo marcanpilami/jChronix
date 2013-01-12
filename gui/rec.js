@@ -2,9 +2,11 @@ function RecurrencePanel(divId, cxfApp)
 {
 	this.cxfApplication = cxfApp;
 	this.html = "<div>  <div><label>Recurrence name: </label><input/><label>(Double-click to edit recurrence)</label></div>  <div id='" + divId
-			+ "grid'/>  <div id='" + divId + "gridrecpanel'/> </div>";
-	$("#" + divId).html(this.html);
-
+			+ "grid' style='height:100%;'/>  <div id='" + divId + "gridrecpanel'/> </div>";
+	var parentDiv = $("#" + divId);
+	parentDiv.html(this.html);
+	var gridDiv = $("#" + divId + "grid");
+	
 	var options =
 	{
 		editable : false,
@@ -15,11 +17,12 @@ function RecurrencePanel(divId, cxfApp)
 		asyncEditorLoading : false,
 		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
 		autoEdit : false,
+		enableTextSelectionOnCells : false,
+		//autoHeight : true,		
 		forceFitColumns : true,
+		fullWidthRows : true,
+		explicitInitialization : true,
 	};
 
 	var columns = [
@@ -27,22 +30,20 @@ function RecurrencePanel(divId, cxfApp)
 		id : "name",
 		name : "Recurrence name",
 		field : "_name",
-		width : 200,
+		minWidth : 100,
 		cssClass : "cell-title",
-		editor : Slick.Editors.Text,
 		validator : requiredFieldValidatorCmd,
-		sortable : true,
+		sortable : false,
 		resizable : true,
 	},
 	{
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 300,
+		minWidth : 150,
 		cssClass : "cell-title",
-		editor : Slick.Editors.Text,
 		validator : requiredFieldValidatorCmd,
-		sortable : true,
+		sortable : false,
 		resizable : true,
 	}, ];
 
@@ -54,10 +55,10 @@ function RecurrencePanel(divId, cxfApp)
 		var row = cell.row;
 		new RecurrenceEditPanel(divId + "gridrecpanel", cxfApp._rrules.getDTORRule()[row]);
 	});
-};
-
-RecurrencePanel.prototype.marsu = function()
-{
+	
+	recGrid.init();
+	gridDiv.height(gridDiv.closest("div.ui-tabs-panel").height()); // mystery: why cannot init find the height by itself?
+	recGrid.resizeCanvas();
 };
 
 function RecurrenceEditPanel(divId, cxfRRule)
