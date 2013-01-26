@@ -60,6 +60,8 @@ public class TranscientBase implements Serializable
 	protected String calendarOccurrenceID;
 	@Column(columnDefinition = "CHAR(36)", length = 36)
 	protected String calendarID;
+	@Column(columnDefinition = "CHAR(36)", length = 36)
+	protected String simulationID;
 	protected Boolean outsideChainLaunch = false;
 	protected Boolean ignoreCalendarUpdating = false;
 
@@ -305,6 +307,16 @@ public class TranscientBase implements Serializable
 	public void setIgnoreCalendarUpdating(Boolean ignoreCalendarUpdating)
 	{
 		this.ignoreCalendarUpdating = ignoreCalendarUpdating;
+	}
+
+	public String getSimulationID()
+	{
+		return simulationID;
+	}
+
+	public void setSimulationID(String simulationID)
+	{
+		this.simulationID = simulationID;
 	}
 	//
 	// //////////////////////////////////////////////
