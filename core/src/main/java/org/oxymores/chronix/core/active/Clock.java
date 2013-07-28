@@ -217,6 +217,7 @@ public class Clock extends ActiveNodeBase
 				|| (now.compareTo(present) < 0 && (new Interval(now, present)).toDurationMillis() > 1000))
 			log.warn("There is more than one second between internal time and clock time - performance issue? (discard if simulation)");
 		now = present;
+		pj.setVirtualTime(present.toDate());
 		org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.DURATION);
 
 		if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear())

@@ -304,9 +304,11 @@ public class TestToken
 		Assert.assertEquals(5, res.size());
 		RunLog rl2 = res.get(2);
 		RunLog rl3 = res.get(3);
+		DateTime end3 = new DateTime(rl3.stoppedRunningAt);
+		DateTime start3 = new DateTime(rl3.beganRunningAt);
 		DateTime end2 = new DateTime(rl2.stoppedRunningAt);
-		DateTime start2 = new DateTime(rl3.beganRunningAt);
+		DateTime start2 = new DateTime(rl2.beganRunningAt);
 
-		Assert.assertTrue(start2.isBefore(end2));
+		Assert.assertTrue(end2.isBefore(start3) || end3.isBefore(start2));
 	}
 }

@@ -126,7 +126,7 @@ public class EventListener implements MessageListener
 			active = s.getRepresents();
 		} catch (Exception e)
 		{
-			log.error("An event was received that was not related to a local applicaiton. Discarded.");
+			log.error("An event was received that was not related to a local application. Discarded.");
 			commit();
 			return;
 		}

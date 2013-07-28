@@ -95,6 +95,11 @@ public class Broker
 
 	public Broker(ChronixContext ctx, boolean purge) throws Exception
 	{
+		this(ctx, purge, true, true);
+	}
+
+	public Broker(ChronixContext ctx, boolean purge, boolean persistent, boolean tcp) throws Exception
+	{
 		log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl,
 				ctx.configurationDirectory));
 		this.ctx = ctx;
@@ -130,7 +135,10 @@ public class Broker
 		broker.setSystemUsage(su);
 
 		// Add a listener
-		broker.addConnector("tcp://" + this.ctx.localUrl);
+		if (tcp)
+			broker.addConnector("tcp://" + this.ctx.localUrl);
+		else
+			broker.addConnector("vm://localhost");
 
 		// Add channels to other nodes
 		ArrayList<String> opened = new ArrayList<String>();

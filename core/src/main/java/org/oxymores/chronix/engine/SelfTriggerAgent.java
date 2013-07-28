@@ -43,15 +43,16 @@ public class SelfTriggerAgent extends Thread
 {
 	private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
 
-	private Semaphore loop;
-	private boolean run = true;
-	private ArrayList<ActiveNodeBase> nodes;
-	private EntityManager em;
-	private ChronixContext ctx;
-	private MessageProducer producerEvents;
-	private Session jmsSession;
-	private EntityTransaction jpaTransaction;
-	private Semaphore triggering;
+	protected Semaphore loop;
+	protected boolean run = true;
+	protected ArrayList<ActiveNodeBase> nodes;
+	protected EntityManager em;
+	protected ChronixContext ctx;
+	protected MessageProducer producerEvents;
+	protected Session jmsSession;
+	protected EntityTransaction jpaTransaction;
+	protected Semaphore triggering;
+	protected DateTime nextLoopVirtualTime;
 
 	public void stopAgent()
 	{
@@ -75,6 +76,11 @@ public class SelfTriggerAgent extends Thread
 
 	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
 	{
+		this.startAgent(emf, ctx, cnx, DateTime.now());
+	}
+
+	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
+	{
 		log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
 
 		// Save pointers
@@ -85,6 +91,7 @@ public class SelfTriggerAgent extends Thread
 		this.producerEvents = jmsSession.createProducer(null);
 		this.jpaTransaction = this.em.getTransaction();
 		this.triggering = new Semaphore(1);
+		this.nextLoopVirtualTime = startTime;
 
 		// Get all self triggered nodes
 		this.nodes = new ArrayList<ActiveNodeBase>();
@@ -108,7 +115,6 @@ public class SelfTriggerAgent extends Thread
 	@Override
 	public void run()
 	{
-		DateTime nextLoopTime = DateTime.now();
 		long msToWait = 0;
 
 		while (run)
@@ -133,27 +139,29 @@ public class SelfTriggerAgent extends Thread
 
 			// Log
 			log.debug("Self trigger agent loops");
+			this.preLoopHook();
+			if (!run)
+				break;
 
 			// Init the next loop time at a huge value
 			DateTime now = DateTime.now();
-			DateTime loopTime = nextLoopTime;
-			nextLoopTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
+			DateTime loopVirtualTime = this.nextLoopVirtualTime;
+			this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
-			// Loop through all the self triggered nodes and get their next loop
-			// time
+			// Loop through all the self triggered nodes and get their next loop virtual time
 			jpaTransaction.begin();
 			DateTime tmp = null;
 			for (ActiveNodeBase n : this.nodes)
 			{
 				try
 				{
-					tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopTime);
+					tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopVirtualTime);
 				} catch (Exception e)
 				{
 					log.error("Error triggering clocks and the like", e);
 				}
-				if (tmp.compareTo(nextLoopTime) < 0)
-					nextLoopTime = tmp;
+				if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
+					this.nextLoopVirtualTime = tmp;
 			}
 
 			// Commit
@@ -168,14 +176,26 @@ public class SelfTriggerAgent extends Thread
 			jpaTransaction.commit();
 
 			this.triggering.release();
-			if (DateTime.now().compareTo(nextLoopTime) < 0)
-			{
-				Interval i = new Interval(DateTime.now(), nextLoopTime);
-				msToWait = i.toDurationMillis();
-			}
-			else
-				msToWait = 0;
+
+			msToWait = getNextLoopTime();
 			log.debug(String.format("Self trigger agent will loop again in %s milliseconds", msToWait));
 		}
+	}
+
+	// Default implementation uses system clock.
+	protected long getNextLoopTime()
+	{
+		if (DateTime.now().compareTo(this.nextLoopVirtualTime) < 0)
+		{
+			Interval i = new Interval(DateTime.now(), this.nextLoopVirtualTime);
+			return i.toDurationMillis();
+		}
+		else
+			return 0;
+	}
+	
+	protected void preLoopHook()
+	{
+		return;
 	}
 }

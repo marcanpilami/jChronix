@@ -129,9 +129,12 @@ public class LogListener implements MessageListener
 			e.printStackTrace();
 		}
 
-		trTransac.begin();
-		RunStats.updateStats(rlog, emTransac);
-		trTransac.commit();
+		if (!ctx.simulateExternalPayloads)
+		{
+			trTransac.begin();
+			RunStats.updateStats(rlog, emTransac);
+			trTransac.commit();
+		}
 
 	}
 }

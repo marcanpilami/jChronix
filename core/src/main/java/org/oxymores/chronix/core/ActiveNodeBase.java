@@ -196,8 +196,7 @@ public class ActiveNodeBase extends ConfigurableBase
 		q.setParameter(2, evt.getLevel1IdU().toString()); // The chain ID
 		List<Event> sessionEvents2 = q.getResultList();
 
-		// Remove consumed events (first filter: those which are completely
-		// consumed)
+		// Remove consumed events (first filter: those which are completely consumed)
 		List<Event> sessionEvents = new ArrayList<Event>();
 		for (Event e : sessionEvents2)
 		{

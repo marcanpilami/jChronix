@@ -21,6 +21,7 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -456,12 +457,12 @@ public class State extends ConfigurableBase
 	// Create and post PJ for run
 	public void runAlone(Place p, MessageProducer pjProducer, Session session)
 	{
-		run(p, pjProducer, session, null, false, true, true, this.chain.id, UUID.randomUUID(), null, null, null);
+		run(p, pjProducer, session, null, false, true, true, this.chain.id, UUID.randomUUID(), null, null, null, null);
 	}
 
 	public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session)
 	{
-		run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null);
+		run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null, null);
 	}
 
 	public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession)
@@ -512,7 +513,8 @@ public class State extends ConfigurableBase
 			}
 		}
 
-		run(p, pjProducer, jmsSession, CalendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate);
+		run(p, pjProducer, jmsSession, CalendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate,
+				null);
 	}
 
 	public void runFromEngine(Place p, EntityManager em, MessageProducer pjProducer, Session session, Event e)
@@ -546,12 +548,12 @@ public class State extends ConfigurableBase
 		}
 
 		run(p, pjProducer, session, CalendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(),
-				e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate, e.getEnvParams().toArray(new EnvironmentValue[0]));
+				e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate, e.getVirtualTime(), e.getEnvParams().toArray(new EnvironmentValue[0]));
 	}
 
 	public void run(Place p, MessageProducer pjProducer, Session session, String CalendarOccurrenceID, boolean updateCalendarPointer,
 			boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id,
-			CalendarPointer cpToUpdate, EnvironmentValue... params)
+			CalendarPointer cpToUpdate, Date virtualTime, EnvironmentValue... params)
 	{
 		DateTime now = DateTime.now();
 
@@ -570,6 +572,7 @@ public class State extends ConfigurableBase
 		pj.setOutsideChain(outOfChainLaunch);
 		pj.setIgnoreCalendarUpdating(!updateCalendarPointer);
 		pj.setOutOfPlan(outOfPlan);
+		pj.setVirtualTime(virtualTime);
 
 		// Warning and kill
 		if (this.warnAfterMn != null)

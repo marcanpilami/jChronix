@@ -72,7 +72,7 @@ public class Runner implements MessageListener
 	private String logDbPath;
 
 	EntityManagerFactory emf;
-	EntityManager em;
+	EntityManager emTransac, emHistory;
 	EntityTransaction tr;
 
 	private ArrayList<PipelineJob> resolving;
@@ -120,8 +120,9 @@ public class Runner implements MessageListener
 		this.jmsPipelineConsumer.setMessageListener(this);
 
 		// Create JPA context for this thread
-		this.em = this.emf.createEntityManager();
-		this.tr = this.em.getTransaction();
+		this.emTransac = this.emf.createEntityManager();
+		this.emHistory = this.ctx.getHistoryEM();
+		this.tr = this.emTransac.getTransaction();
 
 		// Outgoing producer for running commands
 		this.producerRunDescription = this.jmsSession.createProducer(null);
@@ -250,13 +251,13 @@ public class Runner implements MessageListener
 
 	private void recvPJ(PipelineJob job)
 	{
-		PipelineJob j = em.find(PipelineJob.class, job.getId());
+		PipelineJob j = emTransac.find(PipelineJob.class, job.getId());
 		if (j == null)
 		{
 			tr.begin();
-			em.persist(job);
+			emTransac.persist(job);
 			tr.commit();
-			j = em.find(PipelineJob.class, job.getId());
+			j = emTransac.find(PipelineJob.class, job.getId());
 		}
 
 		// Check the job is OK
@@ -296,19 +297,19 @@ public class Runner implements MessageListener
 			res.end = new Date();
 			res.start = res.end;
 			res.outOfPlan = j.getOutOfPlan();
-			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
+			toRun.internalRun(emTransac, ctx, j, this.producerRunDescription, this.jmsSession);
 			recvRR(res);
 		}
 		else if (toRun.hasInternalPayload())
 		{
-			// Asynchronous local run
+			// Synchronous local run (AND and OR mainly)
 			log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution",
 					j.getId(), toRun.getClass()));
-			toRun.internalRun(em, ctx, j, this.producerRunDescription, this.jmsSession);
+			toRun.internalRun(emTransac, ctx, j, this.producerRunDescription, this.jmsSession);
 		}
-		else if (j.isReady(ctx))
+		else if (!ctx.simulateExternalPayloads && j.isReady(ctx))
 		{
-			// It has an active part, but no need for dynamic parameters -> just
+			// It has an external active part, but no need for dynamic parameters -> just
 			// run it (i.e. send it to a runner agent)
 			log.debug(String.format(
 					"Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run",
@@ -323,9 +324,9 @@ public class Runner implements MessageListener
 				e.printStackTrace();
 			}
 		}
-		else
+		else if (!ctx.simulateExternalPayloads) // implicit && !j.isReady(ctx)
 		{
-			// Active part, and dynamic parameters -> resolve parameters.
+			// External active part, and dynamic parameters -> resolve parameters.
 			// The run will occur at parameter value reception
 			log.debug(String.format(
 					"Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
@@ -339,6 +340,14 @@ public class Runner implements MessageListener
 				e.printStackTrace();
 			}
 			toRun.prepareRun(j, this, ctx);
+		}
+		else
+		{
+			// External active part, but simulation. Synchronously simulate it.
+			log.debug(String.format(
+					"Job execution request %s will be simulated",
+					j.getId()));
+			recvRR(j.getSimulatedResult(this.emTransac));
 		}
 	}
 
@@ -430,7 +439,7 @@ public class Runner implements MessageListener
 			CalendarPointer cp = null;
 			try
 			{
-				cp = s.getCurrentCalendarPointer(em, p);
+				cp = s.getCurrentCalendarPointer(emTransac, p);
 			} catch (Exception e1)
 			{
 				// TODO Auto-generated catch block

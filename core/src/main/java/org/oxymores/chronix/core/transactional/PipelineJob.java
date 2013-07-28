@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
@@ -39,6 +40,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.core.timedata.RunStats;
 import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.RunResult;
 
@@ -403,6 +405,7 @@ public class PipelineJob extends TranscientBase
 		e.appID = this.appID;
 		e.activeID = this.activeID;
 		e.createdAt = new Date();
+		e.virtualTime = this.virtualTime;
 
 		// Report environment
 		for (EnvironmentValue ev : this.envParams)
@@ -469,5 +472,19 @@ public class PipelineJob extends TranscientBase
 		}
 
 		return rlog;
+	}
+
+	public RunResult getSimulatedResult(EntityManager emTransac)
+	{
+		RunResult res = new RunResult();
+		res.returnCode = 0;
+		res.id1 = this.id;
+		res.outOfPlan = this.outOfPlan;
+		res.logStart = "simulated run";
+
+		res.start = this.getVirtualTime();
+		res.end = new DateTime(res.start).plusSeconds((int) RunStats.getMean(emTransac, this.stateID, this.placeID)).toDate();
+
+		return res;
 	}
 }

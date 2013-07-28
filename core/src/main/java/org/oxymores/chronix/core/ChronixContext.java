@@ -53,9 +53,10 @@ public class ChronixContext
 	public String dns;
 	public int port;
 	public String transacUnitName, historyUnitName;
+	public boolean simulateExternalPayloads = false;
 
-	public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName, String brokerInterface)
-			throws IOException, NumberFormatException, ChronixNoLocalNode
+	public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName,
+			String brokerInterface, boolean loadNotLocalApps) throws IOException, NumberFormatException, ChronixNoLocalNode
 	{
 		log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
@@ -102,7 +103,7 @@ public class ChronixContext
 		{
 			try
 			{
-				ctx.loadApplication(toLoad.get(ss)[0], toLoad.get(ss)[1]);
+				ctx.loadApplication(toLoad.get(ss)[0], toLoad.get(ss)[1], loadNotLocalApps);
 			} catch (FileNotFoundException e)
 			{
 				// TODO Auto-generated catch block
@@ -151,8 +152,8 @@ public class ChronixContext
 		return ctx;
 	}
 
-	public Application loadApplication(File dataFile, File networkFile) throws FileNotFoundException, IOException, ClassNotFoundException,
-			NumberFormatException, ChronixNoLocalNode
+	public Application loadApplication(File dataFile, File networkFile, boolean loadIfNotLocal) throws FileNotFoundException, IOException,
+			ClassNotFoundException, NumberFormatException, ChronixNoLocalNode
 	{
 		log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
 
@@ -168,9 +169,12 @@ public class ChronixContext
 		} catch (ChronixNoLocalNode e)
 		{
 			// no local node means this application should not run here
-			log.info(String
-					.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
-			return null;
+			if (!loadIfNotLocal)
+			{
+				log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded",
+						res.name));
+				return null;
+			}
 		}
 		applicationsById.put(res.getId(), res);
 		applicationsByName.put(res.getName(), res);
@@ -289,5 +293,12 @@ public class ChronixContext
 	public EntityManager getHistoryEM()
 	{
 		return this.getHistoryEMF().createEntityManager();
+	}
+
+	public void removeApplicationFromCache(UUID appID)
+	{
+		Application a = this.applicationsById.get(appID);
+		this.applicationsById.remove(appID);
+		this.applicationsByName.remove(a.name);
 	}
 }

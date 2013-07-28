@@ -63,7 +63,6 @@ public class RunnerShell
 		// Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
 		if (rd.subMethod.equals("cmd.exe"))
 		{
-			argsStrings.add("/U");
 			argsStrings.add("/C");
 			try
 			{

@@ -44,9 +44,9 @@ public class ChronixEngine extends Thread
 	public Broker broker;
 	public SelfTriggerAgent stAgent;
 
-	private Semaphore startCritical, stop, threadInit, stopped;
-	boolean run = true;
-	int nbRunner;
+	protected Semaphore startCritical, stop, threadInit, stopped;
+	protected boolean run = true;
+	protected int nbRunner;
 
 	// ///////////////////////////////////////////////////////////////
 	// Construction
@@ -92,7 +92,7 @@ public class ChronixEngine extends Thread
 	//
 	// ///////////////////////////////////////////////////////////////
 
-	private void startEngine(boolean blocking, boolean purgeQueues)
+	protected void startEngine(boolean blocking, boolean purgeQueues)
 	{
 		log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
 		try
@@ -102,7 +102,7 @@ public class ChronixEngine extends Thread
 
 			// Context
 			preContextLoad();
-			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface);
+			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
 			postContextLoad();
 
 			// Broker with all the consumer threads
@@ -253,7 +253,7 @@ public class ChronixEngine extends Thread
 			this.ctx.setWorkingAsCurrent(a);
 
 			// Reload context to load new applications
-			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface);
+			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
 		}
 	}
 

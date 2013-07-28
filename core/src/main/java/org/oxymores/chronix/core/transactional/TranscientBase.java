@@ -66,6 +66,7 @@ public class TranscientBase implements Serializable
 	protected Boolean ignoreCalendarUpdating = false;
 
 	protected Date createdAt;
+	protected Date virtualTime;
 
 	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
 	protected ArrayList<EnvironmentValue> envParams;
@@ -320,4 +321,14 @@ public class TranscientBase implements Serializable
 	}
 	//
 	// //////////////////////////////////////////////
+
+	public Date getVirtualTime()
+	{
+		return virtualTime;
+	}
+
+	public void setVirtualTime(Date virtualTime)
+	{
+		this.virtualTime = virtualTime;
+	}
 }
