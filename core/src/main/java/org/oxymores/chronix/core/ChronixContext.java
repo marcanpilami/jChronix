@@ -301,4 +301,14 @@ public class ChronixContext
 		this.applicationsById.remove(appID);
 		this.applicationsByName.remove(a.name);
 	}
+	
+	public boolean hasLocalConsole()
+	{
+		for (Application a : this.applicationsById.values())
+		{
+			if (a.getConsoleNode() != null && a.getLocalNode() == a.getConsoleNode())
+				return true;
+		}
+		return false;
+	}
 }

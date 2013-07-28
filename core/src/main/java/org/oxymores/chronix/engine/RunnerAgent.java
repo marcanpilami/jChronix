@@ -170,7 +170,7 @@ public class RunnerAgent implements MessageListener
 				response.setJMSCorrelationID(msg.getJMSCorrelationID());
 				jmsProducer.send(msg.getJMSReplyTo(), response);
 
-				if (res.logSizeBytes <= 500000)
+				if (res.logSizeBytes <= 5000000)
 				{
 					response = jmsSession.createBytesMessage();
 					byte[] bytes = new byte[(int) res.logSizeBytes];
@@ -181,6 +181,7 @@ public class RunnerAgent implements MessageListener
 					((BytesMessage) response).writeBytes(bytes);
 					response.setJMSCorrelationID(msg.getJMSCorrelationID());
 					response.setStringProperty("FileName", logFileName);
+					response.setStringProperty("APPID", rd.appID);
 					jmsProducer.send(msg.getJMSReplyTo(), response);
 				}
 				else

@@ -35,6 +35,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
@@ -65,7 +66,7 @@ public class Runner implements MessageListener
 
 	private ChronixContext ctx;
 	private Session jmsSession;
-	private Destination destEndJob, destLogFile, destRequest;
+	private Destination destEndJob, destRequest;
 	private Connection jmsConnection;
 	private MessageConsumer jmsPipelineConsumer;
 
@@ -77,7 +78,7 @@ public class Runner implements MessageListener
 
 	private ArrayList<PipelineJob> resolving;
 
-	private MessageProducer producerRunDescription, producerHistory, producerEvents;
+	private MessageProducer producerRunDescription, producerHistory, producerEvents, producerLogFile;
 
 	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf, String logDbPath)
 			throws JMSException
@@ -115,9 +116,10 @@ public class Runner implements MessageListener
 		this.jmsPipelineConsumer.setMessageListener(this);
 
 		// Register on Log Shipping queue
-		this.destLogFile = this.jmsSession.createQueue(String.format("Q.%s.LOGFILE", brokerName));
-		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.destLogFile);
-		this.jmsPipelineConsumer.setMessageListener(this);
+		/*
+		 * this.destLogFile = this.jmsSession.createQueue(String.format("Q.%s.LOGFILE", brokerName)); this.jmsPipelineConsumer =
+		 * this.jmsSession.createConsumer(this.destLogFile); this.jmsPipelineConsumer.setMessageListener(this);
+		 */
 
 		// Create JPA context for this thread
 		this.emTransac = this.emf.createEntityManager();
@@ -128,6 +130,7 @@ public class Runner implements MessageListener
 		this.producerRunDescription = this.jmsSession.createProducer(null);
 		this.producerHistory = this.jmsSession.createProducer(null);
 		this.producerEvents = this.jmsSession.createProducer(null);
+		this.producerLogFile = this.jmsSession.createProducer(null);
 	}
 
 	public void stopListening() throws JMSException
@@ -226,12 +229,23 @@ public class Runner implements MessageListener
 		else if (msg instanceof BytesMessage)
 		{
 			BytesMessage bmsg = (BytesMessage) msg;
+
 			String fn = "dump.txt";
+			String app_id = "";
 			try
 			{
 				fn = bmsg.getStringProperty("FileName");
+				app_id = bmsg.getStringProperty("APPID");
 			} catch (JMSException e)
 			{
+			}
+
+			Application a = this.ctx.applicationsById.get(UUID.fromString(app_id));
+			if (a == null)
+			{
+				log.error(String.format("A log file was received but was not waited for - thrown out %s %s", app_id, fn));
+				commit();
+				return;
 			}
 
 			try
@@ -240,6 +254,15 @@ public class Runner implements MessageListener
 				byte[] r = new byte[l];
 				bmsg.readBytes(r);
 				IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
+
+				if (a.getConsoleNode() != null && a.getConsoleNode() != a.getLocalNode())
+				{
+					String dest = String.format("Q.%s.LOGFILE", a.getConsoleNode().getBrokerName());
+					log.debug(String.format("A received logfile will be transmitted to the console node on %s", dest));
+					Queue q = this.jmsSession.createQueue(dest);
+					this.producerLogFile.send(q, bmsg);
+				}
+
 				commit();
 			} catch (Exception e)
 			{
@@ -344,9 +367,7 @@ public class Runner implements MessageListener
 		else
 		{
 			// External active part, but simulation. Synchronously simulate it.
-			log.debug(String.format(
-					"Job execution request %s will be simulated",
-					j.getId()));
+			log.debug(String.format("Job execution request %s will be simulated", j.getId()));
 			recvRR(j.getSimulatedResult(this.emTransac));
 		}
 	}

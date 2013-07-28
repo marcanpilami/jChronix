@@ -76,6 +76,7 @@ public class Broker
 	TranscientListener thrTL;
 	OrderListener thrOL;
 	TokenDistributionCenter thrTC;
+	LogFileListener thrFL;
 	int nbRunners = 4;
 
 	public Broker(ChronixEngine engine) throws Exception
@@ -257,6 +258,12 @@ public class Broker
 			this.thrTC = new TokenDistributionCenter();
 			this.thrTC.startListening(this.connection, brokerName, ctx);
 		}
+
+		if (this.ctx.hasLocalConsole())
+		{
+			this.thrFL = new LogFileListener();
+			this.thrFL.startListening(connection, brokerName, FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));
+		}
 	}
 
 	public void stop()
@@ -285,6 +292,8 @@ public class Broker
 				this.thrOL.stopListening();
 			if (this.thrTC != null)
 				this.thrTC.stopListening();
+			if(this.thrFL != null)
+				this.thrFL.stopListening();
 
 			for (NetworkConnector nc : this.broker.getNetworkConnectors())
 			{

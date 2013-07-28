@@ -45,6 +45,7 @@ public class RunDescription implements Serializable
 	// Helper for log file naming
 	public String placeName = "";
 	public String activeSourceName = "";
+	public String appID = "";
 
 	// This data is only useful for the engine, not the runner.
 	// It should be put as is in the run result object.
