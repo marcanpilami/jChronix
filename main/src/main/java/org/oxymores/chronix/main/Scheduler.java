@@ -69,6 +69,16 @@ public class Scheduler
 		ShellCommand sc2 = PlanBuilder.buildShellCommand("powershell.exe", a, "echooooooo bb", "bb", "should display 'bb'");
 		ShellCommand sc3 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo fin", "FIN", "should display 'fin'");
 
+		ShellCommand sc4 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc5 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc6 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc7 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc8 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc9 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc10 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc11 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		
+		
 		State s1 = PlanBuilder.buildState(c, pgLocal, ex);
 		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
 		State s3 = PlanBuilder.buildState(c, pgLocal, sc2);

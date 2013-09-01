@@ -28,13 +28,6 @@ function getApplicationOK(responseObject)
 		}
 	}
 
-	var ss = cxfApplication.getShells().getDTOShellCommand();
-	for ( var i = 0; i < ss.length; i++)
-	{
-		ss[i].id = ss[i]._id;
-		addShell(ss[i]);
-	}
-
 	var bb = cxfApplication.getPlaces().getDTOPlace();
 	for ( var i = 0; i < bb.length; i++)
 	{
@@ -50,18 +43,24 @@ function getApplicationOK(responseObject)
 
 	$("#appName").text(cxfApplication._name);
 	$("#appDescr").text(cxfApplication._description);
+	if (cxfApplication._active)
+		$("#appActivity").text("loaded production version");
+	else
+		$("#appActivity").text("loaded draft version");
 
-	initCommandPanel(cxfApplication);
-	fillInPaletteData(cxfShellCommands);
+	//initCommandPanel(cxfApplication);
+	//fillInPaletteData(cxfShellCommands);
 	//initNetworkROPanel(aa);
-	initLogicalNetworkPanel(cxfApplication);
-	RecurrencePanel("schedule", cxfApplication);
+	//initLogicalNetworkPanel(cxfApplication);
+	//RecurrencePanel("schedule", cxfApplication);
+	
+	handleTabs('tab-chain');
 }
 
 function addChain(c)
 {
 	cxfChains[c._id] = c;
-	editChain(c);
+	//editChain(c);
 }
 
 function addShell(s)

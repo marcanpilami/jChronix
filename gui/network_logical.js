@@ -24,7 +24,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		autoHeight : false,
 		autoEdit : true,
 		forceFitColumns : true,
-		fullWidthRows : true,
+		//fullWidthRows : true,
 	};
 
 	var columns = [
@@ -106,7 +106,7 @@ function initLogicalNetworkPanel(cxfApplication)
 	nlGridPlaces = new Slick.Grid("#gridLN", nlDataViewPlaces, columns, options);
 	nlGridPlaces.setSelectionModel(new Slick.RowSelectionModel());
 	
-	$("#gridLN").width($("div.rightpanel").width());
+	//$("#gridLN").width($("div.rightpanel").width());
 	//alert($("div.rightpanel").width());
 	nlGridPlaces.resizeCanvas();
 
@@ -181,7 +181,7 @@ function initLogicalNetworkPanel(cxfApplication)
 	});
 
 	// Delete event
-	$('.delplace').live('click', function()
+	$('.delplace').on('click', function()
 	{
 		var me = $(this), id = me.attr('id');
 
@@ -290,11 +290,12 @@ function initLogicalNetworkPanel2(cxfApplication)
 		showHeaderRow : false,
 		multiSelect : false,
 		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
+		//rowHeight : 30,
+		//autoHeight : true,
 		autoEdit : true,
-		forceFitColumns : true,
-		resizable : true,
+		//forceFitColumns : true,
+		fullWidthRows : true,
+		//resizable : true,
 	};
 
 	var columns = [
@@ -405,7 +406,7 @@ function initLogicalNetworkPanel2(cxfApplication)
 	});
 
 	// Delete event
-	$('.delgroup').live('click', function()
+	$('.delgroup').on('click', function()
 	{
 		var me = $(this);
 		var id = me.attr('id');
@@ -529,7 +530,7 @@ function initLogicalNetworkPanel3(cxfApplication)
 	});
 
 	// Delete event
-	$('.removefromgroup').live('click', function()
+	$('.removefromgroup').on('click', function()
 	{
 		// The given id is from the Place to remove from the currenty selected Group in grid 2
 		var me = $(this);
@@ -588,11 +589,11 @@ function initLogicalNetworkPanel4(cxfApplication)
 		asyncEditorLoading : false,
 		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
+		//enableTextSelectionOnCells : false, // ???
+		//rowHeight : 30,
+		//autoHeight : true,
 		autoEdit : false,
-		forceFitColumns : true
+		//forceFitColumns : true
 	};
 
 	var columns = [
@@ -641,7 +642,7 @@ function initLogicalNetworkPanel4(cxfApplication)
 	});
 
 	// Delete event
-	$('.retiremembership').live('click', function()
+	$('.retiremembership').on('click', function()
 	{
 		// The given id is from the Group to get out from the currenty selected Place
 		var me = $(this);

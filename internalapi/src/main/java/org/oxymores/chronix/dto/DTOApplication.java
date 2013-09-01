@@ -8,6 +8,7 @@ public class DTOApplication
 	public String name;
 	public String description;
 	public String id;
+	public boolean active = true;
 
 	public ArrayList<DTOPlace> places;
 	public ArrayList<DTOPlaceGroup> groups;
@@ -138,6 +139,16 @@ public class DTOApplication
 	public void setNodes(ArrayList<DTOExecutionNode> nodes)
 	{
 		this.nodes = nodes;
+	}
+
+	public boolean isActive()
+	{
+		return active;
+	}
+
+	public void setActive(boolean active)
+	{
+		this.active = active;
 	}
 
 }

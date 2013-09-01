@@ -310,6 +310,18 @@ public class PlanBuilder
 
 		return rr1;
 	}
+	
+	public static ClockRRule buildRRuleMinutes(Application a, int stepInMinutes)
+	{
+		ClockRRule rr1 = new ClockRRule();
+		rr1.setName("Every " + stepInMinutes + " minutes");
+		rr1.setDescription("Every " + stepInMinutes + " minutes");
+		rr1.setPeriod(Recur.MINUTELY);
+		rr1.setINTERVAL(stepInMinutes);
+		a.addRRule(rr1);
+
+		return rr1;
+	}
 
 	public static Token buildToken(Application a, String name)
 	{

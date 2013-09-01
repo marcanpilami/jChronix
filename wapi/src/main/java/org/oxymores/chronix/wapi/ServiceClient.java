@@ -37,7 +37,9 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.demo.DemoApplication;
+import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTORRule;
@@ -62,6 +64,18 @@ public class ServiceClient implements IServiceClient
 	{
 		log.debug(String.format("getApplication service was called for app %s", name));
 		Application a = DemoApplication.getNewDemoApplication();
+		ShellCommand sc4 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc5 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc6 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc7 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc8 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc9 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc10 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		ShellCommand sc11 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildRRuleMinutes(a, 10);
+		PlanBuilder.buildRRuleMinutes(a, 20);
+		PlanBuilder.buildRRuleMinutes(a, 30);
+		
 		// TODO: really look for the application instead of test one
 
 		DTOApplication d = Frontier.getApplication(a);

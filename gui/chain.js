@@ -1,41 +1,43 @@
-// Holder for all chain tabs (JQuery-UI object)
-var chaintabs = null;
-
-// Container for all the CXF chains that are currently displayed in their respective tabs
-var drawnChains = new Object();
-
 // Global parameters
-var nodeSize = 50;
+nodeSize = 30;
+arrowSize = 3;
 
-// Helpers
-var dtoDropped;
-
-function initChainPanel() {
+function ChainPanel(divId, cxfApplication)
+{
+	this.cxfApplication = cxfApplication;
+	
+	// Holder for all chain tabs (JQuery-UI object)
+	this.chaintabs = null;
+	
+	// Container for all the CXF chains that are currently displayed in their respective tabs
+	this.drawnChains = new Object();
+	
+	
+	
+	// Helpers
+	this.dtoDropped;
+	
 	// Create the tab panel with a template that will create a host for a Raphaël object
-	chaintabs = $("#chaintabs").tabs({
-		tabTemplate : "<li><a href='#{href}'>#{label}</a></li>", // <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
-		add : function(event, ui) {
-			$(ui.panel).append("<div class='raph'></div>");
-		}
-	});
-}
-
-function fillInPaletteData(DTOShellCommandArray) {
+	chaintabs = $("#chaintabs").tabs();
+	
 	// Palette: list of shell commands
-	var options = {
+	var options =
+	{
 		editable : false,
 		enableAddRow : false,
-		enableCellNavigation : true,
+		enableCellNavigation : false,
 		enableColumnReorder : false,
 		enableRowReordering : false,
-		asyncEditorLoading : true,
-		showHeaderRow : false, // Weird
+		asyncEditorLoading : false,
+		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
 		autoEdit : false,
-		forceFitColumns : true
+		enableTextSelectionOnCells : true,
+		autoHeight : false,
+		forceFitColumns : true,
+		fullWidthRows : true,
+		explicitInitialization : false,
+		syncColumnCellResize : true,
 	};
 
 	var columns = [{
@@ -45,15 +47,21 @@ function fillInPaletteData(DTOShellCommandArray) {
 		width : 200,
 		cssClass : "cell-title"
 	}];
-	grid = new Slick.Grid("#dgChainPaletteCommands", cxfShellCommands, columns, options);
+	grid = new Slick.Grid("#dgChainPaletteCommands", this.cxfApplication.getShells().getDTOShellCommand(), columns, options);
 	grid.setSelectionModel(new Slick.RowSelectionModel());
-
-	grid.onDragInit.subscribe(function(e, dd) {
+	
+	grid2 = new Slick.Grid("#dgChainPaletteChains", this.cxfApplication.getChains().getDTOChain(), [{id : "name", name : "Chains", field : "_name", width : 200, cssClass : "cell-title"}], options);
+	grid2.setSelectionModel(new Slick.RowSelectionModel());
+	
+	// Drag&Drop
+	grid.onDragInit.subscribe(function(e, dd) 
+	{
 		// prevent the grid from canceling drag'n'drop by default
 		e.stopImmediatePropagation();
 	});
-
-	grid.onDragStart.subscribe(function(e, dd) {
+	
+	grid.onDragStart.subscribe(function(e, dd) 
+	{
 		var cell = grid.getCellFromEvent(e);
 		if(!cell) {
 			return;
@@ -95,7 +103,7 @@ function fillInPaletteData(DTOShellCommandArray) {
 		$(dd.available).css("background", "yellow");
 		return proxy;
 	});
-
+	
 	grid.onDrag.subscribe(function(e, dd) {
 		e.stopImmediatePropagation();
 		dd.helper.css({
@@ -103,12 +111,13 @@ function fillInPaletteData(DTOShellCommandArray) {
 			left : e.pageX + 5
 		});
 	});
-
+	
 	grid.onDragEnd.subscribe(function(e, dd) {
 		e.stopImmediatePropagation();
 		dd.helper.remove();
 		$(dd.available).css("background", "beige");
 	});
+	
 	// register drop event handlers on all SVG charts (including future ones thanks to delegation)
 	$.drop({
 		mode : "mouse"
@@ -116,7 +125,7 @@ function fillInPaletteData(DTOShellCommandArray) {
 	$("#chaintabs").on("dropstart", ".raph", function(e, dd) {
 		alert("e");
 	});
-
+	
 	$("#chaintabs").on("drop", ".raph", function(e, dd) {
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
@@ -135,32 +144,139 @@ function fillInPaletteData(DTOShellCommandArray) {
 
 		//alert("f" + paper + v._label + "X : " + v._x + " - " + v._y);
 	});
-
+	
 	$("#chaintabs").on("dropend", ".raph", function(e, dd) {
 		//alert("g");
 	});
+	
+	// Register edit chain hook
+	grid2.onDblClick.subscribe((function(e, args)
+	{marsu = args;
+	    var row = args.row;
+		var item = grid2.getDataItem(row);
+		this.editChain(item);
+	}).bind(this));
+	
+	this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
 }
 
-// Function to call to add a tab displaying a given DTOChain
-function editChain(cxfObject) {
-	// Check if already displayed
-	if(drawnChains[cxfObject._id] !== undefined)
-		return;
 
+// Function to call to add a tab displaying a given DTOChain
+ChainPanel.prototype.editChain = function(cxfObject) 
+{
+	// Check if already displayed
+	if(this.drawnChains[cxfObject._id] !== undefined)
+	{
+		$("[href='#chaintab-"+cxfObject._id+"']").trigger( "click" );
+		return;
+	}
+	
 	// Adds the chain to the list
-	drawnChains[cxfObject._id] = cxfObject;
+	this.drawnChains[cxfObject._id] = cxfObject;
 
 	// Create a new tab
-	chaintabs.tabs("add", "#chaintab-" + cxfObject._id, cxfObject._name);
-	var r = $("div.raph", $("#chaintab-" + cxfObject._id))[0];
-	var rpaper = new Raphael(r, 1600, 600);
+	$("#chaintabs").append("<div class='tabPanel' id='chaintab-" + cxfObject._id + "'><div style='height:100%;width:100%;' id='raphcontainer_"+cxfObject._id+"'><div class='raph'></div></div></div>");
+	$("#chaintabs > ul").append( "<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
+	chaintabs.tabs('refresh');
+	$("[href='#chaintab-"+cxfObject._id+"']").trigger( "click" );
+	
+	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
+	var rpaper = new Raphael(r, 10 + $("#raphcontainer_" + cxfObject._id).width(), 10 + $("#raphcontainer_" + cxfObject._id).height());
 	rpaper.states = new Array();
 	rpaper.transitions = new Array();
 	r.paper = rpaper;
 	r.dtoChain = cxfObject;
-	drawChain(cxfObject, rpaper);
-}
+	this.drawChain(cxfObject, rpaper);
+	
+};
 
+// Actually draws the chain inside a clean Raphael paper
+ChainPanel.prototype.drawChain = function(cxfChain, raphaelPaper) 
+{
+	// Reinitialize panel
+	raphaelPaper.clear();
+	raphaelPaper.states = new Array();
+	raphaelPaper.transitions = new Array();
+
+	// add chain states to the list and draw them
+	var ss = cxfChain.getStates().getDTOState();
+	for(var i = 0; i < ss.length; i++) {
+		this.addState(ss[i], raphaelPaper);
+	}
+
+	// add transitions to the list and draw them
+	var trs = cxfChain.getTransitions().getDTOTransition();
+	for(var i = 0; i < trs.length; i++) {
+		this.addTransition(trs[i], raphaelPaper);
+	}
+};
+
+
+ChainPanel.prototype.addState = function (DTOState, raphaelPaper) 
+{
+	// Add state to list, both as member of the object (access by id) and to the
+	// list itself (enumerator access)
+	raphaelPaper.states[DTOState._id] = DTOState;
+	raphaelPaper.states.push(DTOState);
+
+	// Draw state as a circle
+	var circle = raphaelPaper.circle(DTOState._x, DTOState._y, nodeSize);
+	circle.attr({
+		fill : 'firebrick',
+		stroke : 'darkorchid',
+		'stroke-width' : 2
+	});
+	tx = raphaelPaper.text(DTOState._x, DTOState._y, DTOState._label + "\n(" + DTOState._runsOnName + ")");
+	tx.node.setAttribute("pointer-events", "none");
+	circle.contents = new Object();
+	circle.contents["text"] = tx;
+
+	// Set reference between business model object and representation object
+	DTOState._drawing = circle;
+	circle.modeldata = DTOState;
+	circle.node.id = DTOState._id;
+	circle.id = DTOState._id;
+	DTOState.trFromHere = new Array();
+	DTOState.trReceivedHere = new Array();
+
+	// Allow dragging with callback taking connections and business objects into account
+	circle.drag(dragStateMove, dragStateStart, dragStateEnd);
+};
+
+ChainPanel.prototype.addTransition = function(DTOTransition, raphaelPaper) 
+{
+	// Add to collection for future reference
+	raphaelPaper.transitions[DTOTransition._id] = DTOTransition;
+	raphaelPaper.transitions.push(DTOTransition);
+
+	// Draw as an arrow
+	var from = raphaelPaper.states[DTOTransition._from];
+	var to = raphaelPaper.states[DTOTransition._to];
+	var x1 = from._x;
+	var y1 = from._y;
+	var x2 = to._x;
+	var y2 = to._y;
+
+	var pc = "M" + x1 + "," + y1 + ",L" + x2 + "," + y2;
+	var shifted1 = Raphael.getPointAtLength(pc, nodeSize);
+	var shifted2 = Raphael.getPointAtLength(pc, Raphael.getTotalLength(pc) - nodeSize);
+	var arrow = raphaelPaper.path("M" + shifted1.x + "," + shifted1.y + ",L" + shifted2.x + "," + shifted2.y);
+
+	arrow.attr({
+		"arrow-end" : "classic-wide-long",
+		"stroke-width" : arrowSize
+	});
+
+	// Set cross references to allow easy navigation between SVG and model elements
+	from.trFromHere.push(arrow);
+	to.trReceivedHere.push(arrow);
+	arrow.from = from;
+	arrow.to = to;
+	DTOTransition._drawing = arrow;
+	arrow.modeldata = DTOTransition;
+};
+
+	
 function dragStateStart(x, y, event) {
 	this.xs = this.attr("cx");
 	this.ys = this.attr("cy");
@@ -201,7 +317,12 @@ function dragStateMove(dx, dy, x, y, event) {
 	}
 }
 
-function shiftArrow(RaphaelArrow) {
+function dragStateEnd(event) {
+
+}
+
+function shiftArrow(RaphaelArrow) 
+{
 	var pc = "M" + RaphaelArrow.from._x + "," + RaphaelArrow.from._y + ",L" + RaphaelArrow.to._x + "," + RaphaelArrow.to._y;
 	var shifted1 = Raphael.getPointAtLength(pc, nodeSize);
 	var shifted2 = Raphael.getPointAtLength(pc, Raphael.getTotalLength(pc) - nodeSize);
@@ -216,100 +337,5 @@ function shiftArrow(RaphaelArrow) {
 	});
 }
 
-function dragStateEnd(event) {
 
-}
 
-function drawChain(cxfChain, raphaelPaper) {
-	// Reinitialize panel
-	raphaelPaper.clear();
-	raphaelPaper.states = new Array();
-	raphaelPaper.transitions = new Array();
-
-	// add chain states to the list and draw them
-	var ss = cxfChain.getStates().getDTOState();
-	for(var i = 0; i < ss.length; i++) {
-		addState(ss[i], raphaelPaper);
-	}
-
-	// add transitions to the list and draw them
-	var trs = cxfChain.getTransitions().getDTOTransition();
-	for(var i = 0; i < trs.length; i++) {
-		addTransition(trs[i], raphaelPaper);
-	}
-}
-
-function getChainOK(responseObject) {
-	drawChain(responseObject.getReturn());
-}
-
-function addState(DTOState, raphaelPaper) {
-	// Add state to list, both as member of the object (access by id) and to the
-	// list itself (enumerator access)
-	raphaelPaper.states[DTOState._id] = DTOState;
-	raphaelPaper.states.push(DTOState);
-
-	// Draw state as a circle
-	var circle = raphaelPaper.circle(DTOState._x, DTOState._y, 50);
-	circle.attr({
-		fill : 'firebrick',
-		stroke : 'darkorchid',
-		'stroke-width' : 2
-	});
-	var tx = raphaelPaper.text(DTOState._x, DTOState._y, DTOState._label + "\n(" + DTOState._runsOnName + ")");
-	circle.contents = new Object();
-	circle.contents["text"] = tx;
-
-	// Set reference between business model object and representation object
-	DTOState._drawing = circle;
-	circle.modeldata = DTOState;
-	circle.node.id = DTOState._id;
-	circle.id = DTOState._id;
-	DTOState.trFromHere = new Array();
-	DTOState.trReceivedHere = new Array();
-
-	// Allow dragging with callback taking connections and business objects into
-	// account
-	circle.drag(dragStateMove, dragStateStart, dragStateEnd);
-}
-
-function addTransition(DTOTransition, raphaelPaper) {
-	// Add to collection for future reference
-	raphaelPaper.transitions[DTOTransition._id] = DTOTransition;
-	raphaelPaper.transitions.push(DTOTransition);
-
-	// Draw as an arrow
-	var from = raphaelPaper.states[DTOTransition._from];
-	var to = raphaelPaper.states[DTOTransition._to];
-	var x1 = from._x;
-	var y1 = from._y;
-	var x2 = to._x;
-	var y2 = to._y;
-
-	var pc = "M" + x1 + "," + y1 + ",L" + x2 + "," + y2;
-	var shifted1 = Raphael.getPointAtLength(pc, nodeSize);
-	var shifted2 = Raphael.getPointAtLength(pc, Raphael.getTotalLength(pc) - nodeSize);
-	var arrow = raphaelPaper.path("M" + shifted1.x + "," + shifted1.y + ",L" + shifted2.x + "," + shifted2.y);
-
-	arrow.attr({
-		"arrow-end" : "classic-wide-long",
-		"stroke-width" : 5
-	});
-
-	// Set cross references to allow easy navigation between SVG and model
-	// elements
-	from.trFromHere.push(arrow);
-	to.trReceivedHere.push(arrow);
-	arrow.from = from;
-	arrow.to = to;
-	DTOTransition._drawing = arrow;
-	arrow.modeldata = DTOTransition;
-}
-
-function getChainKO(responseObject) {
-	alert("oooops");
-}
-
-function loadChain() {
-	proxy.getChain(getChainOK, getChainKO);
-}
