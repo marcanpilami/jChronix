@@ -12,13 +12,15 @@ function ChainPanel(divId, cxfApplication)
 	// Container for all the CXF chains that are currently displayed in their respective tabs
 	this.drawnChains = new Object();
 	
-	
-	
 	// Helpers
-	this.dtoDropped;
+	this.selectedChain = null;
+	this.selectedPaper = null;
 	
 	// Create the tab panel with a template that will create a host for a Raphaël object
-	chaintabs = $("#chaintabs").tabs();
+	this.chaintabs = $("#chaintabs").tabs({activate: this.onShowChain.bind(this)});
+	this.panel = $("#container1");
+	this.panel.data('app', cxfApplication);
+	this.panel.data('panel', this);
 	
 	// Palette: list of shell commands
 	var options =
@@ -54,11 +56,13 @@ function ChainPanel(divId, cxfApplication)
 	grid2.setSelectionModel(new Slick.RowSelectionModel());
 	
 	// Drag&Drop
-	grid.onDragInit.subscribe(function(e, dd) 
+	grid.onDragInit.subscribe((function(e, dd) 
 	{
-		// prevent the grid from canceling drag'n'drop by default
+		// Prevent the grid from canceling drag'n'drop by default
 		e.stopImmediatePropagation();
-	});
+		dd.selectedChain = this.selectedChain;
+		dd.selectedPaper = this.selectedPaper;
+	}).bind(this));
 	
 	grid.onDragStart.subscribe(function(e, dd) 
 	{
@@ -69,13 +73,16 @@ function ChainPanel(divId, cxfApplication)
 
 		// Store row ID
 		dd.row = cell.row;
-		dtoDropped = cxfShellCommands[dd.row];
+		daddy = $(this.getContainerNode()).parents('div[class="panelcontainer"]');
+		ppp = daddy;
+		dd.dtoDropped = daddy.data('app').getShells().getDTOShellCommand()[dd.row];
+		dd.panel = daddy.data('panel');
 
 		if(Slick.GlobalEditorLock.isActive()) {// ?
 			return;
 		}
 
-		// prevent default canceling behaviour
+		// Prevent default canceling behaviour
 		e.stopImmediatePropagation();
 
 		var selectedRows = grid.getSelectedRows();
@@ -96,58 +103,51 @@ function ChainPanel(divId, cxfApplication)
 			"z-index" : 99999,
 			"-moz-border-radius" : "8px",
 			"-moz-box-shadow" : "2px 2px 6px silver"
-		}).text("Drag to drawing to create " + dd.count + " node(s)").appendTo("body");
+		}).text("Drag to drawing to create " + dd.count + " node(s)").appendTo("body");  //container1
 
-		dd.helper = proxy;
-
-		$(dd.available).css("background", "yellow");
+		$(dd.available).css("background", "green");
 		return proxy;
 	});
 	
 	grid.onDrag.subscribe(function(e, dd) {
-		e.stopImmediatePropagation();
-		dd.helper.css({
+		//e.stopImmediatePropagation();
+		$(dd.proxy).css({
 			top : e.pageY + 5,
 			left : e.pageX + 5
 		});
 	});
 	
 	grid.onDragEnd.subscribe(function(e, dd) {
-		e.stopImmediatePropagation();
-		dd.helper.remove();
+		//e.stopImmediatePropagation();
+		dd.proxy.remove();
 		$(dd.available).css("background", "beige");
 	});
 	
-	// register drop event handlers on all SVG charts (including future ones thanks to delegation)
-	$.drop({
-		mode : "mouse"
-	});
-	$("#chaintabs").on("dropstart", ".raph", function(e, dd) {
-		alert("e");
+	// Register drop event handlers on all SVG charts (including future ones thanks to delegation)
+	$("#chaintabs").on("dropstart", "svg", function(e, dd) {
+		//$(this).parent().css("background", "red");
+	}); 
+	$("#chaintabs").on("dropend", "svg", function(e, dd) {
+		//$(this).parent().css("background", "green");
 	});
 	
-	$("#chaintabs").on("drop", ".raph", function(e, dd) {
+	$("#chaintabs").on("drop", "svg", function(e, dd) {
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
-		v._representsId = dtoDropped._id;
-		v._x = e.screenX - $(this).offset().left;
-		v._y = e.screenY - $(this).offset().top;
-		;
-		v._label = dtoDropped._name;
+		v._representsId = dd.dtoDropped._id;	
+		v._x = e.offsetX;
+		v._y = e.offsetY;
+		v._label = dd.dtoDropped._name;
 
-		// Get selected tab
-		//var selected = chaintabs.tabs(chaintabs.tabs('option', 'selected'));
-		var paper = this.paper;
-		addState(v, paper);
-		var dtoChain = this.dtoChain;
-		dtoChain.getStates().getDTOState().push(v);
-
-		//alert("f" + paper + v._label + "X : " + v._x + " - " + v._y);
+		dd.panel.addState(v, dd.selectedPaper);
+		dd.selectedChain.getStates().getDTOState().push(v);
 	});
 	
-	$("#chaintabs").on("dropend", ".raph", function(e, dd) {
-		//alert("g");
+	$.drop({
+		mode : "mouse", // everything inside target to be accepted,
+		delay: 2
 	});
+	
 	
 	// Register edit chain hook
 	grid2.onDblClick.subscribe((function(e, args)
@@ -177,20 +177,34 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	// Create a new tab
 	$("#chaintabs").append("<div class='tabPanel' id='chaintab-" + cxfObject._id + "'><div style='height:100%;width:100%;' id='raphcontainer_"+cxfObject._id+"'><div class='raph'></div></div></div>");
 	$("#chaintabs > ul").append( "<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
-	chaintabs.tabs('refresh');
-	$("[href='#chaintab-"+cxfObject._id+"']").trigger( "click" );
 	
+	// Create new Raphaël paper
 	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
 	var rpaper = new Raphael(r, 10 + $("#raphcontainer_" + cxfObject._id).width(), 10 + $("#raphcontainer_" + cxfObject._id).height());
 	rpaper.states = new Array();
 	rpaper.transitions = new Array();
 	r.paper = rpaper;
 	r.dtoChain = cxfObject;
+	
+	// Draw the chain on the paper
 	this.drawChain(cxfObject, rpaper);
 	
+	// Show new tab
+	this.chaintabs.tabs('refresh');
+	$("[href='#chaintab-"+cxfObject._id+"']").trigger( "click" );
 };
 
-// Actually draws the chain inside a clean Raphael paper
+ChainPanel.prototype.onShowChain = function(event, ui)
+{
+	var raph_jq = ui.newPanel.find('div.raph')[0];
+	var rpaper = raph_jq.paper;
+	var cxfChain = raph_jq.dtoChain;
+	
+	this.selectedPaper = rpaper;
+	this.selectedChain = cxfChain;
+};
+
+// Actually draws the chain inside a clean(ed) Raphael paper
 ChainPanel.prototype.drawChain = function(cxfChain, raphaelPaper) 
 {
 	// Reinitialize panel
@@ -333,7 +347,9 @@ function shiftArrow(RaphaelArrow)
 	path[1][1] = shifted2.x;
 	path[1][2] = shifted2.y;
 	RaphaelArrow.attr({
-		"path" : path
+		"path" : path,
+		"arrow-end" : "classic-wide-long",
+		"stroke-width" : arrowSize
 	});
 }
 
