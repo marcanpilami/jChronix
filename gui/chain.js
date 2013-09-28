@@ -68,17 +68,9 @@ function ChainPanel(divId, cxfApplication)
 	grid2.setSelectionModel(new Slick.RowSelectionModel());
 
 	// Drag&Drop
-	grid.onDragInit.subscribe((function(e, dd)
+	var activeDragStart = function(e, dd)
 	{
-		// Prevent the grid from canceling drag'n'drop by default
-		e.stopImmediatePropagation();
-		dd.selectedChain = this.selectedChain;
-		dd.selectedPaper = this.selectedPaper;
-	}).bind(this));
-
-	grid.onDragStart.subscribe(function(e, dd)
-	{
-		var cell = grid.getCellFromEvent(e);
+		var cell = this.getCellFromEvent(e);
 		if (!cell)
 		{
 			return;
@@ -87,8 +79,7 @@ function ChainPanel(divId, cxfApplication)
 		// Store row ID
 		dd.row = cell.row;
 		daddy = $(this.getContainerNode()).parents('div[class="panelcontainer"]');
-		ppp = daddy;
-		dd.dtoDropped = daddy.data('app').getShells().getDTOShellCommand()[dd.row];
+		dd.dtoDropped = this.getDataItem(dd.row);
 		dd.panel = daddy.data('panel');
 
 		if (Slick.GlobalEditorLock.isActive())
@@ -123,9 +114,15 @@ function ChainPanel(divId, cxfApplication)
 
 		$(dd.available).css("background", "green");
 		return proxy;
-	});
-
-	grid.onDrag.subscribe(function(e, dd)
+	};
+	var activeDragInit = function(e, dd)
+	{
+		// Prevent the grid from canceling drag'n'drop by default
+		e.stopImmediatePropagation();
+		dd.selectedChain = this.selectedChain;
+		dd.selectedPaper = this.selectedPaper;
+	};
+	var activeDrag = function(e, dd)
 	{
 		// e.stopImmediatePropagation();
 		$(dd.proxy).css(
@@ -133,14 +130,23 @@ function ChainPanel(divId, cxfApplication)
 			top : e.pageY + 5,
 			left : e.pageX + 5
 		});
-	});
-
-	grid.onDragEnd.subscribe(function(e, dd)
+	};
+	var activeDragEnd = function(e, dd)
 	{
 		// e.stopImmediatePropagation();
 		dd.proxy.remove();
 		$(dd.available).css("background", "beige");
-	});
+	};
+
+	grid.onDragInit.subscribe(activeDragInit.bind(this));
+	grid.onDragStart.subscribe(activeDragStart);
+	grid.onDrag.subscribe(activeDrag);
+	grid.onDragEnd.subscribe(activeDragEnd);
+	
+	grid2.onDragInit.subscribe(activeDragInit.bind(this));
+	grid2.onDragStart.subscribe(activeDragStart);
+	grid2.onDrag.subscribe(activeDrag);
+	grid2.onDragEnd.subscribe(activeDragEnd);
 
 	// Register drop event handlers on all SVG charts (including future ones thanks to delegation)
 	$("#chaintabs").on("dropstart", "svg", function(e, dd)

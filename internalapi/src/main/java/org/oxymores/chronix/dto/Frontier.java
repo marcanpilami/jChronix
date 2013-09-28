@@ -57,7 +57,7 @@ public class Frontier
 		};
 		List<PlaceGroup> pgs = a.getGroupsList();
 		Collections.sort(pgs, comparator_pg);
-		for (PlaceGroup pg : a.getGroupsList())
+		for (PlaceGroup pg : pgs)
 			res.groups.add(getPlaceGroup(pg));
 
 		for (ClockRRule r : a.getRRulesList())
