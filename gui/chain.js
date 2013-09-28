@@ -165,7 +165,7 @@ function ChainPanel(divId, cxfApplication)
 
 		dd.panel.addState(v, dd.selectedPaper);
 		dd.selectedChain.getStates().getDTOState().push(v);
-		
+
 		this.state_toolbar.show(v);
 	}).bind(this));
 
@@ -460,19 +460,21 @@ function StateToolbar()
 	this.btSelect = $("<button type='button'>select</button>");
 	this.mainDiv.append(this.btSelect);
 	this.btSelect.click(this.select.bind(this));
+
+	this.btDelete = $("<button type='button'>delete</button>");
+	this.mainDiv.append(this.btDelete);
+	this.btDelete.click(this.remove.bind(this));
 }
 
 StateToolbar.prototype.hide = function()
 {
 	this.mainDiv.hide();
-	delete this.dtoState._drawing.contents["toolbar"];
 	this.mode = "select";
 };
 
 StateToolbar.prototype.show = function(dtoState)
 {
 	this.dtoState = dtoState;
-	this.dtoState._drawing.contents["toolbar"] = this.mainDiv;
 	var o = $(this.dtoState._drawing.paper.canvas).offset();
 	this.mainDiv.css(
 	{
@@ -483,6 +485,10 @@ StateToolbar.prototype.show = function(dtoState)
 		this.btLink.hide();
 	else
 		this.btLink.show();
+	if (!dtoState._canBeRemoved)
+		this.btDelete.hide();
+	else
+		this.btDelete.show();
 
 	this.mainDiv.show();
 };
@@ -505,4 +511,41 @@ StateToolbar.prototype.getMode = function()
 StateToolbar.prototype.setMode = function(mode)
 {
 	this.mode = mode;
+};
+
+StateToolbar.prototype.remove = function(mode)
+{
+	this.mode = "select";
+	var panel = this.dtoState._drawing.chain_panel;
+
+	// Remove the helper text from drawings
+	for ( var e in this.dtoState._drawing.contents)
+	{
+		this.dtoState._drawing.contents[e].remove();
+	}
+
+	// Remove the transitions from drawing and model
+	for ( var i = 0; i < this.dtoState.trFromHere.length; i++)
+	{
+		tr = this.dtoState.trFromHere[i];
+		panel.selectedChain.getTransitions().getDTOTransition().pop(tr.modeldata);
+
+		this.dtoState.trFromHere.pop(tr);
+		tr.to.trReceivedHere.pop(tr);
+		tr.remove();
+	}
+	for ( var i = 0; i < this.dtoState.trReceivedHere.length; i++)
+	{
+		tr = this.dtoState.trReceivedHere[i];
+		panel.selectedChain.getTransitions().getDTOTransition().pop(tr.modeldata);
+
+		this.dtoState.trReceivedHere.pop(tr);
+		tr.from.trFromHere.pop(tr);
+		tr.remove();
+	}
+
+	// Remove the state itself from drawing and from model
+	this.dtoState._drawing.remove();
+	panel.selectedChain.getStates().getDTOState().pop(this.dtoState);
+	this.hide();
 };

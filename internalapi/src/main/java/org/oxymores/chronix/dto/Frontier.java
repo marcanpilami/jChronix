@@ -119,6 +119,8 @@ public class Frontier
 				t.canReceiveLink = false;
 			if (s.getRepresents() instanceof ChainEnd)
 				t.canEmitLinks = false;
+			if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
+				t.canBeRemoved = false;
 			res.states.add(t);
 		}
 
