@@ -1,7 +1,6 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -10,7 +9,6 @@ import java.util.List;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
@@ -18,6 +16,8 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.ChainEnd;
+import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -115,6 +115,10 @@ public class Frontier
 			} catch (Exception e)
 			{
 			}
+			if (s.getRepresents() instanceof ChainStart)
+				t.canReceiveLink = false;
+			if (s.getRepresents() instanceof ChainEnd)
+				t.canEmitLinks = false;
 			res.states.add(t);
 		}
 

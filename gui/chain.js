@@ -15,6 +15,7 @@ function ChainPanel(divId, cxfApplication)
 	// Helpers
 	this.selectedChain = null;
 	this.selectedPaper = null;
+	this.state_toolbar = new StateToolbar();
 
 	// Create the tab panel with a template that will create a host for a Raphaël object
 	this.chaintabs = $("#chaintabs").tabs(
@@ -151,7 +152,7 @@ function ChainPanel(divId, cxfApplication)
 		// $(this).parent().css("background", "green");
 	});
 
-	$("#chaintabs").on("drop", "svg", function(e, dd)
+	$("#chaintabs").on("drop", "svg", (function(e, dd)
 	{
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
@@ -159,10 +160,14 @@ function ChainPanel(divId, cxfApplication)
 		v._x = e.offsetX;
 		v._y = e.offsetY;
 		v._label = dd.dtoDropped._name;
+		v._canReceiveLink = true;
+		v._canEmitLinks = true;
 
 		dd.panel.addState(v, dd.selectedPaper);
 		dd.selectedChain.getStates().getDTOState().push(v);
-	});
+		
+		this.state_toolbar.show(v);
+	}).bind(this));
 
 	$.drop(
 	{
@@ -222,6 +227,13 @@ ChainPanel.prototype.editChain = function(cxfObject)
 
 	// Draw the chain on the paper
 	this.drawChain(cxfObject, rpaper);
+
+	// event handlers
+	$(rpaper.canvas).click((function(event)
+	{
+		event.stopPropagation();
+		this.state_toolbar.hide();
+	}).bind(this));
 
 	// Show new tab
 	this.chaintabs.tabs('refresh');
@@ -288,9 +300,40 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 	circle.id = DTOState._id;
 	DTOState.trFromHere = new Array();
 	DTOState.trReceivedHere = new Array();
+	circle.chain_panel = this;
 
 	// Allow dragging with callback taking connections and business objects into account
 	circle.drag($.throttle(dragStateMove, 20), dragStateStart, dragStateEnd);
+	circle.click(function(event)
+	{
+		event.stopPropagation();
+		var toolbar = this.chain_panel.state_toolbar;
+		var mode = toolbar.getMode();
+
+		if (mode === "select")
+			this.chain_panel.state_toolbar.show(this.modeldata);
+		else if (mode === "link")
+		{
+			if (toolbar.dtoState === this.modeldata)
+			{
+				alert("cannot link a state to itself");
+				return;
+			}
+			if (!this.modeldata._canReceiveLink)
+			{
+				alert("the target state you've selected does not allow this operation (start state or similar)");
+				return;
+			}
+
+			var v = new dto_chronix_oxymores_org_DTOTransition();
+			v._id = uuid.v4();
+			v._from = toolbar.dtoState._id;
+			v._to = this.modeldata._id;
+			v._guard1 = 0;
+			this.chain_panel.addTransition(v, this.paper);
+			toolbar.setMode("select");
+		}
+	});
 };
 
 ChainPanel.prototype.addTransition = function(DTOTransition, raphaelPaper)
@@ -397,3 +440,69 @@ function shiftArrow(RaphaelArrow)
 		node.parentNode.insertBefore(node, node);
 	}
 }
+
+// ////////////////////////////////////////////////////////////////////
+// Toolbar for State
+// ////////////////////////////////////////////////////////////////////
+function StateToolbar()
+{
+	this.mainDiv = null; // jQuery object
+	this.dtoState = null;
+	this.mode = "select";
+
+	this.mainDiv = $("<div style='display: none; position: fixed;'></div>");
+	$("body").append(this.mainDiv);
+
+	this.btLink = $("<button type='button'>link</button>");
+	this.mainDiv.append(this.btLink);
+	this.btLink.click(this.link.bind(this));
+
+	this.btSelect = $("<button type='button'>select</button>");
+	this.mainDiv.append(this.btSelect);
+	this.btSelect.click(this.select.bind(this));
+}
+
+StateToolbar.prototype.hide = function()
+{
+	this.mainDiv.hide();
+	delete this.dtoState._drawing.contents["toolbar"];
+	this.mode = "select";
+};
+
+StateToolbar.prototype.show = function(dtoState)
+{
+	this.dtoState = dtoState;
+	this.dtoState._drawing.contents["toolbar"] = this.mainDiv;
+	var o = $(this.dtoState._drawing.paper.canvas).offset();
+	this.mainDiv.css(
+	{
+		left : o.left + dtoState._x - 50,
+		top : o.top + dtoState._y - nodeSize - 30,
+	});
+	if (!dtoState._canEmitLinks)
+		this.btLink.hide();
+	else
+		this.btLink.show();
+
+	this.mainDiv.show();
+};
+
+StateToolbar.prototype.link = function()
+{
+	this.mode = "link";
+};
+
+StateToolbar.prototype.select = function()
+{
+	this.mode = "select";
+};
+
+StateToolbar.prototype.getMode = function()
+{
+	return this.mode;
+};
+
+StateToolbar.prototype.setMode = function(mode)
+{
+	this.mode = mode;
+};
