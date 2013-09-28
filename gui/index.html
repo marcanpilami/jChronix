@@ -9,6 +9,7 @@
 	<link type="text/css" href="lib/slick.grid.css" rel="Stylesheet" />
 	<script type="text/javascript" src="lib/jquery-1.9.1.js"></script>
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="lib/jquery.debounce-1.0.5.js"></script>
 	<script type="text/javascript" src="lib/raphael.js"></script>
 	<script type="text/javascript" src="lib/jquery.event.drag-2.2.js"></script>
 	<script type="text/javascript" src="lib/jquery.event.drop-2.2.js"></script>
@@ -50,7 +51,7 @@
 		</ul>
 
 	<!-- 	<div id="tab-commands" style="padding: 0px; position: absolute; top: 50px; bottom: 10px; right: 10px; left: 10px;">
-			<label>Filter (name or description):</label> <input type="text" id="txtSearchCmd" style="width: 200px;"></input>
+			<label>Filter (name or description):</label> <input type="text" id="txtSearchCmd" style="width: 200px;">
 			<div style="margin: 0px; padding: 0px; position: absolute; top: 25px; bottom: 0px; right: 0px; left: 0px;">
 				<div id="gridCommands" style="padding: 0px; height:100%;"></div>
 			</div>
@@ -58,7 +59,7 @@
 		
 		<div id="tab-command" class='tabPanel'>
 			<div style="display: table; height: 100%; width:100%; table-layout: fixed;">
-				<div style="display: table-row;"><label>Search:</label> <input type="text" id="txtSearchCmd" style="width: 200px;"></input></div>
+				<div style="display: table-row;"><label>Search:</label> <input type="text" id="txtSearchCmd" style="width: 200px;"></div>
 				<div id="gridCommandsContainer" style="display: table-row; height: 100%;">
 					<div id="gridCommands" style="height: 100%;"></div>
 				</div>
@@ -70,6 +71,7 @@
 
 		<div id="tab-chain"  class='tabPanel'>
 			<div id="container1" style='height: 100%;' class='panelcontainer'>
+				<div id="raphBug" style="height: 0px;"></div>
 				<div id="leftbar" class="leftbar">
 					<div id="dgChainPaletteChains" style="height: 33%;"></div>
 					<div id="dgChainPaletteCommands" style="height: 77%;"></div>
@@ -95,13 +97,13 @@
 						<label>Only show <strong>place groups</strong> which name
 							or description contains:
 						</label> 
-						<input type="text" id="txtSearchLNGRP" style="width: 100px;"></input>
+						<input type="text" id="txtSearchLNGRP" style="width: 100px;">
 						<div id="gridLNGRP" style="height: 300px;"></div>
 					</div>
-					<div id="lnplaces" style=""width:100%;">
+					<div id="lnplaces" style="width:100%;">
 						<label>Only show <strong>places</strong> which name or description contains:
 						</label> 
-						<input type="text" id="txtSearchLN" style="width: 100px;"></input>
+						<input type="text" id="txtSearchLN" style="width: 100px;">
 						<div id="gridLN" style="height:300px;"></div>
 					</div>
 				</div>
