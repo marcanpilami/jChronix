@@ -16,10 +16,12 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.And;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 
@@ -48,20 +50,27 @@ public class Frontier
 		for (Place p : a.getPlacesList())
 			res.places.add(getPlace(p));
 
+		Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>() {
+		    public int compare(PlaceGroup c1, PlaceGroup c2) {
+		        return c1.getName().compareToIgnoreCase(c2.getName());
+		    }
+		};
+		List<PlaceGroup> pgs = a.getGroupsList();
+		Collections.sort(pgs, comparator_pg);
 		for (PlaceGroup pg : a.getGroupsList())
 			res.groups.add(getPlaceGroup(pg));
 
 		for (ClockRRule r : a.getRRulesList())
 			res.rrules.add(getRRule(r));
 
-		Comparator<ActiveNodeBase> comparator = new Comparator<ActiveNodeBase>() {
+		Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>() {
 		    public int compare(ActiveNodeBase c1, ActiveNodeBase c2) {
 		        return c1.getName().compareToIgnoreCase(c2.getName());
 		    }
 		};
 
 		List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
-		Collections.sort(active, comparator);
+		Collections.sort(active, comparator_act);
 		for (ActiveNodeBase o : active)
 		{
 			if (o instanceof Chain)
@@ -121,6 +130,8 @@ public class Frontier
 				t.canEmitLinks = false;
 			if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
 				t.canBeRemoved = false;
+			if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or)
+				t.canReceiveMultipleLinks = true;
 			res.states.add(t);
 		}
 

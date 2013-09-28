@@ -324,6 +324,11 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 				alert("the target state you've selected does not allow this operation (start state or similar)");
 				return;
 			}
+			if (!this.modeldata._canReceiveMultipleLinks && this.modeldata.trReceivedHere.length > 0)
+			{
+				alert("the target state can only receive one arrow. Use AND or OR.");
+				return;
+			}
 
 			var v = new dto_chronix_oxymores_org_DTOTransition();
 			v._id = uuid.v4();
@@ -464,6 +469,9 @@ function StateToolbar()
 	this.btDelete = $("<button type='button'>delete</button>");
 	this.mainDiv.append(this.btDelete);
 	this.btDelete.click(this.remove.bind(this));
+
+	this.slPlaceGroup = $("<select></select>");
+	this.mainDiv.append(this.slPlaceGroup);
 }
 
 StateToolbar.prototype.hide = function()
@@ -476,11 +484,15 @@ StateToolbar.prototype.show = function(dtoState)
 {
 	this.dtoState = dtoState;
 	var o = $(this.dtoState._drawing.paper.canvas).offset();
+
+	// Move the toolbar
 	this.mainDiv.css(
 	{
 		left : o.left + dtoState._x - 50,
 		top : o.top + dtoState._y - nodeSize - 30,
 	});
+
+	// Choose which elements should be displayed
 	if (!dtoState._canEmitLinks)
 		this.btLink.hide();
 	else
@@ -490,6 +502,30 @@ StateToolbar.prototype.show = function(dtoState)
 	else
 		this.btDelete.show();
 
+	// Refresh place groups list
+	var panel = this.dtoState._drawing.chain_panel;
+	this.slPlaceGroup.empty();
+	var placeGroups = panel.cxfApplication.getGroups().getDTOPlaceGroup();
+	for ( var i = 0; i < placeGroups.length; i++)
+	{
+		var elt = placeGroups[i];
+		var selected = "";
+		if (this.dtoState._runsOnId === elt._id)
+			selected = "selected='selected'";
+
+		this.slPlaceGroup.append($("<option value='" + elt._id + "'" + selected + ">" + elt._name + "</option>"));
+	}
+	this.slPlaceGroup.change((function()
+	{
+		this.dtoState._runsOnId = this.slPlaceGroup.val();
+		this.dtoState._runsOnName = this.slPlaceGroup.children("option[value='" + this.slPlaceGroup.val() + "']").text();
+		this.dtoState._drawing.contents["text"].attr(
+		{
+			text : this.dtoState._label + "\n(" + this.dtoState._runsOnName + ")"
+		});
+	}).bind(this));
+
+	// Show the toolbar
 	this.mainDiv.show();
 };
 

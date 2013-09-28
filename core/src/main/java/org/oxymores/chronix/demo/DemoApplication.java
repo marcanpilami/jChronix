@@ -103,6 +103,12 @@ public class DemoApplication
 		p2.setName("place 2");
 		p2.setNode(n2);
 		a.addPlace(p2);
+		
+		Place p3 = new Place();
+		p3.setDescription("place 3 - on node 1");
+		p3.setName("place 3");
+		p3.setNode(n1);
+		a.addPlace(p3);
 
 		PlaceGroup pg1 = new PlaceGroup();
 		pg1.setDescription("group all");
@@ -110,6 +116,7 @@ public class DemoApplication
 		a.addGroup(pg1);
 		pg1.addPlace(p1);
 		pg1.addPlace(p2);
+		pg1.addPlace(p3);
 
 		PlaceGroup pg2 = new PlaceGroup();
 		pg2.setDescription("group 1");
@@ -122,6 +129,12 @@ public class DemoApplication
 		pg3.setName("group 2");
 		a.addGroup(pg3);
 		p2.addToGroup(pg3);
+		
+		PlaceGroup pg4 = new PlaceGroup();
+		pg4.setDescription("group 3");
+		pg4.setName("group 3");
+		a.addGroup(pg4);
+		p3.addToGroup(pg4);
 
 		// //////////////////////////////////////////////////////////////
 		// Calendars
@@ -335,7 +348,7 @@ public class DemoApplication
 		// Start
 		State s31 = new State();
 		s31.setChain(c3);
-		s31.setRunsOn(pg2);
+		s31.setRunsOn(pg4);
 		s31.setRepresents(cs);
 		s31.setX(60);
 		s31.setY(60);
@@ -343,7 +356,7 @@ public class DemoApplication
 		// End
 		State s32 = new State();
 		s32.setChain(c3);
-		s32.setRunsOn(pg2);
+		s32.setRunsOn(pg4);
 		s32.setRepresents(ce);
 		s32.setX(300);
 		s32.setY(400);
