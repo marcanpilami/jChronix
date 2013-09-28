@@ -1,8 +1,13 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
+import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
@@ -21,6 +26,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 public class Frontier
 {
 
+	
 	public static DTOApplication getApplication(Application a)
 	{
 		DTOApplication res = new DTOApplication();
@@ -48,7 +54,15 @@ public class Frontier
 		for (ClockRRule r : a.getRRulesList())
 			res.rrules.add(getRRule(r));
 
-		for (ConfigurableBase o : a.getActiveElements().values())
+		Comparator<ActiveNodeBase> comparator = new Comparator<ActiveNodeBase>() {
+		    public int compare(ActiveNodeBase c1, ActiveNodeBase c2) {
+		        return c1.getName().compareToIgnoreCase(c2.getName());
+		    }
+		};
+
+		List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
+		Collections.sort(active, comparator);
+		for (ActiveNodeBase o : active)
 		{
 			if (o instanceof Chain)
 			{
