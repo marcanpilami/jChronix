@@ -6,7 +6,8 @@ public class DTOState
 	protected Integer x, y;
 	protected String label, runsOnName;
 	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
-	protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false;
+	protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
+			isEnd = false, isAnd = false, isOr = false;
 
 	public String getRunsOnName()
 	{
@@ -146,5 +147,55 @@ public class DTOState
 	public void setCanBeRemoved(boolean canBeRemoved)
 	{
 		this.canBeRemoved = canBeRemoved;
+	}
+
+	public boolean isCanReceiveMultipleLinks()
+	{
+		return canReceiveMultipleLinks;
+	}
+
+	public void setCanReceiveMultipleLinks(boolean canReceiveMultipleLinks)
+	{
+		this.canReceiveMultipleLinks = canReceiveMultipleLinks;
+	}
+
+	public boolean isStart()
+	{
+		return isStart;
+	}
+
+	public void setStart(boolean isStart)
+	{
+		this.isStart = isStart;
+	}
+
+	public boolean isEnd()
+	{
+		return isEnd;
+	}
+
+	public void setEnd(boolean isEnd)
+	{
+		this.isEnd = isEnd;
+	}
+
+	public boolean isAnd()
+	{
+		return isAnd;
+	}
+
+	public void setAnd(boolean isAnd)
+	{
+		this.isAnd = isAnd;
+	}
+
+	public boolean isOr()
+	{
+		return isOr;
+	}
+
+	public void setOr(boolean isOr)
+	{
+		this.isOr = isOr;
 	}
 }

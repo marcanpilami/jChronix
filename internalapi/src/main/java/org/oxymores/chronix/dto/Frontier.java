@@ -125,13 +125,24 @@ public class Frontier
 			{
 			}
 			if (s.getRepresents() instanceof ChainStart)
+			{
 				t.canReceiveLink = false;
+				t.isStart = true;
+			}
 			if (s.getRepresents() instanceof ChainEnd)
+			{
 				t.canEmitLinks = false;
+				t.isEnd = true;
+			}
 			if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
 				t.canBeRemoved = false;
 			if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or)
 				t.canReceiveMultipleLinks = true;
+			if (s.getRepresents() instanceof And)
+				t.isAnd = true;
+			if (s.getRepresents() instanceof Or)
+				t.isOr = true;
+			
 			res.states.add(t);
 		}
 

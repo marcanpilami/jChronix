@@ -148,6 +148,25 @@ function ChainPanel(divId, cxfApplication)
 	grid2.onDrag.subscribe(activeDrag);
 	grid2.onDragEnd.subscribe(activeDragEnd);
 
+	$("#chainPaletteAnd").bind("draginit", (function(e, dd)
+	{
+		dd.selectedChain = this.selectedChain;
+		dd.selectedPaper = this.selectedPaper;
+
+		daddy = $('#container1');
+		dd.panel = daddy.data('panel');
+		dd.and = true;
+	}).bind(this));
+	$("#chainPaletteOr").bind("draginit", (function(e, dd)
+	{
+		dd.selectedChain = this.selectedChain;
+		dd.selectedPaper = this.selectedPaper;
+
+		daddy = $('#container1');
+		dd.panel = daddy.data('panel');
+		dd.or = true;
+	}).bind(this));
+
 	// Register drop event handlers on all SVG charts (including future ones thanks to delegation)
 	$("#chaintabs").on("dropstart", "svg", function(e, dd)
 	{
@@ -162,10 +181,25 @@ function ChainPanel(divId, cxfApplication)
 	{
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
-		v._representsId = dd.dtoDropped._id;
+		if (dd.and)
+		{
+			v._isAnd = true;
+			v._label = "AND";
+			v._canReceiveMultipleLinks = true;
+		}
+		else if (dd.or)
+		{
+			v._isOr = true;
+			v._label = "OR";
+			v._canReceiveMultipleLinks = true;
+		}
+		else
+		{
+			v._representsId = dd.dtoDropped._id;
+			v._label = dd.dtoDropped._name;
+		}
 		v._x = e.offsetX;
 		v._y = e.offsetY;
-		v._label = dd.dtoDropped._name;
 		v._canReceiveLink = true;
 		v._canEmitLinks = true;
 		v._canBeRemoved = true;
@@ -221,6 +255,37 @@ function ChainPanel(divId, cxfApplication)
 		v._states = new dto_chronix_oxymores_org_ArrayOfDTOState();
 		v._transitions = new dto_chronix_oxymores_org_ArrayOfDTOTransition();
 
+		var s = new dto_chronix_oxymores_org_DTOState();
+		s._id = uuid.v4();
+		s._representsId = null; // Will be completed by the Frontier
+		s._x = 100;
+		s._y = 50;
+		s._label = "Start";
+		s._canReceiveLink = false;
+		s._canEmitLinks = true;
+		s._canBeRemoved = false;
+		s._isEnd = false;
+		s._isStart = true;
+		s._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
+		s._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
+
+		var e = new dto_chronix_oxymores_org_DTOState();
+		e._id = uuid.v4();
+		e._representsId = null; // Will be completed by the Frontier
+		e._x = 100;
+		e._y = 300;
+		e._label = "End";
+		e._canReceiveLink = true;
+		e._canEmitLinks = false;
+		e._canBeRemoved = false;
+		e._isEnd = true;
+		e._isStart = false;
+		e._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
+		e._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
+
+		v.getStates().getDTOState().push(s);
+		v.getStates().getDTOState().push(e);
+
 		this.cxfApplication.getChains().getDTOChain().push(v);
 		this.editChain(v);
 	}).bind(this));
@@ -241,25 +306,29 @@ ChainPanel.prototype.editChain = function(cxfObject)
 
 	// Create a new tab
 	$("#chaintabs").append(
-			"<div class='tabPanel' id='chaintab-" + cxfObject._id + "'><div style='height:100%;width:100%;' id='raphcontainer_" + cxfObject._id
-					+ "'><span class='raph'></span><span id='chainDetail-" + cxfObject._id
-					+ "' style='width: 200px;border=solid 2px black; height:100%;'></span></div></div>");
+			"<div class='tabPanel' id='chaintab-" + cxfObject._id + "'>" + "<div style='height:100%;width:100%;' id='raphcontainer_" + cxfObject._id
+					+ "'>" + "<div class='raph' style='display: inline-block; overflow: auto; width: calc(100% - 150px); height:100%;'></div>"
+					+ "<div id='chainDetail-" + cxfObject._id
+					+ "' style='width: 150px; border=solid 2px black; display: inline-block; vertical-align: top;'></div></div></div>");
 	$("#chaintabs > ul").append("<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
 
 	// Create edit fields
 	var editPanel = $("#chainDetail-" + cxfObject._id);
-	editPanel.append($("<input></input>").val(cxfObject._name).change(function(event)
+	editPanel.append("<label>Chain name</label>");
+	editPanel.append($("<input></input>").val(cxfObject._name).change((function(event)
 	{
-		alert('rr');
-	}));
-	editPanel.append($("<input></input>").val(cxfObject._description).change(function(event)
+		this.selectedChain._name = $(event.currentTarget).val();
+		$("a[href='#chaintab-" + this.selectedChain._id + "']").text(this.selectedChain._name);
+	}).bind(this)));
+	editPanel.append("<br><label>Chain description</label>");
+	editPanel.append($("<input></input>").val(cxfObject._description).change((function(event)
 	{
-		alert('rr');
-	}));
+		this.selectedChain._description = $(event.currentTarget).val();
+	}).bind(this)));
 
 	// Create new Raphaël paper
-	var r = $("#chaintab-" + cxfObject._id + " span.raph")[0];
-	var rpaper = new Raphael(r, 10 + $("#raphcontainer_" + cxfObject._id).width() - 200, 10 + $("#raphcontainer_" + cxfObject._id).height());
+	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
+	var rpaper = new Raphael(r, 3000, 3000);
 	rpaper.states = new Array();
 	rpaper.transitions = new Array();
 	r.paper = rpaper;
@@ -282,7 +351,7 @@ ChainPanel.prototype.editChain = function(cxfObject)
 
 ChainPanel.prototype.onShowChain = function(event, ui)
 {
-	var raph_jq = ui.newPanel.find('span.raph')[0];
+	var raph_jq = ui.newPanel.find('div.raph')[0];
 	var rpaper = raph_jq.paper;
 	var cxfChain = raph_jq.dtoChain;
 

@@ -512,6 +512,10 @@ dl {
 	background-color: #fee;
 }
 
+.paletteDrag {
+	border: 1px solid black;
+	font-size: 12pt;
+}
 /*
 IMPORTANT:
 In order to preserve the uniform grid appearance, all cell styles need to have padding, margin and border sizes.
