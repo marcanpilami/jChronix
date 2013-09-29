@@ -142,7 +142,7 @@ function ChainPanel(divId, cxfApplication)
 	grid.onDragStart.subscribe(activeDragStart);
 	grid.onDrag.subscribe(activeDrag);
 	grid.onDragEnd.subscribe(activeDragEnd);
-	
+
 	grid2.onDragInit.subscribe(activeDragInit.bind(this));
 	grid2.onDragStart.subscribe(activeDragStart);
 	grid2.onDrag.subscribe(activeDrag);
@@ -168,6 +168,12 @@ function ChainPanel(divId, cxfApplication)
 		v._label = dd.dtoDropped._name;
 		v._canReceiveLink = true;
 		v._canEmitLinks = true;
+		v._canBeRemoved = true;
+		if (dd.selectedChain.getStates().getDTOState().length > 0)
+		{
+			v._runsOnId = dd.selectedChain.getStates().getDTOState()[0]._runsOnId;
+			v._runsOnName = dd.selectedChain.getStates().getDTOState()[0]._runsOnName;
+		}
 
 		dd.panel.addState(v, dd.selectedPaper);
 		dd.selectedChain.getStates().getDTOState().push(v);
@@ -202,6 +208,22 @@ function ChainPanel(divId, cxfApplication)
 
 	// Draw the first chain
 	this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
+
+	// Add create chain button
+	var btAddChain = $("<li style='border-radius: 50%; padding: 1px; margin-right: 5px; height: 20px; width: 20px; border: solid 1px white; text-align: center; vertical-align: middle;'>+</li>");
+	$("#chaintabs .ui-tabs-nav").prepend(btAddChain);
+	btAddChain.click((function()
+	{
+		var v = new dto_chronix_oxymores_org_DTOChain();
+		v._id = uuid.v4();
+		v._name = "new chain";
+		v._description = "new chain description";
+		v._states = new dto_chronix_oxymores_org_ArrayOfDTOState();
+		v._transitions = new dto_chronix_oxymores_org_ArrayOfDTOTransition();
+
+		this.cxfApplication.getChains().getDTOChain().push(v);
+		this.editChain(v);
+	}).bind(this));
 }
 
 // Function to call to add a tab displaying a given DTOChain
@@ -220,12 +242,24 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	// Create a new tab
 	$("#chaintabs").append(
 			"<div class='tabPanel' id='chaintab-" + cxfObject._id + "'><div style='height:100%;width:100%;' id='raphcontainer_" + cxfObject._id
-					+ "'><div class='raph'></div></div></div>");
+					+ "'><span class='raph'></span><span id='chainDetail-" + cxfObject._id
+					+ "' style='width: 200px;border=solid 2px black; height:100%;'></span></div></div>");
 	$("#chaintabs > ul").append("<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
 
+	// Create edit fields
+	var editPanel = $("#chainDetail-" + cxfObject._id);
+	editPanel.append($("<input></input>").val(cxfObject._name).change(function(event)
+	{
+		alert('rr');
+	}));
+	editPanel.append($("<input></input>").val(cxfObject._description).change(function(event)
+	{
+		alert('rr');
+	}));
+
 	// Create new Raphaël paper
-	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
-	var rpaper = new Raphael(r, 10 + $("#raphcontainer_" + cxfObject._id).width(), 10 + $("#raphcontainer_" + cxfObject._id).height());
+	var r = $("#chaintab-" + cxfObject._id + " span.raph")[0];
+	var rpaper = new Raphael(r, 10 + $("#raphcontainer_" + cxfObject._id).width() - 200, 10 + $("#raphcontainer_" + cxfObject._id).height());
 	rpaper.states = new Array();
 	rpaper.transitions = new Array();
 	r.paper = rpaper;
@@ -248,7 +282,7 @@ ChainPanel.prototype.editChain = function(cxfObject)
 
 ChainPanel.prototype.onShowChain = function(event, ui)
 {
-	var raph_jq = ui.newPanel.find('div.raph')[0];
+	var raph_jq = ui.newPanel.find('span.raph')[0];
 	var rpaper = raph_jq.paper;
 	var cxfChain = raph_jq.dtoChain;
 
