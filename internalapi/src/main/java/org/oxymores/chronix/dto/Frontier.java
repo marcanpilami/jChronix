@@ -21,6 +21,7 @@ import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -28,7 +29,6 @@ import org.oxymores.chronix.core.timedata.RunLog;
 public class Frontier
 {
 
-	
 	public static DTOApplication getApplication(Application a)
 	{
 		DTOApplication res = new DTOApplication();
@@ -44,16 +44,19 @@ public class Frontier
 		res.parameters = new ArrayList<DTOParameter>();
 		res.rrules = new ArrayList<DTORRule>();
 		res.clocks = new ArrayList<DTOClock>();
+		res.externals = new ArrayList<DTOExternal>();
 
 		res.nodes = getNetwork(a);
 
 		for (Place p : a.getPlacesList())
 			res.places.add(getPlace(p));
 
-		Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>() {
-		    public int compare(PlaceGroup c1, PlaceGroup c2) {
-		        return c1.getName().compareToIgnoreCase(c2.getName());
-		    }
+		Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
+		{
+			public int compare(PlaceGroup c1, PlaceGroup c2)
+			{
+				return c1.getName().compareToIgnoreCase(c2.getName());
+			}
 		};
 		List<PlaceGroup> pgs = a.getGroupsList();
 		Collections.sort(pgs, comparator_pg);
@@ -63,10 +66,12 @@ public class Frontier
 		for (ClockRRule r : a.getRRulesList())
 			res.rrules.add(getRRule(r));
 
-		Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>() {
-		    public int compare(ActiveNodeBase c1, ActiveNodeBase c2) {
-		        return c1.getName().compareToIgnoreCase(c2.getName());
-		    }
+		Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>()
+		{
+			public int compare(ActiveNodeBase c1, ActiveNodeBase c2)
+			{
+				return c1.getName().compareToIgnoreCase(c2.getName());
+			}
 		};
 
 		List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
@@ -94,6 +99,19 @@ public class Frontier
 				d.name = s.getName();
 				d.description = s.getDescription();
 				res.shells.add(d);
+			}
+
+			if (o instanceof External)
+			{
+				External e = (External) o;
+				DTOExternal d = new DTOExternal();
+				d.id = e.getId().toString();
+				d.accountRestriction = e.accountRestriction;
+				d.machineRestriction = e.machineRestriction;
+				d.regularExpression = e.regularExpression;
+				d.name = e.getName();
+				d.description = e.getDescription();
+				res.externals.add(d);
 			}
 		}
 
@@ -142,7 +160,7 @@ public class Frontier
 				t.isAnd = true;
 			if (s.getRepresents() instanceof Or)
 				t.isOr = true;
-			
+
 			res.states.add(t);
 		}
 

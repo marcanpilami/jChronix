@@ -310,7 +310,7 @@ public class PlanBuilder
 
 		return rr1;
 	}
-	
+
 	public static ClockRRule buildRRuleMinutes(Application a, int stepInMinutes)
 	{
 		ClockRRule rr1 = new ClockRRule();

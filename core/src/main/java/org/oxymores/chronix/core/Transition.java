@@ -38,6 +38,7 @@ public class Transition extends ApplicationObject
 	protected String guard2, guard3;
 	protected UUID guard4;
 	protected boolean calendarAware = false;
+	protected int calendarShift = 0;
 
 	protected State stateFrom, stateTo;
 	protected Chain chain;
@@ -168,5 +169,15 @@ public class Transition extends ApplicationObject
 			}
 		}
 		return res;
+	}
+
+	public int getCalendarShift()
+	{
+		return calendarShift;
+	}
+
+	public void setCalendarShift(int calendarShift)
+	{
+		this.calendarShift = calendarShift;
 	}
 }

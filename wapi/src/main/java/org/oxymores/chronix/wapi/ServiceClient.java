@@ -37,6 +37,7 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.demo.PlanBuilder;
@@ -72,6 +73,7 @@ public class ServiceClient implements IServiceClient
 		ShellCommand sc9 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
 		ShellCommand sc10 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
 		ShellCommand sc11 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		External e1 = PlanBuilder.buildExternal(a, "file 1","/tmp/meuh.txt");
 		PlanBuilder.buildRRuleMinutes(a, 10);
 		PlanBuilder.buildRRuleMinutes(a, 20);
 		PlanBuilder.buildRRuleMinutes(a, 30);

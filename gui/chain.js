@@ -54,10 +54,10 @@ function ChainPanel(divId, cxfApplication)
 		width : 200,
 		cssClass : "cell-title"
 	} ];
-	grid = new Slick.Grid("#dgChainPaletteCommands", this.cxfApplication.getShells().getDTOShellCommand(), columns, options);
-	grid.setSelectionModel(new Slick.RowSelectionModel());
+	this.grid = new Slick.Grid("#dgChainPaletteCommands", this.cxfApplication.getShells().getDTOShellCommand(), columns, options);
+	this.grid.setSelectionModel(new Slick.RowSelectionModel());
 
-	grid2 = new Slick.Grid("#dgChainPaletteChains", this.cxfApplication.getChains().getDTOChain(), [
+	this.grid2 = new Slick.Grid("#dgChainPaletteChains", this.cxfApplication.getChains().getDTOChain(), [
 	{
 		id : "name",
 		name : "Chains",
@@ -65,7 +65,27 @@ function ChainPanel(divId, cxfApplication)
 		width : 200,
 		cssClass : "cell-title"
 	} ], options);
-	grid2.setSelectionModel(new Slick.RowSelectionModel());
+	this.grid2.setSelectionModel(new Slick.RowSelectionModel());
+
+	this.grid3 = new Slick.Grid("#dgChainPaletteClocks", this.cxfApplication.getClocks().getDTOClock(), [
+	{
+		id : "name",
+		name : "Clocks",
+		field : "_name",
+		width : 200,
+		cssClass : "cell-title"
+	} ], options);
+	this.grid3.setSelectionModel(new Slick.RowSelectionModel());
+
+	this.grid4 = new Slick.Grid("#dgChainPaletteExternals", this.cxfApplication.getExternals().getDTOExternal(), [
+	{
+		id : "name",
+		name : "Externals",
+		field : "_name",
+		width : 200,
+		cssClass : "cell-title"
+	} ], options);
+	this.grid4.setSelectionModel(new Slick.RowSelectionModel());
 
 	// Drag&Drop
 	var activeDragStart = function(e, dd)
@@ -90,11 +110,11 @@ function ChainPanel(divId, cxfApplication)
 		// Prevent default canceling behaviour
 		e.stopImmediatePropagation();
 
-		var selectedRows = grid.getSelectedRows();
+		var selectedRows = this.getSelectedRows();
 		if (!selectedRows.length || $.inArray(dd.row, selectedRows) == -1)
 		{
 			selectedRows = [ dd.row ];
-			grid.setSelectedRows(selectedRows);
+			this.setSelectedRows(selectedRows);
 		}
 
 		dd.rows = selectedRows;
@@ -138,15 +158,25 @@ function ChainPanel(divId, cxfApplication)
 		$(dd.available).css("background", "beige");
 	};
 
-	grid.onDragInit.subscribe(activeDragInit.bind(this));
-	grid.onDragStart.subscribe(activeDragStart);
-	grid.onDrag.subscribe(activeDrag);
-	grid.onDragEnd.subscribe(activeDragEnd);
+	this.grid.onDragInit.subscribe(activeDragInit.bind(this));
+	this.grid.onDragStart.subscribe(activeDragStart);
+	this.grid.onDrag.subscribe(activeDrag);
+	this.grid.onDragEnd.subscribe(activeDragEnd);
 
-	grid2.onDragInit.subscribe(activeDragInit.bind(this));
-	grid2.onDragStart.subscribe(activeDragStart);
-	grid2.onDrag.subscribe(activeDrag);
-	grid2.onDragEnd.subscribe(activeDragEnd);
+	this.grid2.onDragInit.subscribe(activeDragInit.bind(this));
+	this.grid2.onDragStart.subscribe(activeDragStart);
+	this.grid2.onDrag.subscribe(activeDrag);
+	this.grid2.onDragEnd.subscribe(activeDragEnd);
+
+	this.grid3.onDragInit.subscribe(activeDragInit.bind(this));
+	this.grid3.onDragStart.subscribe(activeDragStart);
+	this.grid3.onDrag.subscribe(activeDrag);
+	this.grid3.onDragEnd.subscribe(activeDragEnd);
+	
+	this.grid4.onDragInit.subscribe(activeDragInit.bind(this));
+	this.grid4.onDragStart.subscribe(activeDragStart);
+	this.grid4.onDrag.subscribe(activeDrag);
+	this.grid4.onDragEnd.subscribe(activeDragEnd);
 
 	$("#chainPaletteAnd").bind("draginit", (function(e, dd)
 	{
@@ -181,6 +211,12 @@ function ChainPanel(divId, cxfApplication)
 	{
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
+		v._x = e.offsetX;
+		v._y = e.offsetY;
+		v._canReceiveLink = true;
+		v._canEmitLinks = true;
+		v._canBeRemoved = true;
+
 		if (dd.and)
 		{
 			v._isAnd = true;
@@ -193,22 +229,32 @@ function ChainPanel(divId, cxfApplication)
 			v._label = "OR";
 			v._canReceiveMultipleLinks = true;
 		}
+		else if (dd.dtoDropped._regularExpression)
+		{
+			v._representsId = dd.dtoDropped._id;
+			v._label = dd.dtoDropped._name;
+			v._canReceiveLink = false;
+		}
+		else if (dd.dtoDropped._nextOccurrences)
+		{
+			v._representsId = dd.dtoDropped._id;
+			v._label = dd.dtoDropped._name;
+			v._canReceiveLink = false;
+		}
 		else
 		{
 			v._representsId = dd.dtoDropped._id;
 			v._label = dd.dtoDropped._name;
 		}
-		v._x = e.offsetX;
-		v._y = e.offsetY;
-		v._canReceiveLink = true;
-		v._canEmitLinks = true;
-		v._canBeRemoved = true;
+
+		// Default PlaceGroup
 		if (dd.selectedChain.getStates().getDTOState().length > 0)
 		{
 			v._runsOnId = dd.selectedChain.getStates().getDTOState()[0]._runsOnId;
 			v._runsOnName = dd.selectedChain.getStates().getDTOState()[0]._runsOnName;
 		}
 
+		// Add it and draw it
 		dd.panel.addState(v, dd.selectedPaper);
 		dd.selectedChain.getStates().getDTOState().push(v);
 
@@ -222,11 +268,11 @@ function ChainPanel(divId, cxfApplication)
 	});
 
 	// Register edit chain hook
-	grid2.onDblClick.subscribe((function(e, args)
+	this.grid2.onDblClick.subscribe((function(e, args)
 	{
 		marsu = args;
 		var row = args.row;
-		var item = grid2.getDataItem(row);
+		var item = this.grid2.getDataItem(row);
 		this.editChain(item);
 	}).bind(this));
 
@@ -325,6 +371,7 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	{
 		this.selectedChain._description = $(event.currentTarget).val();
 	}).bind(this)));
+	editPanel.append($("<button id='btDelChain" + cxfObject._id + "' >Supprimer la chaine</button>").click(this.onDeleteChain.bind(this)));
 
 	// Create new Raphaël paper
 	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
@@ -347,6 +394,23 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	// Show new tab
 	this.chaintabs.tabs('refresh');
 	$("[href='#chaintab-" + cxfObject._id + "']").trigger("click");
+};
+
+ChainPanel.prototype.redisplay = function()
+{
+	this.grid.invalidate();
+	this.grid2.invalidate();
+};
+
+ChainPanel.prototype.onDeleteChain = function(event)
+{
+	var chainId = event.target.id.substr(10);
+	$("#chaintab-" + chainId).remove();
+	$("#chaintabs > ul li a[href='#chaintab-" + chainId + "'").remove();
+	this.chaintabs.tabs('refresh');
+	this.cxfApplication.getChains().getDTOChain().splice(this.cxfApplication.getChains().getDTOChain().indexOf(this.selectedChain), 1);
+	this.selectedChain = null;
+	this.grid2.invalidate();
 };
 
 ChainPanel.prototype.onShowChain = function(event, ui)

@@ -18,6 +18,7 @@ public class DTOApplication
 	public ArrayList<DTOExecutionNode> nodes;
 	public ArrayList<DTOClock> clocks;
 	public ArrayList<DTORRule> rrules;
+	public ArrayList<DTOExternal> externals;
 
 	public ArrayList<DTOClock> getClocks()
 	{
@@ -149,6 +150,16 @@ public class DTOApplication
 	public void setActive(boolean active)
 	{
 		this.active = active;
+	}
+
+	public ArrayList<DTOExternal> getExternals()
+	{
+		return externals;
+	}
+
+	public void setExternals(ArrayList<DTOExternal> externals)
+	{
+		this.externals = externals;
 	}
 
 }
