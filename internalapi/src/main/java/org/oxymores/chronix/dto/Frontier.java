@@ -174,6 +174,8 @@ public class Frontier
 			d.guard2 = o.getGuard2();
 			d.guard3 = o.getGuard3();
 			d.guard4 = (o.getGuard4() == null ? "" : o.getGuard4().toString());
+			d.calendarAware = o.isCalendarAware();
+			d.calendarShift = o.getCalendarShift();
 
 			res.transitions.add(d);
 		}

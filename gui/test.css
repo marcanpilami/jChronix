@@ -169,6 +169,11 @@ button.chrConsoleButton {
 	font-size: 30pt;
 }
 
+.floatingToolbar {
+	background-color: rgba(192, 192, 192, 0.6);
+	padding: 1px;
+}
+
 /**************************************
 * Column picker
 **************************************/
@@ -617,9 +622,9 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =    
+	filter: alpha(opacity =      
 		                                                         
-		      50);
+		        50);
 }
 
 .slick-cell.invalid {

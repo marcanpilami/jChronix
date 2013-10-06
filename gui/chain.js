@@ -1,6 +1,6 @@
 // Global parameters
 nodeSize = 30;
-arrowSize = 3;
+arrowSize = 5;
 
 function ChainPanel(divId, cxfApplication)
 {
@@ -16,6 +16,7 @@ function ChainPanel(divId, cxfApplication)
 	this.selectedChain = null;
 	this.selectedPaper = null;
 	this.state_toolbar = new StateToolbar();
+	this.transition_toolbar = new TransitionToolbar();
 
 	// Create the tab panel with a template that will create a host for a Raphaël object
 	this.chaintabs = $("#chaintabs").tabs(
@@ -172,7 +173,7 @@ function ChainPanel(divId, cxfApplication)
 	this.grid3.onDragStart.subscribe(activeDragStart);
 	this.grid3.onDrag.subscribe(activeDrag);
 	this.grid3.onDragEnd.subscribe(activeDragEnd);
-	
+
 	this.grid4.onDragInit.subscribe(activeDragInit.bind(this));
 	this.grid4.onDragStart.subscribe(activeDragStart);
 	this.grid4.onDrag.subscribe(activeDrag);
@@ -270,7 +271,6 @@ function ChainPanel(divId, cxfApplication)
 	// Register edit chain hook
 	this.grid2.onDblClick.subscribe((function(e, args)
 	{
-		marsu = args;
 		var row = args.row;
 		var item = this.grid2.getDataItem(row);
 		this.editChain(item);
@@ -389,6 +389,7 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	{
 		event.stopPropagation();
 		this.state_toolbar.hide();
+		this.transition_toolbar.hide();
 	}).bind(this));
 
 	// Show new tab
@@ -421,6 +422,9 @@ ChainPanel.prototype.onShowChain = function(event, ui)
 
 	this.selectedPaper = rpaper;
 	this.selectedChain = cxfChain;
+
+	this.state_toolbar.hide();
+	this.transition_toolbar.hide();
 };
 
 // Actually draws the chain inside a clean(ed) Raphael paper
@@ -480,6 +484,7 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 	circle.click(function(event)
 	{
 		event.stopPropagation();
+		this.chain_panel.transition_toolbar.hide();
 		var toolbar = this.chain_panel.state_toolbar;
 		var mode = toolbar.getMode();
 
@@ -544,9 +549,66 @@ ChainPanel.prototype.addTransition = function(DTOTransition, raphaelPaper)
 	to.trReceivedHere.push(arrow);
 	arrow.from = from;
 	arrow.to = to;
+	arrow.chain_panel = this;
 	DTOTransition._drawing = arrow;
 	arrow.modeldata = DTOTransition;
+
+	// Add handler to display the toolbar
+	arrow.click(function(event)
+	{
+		ee = event;
+		event.stopPropagation();
+		this.chain_panel.state_toolbar.hide();
+		var toolbar = this.chain_panel.transition_toolbar;
+
+		toolbar.show(this.modeldata, event.x, event.y);
+	});
+
+	// Text
+	addTextToArrow(arrow);
 };
+
+function addTextToArrow(arrow)
+{
+
+	var middle = arrow.getPointAtLength(arrow.getTotalLength() / 2);
+	var txt = "[" + arrow.modeldata._guard1 + "]";
+	if (arrow.modeldata._calendarAware)
+		txt = txt + "\n" + "[same calendar occurrence]";
+
+	if (arrow.text)
+	{
+		arrow.text.attr(
+		{
+			x : middle.x + 10,
+			y : middle.y - 10,
+			text : txt,
+		});
+
+		var bbb = arrow.text.getBBox();
+		arrow.txtbck.attr(
+		{
+			x : bbb.x,
+			y : bbb.y,
+			width : bbb.width + 1,
+			height : bbb.height + 1
+		});
+	}
+	else
+	{
+		arrow.text = arrow.paper.text(middle.x + 10, middle.y - 10, txt);
+		arrow.text.node.setAttribute("pointer-events", "none");
+
+		var bbb = arrow.text.getBBox();
+		arrow.txtbck = arrow.paper.rect(bbb.x, bbb.y, bbb.width + 1, bbb.height + 1).attr(
+		{
+			fill : '#C0C0C0',
+			stroke : '#C0C0C0',
+			opacity : 0.7,
+		});
+		arrow.text.toFront();
+	}
+}
 
 function dragStateStart(x, y, event)
 {
@@ -611,6 +673,8 @@ function shiftArrow(RaphaelArrow)
 		"path" : path
 	});
 
+	addTextToArrow(RaphaelArrow);
+
 	// IE 10 specific bug - https://connect.microsoft.com/IE/feedback/details/781964/ - http://stackoverflow.com/a/17421050/252642
 	if (navigator.appVersion.indexOf("MSIE 10") != -1)
 	{
@@ -628,7 +692,7 @@ function StateToolbar()
 	this.dtoState = null;
 	this.mode = "select";
 
-	this.mainDiv = $("<div style='display: none; position: fixed;'></div>");
+	this.mainDiv = $("<div style='display: none; position: fixed;' class='floatingToolbar'></div>");
 	$("body").append(this.mainDiv);
 
 	this.btLink = $("<button type='button'>link</button>");
@@ -756,5 +820,87 @@ StateToolbar.prototype.remove = function(mode)
 	// Remove the state itself from drawing and from model
 	this.dtoState._drawing.remove();
 	panel.selectedChain.getStates().getDTOState().pop(this.dtoState);
+	this.hide();
+};
+
+// ////////////////////////////////////////////////////////////////////
+// Toolbar for Transition
+// ////////////////////////////////////////////////////////////////////
+function TransitionToolbar()
+{
+	this.mainDiv = null; // jQuery object
+	this.dtoTransition = null;
+
+	this.mainDiv = $("<div style='display: none; position: fixed;' class='floatingToolbar'></div>");
+	$("body").append(this.mainDiv);
+
+	this.btDelete = $("<button type='button'>delete</button>");
+	this.mainDiv.append(this.btDelete);
+	this.btDelete.click(this.remove.bind(this));
+
+	this.mainDiv.append($("<label>CR</label>"));
+	this.txtCR = $("<input type='number' maxlength='3' max='9999' style='width:3em;'></input>");
+	this.mainDiv.append(this.txtCR);
+
+	this.cbSameCalOc = $("<input type='checkbox'>Same calendar occurrence</input>");
+	this.mainDiv.append(this.cbSameCalOc);
+}
+
+TransitionToolbar.prototype.hide = function()
+{
+	this.mainDiv.hide();
+	this.mode = "select";
+};
+
+TransitionToolbar.prototype.show = function(dtoTransition, x, y)
+{
+	this.dtoTransition = dtoTransition;
+
+	// Move the toolbar
+	this.mainDiv.css(
+	{
+		left : x,
+		top : y - 30,
+	});
+
+	this.cbSameCalOc.prop('checked', dtoTransition._calendarAware);
+	this.cbSameCalOc.change((function(e)
+	{
+		this.dtoTransition._calendarAware = this.cbSameCalOc.is(':checked');
+		addTextToArrow(this.dtoTransition._drawing);
+	}).bind(this));
+
+	this.txtCR.val(dtoTransition._guard1);
+	this.txtCR.change((function(e)
+	{
+		if (this.txtCR.val() > 0)
+		{
+			this.dtoTransition._guard1 = this.txtCR.val();
+			addTextToArrow(this.dtoTransition._drawing);
+		}
+		else
+			this.txtCR.val(0);
+	}).bind(this));
+
+	this.mainDiv.show();
+};
+
+TransitionToolbar.prototype.remove = function()
+{
+	// this.cxfApplication.getChains().getDTOChain().splice(this.cxfApplication.getChains().getDTOChain().indexOf(this.selectedChain), 1);
+	var panel = this.dtoTransition._drawing.chain_panel;
+	var trs = panel.selectedChain.getTransitions().getDTOTransition();
+	trs.splice(trs.indexOf(this.dtoTransition), 1);
+
+	trs = this.dtoTransition._drawing.from.trFromHere;
+	trs.splice(trs.indexOf(this.dtoTransition), 1);
+
+	trs = this.dtoTransition._drawing.to.trReceivedHere;
+	trs.splice(trs.indexOf(this.dtoTransition), 1);
+
+	this.dtoTransition._drawing.text.remove();
+	this.dtoTransition._drawing.txtbck.remove();
+	this.dtoTransition._drawing.remove();
+	this.dtoTransition = null;
 	this.hide();
 };
