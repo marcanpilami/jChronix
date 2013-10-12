@@ -465,10 +465,8 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 		stroke : 'darkorchid',
 		'stroke-width' : 2
 	});
-	tx = raphaelPaper.text(DTOState._x, DTOState._y, DTOState._label + "\n(" + DTOState._runsOnName + ")");
-	tx.node.setAttribute("pointer-events", "none");
+
 	circle.contents = new Object();
-	circle.contents["text"] = tx;
 
 	// Set reference between business model object and representation object
 	DTOState._drawing = circle;
@@ -478,6 +476,9 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 	DTOState.trFromHere = new Array();
 	DTOState.trReceivedHere = new Array();
 	circle.chain_panel = this;
+
+	// Add text
+	addTextToState(circle);
 
 	// Allow dragging with callback taking connections and business objects into account
 	circle.drag($.throttle(dragStateMove, 20), dragStateStart, dragStateEnd);
@@ -570,7 +571,6 @@ ChainPanel.prototype.addTransition = function(DTOTransition, raphaelPaper)
 
 function addTextToArrow(arrow)
 {
-
 	var middle = arrow.getPointAtLength(arrow.getTotalLength() / 2);
 	var txt = "[" + arrow.modeldata._guard1 + "]";
 	if (arrow.modeldata._calendarAware)
@@ -607,6 +607,33 @@ function addTextToArrow(arrow)
 			opacity : 0.7,
 		});
 		arrow.text.toFront();
+	}
+}
+
+function addTextToState(stateDrawing)
+{
+	var DTOState = stateDrawing.modeldata;
+	var paper = stateDrawing.paper;
+	var text = DTOState._label + "\n(" + DTOState._runsOnName + ")";
+	if (DTOState._parallel)
+		text += "\n//";
+
+	if (stateDrawing.text)
+	{
+		stateDrawing.text.attr(
+		{
+			x : DTOState._x,
+			y : DTOState._y,
+			text : text,
+		});
+	}
+	else
+	{
+		var tx = paper.text(DTOState._x, DTOState._y, text);
+		tx.node.setAttribute("pointer-events", "none");
+
+		stateDrawing.contents["text"] = tx;
+		stateDrawing.text = tx;
 	}
 }
 
@@ -709,6 +736,12 @@ function StateToolbar()
 
 	this.slPlaceGroup = $("<select></select>");
 	this.mainDiv.append(this.slPlaceGroup);
+
+	this.cbParLabel = $("<label>parallel</label>");
+	this.mainDiv.append(this.cbParLabel);
+	this.cbPar = $("<input type='checkbox'></input>");
+	this.mainDiv.append(this.cbPar);
+
 }
 
 StateToolbar.prototype.hide = function()
@@ -738,7 +771,17 @@ StateToolbar.prototype.show = function(dtoState)
 		this.btDelete.hide();
 	else
 		this.btDelete.show();
-
+	if (dtoState._start || dtoState._end)
+	{
+		this.cbPar.hide();
+		this.cbParLabel.hide();
+	}
+	else
+	{
+		this.cbPar.show();
+		this.cbParLabel.show();
+	}
+	bb = dtoState;
 	// Refresh place groups list
 	var panel = this.dtoState._drawing.chain_panel;
 	this.slPlaceGroup.empty();
@@ -756,10 +799,15 @@ StateToolbar.prototype.show = function(dtoState)
 	{
 		this.dtoState._runsOnId = this.slPlaceGroup.val();
 		this.dtoState._runsOnName = this.slPlaceGroup.children("option[value='" + this.slPlaceGroup.val() + "']").text();
-		this.dtoState._drawing.contents["text"].attr(
-		{
-			text : this.dtoState._label + "\n(" + this.dtoState._runsOnName + ")"
-		});
+		addTextToState(this.dtoState._drawing);
+	}).bind(this));
+
+	// Parallel checkbox
+	this.cbPar.prop('checked', dtoState._parallel);
+	this.cbPar.change((function(e)
+	{
+		this.dtoState._parallel = this.cbPar.is(':checked');
+		addTextToState(this.dtoState._drawing);
 	}).bind(this));
 
 	// Show the toolbar

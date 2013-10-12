@@ -130,6 +130,7 @@ public class Frontier
 		for (State s : c.getStates())
 		{
 			DTOState t = new DTOState();
+			t.parallel = s.getParallel();
 			t.id = s.getId().toString();
 			t.x = s.getX();
 			t.y = s.getY();

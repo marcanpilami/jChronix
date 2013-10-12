@@ -6,6 +6,7 @@ public class DTOState
 	protected Integer x, y;
 	protected String label, runsOnName;
 	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
+	protected boolean parallel;
 	protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
 			isEnd = false, isAnd = false, isOr = false;
 
@@ -197,5 +198,15 @@ public class DTOState
 	public void setOr(boolean isOr)
 	{
 		this.isOr = isOr;
+	}
+
+	public boolean isParallel()
+	{
+		return parallel;
+	}
+
+	public void setParallel(boolean parallel)
+	{
+		this.parallel = parallel;
 	}
 }
