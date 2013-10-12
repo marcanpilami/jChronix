@@ -310,8 +310,8 @@ function ChainPanel(divId, cxfApplication)
 		s._canReceiveLink = false;
 		s._canEmitLinks = true;
 		s._canBeRemoved = false;
-		s._isEnd = false;
-		s._isStart = true;
+		s._end = false;
+		s._start = true;
 		s._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
 		s._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
 
@@ -324,8 +324,8 @@ function ChainPanel(divId, cxfApplication)
 		e._canReceiveLink = true;
 		e._canEmitLinks = false;
 		e._canBeRemoved = false;
-		e._isEnd = true;
-		e._isStart = false;
+		e._end = true;
+		e._start = false;
 		e._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
 		e._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
 
