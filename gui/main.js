@@ -17,7 +17,7 @@ $(document).ready(function()
 	loadApplication(); // will trigger first panel init when done
 });
 
-// Function to create panels only when they are displayed (Slickgrid requires a displayed div with known size to init) 
+// Function to create panels only when they are displayed (Slickgrid requires a displayed div with known size to init)
 var loaded = new Array();
 function handleTabs(tabId)
 {
@@ -35,6 +35,8 @@ function handleTabs(tabId)
 		n = new SchedulePanel("tab-schedule", cxfApplication);
 	if (tabId === 'tab-chain')
 		n = new ChainPanel("tab-chain", cxfApplication);
+	if (tabId === 'tab-pn')
+		n = new NPPanel("tab-pn", cxfApplication);
 
 	loaded[tabId] = n;
 }

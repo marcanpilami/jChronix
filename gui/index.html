@@ -21,13 +21,12 @@
 	<script type="text/javascript" src="lib/uuid.js"></script>
 	<script type="text/javascript" src="lib/arbor.js"></script>
 	<script type="text/javascript" src="lib/date.js"></script>
-	<!-- <script type='text/javascript' src='lib/knockout-2.1.0.js'></script> -->
 	<script type="text/javascript" src="Hello?js"></script>
 	<script type="text/javascript" src="application.js"></script>
 	<script type="text/javascript" src="chain.js"></script>
 	<script type="text/javascript" src="commands.js"></script>
 	<script type="text/javascript" src="network_logical.js"></script>
-	<script type="text/javascript" src="network_ro.js"></script>
+	<script type="text/javascript" src="network_phy.js"></script>
 	<script type="text/javascript" src="rec.js"></script>
 	<script type="text/javascript" src="main.js"></script>
 </head>
@@ -41,21 +40,14 @@
 
 	<div id="tabs" style="width: 100%;">
 		<ul>
+			<li><a href="#tab-pn">Physical Network</a></li>
+			
 			<li><a href="#tab-chain">Chains</a></li>
 			<li><a href="#tab-schedule">Schedules</a></li>
 			<li><a href="#tab-logicalnetwork">Logical Network</a></li>
-			
 		 	<li><a href="#tab-command">Commands</a></li>
-			<li><a href="#tab-pnro">Physical Network</a></li>
-			
 		</ul>
 
-	<!-- 	<div id="tab-commands" style="padding: 0px; position: absolute; top: 50px; bottom: 10px; right: 10px; left: 10px;">
-			<label>Filter (name or description):</label> <input type="text" id="txtSearchCmd" style="width: 200px;">
-			<div style="margin: 0px; padding: 0px; position: absolute; top: 25px; bottom: 0px; right: 0px; left: 0px;">
-				<div id="gridCommands" style="padding: 0px; height:100%;"></div>
-			</div>
-		</div> -->
 		
 		<div id="tab-command" class='tabPanel'>
 			<div style="display: table; height: 100%; width:100%; table-layout: fixed;">
@@ -89,8 +81,7 @@
 			</div>
 		</div>
 
-		<div id="tab-pnro">
-			<div id="raphael-pnro"></div>
+		<div id="tab-pn" class='tabPanel'>
 		</div>
 
 		<div id="tab-logicalnetwork">
