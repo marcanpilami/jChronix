@@ -37,6 +37,8 @@ function handleTabs(tabId)
 		n = new ChainPanel("tab-chain", cxfApplication);
 	if (tabId === 'tab-pn')
 		n = new NPPanel("tab-pn", cxfApplication);
+	if (tabId === 'tab-ln')
+		n = new LogicalNetworkPanel('tab-ln', cxfApplication);
 
 	loaded[tabId] = n;
 }

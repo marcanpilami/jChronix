@@ -128,7 +128,7 @@ function CommandPanel(cxfApplication)
 	{
 		searchString : "",
 	});
-	this.cmdDataViewCmds.setFilter(placeFilter);
+	this.cmdDataViewCmds.setFilter(nameDescriptionFilter);
 	this.cmdDataViewCmds.endUpdate();
 
 	this.resize();

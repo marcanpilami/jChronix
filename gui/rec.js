@@ -110,7 +110,7 @@ function SchedulePanel(divId, cxfApp)
 	{
 		searchString : "",
 	});
-	this.recDataView.setFilter(placeFilter);
+	this.recDataView.setFilter(nameDescriptionFilter);
 	this.recDataView.setItems(this.cxfApplication._rrules.getDTORRule(), '_id');
 	this.recGrid = new Slick.Grid("#" + this.divId + "gridrec", this.recDataView, columns, options);
 	this.recGrid.setSelectionModel(new Slick.RowSelectionModel());
@@ -239,7 +239,7 @@ function SchedulePanel(divId, cxfApp)
 	{
 		searchString : "",
 	});
-	this.schDataView.setFilter(placeFilter);
+	this.schDataView.setFilter(nameDescriptionFilter);
 	this.schDataView.setItems(this.cxfApplication._clocks.getDTOClock(), '_id');
 	
 	this.schGrid = new Slick.Grid("#" + this.divId + "gridsch", this.schDataView, columns_sch, options_sch);

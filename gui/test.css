@@ -39,6 +39,7 @@ html,body {
 	/*padding-left: 185px;*/
 	/*padding-left: 14%;*/
 	margin-left: 200px;
+	height: 100%;
 	/*width: 100%;*/
 }
 
@@ -172,6 +173,10 @@ button.chrConsoleButton {
 .floatingToolbar {
 	background-color: rgba(192, 192, 192, 0.6);
 	padding: 1px;
+}
+
+.containerContainer {
+	height: calc(100% - 25px);
 }
 
 /**************************************
@@ -622,9 +627,9 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =      
+	filter: alpha(opacity =       
 		                                                         
-		        50);
+		         50);
 }
 
 .slick-cell.invalid {
