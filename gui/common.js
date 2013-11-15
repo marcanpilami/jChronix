@@ -73,12 +73,12 @@ function searchBoxKeyup(e)
 	// Clear on Esc
 	if (e.which == 27)
 	{
-		this.searchBox.val("");
+		$(e.currentTarget).val("");
 	}
 	// Update filter
 	this.dataview.setFilterArgs(
 	{
-		searchString : this.searchBox.val(),
+		searchString : $.trim($(e.currentTarget).val()),
 	});
 
 	// Refresh dataview
