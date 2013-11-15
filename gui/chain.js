@@ -276,16 +276,6 @@ function ChainPanel(divId, cxfApplication)
 		this.editChain(item);
 	}).bind(this));
 
-	// RAPHAEL BUG
-	var r = $("#raphBug")[0];
-	var rpaper = new Raphael(r, 10, 10);
-	var arrow = rpaper.path("M,1,1,L,20,20");
-	arrow.attr(
-	{
-		"arrow-end" : "classic-wide-long",
-		"stroke-width" : arrowSize
-	});
-
 	// Draw the first chain
 	this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
 

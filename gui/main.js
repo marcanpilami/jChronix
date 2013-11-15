@@ -12,7 +12,18 @@ $(document).ready(function()
 			handleTabs(ui.newPanel.attr('id'));
 		}
 	});
+	
+	// RAPHAEL BUG
+	var r = $("#raphBug")[0];
+	var rpaper = new Raphael(r, 10, 10);
+	var arrow = rpaper.path("M,1,1,L,20,20");
+	arrow.attr(
+	{
+		"arrow-end" : "classic-wide-long",
+		"stroke-width" : arrowSize
+	});
 
+	// Load data from webservice
 	proxy = new internalapi_chronix_oxymores_org__IServiceClientPortType();
 	loadApplication(); // will trigger first panel init when done
 });
