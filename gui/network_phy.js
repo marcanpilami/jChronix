@@ -496,3 +496,9 @@ ENPanel.prototype.remove = function()
 	// Done
 	this.hide();
 };
+
+// Misc.
+dto_chronix_oxymores_org_DTOExecutionNode.prototype.prettyLabel = function()
+{
+	return this._dns + ":" + this._qPort + " (" + (this._simpleRunner ? "runner" : "engine") + ")";
+};

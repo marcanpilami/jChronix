@@ -20,10 +20,15 @@
 
 package org.oxymores.chronix.wapi;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+
+import javax.jms.JMSException;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -37,21 +42,23 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
-import org.oxymores.chronix.core.active.External;
-import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.demo.DemoApplication;
-import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.dto.DTOApplication;
-import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.dto.Frontier2;
+import org.oxymores.chronix.engine.SenderHelpers;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
 public class ServiceClient implements IServiceClient
 {
-
 	private static Logger log = Logger.getLogger(ChronixContext.class);
+	private ChronixContext ctx;
+
+	public ServiceClient(ChronixContext ctx)
+	{
+		this.ctx = ctx;
+	}
 
 	@Override
 	public String sayHello()
@@ -63,65 +70,63 @@ public class ServiceClient implements IServiceClient
 	@Override
 	public DTOApplication getApplication(String name)
 	{
-		log.debug(String.format("getApplication service was called for app %s", name));
-		Application a = DemoApplication.getNewDemoApplication();
-		ShellCommand sc4 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc5 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc6 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc7 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc8 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc9 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc10 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc11 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		External e1 = PlanBuilder.buildExternal(a, "file 1","/tmp/meuh.txt");
-		PlanBuilder.buildRRuleMinutes(a, 10);
-		PlanBuilder.buildRRuleMinutes(a, 20);
-		PlanBuilder.buildRRuleMinutes(a, 30);
-		
-		// TODO: really look for the application instead of test one
+		log.debug(String.format("getApplication service was called for app name %s", name));
+		String id = ctx.applicationsByName.get(name).getId().toString();
+		return getApplicationById(id);
+	};
+
+	@Override
+	public DTOApplication getApplicationById(String id)
+	{
+		log.debug(String.format("getApplication service was called for app id %s", id));
+		Application a = ctx.applicationsById.get(UUID.fromString(id));
 
 		DTOApplication d = Frontier.getApplication(a);
 		log.debug("End of getApplication call. Returning an application.");
 		return d;
 	}
 
-	/*
-	 * @Override public DTOApplication getApplication(String name, Boolean byUuid) { // TODO Auto-generated method stub
-	 * System.err.println("oups2"); return null;// DemoApplication.getNewDemoApplication(); }
-	 */
-
-	@Override
-	public DTOChain getChain()
-	{
-		log.debug("getChain service was called");
-		Application a = DemoApplication.getNewDemoApplication();
-		Chain c = a.getChains().get(0);
-		DTOChain d = Frontier.getChain(c);
-		log.debug("End of getChain call. Returning a chain.");
-		return d;
-	}
-
 	@Override
 	public void stageApplication(DTOApplication app)
 	{
-		// TODO Replace test code with true persistence and reboot engine
-		// context
+		// TODO Replace test code with true persistence
 		log.debug("stageApplication service was called");
 
-		Application a = DemoApplication.getNewDemoApplication();
-		Chain c = a.getChains().get(0);
+		Application a = Frontier2.getApplication(app);
 
-		System.out.println(app.chains.get(0).states.get(0).getX());
-		System.out.println(c.getStates().get(0).getX());
+		// Put the working copy in the local cache (no impact on engine, different cache)
+		this.ctx.applicationsById.put(a.getId(), a);
+		this.ctx.applicationsByName.put(a.getName(), a);
 
+		try
+		{
+			ctx.saveApplication(a);
+		} catch (FileNotFoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		log.debug("End of stageApplication call.");
 	}
 
 	@Override
 	public void storeApplication(String uuid)
 	{
-		// TODO Auto-generated method stub
 		log.debug("storeApplication service was called");
+
+		try
+		{
+			SenderHelpers.sendApplicationToAllClients(this.ctx.applicationsById.get(UUID.fromString(uuid)), ctx);
+		} catch (JMSException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		log.debug("End of storeApplication call.");
 	}
 

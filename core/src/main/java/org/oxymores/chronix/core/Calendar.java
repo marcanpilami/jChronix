@@ -342,7 +342,13 @@ public class Calendar extends ApplicationObject
 							i.s.calendarShift));
 		}
 	}
+
 	//
 	// ///////////////////////////////////////////////////////////////
+
+	public ArrayList<CalendarDay> getDays()
+	{
+		return days;
+	}
 
 }

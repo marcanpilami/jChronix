@@ -5,7 +5,7 @@ var cxfPlaces = [];
 
 function loadApplication()
 {
-	proxy.getApplication(getApplicationOK, getApplicationKO, "MEUH");
+	proxy.getApplication(getApplicationOK, getApplicationKO, "test app");
 }
 
 function getApplicationKO(responseObject)
@@ -82,9 +82,9 @@ function sendApplicationKO(response)
 	alert("Could not store the application. Server returned: " + response);
 }
 
-function addCommand(DTOShellCommand)
+function switchApp()
 {
-
+	proxy.storeApplication(sendApplicationOK, sendApplicationKO, cxfApplication._id);
 }
 
 function deletePlace(dtoApplication, dtoPlace)
@@ -106,7 +106,7 @@ function deletePlace(dtoApplication, dtoPlace)
 	{
 		pg = placeGroupsA[groupids[i]];
 		tmp = pg.getPlaces().getString();
-		tmp.splice(tmp.indexOf(dtoPlace._id));
+		tmp.splice(tmp.indexOf(dtoPlace._id), 1);
 	}
 
 	// Remove from application

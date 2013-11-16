@@ -102,7 +102,7 @@ public class ChronixContext
 		{
 			try
 			{
-				ctx.loadApplication(toLoad.get(ss)[0], toLoad.get(ss)[1]);
+				ctx.loadApplication(toLoad.get(ss)[0]);
 			} catch (FileNotFoundException e)
 			{
 				// TODO Auto-generated catch block
@@ -151,7 +151,16 @@ public class ChronixContext
 		return ctx;
 	}
 
-	public Application loadApplication(File dataFile, File networkFile) throws FileNotFoundException, IOException, ClassNotFoundException,
+	public Application loadApplication(UUID id, boolean workincopy) throws NumberFormatException, FileNotFoundException,
+			ChronixNoLocalNode, IOException, ClassNotFoundException
+	{
+		if (workincopy)
+			return loadApplication(new File(getWorkingPath(id)));
+		else
+			return loadApplication(new File(getActivePath(id)));
+	}
+
+	public Application loadApplication(File dataFile) throws FileNotFoundException, IOException, ClassNotFoundException,
 			NumberFormatException, ChronixNoLocalNode
 	{
 		log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
@@ -191,12 +200,20 @@ public class ChronixContext
 	public void saveApplication(Application a) throws FileNotFoundException, IOException
 	{
 		log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
-
-		String dataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_WORKING_.crn";
-		FileOutputStream fos = new FileOutputStream(dataFilePath);
+		FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id));
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(a);
 		fos.close();
+	}
+
+	protected String getWorkingPath(UUID appId)
+	{
+		return configurationDirectory.getAbsolutePath() + "/app_data_" + appId + "_WORKING_.crn";
+	}
+
+	protected String getActivePath(UUID appId)
+	{
+		return configurationDirectory.getAbsolutePath() + "/app_data_" + appId + "_CURRENT_.crn";
 	}
 
 	protected void preSaveWorkingApp(Application a)
@@ -208,8 +225,8 @@ public class ChronixContext
 	public void setWorkingAsCurrent(Application a) throws Exception
 	{
 		log.info(String.format("(%s) Promoting temp file for application %s as the active file", this.configurationDirectory, a.getName()));
-		String workingDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_WORKING_.crn";
-		String currentDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_CURRENT_.crn";
+		String workingDataFilePath = getWorkingPath(a.id);
+		String currentDataFilePath = getActivePath(a.id);
 
 		File workingData = new File(workingDataFilePath);
 		if (!workingData.exists())

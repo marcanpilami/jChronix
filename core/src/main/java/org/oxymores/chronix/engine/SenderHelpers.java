@@ -215,6 +215,24 @@ public class SenderHelpers
 			jmsSession.commit();
 	}
 
+	public static void sendApplicationToAllClients(Application a, ChronixContext ctx) throws JMSException
+	{
+		// Connect to the local broker
+		JmsSendData d = new JmsSendData(ctx);
+
+		for (ExecutionNode n : a.getNodesList())
+		{
+			if (n.isHosted())
+				continue;
+
+			// Go
+			SenderHelpers.sendApplication(a, n, d.jmsProducer, d.jmsSession, true);
+		}
+
+		// Cleanup
+		d.close();
+	}
+
 	// Application
 	// /////////////////////////////////////////////////////////////////////////
 

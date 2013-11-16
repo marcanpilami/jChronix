@@ -19,6 +19,10 @@ public class DTOApplication
 	public ArrayList<DTOClock> clocks;
 	public ArrayList<DTORRule> rrules;
 	public ArrayList<DTOExternal> externals;
+	public ArrayList<DTONextOccurrence> calnexts;
+	public ArrayList<DTOCalendar> calendars;
+
+	public String andId, orId, startId, endId;
 
 	public ArrayList<DTOClock> getClocks()
 	{
@@ -160,6 +164,66 @@ public class DTOApplication
 	public void setExternals(ArrayList<DTOExternal> externals)
 	{
 		this.externals = externals;
+	}
+
+	public String getAndId()
+	{
+		return andId;
+	}
+
+	public void setAndId(String andId)
+	{
+		this.andId = andId;
+	}
+
+	public String getOrId()
+	{
+		return orId;
+	}
+
+	public void setOrId(String orId)
+	{
+		this.orId = orId;
+	}
+
+	public String getStartId()
+	{
+		return startId;
+	}
+
+	public void setStartId(String startId)
+	{
+		this.startId = startId;
+	}
+
+	public String getEndId()
+	{
+		return endId;
+	}
+
+	public void setEndId(String endId)
+	{
+		this.endId = endId;
+	}
+
+	public ArrayList<DTONextOccurrence> getCalnexts()
+	{
+		return calnexts;
+	}
+
+	public void setCalnexts(ArrayList<DTONextOccurrence> calnexts)
+	{
+		this.calnexts = calnexts;
+	}
+
+	public ArrayList<DTOCalendar> getCalendars()
+	{
+		return calendars;
+	}
+
+	public void setCalendars(ArrayList<DTOCalendar> calendars)
+	{
+		this.calendars = calendars;
 	}
 
 }

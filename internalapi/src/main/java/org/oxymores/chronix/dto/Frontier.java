@@ -8,7 +8,10 @@ import java.util.List;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
@@ -22,6 +25,7 @@ import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -45,7 +49,44 @@ public class Frontier
 		res.rrules = new ArrayList<DTORRule>();
 		res.clocks = new ArrayList<DTOClock>();
 		res.externals = new ArrayList<DTOExternal>();
+		res.calendars = new ArrayList<DTOCalendar>();
+		res.calnexts = new ArrayList<DTONextOccurrence>();
 
+		// Unique elements
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof ChainStart)
+			{
+				res.setStartId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof ChainEnd)
+			{
+				res.setEndId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof Or)
+			{
+				res.setOrId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof And)
+			{
+				res.setAndId(nb.getId().toString());
+				break;
+			}
+		}
+
+		// Network
 		res.nodes = getNetwork(a);
 
 		for (Place p : a.getPlacesList())
@@ -63,6 +104,11 @@ public class Frontier
 		for (PlaceGroup pg : pgs)
 			res.groups.add(getPlaceGroup(pg));
 
+		// Calendars
+		for (Calendar c : a.getCalendars())
+			res.calendars.add(getCalendar(c));
+
+		// Clocks
 		for (ClockRRule r : a.getRRulesList())
 			res.rrules.add(getRRule(r));
 
@@ -74,6 +120,7 @@ public class Frontier
 			}
 		};
 
+		// All the active elements!
 		List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
 		Collections.sort(active, comparator_act);
 		for (ActiveNodeBase o : active)
@@ -112,6 +159,17 @@ public class Frontier
 				d.name = e.getName();
 				d.description = e.getDescription();
 				res.externals.add(d);
+			}
+
+			if (o instanceof NextOccurrence)
+			{
+				NextOccurrence e = (NextOccurrence) o;
+				DTONextOccurrence d = new DTONextOccurrence();
+				d.id = e.getId().toString();
+				d.name = e.getName();
+				d.description = e.getDescription();
+				d.calendarId = e.getUpdatedCalendar().getId().toString();
+				res.calnexts.add(d);
 			}
 		}
 
@@ -217,22 +275,20 @@ public class Frontier
 
 		for (NodeLink nl : en.getCanSendTo())
 		{
-			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-				res.toRCTRL.add(nl.getNodeTo().getId().toString());
-			if (nl.getMethod() == NodeConnectionMethod.TCP)
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
 				res.toTCP.add(nl.getNodeTo().getId().toString());
 		}
 		for (NodeLink nl : en.getCanReceiveFrom())
 		{
-			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-				res.fromRCTRL.add(nl.getNodeFrom().getId().toString());
-			if (nl.getMethod() == NodeConnectionMethod.TCP)
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
 				res.fromTCP.add(nl.getNodeFrom().getId().toString());
 		}
 		for (Place p : en.getPlacesHosted())
 		{
 			res.places.add(p.getId().toString());
 		}
+
+		res.setSimpleRunner(en.isHosted());
 
 		return res;
 	}
@@ -558,6 +614,26 @@ public class Frontier
 		res.sequence = rl.sequence;
 		res.stoppedRunningAt = rl.stoppedRunningAt;
 		res.whatWasRun = rl.whatWasRun;
+
+		return res;
+	}
+
+	public static DTOCalendar getCalendar(Calendar c)
+	{
+		DTOCalendar res = new DTOCalendar();
+		res.setAlertThreshold(c.getAlertThreshold());
+		res.setDescription(c.getDescription());
+		res.setId(c.getId().toString());
+		res.setName(c.getName());
+		res.setDays(new ArrayList<DTOCalendarDay>());
+
+		for (CalendarDay day : c.getDays())
+		{
+			DTOCalendarDay cd = new DTOCalendarDay();
+			cd.setId(day.getId().toString());
+			cd.setSeq(day.getValue());
+			res.getDays().add(cd);
+		}
 
 		return res;
 	}

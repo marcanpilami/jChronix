@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.oxymores.chronix.dto.DTOApplication;
-import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTORRule;
 
 public interface IServiceClient
@@ -33,7 +32,7 @@ public interface IServiceClient
 
 	DTOApplication getApplication(String name);
 
-	// DTOApplication getApplication(String uuid, Boolean byUuid);
+	DTOApplication getApplicationById(String uuid);
 
 	void stageApplication(DTOApplication app);
 
@@ -42,6 +41,4 @@ public interface IServiceClient
 	void resetStage();
 
 	List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound);
-
-	DTOChain getChain();
 }

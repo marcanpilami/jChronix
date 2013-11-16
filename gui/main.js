@@ -22,6 +22,15 @@ $(document).ready(function()
 		"arrow-end" : "classic-wide-long",
 		"stroke-width" : arrowSize
 	});
+	
+	// Always validate SlickGrid edits when loosing focus
+	$("#tabs").on('blur', 'input.editor-text', function() {
+	    Slick.GlobalEditorLock.commitCurrentEdit();
+	});
+	$("#tabs").on('blur', 'select.editor-select', function() {
+	    Slick.GlobalEditorLock.commitCurrentEdit();
+	});
+
 
 	// Load data from webservice
 	proxy = new internalapi_chronix_oxymores_org__IServiceClientPortType();

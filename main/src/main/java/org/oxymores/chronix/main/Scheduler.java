@@ -16,6 +16,7 @@ import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.demo.DemoApplication;
 import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.engine.SenderHelpers;
@@ -31,7 +32,6 @@ public class Scheduler
 		// Load properties
 		Properties applicationProps = new Properties();
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("scheduler.properties");
-		// FileInputStream in = new FileInputStream("scheduler.properties");
 		applicationProps.load(in);
 		in.close();
 
@@ -57,7 +57,8 @@ public class Scheduler
 		// /////////////////////
 		// DEBUG
 		// Application a = DemoApplication.getNewDemoApplication(mainDataInterface, mainDataPort);
-		Application a = PlanBuilder.buildApplication("testing console", "no description for tests");
+		Application a = DemoApplication.getNewDemoApplication();
+		a.setname("test app");
 		PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, mainDataPort, mainDataInterface);
 		Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
@@ -69,16 +70,20 @@ public class Scheduler
 		ShellCommand sc2 = PlanBuilder.buildShellCommand("powershell.exe", a, "echooooooo bb", "bb", "should display 'bb'");
 		ShellCommand sc3 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo fin", "FIN", "should display 'fin'");
 
-		ShellCommand sc4 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc5 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc6 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc7 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc8 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc9 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc10 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		ShellCommand sc11 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-		
-		
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+		PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+
+		PlanBuilder.buildExternal(a, "file 1", "/tmp/meuh.txt");
+		PlanBuilder.buildRRuleMinutes(a, 10);
+		PlanBuilder.buildRRuleMinutes(a, 20);
+		PlanBuilder.buildRRuleMinutes(a, 30);
+
 		State s1 = PlanBuilder.buildState(c, pgLocal, ex);
 		State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
 		State s3 = PlanBuilder.buildState(c, pgLocal, sc2);
@@ -115,7 +120,7 @@ public class Scheduler
 			JettyServer server = new JettyServer(e.ctx);
 			server.start();
 		}
-		
+
 		SenderHelpers.sendOrderExternalEvent(s1.getId(), null, pgLocal.getPlaces().get(0).getNode(), e.ctx);
 
 		Thread.sleep(1000000); // 1000s, debug

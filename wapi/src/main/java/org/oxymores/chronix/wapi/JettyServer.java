@@ -71,7 +71,7 @@ public class JettyServer implements IServer
 	public void start()
 	{
 		log.info("Web service server is starting");
-		ServiceClient serviceImpl = new ServiceClient();
+		ServiceClient serviceImpl = new ServiceClient(this.ctx);
 		ServerFactoryBean svrFactory = new ServerFactoryBean();
 
 		svrFactory.setServiceClass(IServiceClient.class);
@@ -81,10 +81,7 @@ public class JettyServer implements IServer
 
 		try
 		{
-			// svrFactory.setStart(false);
-
-			// Start the server (so as to init all jetty objects with CXF
-			// parameters)
+			// Start the server (so as to init all jetty objects with CXF parameters)
 			cxfServer = svrFactory.create();
 
 			// Get the Jetty server from destination

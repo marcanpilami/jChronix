@@ -21,6 +21,7 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -57,6 +58,14 @@ public class Chain extends ActiveNodeBase
 	public ArrayList<State> getStates()
 	{
 		return states;
+	}
+
+	public State getState(UUID id)
+	{
+		for (State s : this.states)
+			if (s.getId().equals(id))
+				return s;
+		return null;
 	}
 
 	public void addTransition(Transition tr)
