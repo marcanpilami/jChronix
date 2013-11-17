@@ -220,13 +220,19 @@ public class SenderHelpers
 		// Connect to the local broker
 		JmsSendData d = new JmsSendData(ctx);
 
+		// In case of misconfiguration, we may have double nodes.
+		ArrayList<String> sent = new ArrayList<String>();
+
 		for (ExecutionNode n : a.getNodesList())
 		{
 			if (n.isHosted())
 				continue;
+			if (sent.contains(n.getBrokerName()))
+				continue;
 
 			// Go
 			SenderHelpers.sendApplication(a, n, d.jmsProducer, d.jmsSession, true);
+			sent.add(n.getBrokerName());
 		}
 
 		// Cleanup

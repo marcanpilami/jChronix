@@ -89,27 +89,16 @@ function switchApp()
 
 function deletePlace(dtoApplication, dtoPlace)
 {
-	// Get a usable PG table
-	var placeGroups = dtoApplication.getGroups().getDTOPlaceGroup();
-	var placeGroupsA = new Object();
-	var pg = null;
-	for ( var i = 0; i < placeGroups.length; i++)
-	{
-		pg = placeGroups[i];
-		placeGroupsA[pg._id] = pg;
-	}
-
 	// Remove from groups
-	var groupids = dtoPlace.getMemberOf().getString();
-	var tmp = null;
-	for ( var i = 0; i < groupids.length; i++)
+	var gg = dtoApplication.getGroups().getDTOPlaceGroup();
+	for ( var i = 0; i < gg.length; i++)
 	{
-		pg = placeGroupsA[groupids[i]];
-		tmp = pg.getPlaces().getString();
-		tmp.splice(tmp.indexOf(dtoPlace._id), 1);
+		var idx = jQuery.inArray(dtoPlace._id, gg[i]._places.getString());
+		if (-1 !== idx)
+			gg[i]._places.getString().splice(idx, 1);
 	}
 
 	// Remove from application
 	tmp = dtoApplication.getPlaces().getDTOPlace();
-	tmp.splice(tmp.indexOf(dtoPlace));
+	tmp.splice(tmp.indexOf(dtoPlace), 1);
 }

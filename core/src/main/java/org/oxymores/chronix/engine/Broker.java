@@ -280,6 +280,7 @@ public class Broker
 
 			for (NetworkConnector nc : this.broker.getNetworkConnectors())
 			{
+				nc.stop();
 				this.broker.removeNetworkConnector(nc);
 			}
 

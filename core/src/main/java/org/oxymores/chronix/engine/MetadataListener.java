@@ -128,8 +128,6 @@ public class MetadataListener implements MessageListener
 			log.error(
 					"While receiving an application definition, we could not commit reading the message. It is a catastrophy: the db has already been correctly commited with the application data. The scheduler will stop. Empty the APPLICATION queue and restart it.",
 					e);
-			// TODO: stop the engine. Well, as soon as we HAVE an engine to
-			// stop.
 			return;
 		}
 

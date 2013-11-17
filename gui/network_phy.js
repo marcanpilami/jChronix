@@ -451,12 +451,11 @@ ENPanel.prototype.link = function()
 ENPanel.prototype.remove = function()
 {
 	// Remove arrows from the chart
-	tmp = this.dtoApplication.getNodes().getDTOExecutionNode();
+	var tmp = this.dtoApplication.getNodes().getDTOExecutionNode();
 	var arrowsToRemove = new Array();
 	for ( var i = 0; i < tmp.length; i++) // Look for arrows on all nodes
 	{
 		var on = tmp[i];
-		bbb = on;
 		for ( var j = 0; j < on.drawing.arrowsFromHere.length; j++)
 		{
 			var arrow = on.drawing.arrowsFromHere[j];
@@ -467,9 +466,11 @@ ENPanel.prototype.remove = function()
 	var tmp2 = arrowsToRemove.pop();
 	while (tmp2 != undefined)
 	{
-		tmp2.from.getToTCP().getString().splice(tmp2.from.getToTCP().getString().indexOf(tmp._id), 1);
-		tmp2.to.getFromTCP().getString().splice(tmp2.to.getFromTCP().getString().indexOf(tmp._id), 1);
-		tmp2.from.drawing.arrowsFromHere.splice(tmp2.from.drawing.arrowsFromHere.indexOf(tmp), 1);
+		var dtoFrom = tmp2.from;
+		var dtoTo = tmp2.to;
+		dtoFrom.getToTCP().getString().splice(dtoFrom.getToTCP().getString().indexOf(dtoTo._id), 1);
+		dtoTo.getFromTCP().getString().splice(dtoTo.getFromTCP().getString().indexOf(dtoFrom._id), 1);
+		dtoFrom.drawing.arrowsFromHere.splice(dtoFrom.drawing.arrowsFromHere.indexOf(tmp2), 1);
 		tmp2.remove();
 		tmp2 = arrowsToRemove.pop();
 	}
@@ -491,7 +492,7 @@ ENPanel.prototype.remove = function()
 	}
 
 	// Remove the place itself
-	tmp.splice(tmp.indexOf(this.dtoExecutionNode));
+	tmp.splice(tmp.indexOf(this.dtoExecutionNode), 1);
 
 	// Done
 	this.hide();

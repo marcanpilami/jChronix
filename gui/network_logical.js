@@ -68,6 +68,8 @@ LogicalNetworkPanel.prototype.redisplay = function()
 	this.placeGroupPanel.resize();
 	this.groupContent.resize();
 	this.placeMemberOf.resize();
+	
+	this.placePanel.dataview.refresh();
 };
 
 // /////////////////////////////////////////////////////////////
