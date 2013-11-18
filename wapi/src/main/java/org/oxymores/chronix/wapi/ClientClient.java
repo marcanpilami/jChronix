@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
 import org.oxymores.chronix.dto.DTOApplication;
+import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.internalapi.IServiceClient;
 
@@ -94,6 +95,20 @@ public class ClientClient implements IServiceClient
 
 	@Override
 	public DTOApplication getApplicationById(String uuid)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<DTOApplicationShort> getAllApplications()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DTOApplication createApplication(String name, String description)
 	{
 		// TODO Auto-generated method stub
 		return null;

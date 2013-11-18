@@ -277,7 +277,8 @@ function ChainPanel(divId, cxfApplication)
 	}).bind(this));
 
 	// Draw the first chain
-	this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
+	if (this.cxfApplication.getChains().getDTOChain().length > 0)
+		this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
 
 	// Add create chain button
 	var btAddChain = $("<li style='border-radius: 50%; padding: 1px; margin-right: 5px; height: 20px; width: 20px; border: solid 1px white; text-align: center; vertical-align: middle;'>+</li>");
@@ -293,7 +294,6 @@ function ChainPanel(divId, cxfApplication)
 
 		var s = new dto_chronix_oxymores_org_DTOState();
 		s._id = uuid.v4();
-		s._representsId = null; // Will be completed by the Frontier
 		s._x = 100;
 		s._y = 50;
 		s._label = "Start";
@@ -304,10 +304,10 @@ function ChainPanel(divId, cxfApplication)
 		s._start = true;
 		s._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
 		s._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
+		s._representsId = this.cxfApplication._startId;
 
 		var e = new dto_chronix_oxymores_org_DTOState();
 		e._id = uuid.v4();
-		e._representsId = null; // Will be completed by the Frontier
 		e._x = 100;
 		e._y = 300;
 		e._label = "End";
@@ -318,6 +318,7 @@ function ChainPanel(divId, cxfApplication)
 		e._start = false;
 		e._runsOnId = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._id;
 		e._runsOnName = this.cxfApplication.getGroups().getDTOPlaceGroup()[0]._name;
+		e._representsId = this.cxfApplication._endId;
 
 		v.getStates().getDTOState().push(s);
 		v.getStates().getDTOState().push(e);

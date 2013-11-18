@@ -179,6 +179,20 @@ button.chrConsoleButton {
 	height: calc(100% - 25px);
 }
 
+.app-short {
+	background-color: navy;
+	width: auto;
+	padding: 5px;
+	margin: 5px;
+	display: inline-block;
+	color: white;
+}
+
+.descrtxt {
+	font-style: italic;
+	font-size: smaller;
+}
+
 /**************************************
 * Column picker
 **************************************/

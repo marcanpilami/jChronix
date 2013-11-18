@@ -1,11 +1,4 @@
 // /////////////////////////////////////////////////////////////
-// Variables
-// /////////////////////////////////////////////////////////////
-var nlDataViewPlaces = null, nlDataViewGroups = null, nlDataViewGroupContent = null, nlDataViewPlaceMembership = null;
-var nlGridPlaces = null, nlGridGroups = null, nlGridGroupContent = null, nlGridPlaceMembership = null;
-var nlSelectedGroup = null, nlSelectedPlace = null;
-
-// /////////////////////////////////////////////////////////////
 // Global panel
 // /////////////////////////////////////////////////////////////
 
@@ -68,7 +61,7 @@ LogicalNetworkPanel.prototype.redisplay = function()
 	this.placeGroupPanel.resize();
 	this.groupContent.resize();
 	this.placeMemberOf.resize();
-	
+
 	this.placePanel.dataview.refresh();
 };
 
@@ -128,8 +121,8 @@ function PlacePanel(mainDiv, dtoApplication, lnPanel)
 		selectable : false,
 		resizable : true,
 		editor : SelectCellEditor,
-		options: this.dtoApplication.getNodes().getDTOExecutionNode(),
-		formatter: dnsFormatter,
+		options : this.dtoApplication.getNodes().getDTOExecutionNode(),
+		formatter : dnsFormatter,
 		cannotTriggerInsert : true,
 		sortable : false,
 	},

@@ -41,7 +41,9 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.dto.DTOApplication;
+import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.dto.Frontier2;
@@ -165,5 +167,33 @@ public class ServiceClient implements IServiceClient
 		}
 
 		return res;
+	}
+
+	@Override
+	public List<DTOApplicationShort> getAllApplications()
+	{
+		ArrayList<DTOApplicationShort> res = new ArrayList<DTOApplicationShort>();
+
+		for (Application a : this.ctx.applicationsById.values())
+		{
+			DTOApplicationShort t = new DTOApplicationShort();
+			t.description = a.getDescription();
+			t.id = a.getId().toString();
+			t.name = a.getName();
+			res.add(t);
+		}
+		return res;
+	}
+
+	@Override
+	public DTOApplication createApplication(String name, String description)
+	{
+		Application a = PlanBuilder.buildApplication(name, description);
+		PlanBuilder.buildDefaultLocalNetwork(a);
+		PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
+		ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);
+		PlanBuilder.buildClock(a, "once a week day", "day clock", r);
+
+		return Frontier.getApplication(a);
 	}
 }
