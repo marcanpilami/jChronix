@@ -54,6 +54,7 @@ public class TestStart
 		e.start();
 		e.waitForInitEnd();
 		e.stopEngine();
+		e.waitForStopEnd();
 
 		Assert.assertEquals(2, e.ctx.applicationsById.values().size());
 
@@ -64,7 +65,6 @@ public class TestStart
 		Assert.assertEquals(1, a2.getChains().size());
 		Assert.assertEquals(5, a2.getChains().get(0).getStates().size());
 
-		e.waitForStopEnd();
 	}
 
 	@Test
@@ -80,13 +80,12 @@ public class TestStart
 		ctx.setWorkingAsCurrent(a);
 		e.start();
 		e.waitForInitEnd();
+		e.stopEngine();
+		e.waitForStopEnd();
 
 		EntityManager em = ctx.getTransacEM();
 		TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
 		Assert.assertEquals(3, q.getResultList().size());
-
-		e.stopEngine();
-		e.waitForStopEnd();
 	}
 }

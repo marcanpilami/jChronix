@@ -39,6 +39,7 @@ generated.js
 core/target/*
 activemq-data
 doc/html
+target
 
 # Library archive    #
 ######################
