@@ -38,7 +38,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 
-public class LogListener implements MessageListener
+class LogListener implements MessageListener
 {
 
 	private static Logger log = Logger.getLogger(LogListener.class);
@@ -51,7 +51,7 @@ public class LogListener implements MessageListener
 	private EntityTransaction trHistory, trTransac;
 	private ChronixContext ctx;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
 	{
 		log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
@@ -76,7 +76,7 @@ public class LogListener implements MessageListener
 
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.jmsLogConsumer.close();
 		this.jmsSession.close();

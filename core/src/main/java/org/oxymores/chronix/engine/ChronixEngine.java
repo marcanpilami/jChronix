@@ -29,6 +29,10 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.demo.MaintenanceApplication;
 import org.oxymores.chronix.demo.OperationsApplication;
 
+/**
+ * A Chronix Node. Can be either engine + runner or simply runner.
+ *
+ */
 public class ChronixEngine extends Thread
 {
 	private static Logger log = Logger.getLogger(ChronixEngine.class);

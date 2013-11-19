@@ -42,7 +42,7 @@ import javax.jms.Session;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
-public class RunnerAgent implements MessageListener
+class RunnerAgent implements MessageListener
 {
 	private static Logger log = Logger.getLogger(RunnerAgent.class);
 
@@ -54,7 +54,7 @@ public class RunnerAgent implements MessageListener
 
 	private String logDbPath;
 
-	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException
+	void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException, IOException
 	{
 		log.info(String.format("(%s) Starting a runner agent", brokerName));
 
@@ -82,7 +82,7 @@ public class RunnerAgent implements MessageListener
 		this.jmsRequestConsumer.setMessageListener(this);
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.jmsProducer.close();
 		this.jmsRequestConsumer.close();

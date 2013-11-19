@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 
-public class MetadataListener implements MessageListener
+class MetadataListener implements MessageListener
 {
 	private static Logger log = Logger.getLogger(MetadataListener.class);
 
@@ -44,7 +44,7 @@ public class MetadataListener implements MessageListener
 	private Connection jmsConnection;
 	private MessageConsumer jmsApplicationConsumer;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, ChronixEngine engine) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx, ChronixEngine engine) throws JMSException
 	{
 		log.debug(String.format("(%s) Initializing MetadataListener", ctx.configurationDirectory));
 
@@ -62,7 +62,7 @@ public class MetadataListener implements MessageListener
 		this.jmsApplicationConsumer.setMessageListener(this);
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.jmsApplicationConsumer.close();
 		this.jmsSession.close();

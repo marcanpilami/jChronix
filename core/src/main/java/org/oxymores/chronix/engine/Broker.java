@@ -51,7 +51,7 @@ import org.oxymores.chronix.core.NodeLink;
  * 					 .EXCLREQUEST
  */
 
-public class Broker
+class Broker
 {
 	private static Logger log = Logger.getLogger(Broker.class);
 
@@ -78,22 +78,22 @@ public class Broker
 	TokenDistributionCenter thrTC;
 	int nbRunners = 4;
 
-	public Broker(ChronixEngine engine) throws Exception
+	Broker(ChronixEngine engine) throws Exception
 	{
 		this(engine, false);
 	}
 
-	public Broker(ChronixContext ctx) throws Exception
+	Broker(ChronixContext ctx) throws Exception
 	{
 		this(ctx, false);
 	}
 
-	public Broker(ChronixEngine engine, boolean purge) throws Exception
+	Broker(ChronixEngine engine, boolean purge) throws Exception
 	{
 		this(engine.ctx, purge);
 	}
 
-	public Broker(ChronixContext ctx, boolean purge) throws Exception
+	Broker(ChronixContext ctx, boolean purge) throws Exception
 	{
 		log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl,
 				ctx.configurationDirectory));
@@ -180,13 +180,13 @@ public class Broker
 		this.connection.start();
 	}
 
-	public void registerListeners(ChronixEngine engine) throws JMSException, IOException
+	void registerListeners(ChronixEngine engine) throws JMSException, IOException
 	{
 		registerListeners(engine, true, true, true, true, true, true, true, true, true);
 	}
 
-	public void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline,
-			boolean startRunner, boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener,
+	void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
+			boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener,
 			boolean startTokenDistributionCenter) throws JMSException, IOException
 	{
 		this.engine = engine;
@@ -251,7 +251,7 @@ public class Broker
 		}
 	}
 
-	public void stop()
+	void stop()
 	{
 		log.info(String.format("(%s) The message broker will now stop", this.ctx.configurationDirectoryPath));
 		try
@@ -293,22 +293,22 @@ public class Broker
 		}
 	}
 
-	public BrokerService getBroker()
+	BrokerService getBroker()
 	{
 		return this.broker;
 	}
 
-	public EntityManagerFactory getEmf()
+	EntityManagerFactory getEmf()
 	{
 		return emf;
 	}
 
-	public Connection getConnection()
+	Connection getConnection()
 	{
 		return connection;
 	}
 
-	public void purgeAllQueues() throws JMSException
+	void purgeAllQueues() throws JMSException
 	{
 		log.warn("purge all queues on broker was called");
 		try
@@ -321,12 +321,12 @@ public class Broker
 		}
 	}
 
-	public int getNbRunners()
+	int getNbRunners()
 	{
 		return nbRunners;
 	}
 
-	public void setNbRunners(int nbRunners)
+	void setNbRunners(int nbRunners)
 	{
 		this.nbRunners = nbRunners;
 	}

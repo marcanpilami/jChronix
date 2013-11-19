@@ -50,7 +50,7 @@ import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
-public class TokenDistributionCenter extends Thread implements MessageListener
+class TokenDistributionCenter extends Thread implements MessageListener
 {
 	private static Logger log = Logger.getLogger(TokenDistributionCenter.class);
 
@@ -71,7 +71,7 @@ public class TokenDistributionCenter extends Thread implements MessageListener
 
 	private ArrayList<TokenReservation> shouldRenew;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
 	{
 		log.debug(String.format("(%s) Initializing TokenDistributionCenter", ctx.configurationDirectory));
 
@@ -101,7 +101,7 @@ public class TokenDistributionCenter extends Thread implements MessageListener
 		this.start();
 	}
 
-	public void stopListening() throws Exception
+	void stopListening() throws Exception
 	{
 		running = false;
 		mainLoop.release();

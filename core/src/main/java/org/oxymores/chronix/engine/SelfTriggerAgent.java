@@ -39,7 +39,7 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 
-public class SelfTriggerAgent extends Thread
+class SelfTriggerAgent extends Thread
 {
 	private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
 
@@ -53,7 +53,7 @@ public class SelfTriggerAgent extends Thread
 	private EntityTransaction jpaTransaction;
 	private Semaphore triggering;
 
-	public void stopAgent()
+	void stopAgent()
 	{
 		try
 		{
@@ -73,7 +73,7 @@ public class SelfTriggerAgent extends Thread
 		loop.release();
 	}
 
-	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
+	void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
 	{
 		log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
 

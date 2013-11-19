@@ -51,7 +51,7 @@ import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
 
-public class Pipeline extends Thread implements MessageListener
+class Pipeline extends Thread implements MessageListener
 {
 	private static Logger log = Logger.getLogger(Pipeline.class);
 
@@ -76,7 +76,7 @@ public class Pipeline extends Thread implements MessageListener
 	private Boolean run = true;
 	private Semaphore analyze;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
 	{
 		// Pointers
 		this.ctx = ctx;
@@ -121,7 +121,7 @@ public class Pipeline extends Thread implements MessageListener
 		this.start();
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		try
 		{

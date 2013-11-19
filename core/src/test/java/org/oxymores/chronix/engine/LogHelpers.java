@@ -31,7 +31,7 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.TranscientBase;
 
-public class LogHelpers
+class LogHelpers
 {
 	private static Logger log = Logger.getLogger(LogHelpers.class);
 

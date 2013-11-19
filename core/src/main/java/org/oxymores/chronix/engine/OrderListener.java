@@ -46,7 +46,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 
-public class OrderListener implements MessageListener
+class OrderListener implements MessageListener
 {
 	private static Logger log = Logger.getLogger(OrderListener.class);
 
@@ -59,7 +59,7 @@ public class OrderListener implements MessageListener
 	private ChronixContext ctx;
 	private String brokerName;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx) throws JMSException
 	{
 		log.debug(String.format("(%s) Initializing OrderListener", ctx.configurationDirectory));
 
@@ -80,7 +80,7 @@ public class OrderListener implements MessageListener
 		this.jmsOrderConsumer.setMessageListener(this);
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.jmsOrderConsumer.close();
 		this.jmsSession.close();
@@ -243,5 +243,4 @@ public class OrderListener implements MessageListener
 			e.printStackTrace();
 		}
 	}
-
 }

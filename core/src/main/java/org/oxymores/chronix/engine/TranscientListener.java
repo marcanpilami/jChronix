@@ -46,7 +46,7 @@ import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 
-public class TranscientListener implements MessageListener
+class TranscientListener implements MessageListener
 {
 	private static Logger log = Logger.getLogger(TranscientListener.class);
 
@@ -60,7 +60,7 @@ public class TranscientListener implements MessageListener
 	private EntityTransaction tr;
 	private ChronixContext ctx;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
 	{
 		log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
@@ -86,7 +86,7 @@ public class TranscientListener implements MessageListener
 		this.tr = this.em.getTransaction();
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.jmsTranscientConsumer.close();
 		this.jmsSession.close();

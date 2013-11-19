@@ -47,7 +47,7 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
 
-public class EventListener implements MessageListener
+class EventListener implements MessageListener
 {
 	private static Logger log = Logger.getLogger(EventListener.class);
 
@@ -60,7 +60,7 @@ public class EventListener implements MessageListener
 	private MessageProducer producerPJ;
 	MessageConsumer consumer;
 
-	public void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
+	void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
 	{
 		log.info(String.format("(%s) Starting an event engine", ctx.configurationDirectoryPath));
 
@@ -80,7 +80,7 @@ public class EventListener implements MessageListener
 		this.producerPJ = this.jmsSession.createProducer(null);
 	}
 
-	public void stopListening() throws JMSException
+	void stopListening() throws JMSException
 	{
 		this.producerPJ.close();
 		this.consumer.close();
