@@ -62,6 +62,7 @@ public final class RunnerShell
         Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
         Matcher matcher = pat.matcher("Testing123Testing");
         String encoding = getEncoding(rd);
+        log.debug("Encoding is " + encoding);
 
         // ///////////////////////////
         // Build command
@@ -86,7 +87,7 @@ public final class RunnerShell
         try
         {
             // Start!
-            log.debug("GO");
+            log.debug("GO (" + rd.subMethod + ")");
             p = pb.start();
 
             // Read output (err & out), write it to file
@@ -216,7 +217,7 @@ public final class RunnerShell
             }
             catch (Exception e)
             {
-                // nothing - keep default system-wide encoding
+                log.warn("Windows console encoding could not be found. Default encoding will be used. Logs may be encoded weirdly", e);
             }
         }
         return encoding;
@@ -232,7 +233,6 @@ public final class RunnerShell
         // Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
         if (rd.subMethod.equals(CMD_CMD))
         {
-            argsStrings.add("/U");
             argsStrings.add("/C");
         }
         else if (rd.subMethod.equals(POWERSHELL_CMD))

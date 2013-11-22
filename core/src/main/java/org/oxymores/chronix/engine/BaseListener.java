@@ -20,7 +20,7 @@ import org.oxymores.chronix.core.ChronixContext;
 
 public class BaseListener implements MessageListener
 {
-    private static Logger log = Logger.getLogger(MessageListener.class);
+    private static Logger log = Logger.getLogger(BaseListener.class);
 
     protected ChronixContext ctx;
     protected Broker broker;
