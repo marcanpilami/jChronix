@@ -26,242 +26,289 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.demo.MaintenanceApplication;
-import org.oxymores.chronix.demo.OperationsApplication;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
+import org.oxymores.chronix.planbuilder.MaintenanceApplication;
+import org.oxymores.chronix.planbuilder.OperationsApplication;
 
+/**
+ * A Chronix Node. Can be either engine + runner or simply runner.
+ * 
+ */
 public class ChronixEngine extends Thread
 {
-	private static Logger log = Logger.getLogger(ChronixEngine.class);
+    private static Logger log = Logger.getLogger(ChronixEngine.class);
 
-	private boolean runnerMode;
+    private boolean runnerMode;
 
-	public ChronixContext ctx;
-	public String dbPath;
-	public String brokerInterface, transacUnitName, historyUnitName;
-	public int brokerPort;
-	public String brokerInterfaceNoPort;
+    protected ChronixContext ctx;
+    protected String dbPath;
+    protected String brokerInterface, transacUnitName, historyUnitName;
+    protected int brokerPort;
+    protected String brokerInterfaceNoPort;
 
-	public Broker broker;
-	public SelfTriggerAgent stAgent;
+    protected Broker broker;
+    protected SelfTriggerAgent stAgent;
 
-	protected Semaphore startCritical, stop, threadInit, stopped;
-	protected boolean run = true;
-	protected int nbRunner;
+    protected Semaphore startCritical, stop, threadInit, stopped;
+    protected boolean run = true;
+    protected int nbRunner;
 
-	// ///////////////////////////////////////////////////////////////
-	// Construction
-	public ChronixEngine(String dbPath, String mainInterface)
-	{
-		this(dbPath, mainInterface, "TransacUnit", "HistoryUnit");
-	}
+    // ///////////////////////////////////////////////////////////////
+    // Construction
+    public ChronixEngine(String dbPath, String mainInterface)
+    {
+        this(dbPath, mainInterface, "TransacUnit", "HistoryUnit");
+    }
 
-	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName)
-	{
-		this(dbPath, mainInterface, TransacUnitName, HistoryUnitName, false, 1);
-	}
+    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName)
+    {
+        this(dbPath, mainInterface, transacUnitName, historyUnitName, false, 1);
+    }
 
-	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName, boolean runnerMode)
-	{
-		this(dbPath, mainInterface, TransacUnitName, HistoryUnitName, runnerMode, 1);
-	}
+    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode)
+    {
+        this(dbPath, mainInterface, transacUnitName, historyUnitName, runnerMode, 1);
+    }
 
-	public ChronixEngine(String dbPath, String mainInterface, String TransacUnitName, String HistoryUnitName, boolean runnerMode,
-			int nbRunner)
-	{
-		this.dbPath = dbPath;
-		this.runnerMode = runnerMode;
-		this.transacUnitName = TransacUnitName;
-		this.historyUnitName = HistoryUnitName;
-		this.brokerInterface = mainInterface;
-		this.ctx = new ChronixContext(); // to allow some basic config
-		this.ctx.configurationDirectoryPath = dbPath; // before starting
-		this.ctx.configurationDirectory = new File(dbPath);
-		this.ctx.localUrl = mainInterface;
-		this.ctx.transacUnitName = TransacUnitName;
-		this.ctx.historyUnitName = HistoryUnitName;
-		this.brokerInterfaceNoPort = this.brokerInterface.split(":")[0];
-		this.brokerPort = Integer.parseInt(this.brokerInterface.split(":")[1]);
-		this.nbRunner = nbRunner;
+    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode,
+            int nbRunner)
+    {
+        this.dbPath = dbPath;
+        this.runnerMode = runnerMode;
+        this.transacUnitName = transacUnitName;
+        this.historyUnitName = historyUnitName;
+        this.brokerInterface = mainInterface;
+        this.brokerInterfaceNoPort = this.brokerInterface.split(":")[0];
+        this.brokerPort = Integer.parseInt(this.brokerInterface.split(":")[1]);
+        this.nbRunner = nbRunner;
 
-		this.startCritical = new Semaphore(1);
-		this.stop = new Semaphore(0);
-		this.threadInit = new Semaphore(0);
-		this.stopped = new Semaphore(0);
-	}
+        // To allow some basic configuration before starting nodes, we init the minimal fields inside the context
+        this.ctx = new ChronixContext();
+        this.ctx.configurationDirectoryPath = dbPath;
+        this.ctx.configurationDirectory = new File(dbPath);
+        this.ctx.localUrl = mainInterface;
+        this.ctx.transacUnitName = transacUnitName;
+        this.ctx.historyUnitName = historyUnitName;
 
-	//
-	// ///////////////////////////////////////////////////////////////
+        this.startCritical = new Semaphore(1);
+        this.stop = new Semaphore(0);
+        this.threadInit = new Semaphore(0);
+        this.stopped = new Semaphore(0);
+    }
 
-	protected void startEngine(boolean blocking, boolean purgeQueues)
-	{
-		log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
-		try
-		{
-			this.startCritical.acquire();
-			this.threadInit.release(1);
+    //
+    // ///////////////////////////////////////////////////////////////
 
-			// Context
-			preContextLoad();
-			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
-			postContextLoad();
+    protected void startEngine(boolean blocking, boolean purgeQueues)
+    {
+        log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
+        try
+        {
+            this.startCritical.acquire();
+            this.threadInit.release(1);
 
-			// Broker with all the consumer threads
-			this.broker = new Broker(this, purgeQueues);
-			this.broker.setNbRunners(this.nbRunner);
-			if (!runnerMode)
-				this.broker.registerListeners(this);
-			else
-				this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
+            // Context
+            preContextLoad();
+            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
+            postContextLoad();
 
-			// Active sources agent
-			if (!this.runnerMode && broker.getEmf() != null)
-			{
-				this.stAgent = new SelfTriggerAgent();
-				this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
-			}
+            // Broker with all the consumer threads
+            this.broker = new Broker(this, purgeQueues);
+            this.broker.setNbRunners(this.nbRunner);
+            if (!runnerMode)
+            {
+                this.broker.registerListeners(this);
+            }
+            else
+            {
+                this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
+            }
 
-			// Done
-			this.startCritical.release();
+            // Active sources agent
+            if (!this.runnerMode && broker.getEmf() != null)
+            {
+                this.stAgent = new SelfTriggerAgent();
+                this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+            }
 
-			if (blocking)
-			{
-				stop.wait();
-			} /*
-			 * else this.start();
-			 */
+            // Done
+            this.startCritical.release();
 
-		} catch (Exception e)
-		{
-			log.error("The engine has failed to start", e);
-			this.run = false;
-		}
-	}
+            if (blocking)
+            {
+                stop.acquire();
+            }
 
-	@Override
-	public void run()
-	{
-		// Only does one thing: reload configuration and stop on trigger
-		while (this.run)
-		{
-			// First : start!
-			startEngine(false, false);
-			if (!run)
-			{
-				this.startCritical.release();
-				this.stop.release();
-				this.threadInit.release();
-				return;
-			}
+        }
+        catch (Exception e)
+        {
+            log.fatal("The engine has failed to start", e);
+            this.run = false;
+        }
+    }
 
-			// Then, wait for the end signal
-			try
-			{
-				this.stop.acquire();
-			} catch (InterruptedException e)
-			{
-				log.error("big problem here", e);
-			}
+    @Override
+    public void run()
+    {
+        // Only does one thing: reload configuration and stop on trigger
+        while (this.run)
+        {
+            // First : start!
+            startEngine(false, false);
+            if (!run)
+            {
+                this.startCritical.release();
+                this.stop.release();
+                this.threadInit.release();
+                return;
+            }
 
-			// Properly stop the engine
-			if (this.stAgent != null)
-				this.stAgent.stopAgent();
-			this.broker.stop();
+            // Then, wait for the end signal
+            try
+            {
+                this.stop.acquire();
+            }
+            catch (InterruptedException e)
+            {
+                log.error("big problem here", e);
+            }
 
-			try
-			{
-				Thread.sleep(1000);
-			} catch (InterruptedException e)
-			{
-			} // Port release is not immediate, sad.
+            // Properly stop the engine
+            if (this.stAgent != null)
+            {
+                this.stAgent.stopAgent();
+            }
+            this.broker.stop();
 
-			// Done. If 'run' is still true, will restart the engine
-		}
-		this.stopped.release();
-		log.info("The scheduler has stopped");
-	}
+            // TCP port release is not immediate, sad.
+            try
+            {
+                Thread.sleep(Constants.BROKER_PORT_FREEING_MS);
+            }
+            catch (InterruptedException e)
+            {
+                log.info("Interruption while waiting for port freeing");
+            }
 
-	public void waitForInitEnd()
-	{
-		try
-		{
-			this.threadInit.acquire();
-			this.startCritical.acquire();
-		} catch (InterruptedException e)
-		{
-		}
-		this.startCritical.release();
-		this.threadInit.release();
-	}
+            // Done. If 'run' is still true, will restart the engine
+        }
+        this.stopped.release();
+        log.info("The scheduler has stopped");
+    }
 
-	public void waitForStopEnd()
-	{
-		try
-		{
-			this.stopped.acquire();
-		} catch (InterruptedException e)
-		{
-		}
-		this.stop.release();
-	}
+    public void waitForInitEnd()
+    {
+        try
+        {
+            this.threadInit.acquire();
+            this.startCritical.acquire();
+        }
+        catch (InterruptedException e)
+        {
+            log.warn("Interruption while waiting for engine to start");
+        }
+        this.startCritical.release();
+        this.threadInit.release();
+    }
 
-	public void queueReloadConfiguration()
-	{
-		try
-		{
-			this.startCritical.acquire();
-			threadInit.acquire();
-			this.run = true;
-			this.stop.release();
-		} catch (InterruptedException e)
-		{
-		}
-		this.startCritical.release();
-	}
+    public void waitForStopEnd()
+    {
+        try
+        {
+            this.stopped.acquire();
+        }
+        catch (InterruptedException e)
+        {
+            log.info("Interruption while waiting for engine to stop");
+        }
+        this.stop.release();
+    }
 
-	public void stopEngine()
-	{
-		log.info("The main engine has received a stop request");
-		try
-		{
-			this.startCritical.acquire();
-			this.run = false;
-			this.stop.release();
-		} catch (InterruptedException e)
-		{
-		}
-		this.startCritical.release();
-	}
+    public void queueReloadConfiguration()
+    {
+        try
+        {
+            this.startCritical.acquire();
+            threadInit.acquire();
+            this.run = true;
+            this.stop.release();
+        }
+        catch (InterruptedException e)
+        {
+            log.warn("Interruption while waiting for engine to restart");
+        }
+        this.startCritical.release();
+    }
 
-	protected void preContextLoad() throws Exception
-	{
+    public void stopEngine()
+    {
+        log.info("The main engine has received a stop request");
+        try
+        {
+            this.startCritical.acquire();
+            this.run = false;
+            this.stop.release();
+        }
+        catch (InterruptedException e)
+        {
+            log.warn("Interruption while trying to stop the engine");
+        }
+        this.startCritical.release();
+    }
 
-	}
+    protected void preContextLoad() throws ChronixInitializationException
+    {
+        // Nothing yet. Probably never. For overloads?
+    }
 
-	protected void postContextLoad() throws Exception
-	{
-		// First start?
-		if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode)
-		{
-			// Create OPERATIONS application
-			Application a = OperationsApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
-			this.ctx.saveApplication(a);
-			this.ctx.setWorkingAsCurrent(a);
+    protected void postContextLoad() throws ChronixInitializationException
+    {
+        // First start?
+        if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode)
+        {
+            try
+            {
+                // Create OPERATIONS application
+                Application a = OperationsApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
+                this.ctx.saveApplication(a);
+                this.ctx.setWorkingAsCurrent(a);
 
-			// Create CHRONIX_MAINTENANCE application
-			a = MaintenanceApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
-			this.ctx.saveApplication(a);
-			this.ctx.setWorkingAsCurrent(a);
+                // Create CHRONIX_MAINTENANCE application
+                a = MaintenanceApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
+                this.ctx.saveApplication(a);
+                this.ctx.setWorkingAsCurrent(a);
 
-			// Reload context to load new applications
-			this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
-		}
-	}
+                // Reload context to load new applications
+                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
+            }
+            catch (ChronixPlanStorageException e)
+            {
+                throw new ChronixInitializationException("Could not create default applications", e);
+            }
+        }
+    }
 
-	public void emptyDb()
-	{
-		// Clear test db directory
-		File[] fileList = new File(this.dbPath).listFiles();
-		for (int i = 0; i < fileList.length; i++)
-			fileList[i].delete();
-	}
+    public void emptyDb()
+    {
+        // Clear test db directory
+        File[] fileList = new File(this.dbPath).listFiles();
+        for (int i = 0; i < fileList.length; i++)
+        {
+            if (!fileList[i].delete())
+            {
+                log.error("Purge has failed for directory " + fileList[i].getAbsolutePath());
+            }
+        }
+    }
+
+    boolean shouldRun()
+    {
+        return this.run;
+    }
+
+    public ChronixContext getContext()
+    {
+        return this.ctx;
+    }
 }

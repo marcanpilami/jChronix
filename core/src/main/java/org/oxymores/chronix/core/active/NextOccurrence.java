@@ -32,7 +32,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 
 public class NextOccurrence extends ActiveNodeBase
 {

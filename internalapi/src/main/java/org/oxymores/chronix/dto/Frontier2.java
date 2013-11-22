@@ -2,10 +2,290 @@ package org.oxymores.chronix.dto;
 
 import java.util.UUID;
 
+import org.oxymores.chronix.core.ActiveNodeBase;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
+import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.PlaceGroup;
+import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.And;
+import org.oxymores.chronix.core.active.ChainEnd;
+import org.oxymores.chronix.core.active.ChainStart;
+import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.active.NextOccurrence;
+import org.oxymores.chronix.core.active.Or;
+import org.oxymores.chronix.core.active.ShellCommand;
 
 public class Frontier2
-{	
+{
+	public static Application getApplication(DTOApplication d)
+	{
+		Application a = new Application();
+		a.setId(UUID.fromString(d.getId()));
+		a.setDescription(d.getDescription());
+		a.setname(d.getName());
+
+		Or or = new Or();
+		or.setId(UUID.fromString(d.getOrId()));
+		or.setName("OR");
+		a.addActiveElement(or);
+
+		And and = new And();
+		and.setId(UUID.fromString(d.getAndId()));
+		and.setName("AND");
+		a.addActiveElement(and);
+
+		ChainStart start = new ChainStart();
+		start.setId(UUID.fromString(d.getStartId()));
+		start.setName("START");
+		a.addActiveElement(start);
+
+		ChainEnd end = new ChainEnd();
+		end.setId(UUID.fromString(d.getEndId()));
+		end.setName("END");
+		a.addActiveElement(end);
+
+		for (DTOExecutionNode e : d.getNodes())
+			a.addNode(getExecutionNode(e, a));
+
+		for (DTOExecutionNode e : d.getNodes())
+			setExecutionNodeNetwork(e, a);
+
+		for (DTOPlace e : d.getPlaces())
+			a.addPlace(getPlace(e, a));
+
+		for (DTOPlaceGroup e : d.getGroups())
+			a.addGroup(getPlaceGroup(e, a));
+
+		for (DTORRule e : d.getRrules())
+			a.addRRule(getRRule(e));
+
+		for (DTOCalendar e : d.getCalendars())
+			a.addCalendar(getCalendar(e, a));
+
+		for (DTOShellCommand e : d.getShells())
+			a.addActiveElement(getShellCommand(e));
+
+		for (DTOClock e : d.getClocks())
+			a.addActiveElement(getClock(e, a));
+
+		for (DTOExternal e : d.getExternals())
+			a.addActiveElement(getExternal(e));
+
+		for (DTONextOccurrence e : d.getCalnexts())
+			a.addActiveElement(getNextOccurrence(e, a));
+
+		for (DTOChain e : d.getChains())
+			a.addActiveElement(getChain(e, a, d));
+
+		return a;
+	}
+
+	public static Chain getChain(DTOChain d, Application a, DTOApplication da)
+	{
+		// Create chain (basics)
+		Chain r = new Chain();
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+
+		// States
+		for (DTOState s : d.getStates())
+		{
+			State z = new State();
+			z.setApplication(a);
+			// z.setCalendar(c)
+			// z.setCalendarShift(shift)
+			z.setChain(r);
+			// z.setEndOfOccurrence(s.get)
+			z.setEventValidityMn(s.getEventValidityMn());
+			z.setId(UUID.fromString(s.getId()));
+			z.setKillAfterMn(s.getKillAfterMn());
+			// z.setLoopMissedOccurrences(s.get)
+			z.setMaxPipeWaitTime(s.getMaxPipeWaitTime());
+			z.setParallel(s.isParallel());
+			z.setRunsOn(a.getGroup(UUID.fromString(s.getRunsOnId())));
+			// z.setTokens(tokens)
+			z.setWarnAfterMn(s.getWarnAfterMn());
+			z.setX(s.getX());
+			z.setY(s.getY());
+
+			ActiveNodeBase target = a.getActiveNode(UUID.fromString(s.getRepresentsId()));
+			if (target != null)
+			{
+				z.setRepresents(target);
+			}
+			else
+			{
+				if (s.isAnd)
+					z.setRepresents(a.getActiveNode(UUID.fromString(da.getAndId())));
+				if (s.isOr)
+					z.setRepresents(a.getActiveNode(UUID.fromString(da.getOrId())));
+				if (s.isStart)
+					z.setRepresents(a.getActiveNode(UUID.fromString(da.getStartId())));
+				if (s.isEnd)
+					z.setRepresents(a.getActiveNode(UUID.fromString(da.getEndId())));
+			}
+		}
+
+		for (DTOTransition s : d.getTransitions())
+		{
+			Transition z = new Transition();
+			z.setApplication(a);
+			z.setCalendarAware(s.isCalendarAware());
+			z.setCalendarShift(s.getCalendarShift());
+			z.setChain(r);
+			z.setGuard1(s.getGuard1());
+			z.setGuard2(s.getGuard2());
+			z.setGuard3(s.getGuard3());
+			if (!s.getGuard4().isEmpty())
+				z.setGuard4(UUID.fromString(s.getGuard4()));
+			z.setId(UUID.fromString(s.getId()));
+			z.setStateFrom(r.getState(UUID.fromString(s.getFrom())));
+			z.setStateTo(r.getState(UUID.fromString(s.getTo())));
+		}
+
+		return r;
+	}
+
+	public static Calendar getCalendar(DTOCalendar d, Application a)
+	{
+		Calendar r = new Calendar();
+		r.setAlertThreshold(d.getAlertThreshold());
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+		r.setApplication(a);
+
+		for (DTOCalendarDay dd : d.getDays())
+		{
+			new CalendarDay(dd.getSeq(), r);
+		}
+		return r;
+	}
+
+	public static NextOccurrence getNextOccurrence(DTONextOccurrence d, Application a)
+	{
+		NextOccurrence r = new NextOccurrence();
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+		r.setUpdatedCalendar(a.getCalendar(UUID.fromString(d.getCalendarId())));
+
+		return r;
+	}
+
+	public static External getExternal(DTOExternal d)
+	{
+		External r = new External();
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+		r.setRegularExpression(d.getRegularExpression());
+
+		return r;
+	}
+
+	public static Clock getClock(DTOClock d, Application a)
+	{
+		Clock r = new Clock();
+		r.setDescription(d.getDescription());
+		r.setDURATION(0);
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+
+		for (String s : d.getRulesADD())
+			r.addRRuleADD(a.getRRule(UUID.fromString(s)));
+
+		for (String s : d.getRulesEXC())
+			r.addRRuleEXC(a.getRRule(UUID.fromString(s)));
+
+		return r;
+	}
+
+	public static ExecutionNode getExecutionNode(DTOExecutionNode d, Application a)
+	{
+		ExecutionNode r = new ExecutionNode();
+		r.setConsole(d.isConsole);
+		r.setDns(d.getDns());
+		r.setId(UUID.fromString(d.getId()));
+		r.setJmxPort(d.getJmxPort());
+		r.setOspassword(d.getOspassword());
+		r.setOsusername(d.getOsusername());
+		r.setqPort(d.getqPort());
+		r.setRemoteExecPort(d.getRemoteExecPort());
+		// r.setSshKeyFilePath(d.get)
+		// r.setSslKeyFilePath(d.gets)
+		// r.setType(type);
+		r.setWsPort(d.getWsPort());
+		r.setX(d.getX());
+		r.setY(d.getY());
+
+		return r;
+	}
+
+	public static void setExecutionNodeNetwork(DTOExecutionNode d, Application a)
+	{
+		ExecutionNode r = a.getNode(UUID.fromString(d.getId()));
+
+		for (String s : d.getFromTCP())
+		{
+			ExecutionNode remote = a.getNode(UUID.fromString(s));
+			if (!d.isSimpleRunner)
+				remote.connectTo(r, NodeConnectionMethod.TCP);
+			else
+				remote.connectTo(r, NodeConnectionMethod.RCTRL);
+		}
+
+	}
+
+	public static Place getPlace(DTOPlace d, Application a)
+	{
+		Place r = new Place();
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+		r.setNode(a.getNode(UUID.fromString(d.getNodeid())));
+		r.setProperty1(d.getProp1());
+		r.setProperty2(d.getProp2());
+		r.setProperty3(d.getProp3());
+		r.setProperty4(d.getProp4());
+		return r;
+	}
+
+	public static PlaceGroup getPlaceGroup(DTOPlaceGroup d, Application a)
+	{
+		PlaceGroup r = new PlaceGroup();
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+
+		for (String s : d.getPlaces())
+		{
+			r.addPlace(a.getPlace(UUID.fromString(s)));
+		}
+
+		return r;
+	}
+
+	public static ShellCommand getShellCommand(DTOShellCommand d)
+	{
+		ShellCommand r = new ShellCommand();
+		r.setCommand(d.getCommand());
+		r.setDescription(d.getDescription());
+		r.setId(UUID.fromString(d.getId()));
+		r.setName(d.getName());
+
+		return r;
+	}
+
 	public static ClockRRule getRRule(DTORRule r)
 	{
 		ClockRRule res = new ClockRRule();
@@ -240,7 +520,7 @@ public class Frontier2
 			BH += "22,";
 		if (r.bh_23)
 			BH += "23,";
-		
+
 		res.setBYHOUR(BH);
 
 		// ByMinute

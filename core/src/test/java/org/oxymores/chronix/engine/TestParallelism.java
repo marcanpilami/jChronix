@@ -17,7 +17,8 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.demo.PlanBuilder;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestParallelism
 {
@@ -37,17 +38,17 @@ public class TestParallelism
 	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run)
+		if (e1 != null && e1.shouldRun())
 		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
-		if (e2 != null && e2.run)
+		if (e2 != null && e2.shouldRun())
 		{
 			e2.stopEngine();
 			e2.waitForStopEnd();
 		}
-		if (e3 != null && e3.run)
+		if (e3 != null && e3.shouldRun())
 		{
 			e3.stopEngine();
 			e3.waitForStopEnd();

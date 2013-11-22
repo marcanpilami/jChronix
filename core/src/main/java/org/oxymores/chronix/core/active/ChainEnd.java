@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.RunResult;
+import org.oxymores.chronix.engine.data.RunResult;
 
 public class ChainEnd extends ActiveNodeBase
 {

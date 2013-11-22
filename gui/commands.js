@@ -1,34 +1,18 @@
-var cmdGrid = null;
-var cmdDataViewCmds = null;
-
-function initCommandPanel(cxfApplication)
+function CommandPanel(cxfApplication)
 {
-	var options =
-	{
-		editable : true,
-		enableAddRow : true,
-		enableCellNavigation : true,
-		enableColumnReorder : false,
-		enableRowReordering : false,
-		asyncEditorLoading : false,
-		showHeaderRow : false,
-		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : true,
-		forceFitColumns : true,
-	};
+	this.dtoApplication = cxfApplication;
+
+	var options = getSlickGridOptionsEditable();
 
 	var columns = [
 	{
 		id : "name",
 		name : "Command short name",
 		field : "_name",
-		width : 200,
+		minWidth : 70,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
-		validator : requiredFieldValidatorCmd,
+		validator : requiredFieldValidator,
 		sortable : true,
 		resizable : true,
 	},
@@ -36,10 +20,10 @@ function initCommandPanel(cxfApplication)
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 250,
+		minWidth : 150,
 		// selectable : false,
 		editor : Slick.Editors.Text,
-		validator : requiredFieldValidatorCmd,
+		validator : requiredFieldValidator,
 		cannotTriggerInsert : true,
 		sortable : false,
 		resizable : true,
@@ -48,10 +32,10 @@ function initCommandPanel(cxfApplication)
 		id : "cmde",
 		name : "Shell command line to run",
 		field : "_command",
-		width : 600,
+		minWidth : 100,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
-		validator : requiredFieldValidatorCmd,
+		validator : requiredFieldValidator,
 		cannotTriggerInsert : true,
 		sortable : false,
 		resizable : true,
@@ -60,129 +44,103 @@ function initCommandPanel(cxfApplication)
 		id : "del",
 		name : "",
 		field : "del",
-		width : 30,
+		maxWidth : 35,
 		formatter : delCmdBtFormatter,
 		cannotTriggerInsert : true,
 	}, ];
 
-	cmdDataViewCmds = new Slick.Data.DataView(
+	this.dataview = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	cmdGrid = new Slick.Grid("#gridCommands", cmdDataViewCmds, columns, options);
+	this.mainGrid = new Slick.Grid("#gridCommands", this.dataview, columns, options);
+	this.mainGrid.setSelectionModel(new Slick.RowSelectionModel());
 
-	cmdGrid.setSelectionModel(new Slick.RowSelectionModel());
-	cmdGrid.onAddNewRow.subscribe(onNewRow);
-	cmdGrid.onCellChange.subscribe(function(e, args)
-	{
-		cmdDataViewCmds.updateItem(args.item.id, args.item);
-	});
-	cmdGrid.onSort.subscribe(function(e, args)
-	{
-		sortdir = args.sortAsc ? 1 : -1;
-		sortcol = args.sortCol.field;
-		cmdDataViewCmds.sort(cmdNameComparer, args.sortAsc);
-	});
-	cmdDataViewCmds.onRowCountChanged.subscribe(function(e, args)
-	{
-		cmdGrid.updateRowCount();
-		cmdGrid.render();
-	});
+	// Plumbing events
+	this.mainGrid.onCellChange.subscribe(onCellChange.bind(this));
+	this.mainGrid.onSort.subscribe(onSort.bind(this));
+	this.dataview.onRowCountChanged.subscribe(onRowCountChanged.bind(this));
+	this.dataview.onRowsChanged.subscribe(onRowsChanged.bind(this));
+	$("#txtSearchCmd").keyup(searchBoxKeyup.bind(this));
 
-	cmdDataViewCmds.onRowsChanged.subscribe(function(e, args)
+	// Specific events
+	this.mainGrid.onAddNewRow.subscribe((function(e, args)
 	{
-		cmdGrid.invalidateRows(args.rows);
-		cmdGrid.render();
-	});
-	$("#txtSearchCmd").keyup(function(e)
-	{
-		Slick.GlobalEditorLock.cancelCurrentEdit();
-
-		// Clear on Esc
-		if (e.which == 27)
+		var v = new dto_chronix_oxymores_org_DTOShellCommand();
+		for ( var o in args.item)
 		{
-			this.value = "";
+			v[o] = args.item[o];
 		}
-		// Update filter
-		cmdDataViewCmds.setFilterArgs(
-		{
-			searchString : this.value,
-		});
-		// Refresh dataview
-		cmdDataViewCmds.refresh();
-	});
-	$('.delcmd').live('click', function()
-	{
-		var me = $(this), id = me.attr('id');
+		v._id = uuid.v4();
+		v.id = v._id;
+		this.dataview.addItem(v);
+	}).bind(this));
 
-		// Clean states of this Place????
-		// TODO
+	$('#gridCommands').on('click', '.delcmd', (function(e)
+	{
+		var id = e.currentTarget.id.substr(3);
+
+		// Check the command is not used in a chain
+		var usedBy = new Array();
+		var chains = this.dtoApplication.getChains().getDTOChain();
+
+		for ( var j = 0; j < chains.length; j++)
+		{
+			var chain = chains[j];
+			var states = chain.getStates().getDTOState();
+			for ( var i = 0; i < states.length; i++)
+			{
+				var state = states[i];
+				if (state._representsId === id)
+					usedBy.push(chain);
+			}
+		}
+
+		if (usedBy.length > 0)
+		{
+			alert("This command is used inside chains and therefore cannot be deleted. First free it from its chains.");
+			return;
+		}
 
 		// Destroy the cmd through the dataview (will in turn update cxfApplication)
-		cmdDataViewCmds.deleteItem(id);
-	});
+		this.dataview.deleteItem(id);
+	}).bind(this));
 
 	// Populate & go
-	cmdDataViewCmds.beginUpdate();
-	cmdDataViewCmds.setItems(cxfApplication.getShells().getDTOShellCommand());
-	cmdDataViewCmds.setFilterArgs(
+	this.dataview.beginUpdate();
+	this.dataview.setItems(cxfApplication.getShells().getDTOShellCommand(), '_id');
+	this.dataview.setFilterArgs(
 	{
 		searchString : "",
 	});
-	cmdDataViewCmds.setFilter(placeFilter);
-	cmdDataViewCmds.endUpdate();
+	this.dataview.setFilter(nameDescriptionFilter);
+	this.dataview.endUpdate();
+
+	this.resize();
+	this.mainGrid.init();
+	$(window).resize(this.resize.bind(this));
 }
 
-function onNewRow(e, args)
+CommandPanel.prototype.redisplay = function()
 {
-	var v = new dto_chronix_oxymores_org_DTOShellCommand();
-	for ( var o in args.item)
-	{
-		v[o] = args.item[o];
-	}
-	v._id = uuid.v4();
-	v.id = v._id;
-	cmdDataViewCmds.addItem(v);
-}
+	this.resize();
+};
 
-function requiredFieldValidatorCmd(value)
+CommandPanel.prototype.resize = function()
 {
-	if (value == null || value == undefined || !value.length)
-	{
-		var res =
-		{
-			valid : false,
-			msg : "This is a required field"
-		};
-		return res;
-	}
-	else
-	{
-		var res =
-		{
-			valid : true,
-			msg : null
-		};
-		return res;
-	}
-}
-
-function cmdNameComparer(a, b)
-{
-	var x = a[sortcol], y = b[sortcol];
-	return x.toLowerCase().localeCompare(y.toLowerCase());
-}
-
-function cmdFilter(item, args)
-{
-	if (args.searchString != "" && (item["_name"].indexOf(args.searchString) == -1 && item["_description"].indexOf(args.searchString) == -1))
-	{
-		return false;
-	}
-	return true;
-}
+	if (!$("#gridCommands").is(':visible'))
+		return;
+	$("#gridCommands").height(0);
+	$("#gridCommands").height($("#gridCommandsContainer").height());
+	$("#gridCommands").width($("#gridCommandsContainer").width());
+	this.mainGrid.resizeCanvas();
+};
 
 function delCmdBtFormatter(row, cell, value, columnDef, dataContext)
 {
-	return "<button class='delcmd' type='button' id='" + dataContext.id + "' >X</button>";
+	return "<button class='delcmd' type='button' id='del" + dataContext._id + "' >X</button>";
+}
+function editCmdBtFormatter(row, cell, value, columnDef, dataContext)
+{
+	return "<button class='editcmd' type='button' id='edit" + dataContext._id + "' >E</button>";
 }

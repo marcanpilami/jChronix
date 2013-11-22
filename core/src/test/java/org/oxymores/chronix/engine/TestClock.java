@@ -20,8 +20,8 @@ import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.demo.DemoApplication;
-import org.oxymores.chronix.demo.PlanBuilder;
+import org.oxymores.chronix.planbuilder.DemoApplication;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestClock
 {

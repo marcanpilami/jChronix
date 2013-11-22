@@ -1,9 +1,15 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
+import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
+import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -13,8 +19,14 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.active.And;
+import org.oxymores.chronix.core.active.ChainEnd;
+import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.active.NextOccurrence;
+import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 
@@ -36,19 +48,82 @@ public class Frontier
 		res.parameters = new ArrayList<DTOParameter>();
 		res.rrules = new ArrayList<DTORRule>();
 		res.clocks = new ArrayList<DTOClock>();
+		res.externals = new ArrayList<DTOExternal>();
+		res.calendars = new ArrayList<DTOCalendar>();
+		res.calnexts = new ArrayList<DTONextOccurrence>();
 
+		// Unique elements
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof ChainStart)
+			{
+				res.setStartId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof ChainEnd)
+			{
+				res.setEndId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof Or)
+			{
+				res.setOrId(nb.getId().toString());
+				break;
+			}
+		}
+		for (ConfigurableBase nb : a.getActiveElements().values())
+		{
+			if (nb instanceof And)
+			{
+				res.setAndId(nb.getId().toString());
+				break;
+			}
+		}
+
+		// Network
 		res.nodes = getNetwork(a);
 
 		for (Place p : a.getPlacesList())
 			res.places.add(getPlace(p));
 
-		for (PlaceGroup pg : a.getGroupsList())
+		Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
+		{
+			public int compare(PlaceGroup c1, PlaceGroup c2)
+			{
+				return c1.getName().compareToIgnoreCase(c2.getName());
+			}
+		};
+		List<PlaceGroup> pgs = a.getGroupsList();
+		Collections.sort(pgs, comparator_pg);
+		for (PlaceGroup pg : pgs)
 			res.groups.add(getPlaceGroup(pg));
 
+		// Calendars
+		for (Calendar c : a.getCalendars())
+			res.calendars.add(getCalendar(c));
+
+		// Clocks
 		for (ClockRRule r : a.getRRulesList())
 			res.rrules.add(getRRule(r));
 
-		for (ConfigurableBase o : a.getActiveElements().values())
+		Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>()
+		{
+			public int compare(ActiveNodeBase c1, ActiveNodeBase c2)
+			{
+				return c1.getName().compareToIgnoreCase(c2.getName());
+			}
+		};
+
+		// All the active elements!
+		List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
+		Collections.sort(active, comparator_act);
+		for (ActiveNodeBase o : active)
 		{
 			if (o instanceof Chain)
 			{
@@ -72,6 +147,30 @@ public class Frontier
 				d.description = s.getDescription();
 				res.shells.add(d);
 			}
+
+			if (o instanceof External)
+			{
+				External e = (External) o;
+				DTOExternal d = new DTOExternal();
+				d.id = e.getId().toString();
+				d.accountRestriction = e.accountRestriction;
+				d.machineRestriction = e.machineRestriction;
+				d.regularExpression = e.regularExpression;
+				d.name = e.getName();
+				d.description = e.getDescription();
+				res.externals.add(d);
+			}
+
+			if (o instanceof NextOccurrence)
+			{
+				NextOccurrence e = (NextOccurrence) o;
+				DTONextOccurrence d = new DTONextOccurrence();
+				d.id = e.getId().toString();
+				d.name = e.getName();
+				d.description = e.getDescription();
+				d.calendarId = e.getUpdatedCalendar().getId().toString();
+				res.calnexts.add(d);
+			}
 		}
 
 		return res;
@@ -89,6 +188,7 @@ public class Frontier
 		for (State s : c.getStates())
 		{
 			DTOState t = new DTOState();
+			t.parallel = s.getParallel();
 			t.id = s.getId().toString();
 			t.x = s.getX();
 			t.y = s.getY();
@@ -101,6 +201,25 @@ public class Frontier
 			} catch (Exception e)
 			{
 			}
+			if (s.getRepresents() instanceof ChainStart)
+			{
+				t.canReceiveLink = false;
+				t.isStart = true;
+			}
+			if (s.getRepresents() instanceof ChainEnd)
+			{
+				t.canEmitLinks = false;
+				t.isEnd = true;
+			}
+			if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
+				t.canBeRemoved = false;
+			if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or)
+				t.canReceiveMultipleLinks = true;
+			if (s.getRepresents() instanceof And)
+				t.isAnd = true;
+			if (s.getRepresents() instanceof Or)
+				t.isOr = true;
+
 			res.states.add(t);
 		}
 
@@ -114,6 +233,8 @@ public class Frontier
 			d.guard2 = o.getGuard2();
 			d.guard3 = o.getGuard3();
 			d.guard4 = (o.getGuard4() == null ? "" : o.getGuard4().toString());
+			d.calendarAware = o.isCalendarAware();
+			d.calendarShift = o.getCalendarShift();
 
 			res.transitions.add(d);
 		}
@@ -154,22 +275,20 @@ public class Frontier
 
 		for (NodeLink nl : en.getCanSendTo())
 		{
-			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-				res.toRCTRL.add(nl.getNodeTo().getId().toString());
-			if (nl.getMethod() == NodeConnectionMethod.TCP)
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
 				res.toTCP.add(nl.getNodeTo().getId().toString());
 		}
 		for (NodeLink nl : en.getCanReceiveFrom())
 		{
-			if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-				res.fromRCTRL.add(nl.getNodeFrom().getId().toString());
-			if (nl.getMethod() == NodeConnectionMethod.TCP)
+			if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
 				res.fromTCP.add(nl.getNodeFrom().getId().toString());
 		}
 		for (Place p : en.getPlacesHosted())
 		{
 			res.places.add(p.getId().toString());
 		}
+
+		res.setSimpleRunner(en.isHosted());
 
 		return res;
 	}
@@ -495,6 +614,26 @@ public class Frontier
 		res.sequence = rl.sequence;
 		res.stoppedRunningAt = rl.stoppedRunningAt;
 		res.whatWasRun = rl.whatWasRun;
+
+		return res;
+	}
+
+	public static DTOCalendar getCalendar(Calendar c)
+	{
+		DTOCalendar res = new DTOCalendar();
+		res.setAlertThreshold(c.getAlertThreshold());
+		res.setDescription(c.getDescription());
+		res.setId(c.getId().toString());
+		res.setName(c.getName());
+		res.setDays(new ArrayList<DTOCalendarDay>());
+
+		for (CalendarDay day : c.getDays())
+		{
+			DTOCalendarDay cd = new DTOCalendarDay();
+			cd.setId(day.getId().toString());
+			cd.setSeq(day.getValue());
+			res.getDays().add(cd);
+		}
 
 		return res;
 	}

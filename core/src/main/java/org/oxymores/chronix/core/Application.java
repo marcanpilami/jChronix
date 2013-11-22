@@ -229,6 +229,11 @@ public class Application extends ChronixObject
 		return places;
 	}
 
+	public PlaceGroup getGroup(UUID id)
+	{
+		return this.groups.get(id);
+	}
+
 	public Hashtable<UUID, PlaceGroup> getGroups()
 	{
 		return groups;
@@ -342,6 +347,11 @@ public class Application extends ChronixObject
 	public List<Place> getPlacesList()
 	{
 		return new ArrayList<Place>(this.places.values());
+	}
+
+	public ClockRRule getRRule(UUID id)
+	{
+		return this.rrules.get(id);
 	}
 
 	public List<ClockRRule> getRRulesList()

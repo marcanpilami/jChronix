@@ -21,6 +21,7 @@
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -39,163 +40,186 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 
-public class SelfTriggerAgent extends Thread
+class SelfTriggerAgent extends Thread
 {
-	private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
+    private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
 
-	protected Semaphore loop;
-	protected boolean run = true;
-	protected ArrayList<ActiveNodeBase> nodes;
-	protected EntityManager em;
-	protected ChronixContext ctx;
-	protected MessageProducer producerEvents;
-	protected Session jmsSession;
-	protected EntityTransaction jpaTransaction;
-	protected Semaphore triggering;
-	protected DateTime nextLoopVirtualTime;
+    protected Semaphore loop;
+    protected boolean run = true;
+    protected List<ActiveNodeBase> nodes;
+    protected EntityManager em;
+    protected ChronixContext ctx;
+    protected MessageProducer producerEvents;
+    protected Session jmsSession;
+    protected EntityTransaction jpaTransaction;
+    protected Semaphore triggering;
+    protected DateTime nextLoopVirtualTime;
 
-	public void stopAgent()
-	{
-		try
-		{
-			this.triggering.acquire();
-		} catch (InterruptedException e1)
-		{
-		}
-		try
-		{
-			this.producerEvents.close();
-			this.jmsSession.close();
-		} catch (JMSException e)
-		{
-			e.printStackTrace();
-		}
-		run = false;
-		loop.release();
-	}
+    void stopAgent()
+    {
+        try
+        {
+            this.triggering.acquire();
+        }
+        catch (InterruptedException e1)
+        {
+            // Not an issue.
+        }
+        try
+        {
+            this.producerEvents.close();
+            this.jmsSession.close();
+        }
+        catch (JMSException e)
+        {
+            log.warn("An error occurred during SelfTriggerAgent shutdown. Not a problem, but please report it.", e);
+        }
+        run = false;
+        loop.release();
+    }
 
-	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
-	{
-		this.startAgent(emf, ctx, cnx, DateTime.now());
-	}
+    public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
+    {
+        this.startAgent(emf, ctx, cnx, DateTime.now());
+    }
 
-	public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
-	{
-		log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
+    void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
+    {
+        log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
 
-		// Save pointers
-		this.loop = new Semaphore(0);
-		this.em = emf.createEntityManager();
-		this.ctx = ctx;
-		this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
-		this.producerEvents = jmsSession.createProducer(null);
-		this.jpaTransaction = this.em.getTransaction();
-		this.triggering = new Semaphore(1);
-		this.nextLoopVirtualTime = startTime;
+        // Save pointers
+        this.loop = new Semaphore(0);
+        this.em = emf.createEntityManager();
+        this.ctx = ctx;
+        this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
+        this.producerEvents = jmsSession.createProducer(null);
+        this.jpaTransaction = this.em.getTransaction();
+        this.triggering = new Semaphore(1);
+        this.nextLoopVirtualTime = startTime;
 
-		// Get all self triggered nodes
-		this.nodes = new ArrayList<ActiveNodeBase>();
-		for (Application a : this.ctx.applicationsById.values())
-		{
-			for (ActiveNodeBase n : a.getActiveElements().values())
-			{
-				if (n.selfTriggered())
-					this.nodes.add(n);
-			}// TODO: select only clocks with local consequences
-		}
-		log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.configurationDirectoryPath,
-				this.nodes.size()));
-		for (int i = 0; i < this.nodes.size(); i++)
-			log.debug(String.format("\t\t" + this.nodes.get(i).getName()));
+        // Get all self triggered nodes
+        this.nodes = new ArrayList<ActiveNodeBase>();
+        for (Application a : this.ctx.applicationsById.values())
+        {
+            for (ActiveNodeBase n : a.getActiveElements().values())
+            {
+                if (n.selfTriggered())
+                {
+                    this.nodes.add(n);
+                }
+            }
+            // TODO: select only clocks with local consequences
+        }
+        log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.configurationDirectoryPath,
+                this.nodes.size()));
+        for (int i = 0; i < this.nodes.size(); i++)
+        {
+            log.debug(String.format("\t\t" + this.nodes.get(i).getName()));
+        }
 
-		// Start thread
-		this.start();
-	}
+        // Start thread
+        this.start();
+    }
 
-	@Override
-	public void run()
-	{
-		long msToWait = 0;
+    @Override
+    public void run()
+    {
+        long msToWait = 0;
 
-		while (run)
-		{
-			// Wait for the required number of seconds
-			try
-			{
-				loop.tryAcquire(msToWait, TimeUnit.MILLISECONDS);
-			} catch (InterruptedException e)
-			{
-				return;
-			}
-			if (!run)
-				break; // Don't bother doing the final loop
+        while (run)
+        {
+            // Wait for the required number of seconds
+            try
+            {
+                if (loop.tryAcquire(msToWait, TimeUnit.MILLISECONDS))
+                {
+                    // Test is only important because ignoring a result is a Sonar alert...
+                }
+            }
+            catch (InterruptedException e)
+            {
+                return;
+            }
+            if (!run)
+            {
+                // Don't bother doing the final loop
+                break;
+            }
 
-			try
-			{
-				this.triggering.acquire();
-			} catch (InterruptedException e1)
-			{
-			}
+            try
+            {
+                this.triggering.acquire();
+            }
+            catch (InterruptedException e1)
+            {
+                // Not an issue
+            }
 
-			// Log
-			log.debug("Self trigger agent loops");
-			this.preLoopHook();
-			if (!run)
-				break;
+            // Log
+            log.debug("Self trigger agent loops");
+            this.preLoopHook();
+            if (!run)
+            {
+                break;
+            }
 
-			// Init the next loop time at a huge value
-			DateTime now = DateTime.now();
-			DateTime loopVirtualTime = this.nextLoopVirtualTime;
-			this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
+            // Init the next loop time at a huge value
+            DateTime now = DateTime.now();
+            DateTime loopVirtualTime = this.nextLoopVirtualTime;
+            this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
-			// Loop through all the self triggered nodes and get their next loop virtual time
-			jpaTransaction.begin();
-			DateTime tmp = null;
-			for (ActiveNodeBase n : this.nodes)
-			{
-				try
-				{
-					tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopVirtualTime);
-				} catch (Exception e)
-				{
-					log.error("Error triggering clocks and the like", e);
-				}
-				if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
-					this.nextLoopVirtualTime = tmp;
-			}
+            // Loop through all the self triggered nodes and get their next loop time
+            jpaTransaction.begin();
+            DateTime tmp = null;
+            for (ActiveNodeBase n : this.nodes)
+            {
+                try
+                {
+                    tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopVirtualTime);
+                }
+                catch (Exception e)
+                {
+                    log.error("Error triggering clocks and the like", e);
+                }
+                if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
+                {
+                    this.nextLoopVirtualTime = tmp;
+                }
+            }
 
-			// Commit
-			try
-			{
-				jmsSession.commit();
-			} catch (JMSException e)
-			{
-				log.error("Oups", e);
-				return;
-			}
-			jpaTransaction.commit();
+            // Commit
+            try
+            {
+                jmsSession.commit();
+            }
+            catch (JMSException e)
+            {
+                log.error("Oups", e);
+                return;
+            }
+            jpaTransaction.commit();
 
-			this.triggering.release();
+            this.triggering.release();
 
-			msToWait = getNextLoopTime();
-			log.debug(String.format("Self trigger agent will loop again in %s milliseconds", msToWait));
-		}
-	}
+            msToWait = getNextLoopTime();
+            log.debug(String.format("Self trigger agent will loop again in %s milliseconds", msToWait));
+        }
+    }
 
-	// Default implementation uses system clock.
-	protected long getNextLoopTime()
-	{
-		if (DateTime.now().compareTo(this.nextLoopVirtualTime) < 0)
-		{
-			Interval i = new Interval(DateTime.now(), this.nextLoopVirtualTime);
-			return i.toDurationMillis();
-		}
-		else
-			return 0;
-	}
-	
-	protected void preLoopHook()
-	{
-		return;
-	}
+    // Default implementation uses system clock.
+    protected long getNextLoopTime()
+    {
+        if (DateTime.now().compareTo(this.nextLoopVirtualTime) < 0)
+        {
+            Interval i = new Interval(DateTime.now(), this.nextLoopVirtualTime);
+            return i.toDurationMillis();
+        }
+        else
+            return 0;
+    }
+
+    protected void preLoopHook()
+    {
+        return;
+    }
 }

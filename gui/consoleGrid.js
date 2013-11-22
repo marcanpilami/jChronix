@@ -191,11 +191,8 @@ function ConsoleGrid(divId)
 	this.toolbar = new ConsoleFloatingPanel($("#mainGrid"), this);
 
 	// Events
-	marsu = null;
 	this.histGrid.onSelectedRowsChanged.subscribe($.proxy(function(e, args)
 	{
-		marsu = e;
-		marsu2 = args;
 		if (args.rows.length >= 1)
 		{
 			var pos = this.histGrid.getActiveCellPosition();

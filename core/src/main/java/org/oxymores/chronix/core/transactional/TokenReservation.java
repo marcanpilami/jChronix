@@ -27,8 +27,8 @@ import java.util.UUID;
 import javax.persistence.Entity;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.engine.TokenRequest;
-import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
+import org.oxymores.chronix.engine.data.TokenRequest;
+import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 
 @Entity
 public class TokenReservation implements Serializable

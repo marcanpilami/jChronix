@@ -1,39 +1,101 @@
 // /////////////////////////////////////////////////////////////
-// Variables
+// Global panel
 // /////////////////////////////////////////////////////////////
-var nlDataViewPlaces = null, nlDataViewGroups = null, nlDataViewGroupContent = null, nlDataViewPlaceMembership = null;
-var nlGridPlaces = null, nlGridGroups = null, nlGridGroupContent = null, nlGridPlaceMembership = null;
-var nlSelectedGroup = null, nlSelectedPlace = null;
+
+function LogicalNetworkPanel(divId, dtoApplication)
+{
+	this.mainDiv = $("#" + divId);
+	this.dtoApplication = dtoApplication;
+
+	// Left bar (Place Group content & Membership for places)
+	this.leftBarDiv = $("<div  class='leftbar'></div>");
+	this.mainDiv.append(this.leftBarDiv);
+	this.groupContentDiv = $("<div style='height:50%;'></div>");
+	this.leftBarDiv.append(this.groupContentDiv);
+	this.placeMemberOfDiv = $("<div style='height:50%;'></div>");
+	this.leftBarDiv.append(this.placeMemberOfDiv);
+
+	this.groupContent = new GroupContentPanel(this.groupContentDiv, this.dtoApplication, this);
+	this.placeMemberOf = new PlaceMemberOfPanel(this.placeMemberOfDiv, this.dtoApplication, this);
+
+	// Main panel (places & place groups)
+	this.mainPanelDiv = $("<div class='rightpanel'></div>");
+	this.mainDiv.append(this.mainPanelDiv);
+	this.groupPanelDiv = $("<div style='height:50%;'></div>");
+	this.mainPanelDiv.append(this.groupPanelDiv);
+	this.placePanelDiv = $("<div style='height:50%;'></div>");
+	this.mainPanelDiv.append(this.placePanelDiv);
+
+	this.placePanel = new PlacePanel(this.placePanelDiv, dtoApplication, this);
+	this.placeGroupPanel = new PlaceGroupPanel(this.groupPanelDiv, this.dtoApplication, this);
+
+	// Selected items
+	this.selectedGroup = null;
+	this.selectedPlace = null;
+
+	// Add
+	this.placePanel.btAddToGroup.click(this.addPlaceToGroupClick.bind(this));
+
+	// End
+	$(window).resize(this.redisplay.bind(this));
+}
+
+LogicalNetworkPanel.prototype.addPlaceToGroupClick = function()
+{
+	if (this.selectedGroup == null || this.selectedPlace == null)
+		return;
+
+	if (-1 !== jQuery.inArray(this.selectedPlace._id, this.selectedGroup._places.getString()))
+		return; // Don't add a place twice in the same group
+
+	this.selectedGroup._places.getString().push(this.selectedPlace._id);
+	this.selectedPlace._memberOf.getString().push(this.selectedGroup._id);
+
+	this.groupContent.dataview.refresh();
+	this.placeMemberOf.dataview.refresh();
+};
+
+LogicalNetworkPanel.prototype.redisplay = function()
+{
+	this.placePanel.resize();
+	this.placeGroupPanel.resize();
+	this.groupContent.resize();
+	this.placeMemberOf.resize();
+
+	this.placePanel.dataview.refresh();
+};
 
 // /////////////////////////////////////////////////////////////
 // PLACES
 // /////////////////////////////////////////////////////////////
-function initLogicalNetworkPanel(cxfApplication)
+function PlacePanel(mainDiv, dtoApplication, lnPanel)
 {
-	var options =
-	{
-		editable : true,
-		enableAddRow : true,
-		enableCellNavigation : true,
-		enableColumnReorder : false,
-		enableRowReordering : false,
-		asyncEditorLoading : false,
-		showHeaderRow : false,
-		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : true,
-		forceFitColumns : true,
-	};
+	this.dtoApplication = dtoApplication;
+	this.mainDiv = mainDiv;
+	this.parent = lnPanel;
+
+	this.mainDiv.append($("<label>Only show <strong>places</strong> which name or description contains:</label>"));
+	this.searchBox = $("<input type='text' style='width: 100px;'>");
+	this.mainDiv.append(this.searchBox);
+	this.btAddToGroup = $("<input type='button' value='Add to selected group'>");
+	this.mainDiv.append(this.btAddToGroup);
+
+	this.containerContainer = $("<div class='containerContainer'></div>");
+	this.mainDiv.append(this.containerContainer);
+	this.slickContainer = $("<div></div>");
+	this.containerContainer.append(this.slickContainer);
+
+	// Slickgrid options
+	var options = getSlickGridOptionsEditable();
 
 	var columns = [
 	{
 		id : "name",
 		name : "Place name",
 		field : "_name",
-		width : 200,
-		cssClass : "cell-title",
+		minWidth : 50,
+		maxWidth : 300,
+		// cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		sortable : true,
@@ -43,19 +105,32 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "description",
 		name : "Description",
 		field : "_description",
-		width : 250,
+		minWidth : 200,
 		selectable : false,
-		resizable : false,
+		resizable : true,
 		editor : Slick.Editors.Text,
 		validator : requiredFieldValidator,
 		cannotTriggerInsert : true,
 		sortable : true,
 	},
 	{
+		id : "phynode",
+		name : "Physical node",
+		field : "_nodeid",
+		minWidth : 100,
+		selectable : false,
+		resizable : true,
+		editor : SelectCellEditor,
+		options : this.dtoApplication.getNodes().getDTOExecutionNode(),
+		formatter : dnsFormatter,
+		cannotTriggerInsert : true,
+		sortable : false,
+	},
+	{
 		id : "prop1",
 		name : "Prop1",
 		field : "_prop1",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -64,7 +139,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop2",
 		name : "Prop2",
 		field : "_prop2",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -73,7 +148,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop3",
 		name : "Prop3",
 		field : "_prop3",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -82,7 +157,7 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "prop4",
 		name : "Prop4",
 		field : "_prop4",
-		width : 150,
+		maxWidth : 80,
 		cssClass : "cell-title",
 		editor : Slick.Editors.Text,
 		cannotTriggerInsert : true,
@@ -91,204 +166,120 @@ function initLogicalNetworkPanel(cxfApplication)
 		id : "del",
 		name : "Delete",
 		field : "del",
-		width : 70,
+		maxWidth : 70,
 		formatter : delBtFormatter,
 		cannotTriggerInsert : true,
 	}, ];
 
-	nlDataViewPlaces = new Slick.Data.DataView(
+	// Slickgrid dataview (we need sort & co)
+	this.dataview = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	nlGridPlaces = new Slick.Grid("#gridLN", nlDataViewPlaces, columns, options);
-	nlGridPlaces.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridPlaces.onAddNewRow.subscribe(onNewPlaceRow);
+	// Create SlickGrid
+	this.mainGrid = new Slick.Grid(this.slickContainer, this.dataview, columns, options);
+	this.mainGrid.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridPlaces.onCellChange.subscribe(function(e, args)
+	// Generic events
+	this.mainGrid.onCellChange.subscribe(onCellChange.bind(this)); // Update dataview on change
+	this.mainGrid.onSort.subscribe(onSort.bind(this)); // A-Z sorting
+	this.dataview.onRowCountChanged.subscribe(onRowCountChanged.bind(this)); // Rerender the grid
+	this.dataview.onRowsChanged.subscribe(onRowsChanged.bind(this)); // Invalidate the updated rows & rerender grid
+	this.searchBox.keyup(searchBoxKeyup.bind(this)); // wire up the search textbox to apply the filter
+
+	// Specific events
+	this.mainGrid.onAddNewRow.subscribe((function(e, args)
 	{
-		nlDataViewPlaces.updateItem(args.item.id, args.item);
-	});
-
-	nlGridPlaces.onSort.subscribe(function(e, args)
-	{
-		sortdir = args.sortAsc ? 1 : -1;
-		sortcol = args.sortCol.field;
-
-		// using native sort with comparer
-		// preferred method but can be very slow in IE with huge datasets
-		nlDataViewPlaces.sort(comparer, args.sortAsc);
-	});
-
-	nlGridPlaces.onSelectedRowsChanged.subscribe(function()
-	{
-		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
+		var v = new dto_chronix_oxymores_org_DTOPlace();
+		for ( var o in args.item)
 		{
-			nlSelectedPlace = this.getDataItem(this.getSelectedRows()[0]);
-			nlDataViewPlaceMembership.setFilterArgs(
+			v[o] = args.item[o];
+		}
+		v._id = uuid.v4();
+		v._memberOf = new internalapi_chronix_oxymores_org__ArrayOfString();
+		this.dataview.addItem(v);
+	}).bind(this));
+
+	this.mainGrid.onSelectedRowsChanged.subscribe((function()
+	{
+		this.parent.selectedPlace = this.mainGrid.getDataItem(this.mainGrid.getSelectedRows()[0]);
+
+		if (this.parent.selectedPlace != undefined)
+		{
+			this.parent.placeMemberOf.dataview.setFilterArgs(
 			{
-				searchString : nlSelectedPlace._id,
+				searchString : this.parent.selectedPlace._id,
 			});
 		}
 		else
 		{
-			nlSelectedPlace = null;
-			nlDataViewPlaceMembership.setFilterArgs(
+			this.parent.placeMemberOf.dataview.setFilterArgs(
 			{
-				searchString : "X",
+				searchString : null,
 			});
 		}
-		nlDataViewPlaceMembership.refresh();
-	});
+		this.parent.placeMemberOf.dataview.refresh();
+	}).bind(this));
 
-	// wire up model events to drive the grid
-	nlDataViewPlaces.onRowCountChanged.subscribe(function(e, args)
+	this.slickContainer.on('click', '.deldto_chronix_oxymores_org_DTOPlace', (function()
 	{
-		nlGridPlaces.updateRowCount();
-		nlGridPlaces.render();
-	});
-
-	nlDataViewPlaces.onRowsChanged.subscribe(function(e, args)
-	{
-		nlGridPlaces.invalidateRows(args.rows);
-		nlGridPlaces.render();
-	});
-
-	// wire up the search textbox to apply the filter to the model
-	$("#txtSearchLN").keyup(function(e)
-	{
-		Slick.GlobalEditorLock.cancelCurrentEdit();
-
-		// Clear on Esc
-		if (e.which == 27)
-		{
-			this.value = "";
-		}
-		// Update filter
-		nlDataViewPlaces.setFilterArgs(
-		{
-			searchString : this.value,
-		});
-		// Refresh dataview
-		nlDataViewPlaces.refresh();
-	});
-
-	// Delete event
-	$('.delplace').live('click', function()
-	{
-		var me = $(this), id = me.attr('id');
-
 		// Void detail view
-		nlDataViewPlaceMembership.setFilterArgs(
+		this.parent.placeMemberOf.dataview.setFilterArgs(
 		{
-			searchString : "X",
+			searchString : null,
 		});
 
 		// Clean groups of this Place
-		var gg = nlDataViewGroups.getItems();
+		var gg = this.dtoApplication.getGroups().getDTOPlaceGroup();
 		for ( var i = 0; i < gg.length; i++)
 		{
-			var idx = jQuery.inArray(id, gg[i]._places.getString());
+			var idx = jQuery.inArray(this.parent.selectedPlace._id, gg[i]._places.getString());
 			if (-1 !== idx)
 				gg[i]._places.getString().splice(idx, 1);
 		}
 
-		// Destroy Place through the dataview (will in turn update cxfApplication)
-		nlDataViewPlaces.deleteItem(id);
-		nlDataViewGroupContent.refresh();
-		nlDataViewPlaceMembership.refresh();
-	});
+		// Destroy Place through the dataview (will in turn update dtoApplication & propagate)
+		this.dataview.deleteItem(this.parent.selectedPlace._id);
+		this.parent.placeMemberOf.dataview.refresh();
+		this.parent.groupContent.dataview.refresh();
+	}).bind(this));
 
 	// Initialize the model after all the events have been hooked up
-	nlDataViewPlaces.beginUpdate();
-	nlDataViewPlaces.setItems(cxfApplication.getPlaces().getDTOPlace());
-	nlDataViewPlaces.setFilterArgs(
+	this.dataview.beginUpdate();
+	this.dataview.setItems(this.dtoApplication.getPlaces().getDTOPlace(), '_id');
+	this.dataview.setFilterArgs(
 	{
 		searchString : "",
 	});
-	nlDataViewPlaces.setFilter(placeFilter);
-	nlDataViewPlaces.endUpdate();
+	this.dataview.setFilter(nameDescriptionFilter);
+	this.dataview.endUpdate();
 
-	// Second panel
-	initLogicalNetworkPanel2(cxfApplication);
+	this.resize();
+	this.mainGrid.init();
 }
 
-function placeFilter(item, args)
-{
-	if (args.searchString != "" && (item["_name"].indexOf(args.searchString) == -1 && item["_description"].indexOf(args.searchString) == -1))
-	{
-		return false;
-	}
-	return true;
-}
-
-function comparer(a, b)
-{
-	var x = a[sortcol], y = b[sortcol];
-	return x.toLowerCase().localeCompare(y.toLowerCase());
-}
-
-function requiredFieldValidator(value)
-{
-	if (value == null || value == undefined || !value.length)
-	{
-		var res =
-		{
-			valid : false,
-			msg : "This is a required field"
-		};
-		return res;
-	}
-	else
-	{
-		var res =
-		{
-			valid : true,
-			msg : null
-		};
-		return res;
-	}
-}
-
-function onNewPlaceRow(e, args)
-{
-	var v = new dto_chronix_oxymores_org_DTOPlace();
-	for ( var o in args.item)
-	{
-		v[o] = args.item[o];
-	}
-	v._id = uuid.v4();
-	v.id = v._id;
-	nlDataViewPlaces.addItem(v);
-}
-
-function delBtFormatter(row, cell, value, columnDef, dataContext)
-{
-	return "<button class='delplace' type='button' id='" + dataContext.id + "' >DELETE</button>";
-}
+PlacePanel.prototype.resize = slResize;
 
 // /////////////////////////////////////////////////////////////
 // GROUPS
 // /////////////////////////////////////////////////////////////
-function initLogicalNetworkPanel2(cxfApplication)
+function PlaceGroupPanel(mainDiv, dtoApplication, lnPanel)
 {
-	var options =
-	{
-		editable : true,
-		enableAddRow : true,
-		enableCellNavigation : true,
-		enableColumnReorder : false,
-		enableRowReordering : false,
-		asyncEditorLoading : false,
-		showHeaderRow : false,
-		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : true,
-		forceFitColumns : true,
-		resizable : true,
-	};
+	this.dtoApplication = dtoApplication;
+	this.mainDiv = mainDiv;
+	this.parent = lnPanel;
+
+	this.mainDiv.append($("<label>Only show <strong>place groups</strong> which name or description contains: </label>"));
+	this.searchBox = $("<input type='text' style='width: 100px;'>");
+	this.mainDiv.append(this.searchBox);
+	this.containerContainer = $("<div class='containerContainer'></div>");
+	this.mainDiv.append(this.containerContainer);
+	this.slickContainer = $("<div></div>");
+	this.containerContainer.append(this.slickContainer);
+
+	// Slickgrid options
+	var options = getSlickGridOptionsEditable();
 
 	var columns = [
 	{
@@ -319,162 +310,117 @@ function initLogicalNetworkPanel2(cxfApplication)
 		name : "Delete",
 		field : "del",
 		width : 70,
-		formatter : delGrpBtFormatter,
+		formatter : delBtFormatter,
 		cannotTriggerInsert : true,
 		resizable : true,
 	}, ];
 
-	nlDataViewGroups = new Slick.Data.DataView(
+	// Slickgrid dataview (we need sort & co)
+	this.dataview = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	nlGridGroups = new Slick.Grid("#gridLNGRP", nlDataViewGroups, columns, options);
-	nlGridGroups.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridGroups.onAddNewRow.subscribe(onNewGroupRow);
+	// Create SlickGrid
+	this.mainGrid = new Slick.Grid(this.slickContainer, this.dataview, columns, options);
+	this.mainGrid.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridGroups.onCellChange.subscribe(function(e, args)
+	// Generic events
+	this.mainGrid.onCellChange.subscribe(onCellChange.bind(this)); // Update dataview on change
+	this.mainGrid.onSort.subscribe(onSort.bind(this)); // A-Z sorting
+	this.dataview.onRowCountChanged.subscribe(onRowCountChanged.bind(this)); // Rerender the grid
+	this.dataview.onRowsChanged.subscribe(onRowsChanged.bind(this)); // Invalidate the updated rows & rerender grid
+	this.searchBox.keyup(searchBoxKeyup.bind(this)); // wire up the search textbox to apply the filter
+
+	// Specific events
+	this.mainGrid.onAddNewRow.subscribe((function(e, args)
 	{
-		nlDataViewGroups.updateItem(args.item.id, args.item);
-	});
-
-	nlGridGroups.onSort.subscribe(function(e, args)
-	{
-		sortdir = args.sortAsc ? 1 : -1;
-		sortcol = args.sortCol.field;
-		nlDataViewGroups.sort(comparer, args.sortAsc); // same comparer for all grids (lexicographic)
-	});
-
-	nlGridGroups.onSelectedRowsChanged.subscribe(function()
-	{
-		if (this.getDataItem(this.getSelectedRows()[0]) != undefined)
+		var v = new dto_chronix_oxymores_org_DTOPlaceGroup();
+		for ( var o in args.item)
 		{
-			nlSelectedGroup = this.getDataItem(this.getSelectedRows()[0]);
-			nlDataViewGroupContent.setFilterArgs(
-			{
-				searchString : nlSelectedGroup._id,
-			});
+			v[o] = args.item[o];
 		}
-		else
-		{
-			nlSelectedGroup = null;
-			nlDataViewGroupContent.setFilterArgs(
-			{
-				searchString : "X",
-			});
-		}
-		nlDataViewGroupContent.refresh();
-	});
+		v._id = uuid.v4();
+		v._places = new internalapi_chronix_oxymores_org__ArrayOfString();
+		this.dataview.addItem(v);
+	}).bind(this));
 
-	nlDataViewGroups.onRowCountChanged.subscribe(function(e, args)
+	this.slickContainer.on('click', '.deldto_chronix_oxymores_org_DTOPlaceGroup', (function()
 	{
-		nlGridGroups.updateRowCount();
-		nlGridGroups.render();
-	});
-
-	nlDataViewGroups.onRowsChanged.subscribe(function(e, args)
-	{
-		nlGridGroups.invalidateRows(args.rows);
-		nlGridGroups.render();
-	});
-
-	// wire up the search textbox to apply the filter to the model
-	$("#txtSearchLNGRP").keyup(function(e)
-	{
-		Slick.GlobalEditorLock.cancelCurrentEdit();
-
-		// Clear on Esc
-		if (e.which == 27)
-		{
-			this.value = "";
-		}
-		// Update filter
-		nlDataViewGroups.setFilterArgs(
-		{
-			searchString : this.value,
-		});
-		// Refresh dataview
-		nlDataViewGroups.refresh();
-	});
-
-	// Delete event
-	$('.delgroup').live('click', function()
-	{
-		var me = $(this);
-		var id = me.attr('id');
-
 		// Unselect Group (hide its content from the detail view)
-		nlDataViewGroupContent.setFilterArgs(
+		this.parent.groupContent.dataview.setFilterArgs(
 		{
-			searchString : "X",
+			searchString : null,
 		});
 
 		// Clean Places of this Group
-		var gg = nlDataViewPlaces.getItems();
+		var gg = this.dtoApplication.getPlaces().getDTOPlace();
 		for ( var i = 0; i < gg.length; i++)
 		{
-			var idx = jQuery.inArray(id, gg[i]._memberOf.getString());
+			var idx = jQuery.inArray(this.parent.selectedGroup._id, gg[i]._memberOf.getString());
 			if (-1 !== idx)
 				gg[i]._memberOf.getString().splice(idx, 1);
 		}
 
-		// Destroy Group through the dataview (will in turn update cxfApplication)
-		nlDataViewGroups.deleteItem(id);
-		nlDataViewGroupContent.refresh();
-		nlDataViewPlaceMembership.refresh();
-	});
+		// Destroy Group through the dataview (will in turn update dtoApplication & propagate)
+		this.dataview.deleteItem(this.parent.selectedGroup._id);
+		this.parent.placeMemberOf.dataview.refresh();
+		this.parent.groupContent.dataview.refresh();
+	}).bind(this));
+
+	this.mainGrid.onSelectedRowsChanged.subscribe((function()
+	{
+		this.parent.selectedGroup = this.mainGrid.getDataItem(this.mainGrid.getSelectedRows()[0]);
+
+		if (this.parent.selectedGroup != undefined)
+		{
+			this.parent.groupContent.dataview.setFilterArgs(
+			{
+				searchString : this.parent.selectedGroup._id,
+			});
+		}
+		else
+		{
+			this.parent.groupContent.dataview.setFilterArgs(
+			{
+				searchString : null,
+			});
+		}
+		this.parent.groupContent.dataview.refresh();
+	}).bind(this));
 
 	// Initialize the model after all the events have been hooked up
-	nlDataViewGroups.beginUpdate();
-	nlDataViewGroups.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
-	nlDataViewGroups.setFilterArgs(
+	this.dataview.beginUpdate();
+	this.dataview.setItems(this.dtoApplication.getGroups().getDTOPlaceGroup(), '_id');
+	this.dataview.setFilterArgs(
 	{
 		searchString : "",
 	});
-	nlDataViewGroups.setFilter(placeFilter); // same field names in both groups and places
-	nlDataViewGroups.endUpdate();
+	this.dataview.setFilter(nameDescriptionFilter);
+	this.dataview.endUpdate();
 
-	initLogicalNetworkPanel3(cxfApplication);
+	this.resize();
+	this.mainGrid.init();
 }
 
-function onNewGroupRow(e, args)
-{
-	var v = new dto_chronix_oxymores_org_DTOPlaceGroup();
-	for ( var o in args.item)
-	{
-		v[o] = args.item[o];
-	}
-	v._id = uuid.v4();
-	v.id = v._id;
-	nlDataViewGroups.addItem(v);
-}
-
-function delGrpBtFormatter(row, cell, value, columnDef, dataContext)
-{
-	return "<button class='delgroup' type='button' id='" + dataContext._id + "' >DELETE</button>";
-}
+PlaceGroupPanel.prototype.resize = slResize;
 
 // /////////////////////////////////////////////////////////////
 // GROUP CONTENT
 // /////////////////////////////////////////////////////////////
-function initLogicalNetworkPanel3(cxfApplication)
+function GroupContentPanel(mainDiv, dtoApplication, lnPanel)
 {
-	var options =
-	{
-		editable : false,
-		enableAddRow : false,
-		enableCellNavigation : true,
-		enableColumnReorder : false,
-		enableRowReordering : false,
-		asyncEditorLoading : false,
-		showHeaderRow : false,
-		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : false,
-		forceFitColumns : true
-	};
+	this.dtoApplication = dtoApplication;
+	this.mainDiv = mainDiv;
+	this.parent = lnPanel;
+
+	this.containerContainer = $("<div class='containerContainer'></div>");
+	this.mainDiv.append(this.containerContainer);
+	this.slickContainer = $("<div></div>");
+	this.containerContainer.append(this.slickContainer);
+
+	// Slickgrid options
+	var options = getSlickGridOptionsReadOnly();
 
 	var columns = [
 	{
@@ -490,103 +436,80 @@ function initLogicalNetworkPanel3(cxfApplication)
 		name : "",
 		field : "del",
 		width : 20,
-		formatter : delPlaceGrpCntBtFormatter,
+		formatter : delBtFormatter,
 		cannotTriggerInsert : true,
 		resizable : false,
 	}, ];
 
-	nlDataViewGroupContent = new Slick.Data.DataView(
+	// Slickgrid dataview (we need sort & co)
+	this.dataview = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	nlGridGroupContent = new Slick.Grid("#gridLNGRPCNT", nlDataViewGroupContent, columns, options);
-	nlGridGroupContent.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridGroupContent.onSort.subscribe(function(e, args)
+	// Create SlickGrid
+	this.mainGrid = new Slick.Grid(this.slickContainer, this.dataview, columns, options);
+	this.mainGrid.setSelectionModel(new Slick.RowSelectionModel());
+
+	// Generic events
+	this.mainGrid.onSort.subscribe(onSort.bind(this)); // A-Z sorting
+	this.dataview.onRowCountChanged.subscribe(onRowCountChanged.bind(this)); // Rerender the grid
+	this.dataview.onRowsChanged.subscribe(onRowsChanged.bind(this)); // Invalidate the updated rows & rerender grid
+
+	// Specific events
+	this.slickContainer.on('click', '.deldto_chronix_oxymores_org_DTOPlace', (function()
 	{
-		sortdir = args.sortAsc ? 1 : -1;
-		sortcol = args.sortCol.field;
-		nlDataViewGroupContent.sort(comparer, args.sortAsc);
-	});
+		var placeToRemove = this.mainGrid.getDataItem(this.mainGrid.getSelectedRows()[0]);
 
-	nlDataViewGroupContent.onRowCountChanged.subscribe(function(e, args)
-	{
-		nlGridGroupContent.updateRowCount();
-		nlGridGroupContent.render();
-	});
+		this.parent.selectedGroup._places.getString().splice(jQuery.inArray(placeToRemove._id, this.parent.selectedGroup._places.getString()), 1);
+		placeToRemove._memberOf.getString().splice(jQuery.inArray(this.parent.selectedGroup._id, placeToRemove._memberOf.getString()), 1);
 
-	nlDataViewGroupContent.onRowsChanged.subscribe(function(e, args)
-	{
-		nlGridGroupContent.invalidateRows(args.rows);
-		nlGridGroupContent.render();
-	});
+		this.parent.placeMemberOf.dataview.refresh();
+		this.parent.groupContent.dataview.refresh();
+	}).bind(this));
 
-	// Delete event
-	$('.removefromgroup').live('click', function()
-	{
-		// The given id is from the Place to remove from the currenty selected Group in grid 2
-		var me = $(this);
-		var id = me.attr('id');
-		var placeToRemove = nlDataViewPlaces.getItemById(id);
-
-		nlSelectedGroup._places.getString().splice(jQuery.inArray(id, nlSelectedGroup._places.getString()), 1);
-		placeToRemove._memberOf.getString().splice(jQuery.inArray(nlSelectedGroup._id, placeToRemove._memberOf.getString()), 1);
-
-		nlDataViewGroupContent.refresh();
-		nlDataViewPlaceMembership.refresh();
-	});
-
-	// Initialize the model after all the events have been hooked up
-	nlDataViewGroupContent.beginUpdate();
-	nlDataViewGroupContent.setItems(cxfApplication.getPlaces().getDTOPlace());
-	nlDataViewGroupContent.setFilterArgs(
+	// Initialize the grid after all the events have been hooked up
+	this.dataview.beginUpdate();
+	this.dataview.setItems(this.dtoApplication.getPlaces().getDTOPlace(), '_id');
+	this.dataview.setFilterArgs(
 	{
 		searchString : "",
 	});
-	nlDataViewGroupContent.setFilter(placeGroupContentFilter);
-	nlDataViewGroupContent.endUpdate();
+	this.dataview.setFilter(this.placeGroupContentFilter);
+	this.dataview.endUpdate();
 
-	// Final panel
-	initLogicalNetworkPanel4(cxfApplication);
+	this.resize();
+	this.mainGrid.init();
 }
 
-function placeGroupContentFilter(item, args)
+GroupContentPanel.prototype.placeGroupContentFilter = function(item, args)
 {
 	if (args.searchString != null)
 	{
 		var mm = item.getMemberOf().getString();
-		debug2 = mm;
 		return (-1 !== jQuery.inArray(args.searchString, mm));
 	}
 	return false;
-}
+};
 
-function delPlaceGrpCntBtFormatter(row, cell, value, columnDef, dataContext)
-{
-	return "<button class='removefromgroup' type='button' id='" + dataContext._id + "' >X</button>";
-}
+GroupContentPanel.prototype.resize = slResize;
 
 // /////////////////////////////////////////////////////////////
 // PLACE GROUP MEMBERSHIP
 // /////////////////////////////////////////////////////////////
-function initLogicalNetworkPanel4(cxfApplication)
+function PlaceMemberOfPanel(mainDiv, dtoApplication, lnPanel)
 {
-	var options =
-	{
-		editable : false,
-		enableAddRow : false,
-		enableCellNavigation : true,
-		enableColumnReorder : false,
-		enableRowReordering : false,
-		asyncEditorLoading : false,
-		showHeaderRow : false,
-		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : false,
-		forceFitColumns : true
-	};
+	this.dtoApplication = dtoApplication;
+	this.mainDiv = mainDiv;
+	this.parent = lnPanel;
+
+	this.containerContainer = $("<div class='containerContainer'></div>");
+	this.mainDiv.append(this.containerContainer);
+	this.slickContainer = $("<div></div>");
+	this.containerContainer.append(this.slickContainer);
+
+	// Slickgrid options
+	var options = getSlickGridOptionsReadOnly();
 
 	var columns = [
 	{
@@ -602,64 +525,55 @@ function initLogicalNetworkPanel4(cxfApplication)
 		name : "",
 		field : "del",
 		width : 20,
-		formatter : delRemPlaceFromGroupBtFormatter,
+		formatter : delBtFormatter,
 		cannotTriggerInsert : true,
 		resizable : false,
 	}, ];
 
-	nlDataViewPlaceMembership = new Slick.Data.DataView(
+	// Slickgrid dataview (we need sort & co)
+	this.dataview = new Slick.Data.DataView(
 	{
 		inlineFilters : true
 	});
-	nlGridPlaceMembership = new Slick.Grid("#gridLNPLCGRP", nlDataViewPlaceMembership, columns, options);
-	nlGridPlaceMembership.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlGridPlaceMembership.onSort.subscribe(function(e, args)
-	{
-		sortdir = args.sortAsc ? 1 : -1;
-		sortcol = args.sortCol.field;
-		nlDataViewPlaceMembership.sort(comparer, args.sortAsc);
-	});
+	// Create SlickGrid
+	this.mainGrid = new Slick.Grid(this.slickContainer, this.dataview, columns, options);
+	this.mainGrid.setSelectionModel(new Slick.RowSelectionModel());
 
-	nlDataViewPlaceMembership.onRowCountChanged.subscribe(function(e, args)
-	{
-		nlGridPlaceMembership.updateRowCount();
-		nlGridPlaceMembership.render();
-	});
+	// Generic events
+	this.mainGrid.onSort.subscribe(onSort.bind(this)); // A-Z sorting
+	this.dataview.onRowCountChanged.subscribe(onRowCountChanged.bind(this)); // Rerender the grid
+	this.dataview.onRowsChanged.subscribe(onRowsChanged.bind(this)); // Invalidate the updated rows & rerender grid
 
-	nlDataViewPlaceMembership.onRowsChanged.subscribe(function(e, args)
-	{
-		nlGridPlaceMembership.invalidateRows(args.rows);
-		nlGridPlaceMembership.render();
-	});
+	// Specific events
+	this.slickContainer.on('click', '.deldto_chronix_oxymores_org_DTOPlaceGroup',
+			(function()
+			{
+				var groupToRemove = this.mainGrid.getDataItem(this.mainGrid.getSelectedRows()[0]);
 
-	// Delete event
-	$('.retiremembership').live('click', function()
-	{
-		// The given id is from the Group to get out from the currenty selected Place
-		var me = $(this);
-		var id = me.attr('id');
-		var groupToRemove = nlDataViewGroups.getItemById(id);
+				this.parent.selectedPlace._memberOf.getString().splice(
+						jQuery.inArray(groupToRemove._id, this.parent.selectedPlace._memberOf.getString()), 1);
+				groupToRemove._places.getString().splice(jQuery.inArray(this.parent.selectedPlace._id, groupToRemove._places.getString()), 1);
 
-		nlSelectedPlace._memberOf.getString().splice(jQuery.inArray(id, nlSelectedPlace._memberOf.getString()), 1);
-		groupToRemove._places.getString().splice(jQuery.inArray(nlSelectedPlace._id, groupToRemove._places.getString()), 1);
-
-		nlDataViewGroupContent.refresh();
-		nlDataViewPlaceMembership.refresh();
-	});
+				this.parent.placeMemberOf.dataview.refresh();
+				this.parent.groupContent.dataview.refresh();
+			}).bind(this));
 
 	// Initialize the model after all the events have been hooked up
-	nlDataViewPlaceMembership.beginUpdate();
-	nlDataViewPlaceMembership.setItems(cxfApplication.getGroups().getDTOPlaceGroup());
-	nlDataViewPlaceMembership.setFilterArgs(
+	this.dataview.beginUpdate();
+	this.dataview.setItems(this.dtoApplication.getGroups().getDTOPlaceGroup(), '_id');
+	this.dataview.setFilterArgs(
 	{
 		searchString : "",
 	});
-	nlDataViewPlaceMembership.setFilter(placeGroupMembershipContentFilter);
-	nlDataViewPlaceMembership.endUpdate();
+	this.dataview.setFilter(this.placeGroupMembershipContentFilter);
+	this.dataview.endUpdate();
+
+	this.resize();
+	this.mainGrid.init();
 }
 
-function placeGroupMembershipContentFilter(item, args)
+PlaceMemberOfPanel.prototype.placeGroupMembershipContentFilter = function(item, args)
 {
 	if (args.searchString != null)
 	{
@@ -671,28 +585,6 @@ function placeGroupMembershipContentFilter(item, args)
 		}
 	}
 	return false;
-}
+};
 
-function delRemPlaceFromGroupBtFormatter(row, cell, value, columnDef, dataContext)
-{
-	return "<button class='retiremembership' type='button' id='" + dataContext._id + "' >X</button>";
-}
-
-// /////////////////////////////////////////////////////////////
-// ADD MEMBERSHIP
-// /////////////////////////////////////////////////////////////
-
-function nlAddPlaceToGroupClick()
-{
-	if (nlSelectedGroup == null || nlSelectedPlace == null)
-		return;
-
-	if (-1 !== jQuery.inArray(nlSelectedPlace._id, nlSelectedGroup._places.getString()))
-		return; // Don't add a place twice in the same group
-
-	nlSelectedGroup._places.getString().push(nlSelectedPlace._id);
-	nlSelectedPlace._memberOf.getString().push(nlSelectedGroup._id);
-
-	nlDataViewGroupContent.refresh();
-	nlDataViewPlaceMembership.refresh();
-}
+PlaceMemberOfPanel.prototype.resize = slResize;

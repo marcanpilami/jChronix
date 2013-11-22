@@ -1,25 +1,69 @@
-function RecurrencePanel(divId, cxfApp)
-{
-	this.cxfApplication = cxfApp;
-	this.html = "<div>  <div><label>Recurrence name: </label><input/><label>(Double-click to edit recurrence)</label></div>  <div id='" + divId
-			+ "grid'/>  <div id='" + divId + "gridrecpanel'/> </div>";
-	$("#" + divId).html(this.html);
 
+function SchedulePanel(divId, cxfApp)
+{
+	this.divId = divId;
+	this.cxfApplication = cxfApp;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// HTML template
+	//////////////////////////////////////////////////////////////////////////////////////
+	this.html = "\
+		<div style='display: table; height: 100%; width:100%; table-layout: fixed;'>\
+			<div style='display: table-row;'>\
+				<label>Search: </label>\
+				<input id='"
+			+ divId
+			+ "recsearch'></input>\
+				<label></label>\
+			</div> \
+			<div id='"
+			+ divId
+			+ "gridreccontainer' style='display: table-row; height: 66%;'>\
+				<div id='"
+			+ divId
+			+ "gridrec' style='height: 100%;'></div>\
+			</div>\
+			<div style='display: table-row;'>\
+			<label>Search: </label>\
+			<input id='"
+			+ divId
+			+ "schsearch'></input>\
+			<label></label>\
+		</div> \
+			<div id='"
+			+ divId
+			+ "gridschcontainer' style='display: table-row; height: 34%;'>\
+				<div id='"
+			+ divId
+			+ "gridsch' style='height: 100%;'></div>\
+			</div>\
+			<div id='" + divId + "gridrecpanel'></div>\
+		</div>";
+
+	var parentDiv = $("#" + this.divId);
+	parentDiv.html(this.html);
+
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Recurrence grid
+	//////////////////////////////////////////////////////////////////////////////////////
 	var options =
 	{
-		editable : false,
-		enableAddRow : false,
+		editable : true,
+		enableAddRow : true,
 		enableCellNavigation : true,
 		enableColumnReorder : false,
 		enableRowReordering : false,
-		asyncEditorLoading : false,
+		asyncEditorLoading : true,
 		showHeaderRow : false,
 		multiSelect : false,
-		enableTextSelectionOnCells : false, // ???
-		rowHeight : 30,
-		autoHeight : true,
-		autoEdit : false,
+		autoEdit : true,
+		enableTextSelectionOnCells : true,
+		autoHeight : false,
 		forceFitColumns : true,
+		fullWidthRows : true,
+		explicitInitialization : true,
+		syncColumnCellResize : true,
 	};
 
 	var columns = [
@@ -27,38 +71,343 @@ function RecurrencePanel(divId, cxfApp)
 		id : "name",
 		name : "Recurrence name",
 		field : "_name",
-		width : 200,
-		cssClass : "cell-title",
-		editor : Slick.Editors.Text,
-		validator : requiredFieldValidatorCmd,
+		minWidth : 150,
 		sortable : true,
 		resizable : true,
+		editor : Slick.Editors.Text,
 	},
 	{
-		id : "description",
+		id : "recdescription",
 		name : "Description",
 		field : "_description",
-		width : 300,
-		cssClass : "cell-title",
-		editor : Slick.Editors.Text,
-		validator : requiredFieldValidatorCmd,
+		minWidth : 200,
 		sortable : true,
 		resizable : true,
-	}, ];
-
-	var recGrid = new Slick.Grid("#" + divId + "grid", cxfApp._rrules.getDTORRule(), columns, options);
-
-	recGrid.onDblClick.subscribe(function(e, args)
+		editor : Slick.Editors.Text,
+	},
 	{
-		var cell = recGrid.getCellFromEvent(e);
-		var row = cell.row;
-		new RecurrenceEditPanel(divId + "gridrecpanel", cxfApp._rrules.getDTORRule()[row]);
+		id : "del",
+		name : "",
+		field : "del",
+		maxWidth : 35,
+		formatter : delCmdBtFormatter,
+		cannotTriggerInsert : true,
+	}, 
+	{
+		id : "edit",
+		name : "",
+		field : "edit",
+		maxWidth : 35,
+		formatter : editCmdBtFormatter,
+		cannotTriggerInsert : true,
+	},];
+
+	this.recDataView = new Slick.Data.DataView(
+	{
+		inlineFilters : true
 	});
+	this.recDataView.setFilterArgs(
+	{
+		searchString : "",
+	});
+	this.recDataView.setFilter(nameDescriptionFilter);
+	this.recDataView.setItems(this.cxfApplication._rrules.getDTORRule(), '_id');
+	this.recGrid = new Slick.Grid("#" + this.divId + "gridrec", this.recDataView, columns, options);
+	this.recGrid.setSelectionModel(new Slick.RowSelectionModel());
+
+	// Subscribe to data change events (both ways)
+	this.recDataView.onRowCountChanged.subscribe((function(e, args)
+	{
+		this.recGrid.updateRowCount();
+		this.recGrid.render();
+	}).bind(this));
+	this.recDataView.onRowsChanged.subscribe((function(e, args)
+	{
+		this.recGrid.invalidateRows(args.rows);
+		this.recGrid.render();
+	}).bind(this));
+	this.recGrid.onCellChange.subscribe((function(e, args)
+	{
+		this.recDataView.updateItem(args.item._id, args.item);
+	}).bind(this));
+	this.recGrid.onAddNewRow.subscribe((function(e, args)
+	{
+		var v = new dto_chronix_oxymores_org_DTORRule();
+		for ( var o in args.item)
+		{
+			v[o] = args.item[o];
+		}
+		v._id = uuid.v4();
+		this.recDataView.addItem(v);
+	}).bind(this));
+	
+	// Edit
+	$('#' + this.divId + "gridrec").on('click', '.delcmd', (function(event)
+	{
+		this.recDataView.deleteItem($(event.target).attr("id").substr(3));
+	}).bind(this));
+	$('#' + this.divId + "gridrec").on('click', '.editcmd', (function(event)
+	{
+		new RecurrenceEditPanel(this.divId + "gridrecpanel", this.recDataView.getItemById($(event.target).attr("id").substr(4)));
+	}).bind(this));
+	
+	// Search
+	$("#" + this.divId + "recsearch").keyup((function(e)
+	{
+		Slick.GlobalEditorLock.cancelCurrentEdit();
+
+		// Clear on Esc
+		if (e.which == 27)
+		{
+			$(e.currentTarget).val("");
+		}
+		// Update dataview filter
+		this.recDataView.setFilterArgs(
+		{
+			searchString : $.trim($(e.currentTarget).val()),
+		});
+		// Refresh dataview
+		this.recDataView.refresh();
+	}).bind(this));
+	
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Schedule grid
+	//////////////////////////////////////////////////////////////////////////////////////
+	
+	var options_sch =
+	{
+		editable : true,
+		enableAddRow : true,
+		enableCellNavigation : true,
+		enableColumnReorder : false,
+		enableRowReordering : false,
+		asyncEditorLoading : true,
+		showHeaderRow : false,
+		multiSelect : false,
+		autoEdit : true,
+		enableTextSelectionOnCells : false,
+		autoHeight : false,
+		forceFitColumns : true,
+		fullWidthRows : true,
+		explicitInitialization : true,
+		syncColumnCellResize : true,
+	};
+
+	var columns_sch = [
+	{
+		id : "name",
+		name : "Schedule name",
+		field : "_name",
+		minWidth : 150,
+		sortable : true,
+		resizable : true,
+		editor : Slick.Editors.Text
+	},
+	{
+		id : "schdescription",
+		name : "Description",
+		field : "_description",
+		minWidth : 200,
+		sortable : true,
+		resizable : true,
+		editor : Slick.Editors.Text
+	}, 
+	{
+		id : "del",
+		name : "",
+		field : "del",
+		maxWidth : 35,
+		formatter : delCmdBtFormatter,
+		cannotTriggerInsert : true,
+	}, 
+	{
+		id : "edit",
+		name : "",
+		field : "edit",
+		maxWidth : 35,
+		formatter : editCmdBtFormatter,
+		cannotTriggerInsert : true,
+	},];
+
+	this.schDataView = new Slick.Data.DataView(
+	{
+		inlineFilters : true
+	});
+	this.schDataView.setFilterArgs(
+	{
+		searchString : "",
+	});
+	this.schDataView.setFilter(nameDescriptionFilter);
+	this.schDataView.setItems(this.cxfApplication._clocks.getDTOClock(), '_id');
+	
+	this.schGrid = new Slick.Grid("#" + this.divId + "gridsch", this.schDataView, columns_sch, options_sch);
+	this.schGrid.setSelectionModel(new Slick.RowSelectionModel());
+
+	// Subscribe to data change events (both ways)
+	this.schGrid.onCellChange.subscribe((function(e, args)
+	{
+		this.schDataView.updateItem(args.item._id, args.item);
+	}).bind(this));
+	this.schDataView.onRowCountChanged.subscribe((function(e, args)
+	{
+		this.schGrid.updateRowCount();
+		this.schGrid.render();
+	}).bind(this));
+	this.schDataView.onRowsChanged.subscribe((function(e, args)
+	{
+		this.schGrid.invalidateRows(args.rows);
+		this.schGrid.render();
+	}).bind(this));
+	this.schGrid.onAddNewRow.subscribe((function(e, args)
+	{
+		var v = new dto_chronix_oxymores_org_DTOClock();
+		for ( var o in args.item)
+		{
+			v[o] = args.item[o];
+		}
+		v._id = uuid.v4();
+		v._rulesADD = new internalapi_chronix_oxymores_org__ArrayOfString();
+		v._rulesEXC = new internalapi_chronix_oxymores_org__ArrayOfString();
+		this.schDataView.addItem(v);
+	}).bind(this));
+	
+	// Edit event
+	$('#' + this.divId + "gridsch").on('click', '.delcmd', (function(event)
+	{
+		this.schDataView.deleteItem($(event.target).attr("id").substr(3));
+	}).bind(this));
+	$('#' + this.divId + "gridsch").on('click', '.editcmd', (function(event)
+	{
+		new ScheduleEditPanel(this.divId + "gridrecpanel", this.cxfApplication, this.schDataView.getItemById($(event.target).attr("id").substr(4)));
+	}).bind(this));
+	
+	// Search
+	$("#" + this.divId + "schsearch").keyup((function(e)
+	{
+		Slick.GlobalEditorLock.cancelCurrentEdit();
+
+		// Clear on Esc
+		if (e.which == 27)
+		{
+			$(e.currentTarget).val("");
+		}
+		// Update dataview filter
+		this.schDataView.setFilterArgs(
+		{
+			searchString : $.trim($(e.currentTarget).val()),
+		});
+		// Refresh dataview
+		this.schDataView.refresh();
+	}).bind(this));
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Finalization
+	//////////////////////////////////////////////////////////////////////////////////////
+	this.resize();
+	this.recGrid.init();
+	this.schGrid.init();
+	$(window).resize(this.resize.bind(this));
 };
 
-RecurrencePanel.prototype.marsu = function()
+SchedulePanel.prototype.resize = function()
 {
+	if (!$("#" + this.divId + "gridrec").is(':visible'))
+		return;
+	$("#" + this.divId + "gridrec").height(0);
+	$("#" + this.divId + "gridrec").height($("#" + this.divId + "gridreccontainer").height());
+	$("#" + this.divId + "gridrec").width($("#" + this.divId + "gridreccontainer").width());
+	this.recGrid.resizeCanvas();
+	
+	if (!$("#" + this.divId + "gridsch").is(':visible'))
+		return;
+	$("#" + this.divId + "gridsch").height(0);
+	$("#" + this.divId + "gridsch").height($("#" + this.divId + "gridschcontainer").height());
+	$("#" + this.divId + "gridsch").width($("#" + this.divId + "gridschcontainer").width());
+	this.schGrid.resizeCanvas();
 };
+
+SchedulePanel.prototype.redisplay = function()
+{
+	this.resize();
+};
+
+function ScheduleEditPanel(divId, cxfApplication, cxfSchedule)
+{
+	this.mainDiv = $("#" + divId);
+	this.cxfApp = cxfApplication;
+	this.mainDiv.hide();
+	this.mainDiv.empty();
+	
+	this.html = "<div class='recPanel'> <form action=''> <div id='recIN" + divId + "'/> <div id='recOUT" + divId + "'/> <div id='schBOTTOM"+divId+"'/>  </form> </div>";
+	this.mainDiv.append(this.html);
+	
+	// REC IN
+	$("#recIN" + divId).append("<div id='recINContent" + divId + "' class='subPanel1'/>");
+	var recIN = $("#recINContent" + divId);
+	recIN.append("<label class='cbxListTitle' for='recINContent" + divId + "'>Included recurrences</label>");
+	
+	var rules = this.cxfApp._rrules.getDTORRule();
+	var length = rules.length;
+	var ch = "";
+	var rule = null;
+	var selected = cxfSchedule._rulesADD.getString();
+	for (var i = 0; i < length; i++)
+	{
+		rule = rules[i];
+		ch = "";
+		if (selected.indexOf(rule._id) >= 0)
+			ch = "checked='checked'";
+		recIN.append("<div class='cbxListPair'> <input id='cbxrecin" + divId + i + "' type='checkbox' name='recin' value='" + i + "' " + ch
+				+ "/><label for='cbxrecin" + divId + i + "' class='cbListLabel' title='"+rule._description+"'>" + rule._name + "</span> </div>");
+	}
+	
+	$("#recINContent" + divId + " input:checkbox").click(function()
+	{
+		var rule = rules[this.value];
+		if (this.checked && cxfSchedule._rulesADD.getString().indexOf(rule._id) < 0)
+			cxfSchedule._rulesADD.getString().push(rule._id);
+		else if ((! this.checked) && cxfSchedule._rulesADD.getString().indexOf(rule._id) >= 0)
+		cxfSchedule._rulesADD.getString().pop(rule._id);
+	});
+	
+	// REC OUT
+	$("#recOUT" + divId).append("<div id='recOUTContent" + divId + "' class='subPanel1'/>");
+	var recOUT = $("#recOUTContent" + divId);
+	recOUT.append("<label class='cbxListTitle' for='recOUTContent" + divId + "'>Excluded recurrences</label>");
+	
+	var selected = cxfSchedule._rulesEXC.getString();
+	for (var i = 0; i < length; i++)
+	{
+		rule = rules[i];
+		ch = "";
+		if (selected.indexOf(rule._id) >= 0)
+			ch = "checked='checked'";
+		recOUT.append("<div class='cbxListPair'> <input id='cbxrecout" + divId + i + "' type='checkbox' name='recout' value='" + i + "' " + ch
+				+ "/><label for='cbxrecout" + divId + i + "' class='cbListLabel' title='"+rule._description+"'>" + rule._name + "</span> </div>");
+	}
+	
+	$("#recOUTContent" + divId + " input:checkbox").click(function()
+	{
+		var rule = rules[this.value];
+		if (this.checked && cxfSchedule._rulesEXC.getString().indexOf(rule._id) < 0)
+			cxfSchedule._rulesEXC.getString().push(rule._id);
+		else if ((! this.checked) && cxfSchedule._rulesEXC.getString().indexOf(rule._id) >= 0)
+		cxfSchedule._rulesEXC.getString().pop(rule._id);
+	});
+	
+	// Close button
+	this.bottomDiv = $("#schBOTTOM" + divId);
+	this.bottomDiv.append($("<button type='button'>Close panel </button>").click(function()
+	{
+		$("#" + divId).hide(600);
+	}));
+
+	// Done
+	this.mainDiv.show(300);
+}
 
 function RecurrenceEditPanel(divId, cxfRRule)
 {
@@ -78,13 +427,7 @@ function RecurrenceEditPanel(divId, cxfRRule)
 
 	// Basic data
 	basicsDiv
-			.append("<div class='txtPair'><label class='txtLabel'>Short name</label><input name='_name' required='required' maxlength='30' size='33' type='text' value='"
-					+ cxfRRule._name + "'/></div>");
-	basicsDiv
-			.append("<div class='txtPair'><label class='txtLabel'>Description</label><input name='_description' required='required' maxlength='200' size='65' type='text' value='"
-					+ cxfRRule._description + "'/></div>");
-	basicsDiv
-			.append("<br/><div class='txtPair'><label class='txtLabel'>Every</label><input name='_interval' required='required' size='5' type='number' max='999' min='1' value='"
+			.append("<div class='txtPair'><label class='txtLabel'>Every</label><input name='_interval' required='required' size='5' type='number' max='999' min='1' value='"
 					+ cxfRRule._interval + "'/></div>");
 	var periods_display = [ "second", "minute", "hour", "day", "week", "month", "year" ];
 	var periods_value = [ "SECONLDY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY" ];

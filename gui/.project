@@ -28,11 +28,13 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1352632039459</id>
+			<id>1384764405437</id>
 			<name>lib</name>
-			<type>10</type>
+			<type>30</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.andFilterMatcher</id>
+				<arguments>
+				</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

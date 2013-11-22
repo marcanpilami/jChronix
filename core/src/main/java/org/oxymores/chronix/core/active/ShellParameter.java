@@ -25,8 +25,8 @@ import javax.jms.JMSException;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.RunDescription;
 import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.data.RunDescription;
 
 public class ShellParameter extends Parameter
 {

@@ -1,0 +1,55 @@
+/**
+ * By Marc-Antoine Gouillart, 2012
+ * 
+ * See the NOTICE file distributed with this work for 
+ * information regarding copyright ownership.
+ * This file is licensed to you under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file 
+ * except in compliance with the License. You may obtain 
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.oxymores.chronix.engine.data;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.UUID;
+
+public class RunDescription implements Serializable
+{
+	private static final long serialVersionUID = -7603747840000703435L;
+
+	public String reportToQueueName;
+	public String command;
+	// public String parameters;
+	public ArrayList<String> paramNames = new ArrayList<String>();
+	public ArrayList<String> paramValues = new ArrayList<String>();
+	public ArrayList<String> envNames = new ArrayList<String>();
+	public ArrayList<String> envValues = new ArrayList<String>();
+
+	public Boolean helperExecRequest = false;
+	public Boolean shouldSendLogFile = false;
+
+	public String Method = "Shell";
+	public String subMethod = "powershell.exe";
+
+	// Helper for log file naming
+	public String placeName = "";
+	public String activeSourceName = "";
+	public String appID = "";
+
+	// This data is only useful for the engine, not the runner.
+	// It should be put as is in the run result object.
+	public String id1; // PJ id
+	public UUID id2;
+	public Boolean outOfPlan = false;
+}

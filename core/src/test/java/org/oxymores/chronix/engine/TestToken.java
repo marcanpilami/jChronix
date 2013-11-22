@@ -20,7 +20,8 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.demo.PlanBuilder;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestToken
 {
@@ -96,7 +97,7 @@ public class TestToken
 	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run)
+		if (e1 != null && e1.shouldRun())
 		{
 			e1.stopEngine();
 			e1.waitForStopEnd();

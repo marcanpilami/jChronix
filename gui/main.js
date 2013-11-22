@@ -1,43 +1,90 @@
 var proxy = null;
 
-$(document).ready(function() {
-	$("#tabs").tabs();
+$(document).ready(function()
+{
+	$(window).resize(onViewPortResize);
+	onViewPortResize();
+
+	$("#tabs").tabs(
+	{
+		activate : function(event, ui)
+		{
+			handleTabs(ui.newPanel.attr('id'));
+		}
+	});
 	
+	// RAPHAEL BUG
+	var r = $("#raphBug")[0];
+	var rpaper = new Raphael(r, 10, 10);
+	var arrow = rpaper.path("M,1,1,L,20,20");
+	arrow.attr(
+	{
+		"arrow-end" : "classic-wide-long",
+		"stroke-width" : arrowSize
+	});
+	
+	// Always validate SlickGrid edits when loosing focus
+	$("#tabs").on('blur', 'input.editor-text', function() {
+	    Slick.GlobalEditorLock.commitCurrentEdit();
+	});
+	$("#tabs").on('blur', 'select.editor-select', function() {
+	    Slick.GlobalEditorLock.commitCurrentEdit();
+	});
+
+
+	// Load data from webservice
 	proxy = new internalapi_chronix_oxymores_org__IServiceClientPortType();
-	
-	initChainPanel();
-	//initCommandPanel();
-	
-	loadApplication();
+	loadApplication(); // will trigger first panel init when done
 });
 
-function drawDebug() {
-	canvas = document.getElementById("cnMain");
-	ctx = canvas.getContext("2d");
+// Function to create panels only when they are displayed (Slickgrid requires a displayed div with known size to init)
+var loaded = new Array();
+function handleTabs(tabId)
+{
+	if (loaded[tabId] !== undefined && loaded[tabId] !== null)
+		loaded[tabId].redisplay(); // just update display
 
-	ctx.fillStyle = "rgb(200,0,0)";
-	ctx.fillRect(10, 10, 55, 50);
+	if (loaded[tabId] !== undefined)
+		return; // already initialized
 
-	ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
-	ctx.fillRect(30, 30, 55, 50);
+	// Create new tab
+	var n = null;
+	if (tabId === 'tab-command')
+		n = new CommandPanel(cxfApplication);
+	if (tabId === 'tab-schedule')
+		n = new SchedulePanel("tab-schedule", cxfApplication);
+	if (tabId === 'tab-chain')
+		n = new ChainPanel("tab-chain", cxfApplication);
+	if (tabId === 'tab-pn')
+		n = new NPPanel("tab-pn", cxfApplication);
+	if (tabId === 'tab-ln')
+		n = new LogicalNetworkPanel('tab-ln', cxfApplication);
 
-	ctx.strokeText('Hello world!', 0, 50);
+	loaded[tabId] = n;
 }
 
-function loadApplicationsList() {
+function loadApplicationsList()
+{
 }
 
-function pingServer() {
+function pingServer()
+{
 	var p = new internalapi_chronix_oxymores_org__IServiceClientPortType();
 	p.sayHello(successCallback, errorCallback, "marsu", 12);
 }
 
-function errorCallback(httpStatus, httpStatusText) {
+function errorCallback(httpStatus, httpStatusText)
+{
 	alert('error ' + httpStatusText);
 }
 
-function successCallback(responseObject) {
+function successCallback(responseObject)
+{
 	// alert(responseObject.getReturn());
 	$("#greetings").html(responseObject.getReturn() + " - " + uuid.v4());
 }
 
+function onViewPortResize()
+{
+	$("#tabs").height($(window).height() - 50);
+};

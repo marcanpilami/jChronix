@@ -6,7 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.oxymores.chronix.engine.OrderType;
+import org.oxymores.chronix.engine.helpers.OrderType;
 
 @Entity
 public class UserTrace

@@ -4,9 +4,7 @@
 
   <artifactId>internalapi</artifactId>
   <packaging>jar</packaging>
-
   <name>internalapi</name>
-  <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,11 +17,17 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+	
+	<dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
   <parent>
   	<groupId>org.oxymores.chronix</groupId>
-  	<artifactId>main</artifactId>
+  	<artifactId>parent</artifactId>
   	<version>0.0.1-SNAPSHOT</version>
-  	<relativePath>../main</relativePath>
+  	<relativePath>../parent</relativePath>
   </parent>
 </project>

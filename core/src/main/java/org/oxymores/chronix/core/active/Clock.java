@@ -49,7 +49,7 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.ClockTick;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 
 public class Clock extends ActiveNodeBase
 {

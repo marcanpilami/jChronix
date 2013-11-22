@@ -32,6 +32,7 @@ import javax.persistence.Query;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.exceptions.ChronixNoCalendarException;
 
 public class Calendar extends ApplicationObject
 {
@@ -330,7 +331,7 @@ public class Calendar extends ApplicationObject
 		return issues;
 	}
 
-	public void processStragglers(EntityManager em) throws Exception
+	public void processStragglers(EntityManager em) throws ChronixNoCalendarException
 	{
 		log.debug(String.format("Processing stragglers on calendar %s", this.name));
 		CalendarDay d = this.getCurrentOccurrence(em);
@@ -342,7 +343,13 @@ public class Calendar extends ApplicationObject
 							i.s.calendarShift));
 		}
 	}
+
 	//
 	// ///////////////////////////////////////////////////////////////
+
+	public ArrayList<CalendarDay> getDays()
+	{
+		return days;
+	}
 
 }

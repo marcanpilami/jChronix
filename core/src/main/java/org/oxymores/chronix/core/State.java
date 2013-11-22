@@ -39,7 +39,8 @@ import org.oxymores.chronix.core.transactional.EnvironmentValue;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.exceptions.ChronixNoCalendarException;
 
 public class State extends ConfigurableBase
 {
@@ -814,15 +815,15 @@ public class State extends ConfigurableBase
 		return this.calendar != null;
 	}
 
-	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p) throws Exception
+	public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p) throws ChronixNoCalendarException
 	{
 		return this.calendar.getDay(this.getCurrentCalendarPointer(em, p).getLastEndedOkOccurrenceUuid());
 	}
 
-	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p) throws Exception
+	public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p) throws ChronixNoCalendarException
 	{
 		if (!usesCalendar())
-			throw new Exception("A state without calendar has no current occurrence");
+			throw new ChronixNoCalendarException();
 
 		Query q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2 AND p.calendarID = ?3");
 		q.setParameter(1, this.id.toString());
@@ -831,7 +832,6 @@ public class State extends ConfigurableBase
 		CalendarPointer cp = (CalendarPointer) q.getSingleResult();
 		em.refresh(cp);
 		return cp;
-
 	}
 
 	// Calendar stuff
