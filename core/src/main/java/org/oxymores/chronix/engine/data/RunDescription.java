@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.engine.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;

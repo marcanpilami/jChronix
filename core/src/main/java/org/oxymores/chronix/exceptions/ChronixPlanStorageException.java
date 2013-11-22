@@ -18,36 +18,14 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.exceptions;
 
-import java.util.ArrayList;
-
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.transactional.Event;
-
-public class PlaceAnalysisResult
+public class ChronixPlanStorageException extends ChronixException
 {
-	public PlaceAnalysisResult(Place p)
+	private static final long serialVersionUID = 7711707622338172749L;
+
+	public ChronixPlanStorageException(String message, Exception parent)
 	{
-		this.place = p;
-	}
-
-	public boolean res = false;
-	public Place place;
-	public ArrayList<Event> consumedEvents = new ArrayList<Event>();
-	public ArrayList<Event> usedEvents = new ArrayList<Event>();
-
-	public void add(PlaceAnalysisResult ear)
-	{
-		res = res && ear.res;
-		if (res)
-			consumedEvents.addAll(ear.consumedEvents);
-		else
-			consumedEvents.clear();
-
-		if (res)
-			usedEvents.addAll(ear.usedEvents);
-		else
-			usedEvents.clear();
+		super(message, parent);
 	}
 }

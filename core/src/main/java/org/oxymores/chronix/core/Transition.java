@@ -27,8 +27,8 @@ import java.util.UUID;
 import javax.persistence.EntityManager;
 
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.engine.PlaceAnalysisResult;
-import org.oxymores.chronix.engine.TransitionAnalysisResult;
+import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
+import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 
 public class Transition extends ApplicationObject
 {

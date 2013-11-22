@@ -16,10 +16,10 @@ import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
-import org.oxymores.chronix.demo.DemoApplication;
-import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.engine.ChronixEngine;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.planbuilder.DemoApplication;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 import org.oxymores.chronix.wapi.JettyServer;
 
 public class Scheduler

@@ -39,8 +39,8 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.engine.RunDescription;
-import org.oxymores.chronix.engine.RunResult;
+import org.oxymores.chronix.engine.data.RunDescription;
+import org.oxymores.chronix.engine.data.RunResult;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)

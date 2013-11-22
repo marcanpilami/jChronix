@@ -20,8 +20,6 @@
 
 package org.oxymores.chronix.wapi;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,14 +39,15 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
-import org.oxymores.chronix.demo.PlanBuilder;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.dto.Frontier2;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.internalapi.IServiceClient;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class ServiceClient implements IServiceClient
 {
@@ -101,11 +100,7 @@ public class ServiceClient implements IServiceClient
 		try
 		{
 			ctx.saveApplication(a);
-		} catch (FileNotFoundException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e)
+		} catch (ChronixPlanStorageException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

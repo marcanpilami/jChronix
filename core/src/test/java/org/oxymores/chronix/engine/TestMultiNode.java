@@ -24,8 +24,9 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.demo.CalendarBuilder;
-import org.oxymores.chronix.demo.PlanBuilder;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.planbuilder.CalendarBuilder;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestMultiNode
 {
@@ -43,17 +44,17 @@ public class TestMultiNode
 	{
 		log.debug("**************************************************************************************");
 		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.run)
+		if (e1 != null && e1.shouldRun())
 		{
 			e1.stopEngine();
 			e1.waitForStopEnd();
 		}
-		if (e2 != null && e2.run)
+		if (e2 != null && e2.shouldRun())
 		{
 			e2.stopEngine();
 			e2.waitForStopEnd();
 		}
-		if (e3 != null && e3.run)
+		if (e3 != null && e3.shouldRun())
 		{
 			e3.stopEngine();
 			e3.waitForStopEnd();

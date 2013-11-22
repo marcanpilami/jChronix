@@ -18,14 +18,36 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.engine.data;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 
-public class Order implements Serializable
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.transactional.Event;
+
+public class PlaceAnalysisResult
 {
-	private static final long serialVersionUID = 6731249888476299895L;
+	public PlaceAnalysisResult(Place p)
+	{
+		this.place = p;
+	}
 
-	public OrderType type;
-	public Object data, data2;
+	public boolean res = false;
+	public Place place;
+	public ArrayList<Event> consumedEvents = new ArrayList<Event>();
+	public ArrayList<Event> usedEvents = new ArrayList<Event>();
+
+	public void add(PlaceAnalysisResult ear)
+	{
+		res = res && ear.res;
+		if (res)
+			consumedEvents.addAll(ear.consumedEvents);
+		else
+			consumedEvents.clear();
+
+		if (res)
+			usedEvents.addAll(ear.usedEvents);
+		else
+			usedEvents.clear();
+	}
 }

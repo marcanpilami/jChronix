@@ -23,7 +23,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.dto.ResOrder;
-import org.oxymores.chronix.engine.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
 
 public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest

@@ -18,29 +18,14 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.engine.helpers;
 
 import java.io.Serializable;
-import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-public class TokenRequest implements Serializable
+public class Order implements Serializable
 {
-	private static final long serialVersionUID = -7250533108215592799L;
+	private static final long serialVersionUID = 6731249888476299895L;
 
-	public enum TokenRequestType {
-		REQUEST, RELEASE, RENEW, AGREE
-	}
-
-	public TokenRequestType type;
-	public UUID applicationID;
-	public UUID tokenID;
-	public UUID placeID;
-	public UUID stateID;
-	public UUID requestingNodeID;
-	public UUID pipelineJobID;
-	public DateTime requestedAt;
-
-	public boolean local = true;
+	public OrderType type;
+	public Object data, data2;
 }

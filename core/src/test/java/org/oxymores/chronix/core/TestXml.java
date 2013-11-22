@@ -25,7 +25,7 @@ public class TestXml
 	@Test
 	public void testXml() throws Exception
 	{
-		Application a1 = org.oxymores.chronix.demo.DemoApplication.getNewDemoApplication();
+		Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication();
 
 		JAXBContext ctx = JAXBContext.newInstance(Application.class);
 		Marshaller m = ctx.createMarshaller();
@@ -39,7 +39,7 @@ public class TestXml
 	{
 		XStream x = new XStream(new StaxDriver());
 
-		Application a1 = org.oxymores.chronix.demo.DemoApplication.getNewDemoApplication();
+		Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication();
 		x.marshal(a1, new PrettyPrintWriter(new OutputStreamWriter(new BufferedOutputStream(System.out))));
 	}
 }

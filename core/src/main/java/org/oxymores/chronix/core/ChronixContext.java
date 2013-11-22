@@ -22,9 +22,7 @@ package org.oxymores.chronix.core;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Date;
@@ -39,6 +37,7 @@ import javax.persistence.Persistence;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
+import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
 public class ChronixContext
 {
@@ -55,7 +54,7 @@ public class ChronixContext
 	public String transacUnitName, historyUnitName;
 
 	public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName, String brokerInterface)
-			throws IOException, NumberFormatException, ChronixNoLocalNode
+			throws ChronixPlanStorageException
 	{
 		log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
@@ -100,22 +99,7 @@ public class ChronixContext
 
 		for (String ss : toLoad.keySet())
 		{
-			try
-			{
-				ctx.loadApplication(toLoad.get(ss)[0]);
-			} catch (FileNotFoundException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ClassNotFoundException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			ctx.loadApplication(toLoad.get(ss)[0]);
 		}
 
 		// ///////////////////
@@ -151,8 +135,7 @@ public class ChronixContext
 		return ctx;
 	}
 
-	public Application loadApplication(UUID id, boolean workincopy) throws NumberFormatException, FileNotFoundException,
-			ChronixNoLocalNode, IOException, ClassNotFoundException
+	public Application loadApplication(UUID id, boolean workincopy) throws ChronixPlanStorageException
 	{
 		if (workincopy)
 			return loadApplication(new File(getWorkingPath(id)));
@@ -160,16 +143,22 @@ public class ChronixContext
 			return loadApplication(new File(getActivePath(id)));
 	}
 
-	public Application loadApplication(File dataFile) throws FileNotFoundException, IOException, ClassNotFoundException,
-			NumberFormatException, ChronixNoLocalNode
+	public Application loadApplication(File dataFile) throws ChronixPlanStorageException
 	{
 		log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
+		Application res = null;
 
-		FileInputStream fis = new FileInputStream(dataFile);
-		ObjectInputStream ois = new ObjectInputStream(fis);
+		try
+		{
+			FileInputStream fis = new FileInputStream(dataFile);
+			ObjectInputStream ois = new ObjectInputStream(fis);
 
-		Application res = (Application) ois.readObject();
-		ois.close();
+			res = (Application) ois.readObject();
+			ois.close();
+		} catch (Exception e)
+		{
+			throw new ChronixPlanStorageException("Could not load file " + dataFile, e);
+		}
 
 		try
 		{
@@ -187,23 +176,29 @@ public class ChronixContext
 		return res;
 	}
 
-	public void saveApplication(String name) throws FileNotFoundException, IOException
+	public void saveApplication(String name) throws ChronixPlanStorageException
 	{
 		saveApplication(this.applicationsByName.get(name));
 	}
 
-	public void saveApplication(UUID id) throws FileNotFoundException, IOException
+	public void saveApplication(UUID id) throws ChronixPlanStorageException
 	{
 		saveApplication(this.applicationsById.get(id));
 	}
 
-	public void saveApplication(Application a) throws FileNotFoundException, IOException
+	public void saveApplication(Application a) throws ChronixPlanStorageException
 	{
 		log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
-		FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id));
-		ObjectOutputStream oos = new ObjectOutputStream(fos);
-		oos.writeObject(a);
-		fos.close();
+		try
+		{
+			FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id));
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(a);
+			fos.close();
+		} catch (Exception e)
+		{
+			throw new ChronixPlanStorageException("Could not save application to temp file", e);
+		}
 	}
 
 	protected String getWorkingPath(UUID appId)
@@ -222,7 +217,7 @@ public class ChronixContext
 	}
 
 	// Does NOT refresh caches. Restart engine for that !
-	public void setWorkingAsCurrent(Application a) throws Exception
+	public void setWorkingAsCurrent(Application a) throws ChronixPlanStorageException
 	{
 		log.info(String.format("(%s) Promoting temp file for application %s as the active file", this.configurationDirectory, a.getName()));
 		String workingDataFilePath = getWorkingPath(a.id);
@@ -230,7 +225,7 @@ public class ChronixContext
 
 		File workingData = new File(workingDataFilePath);
 		if (!workingData.exists())
-			throw new Exception("work file does not exist. You sure 'bout that? You seem to have made no changes!");
+			throw new ChronixPlanStorageException("work file does not exist. You sure 'bout that? You seem to have made no changes!", null);
 		File currentData = new File(currentDataFilePath);
 
 		// Get latest version

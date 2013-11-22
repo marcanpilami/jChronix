@@ -35,11 +35,11 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.EventAnalysisResult;
-import org.oxymores.chronix.engine.TransitionAnalysisResult;
-import org.oxymores.chronix.engine.RunResult;
 import org.oxymores.chronix.engine.Runner;
-import org.oxymores.chronix.engine.PlaceAnalysisResult;
+import org.oxymores.chronix.engine.data.EventAnalysisResult;
+import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
+import org.oxymores.chronix.engine.data.RunResult;
+import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 
 public class ActiveNodeBase extends ConfigurableBase
 {
@@ -169,8 +169,10 @@ public class ActiveNodeBase extends ConfigurableBase
 						}
 					} catch (Exception e1)
 					{
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						log.error(
+								"An event was rejected on a transition because the calendar analyis encountered an issue. It may not be an issue, yet there is likely a problem with the plan that should be corrected.",
+								e1);
+						continue;
 					}
 				}
 			}
@@ -331,6 +333,7 @@ public class ActiveNodeBase extends ConfigurableBase
 	{
 		return "None";
 	}
+
 	public String getSubActivityMethod()
 	{
 		return "None";

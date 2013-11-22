@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.engine.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +45,8 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.data.RunDescription;
+import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.exceptions.ChronixException;
 
 public class SenderHelpers

@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
-import org.oxymores.chronix.demo.DemoApplication;
+import org.oxymores.chronix.planbuilder.DemoApplication;
 
 public class TestStart
 {
@@ -40,7 +40,7 @@ public class TestStart
 		{
 			return;
 		}
-		Assert.assertEquals(false, e.run); // engine should not have been able
+		Assert.assertEquals(false, e.shouldRun()); // engine should not have been able
 											// to start
 	}
 

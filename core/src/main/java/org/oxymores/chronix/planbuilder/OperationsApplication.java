@@ -18,15 +18,21 @@
  * under the License.
  */
 
-package org.oxymores.chronix.exceptions;
+package org.oxymores.chronix.planbuilder;
 
-public class ChronixInconsistentMetadataException extends ChronixException
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.PlaceGroup;
+
+public class OperationsApplication
 {
-
-	private static final long serialVersionUID = 7711707622338172749L;
-
-	public ChronixInconsistentMetadataException(String message)
+	public static Application getNewApplication(String brokerInterface, int port)
 	{
-		super(message);
+		Application a = PlanBuilder.buildApplication("Operations",
+				"This application exists to group all the little 'on demand' jobs that operators often get");
+
+		PlaceGroup pg = PlanBuilder.buildDefaultLocalNetwork(a, port, brokerInterface);
+		PlanBuilder.buildChain(a, "All ops", "create as many jobs as you want here", pg);
+
+		return a;
 	}
 }

@@ -33,194 +33,242 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.oxymores.chronix.engine.data.RunDescription;
+import org.oxymores.chronix.engine.data.RunResult;
 
-public class RunnerShell
+public final class RunnerShell
 {
-	// RunnerAgent logger, yes.
-	private static Logger log = Logger.getLogger(RunnerAgent.class);
+    private RunnerShell()
+    {
 
-	public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)
-	{
-		RunResult res = new RunResult();
-		Process p;
-		String nl = System.getProperty("line.separator");
-		Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
-		Matcher matcher = pat.matcher("Testing123Testing");
-		String encoding = System.getProperty("file.encoding");
+    }
 
-		// ///////////////////////////
-		// Build command
-		ArrayList<String> argsStrings = new ArrayList<String>();
+    // RunnerAgent logger, yes.
+    private static Logger log = Logger.getLogger(RunnerAgent.class);
+    private static String POWERSHELL_CMD = "powershell.exe", CMD_CMD = "cmd.exe";
 
-		// First line is the shell name
-		argsStrings.add(rd.subMethod);
+    public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)
+    {
+        RunResult res = new RunResult();
+        Process p;
+        String nl = System.getProperty("line.separator");
+        Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
+        Matcher matcher = pat.matcher("Testing123Testing");
+        String encoding = getEncoding(rd);
 
-		// Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
-		if (rd.subMethod.equals("cmd.exe"))
-		{
-			argsStrings.add("/U");
-			argsStrings.add("/C");
-			try
-			{
-				encoding = "cp"
-						+ WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
-								"OEMCP");
-			} catch (Exception e)
-			{
-				// nothing - keep default system-wide encoding
-			}
-		}
-		else if (rd.subMethod.equals("powershell.exe"))
-		{
-			argsStrings.add("-NoLogo");
-			argsStrings.add("-NonInteractive");
-			argsStrings.add("-WindowStyle");
-			argsStrings.add("Hidden");
-			argsStrings.add("-Command");
-			try
-			{
-				encoding = "cp"
-						+ WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
-								"OEMCP");
-			} catch (Exception e)
-			{
-				// nothing - keep default system-wide encoding
-			}
-		}
+        // ///////////////////////////
+        // Build command
+        List<String> argsStrings = buildCommand(rd);
 
-		// Then add the command itself
-		argsStrings.add(rd.command);
+        // /////////////////////////////////////////////////////////////////////////
+        // Create a process builder with the command line contained in the array
+        ProcessBuilder pb = new ProcessBuilder(argsStrings);
 
-		// Finally add parameters (if any - there may be none or they may be contained inside the command itself)
-		for (int i = 0; i < rd.paramNames.size(); i++)
-		{
-			String key = rd.paramNames.get(i);
-			String value = rd.paramValues.get(i);
-			String arg = "";
-			if (key != null && !key.equals(""))
-				arg = key;
-			if (value != null && !value.equals("") && (key != null && !key.equals("")))
-				arg += " " + value;
-			if (value != null && !value.equals("") && !(key != null && !key.equals("")))
-				arg += value;
+        // Mix stdout and stderr (easier to put errors in context this way)
+        pb.redirectErrorStream(true);
 
-			argsStrings.add(arg);
-		}
+        // Create array containing environment
+        Map<String, String> env = pb.environment();
+        for (int i = 0; i < rd.envNames.size(); i++)
+        {
+            env.put(rd.envNames.get(i), rd.envValues.get(i));
+        }
 
-		// /////////////////////////////////////////////////////////////////////////
-		// Create a process builder with the command line contained in the array
-		ProcessBuilder pb = new ProcessBuilder(argsStrings);
+        BufferedReader br = null;
+        Writer output = null;
+        try
+        {
+            // Start!
+            log.debug("GO");
+            p = pb.start();
 
-		// Mix stdout and stderr (easier to put errors in context this way)
-		pb.redirectErrorStream(true);
+            // Read output (err & out), write it to file
+            InputStreamReader isr = new InputStreamReader(p.getInputStream(), encoding);
+            br = new BufferedReader(isr);
 
-		// Create array containing environment
-		Map<String, String> env = pb.environment();
-		for (int i = 0; i < rd.envNames.size(); i++)
-		{
-			env.put(rd.envNames.get(i), rd.envValues.get(i));
-		}
-		// pb.directory("myDir");
+            String line = null;
+            int i = 0;
+            LinkedHashMap<Integer, String> endBuffer = new LinkedHashMap<Integer, String>()
+            {
+                private static final long serialVersionUID = -6773540176968046737L;
 
-		try
-		{
-			// Start!
-			log.debug("GO");
-			p = pb.start();
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest)
+                {
+                    return this.size() > Constants.MAX_RETURNED_BIG_LOG_END_LINES;
+                }
+            };
 
-			// Read output (err & out), write it to file
-			InputStreamReader isr = new InputStreamReader(p.getInputStream(), encoding);
-			BufferedReader br = new BufferedReader(isr);
+            if (storeLogFile)
+            {
+                output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFilePath), "UTF-8"));
+            }
+            line = br.readLine();
+            while (line != null)
+            {
+                i++;
 
-			String line = null;
-			int i = 0;
-			LinkedHashMap<Integer, String> endBuffer = new LinkedHashMap<Integer, String>()
-			{
-				private static final long serialVersionUID = -6773540176968046737L;
+                // Local log file gets all lines
+                if (storeLogFile)
+                {
+                    output.write(line + nl);
+                }
 
-				@Override
-				protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest)
-				{
-					return this.size() > 1000;
-				}
-			};
-			Writer output = null;
-			if (storeLogFile)
-				output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFilePath), "UTF-8"));
-			while ((line = br.readLine()) != null)
-			{
-				i++;
+                // Small log gets first 500 lines or 10000 characters (the smaller of the two)
+                if (i < Constants.MAX_RETURNED_SMALL_LOG_LINES && res.logStart.length() < Constants.MAX_RETURNED_SMALL_LOG_CHARACTERS)
+                {
+                    res.logStart += nl + line;
+                }
 
-				// Local log file gets all lines
-				if (storeLogFile)
-					output.write(line + nl);
+                // Scheduler internal log gets first line only
+                if (i == 1)
+                {
+                    log.debug(String.format("Job running. First line of output is: %s", line));
+                }
 
-				// Small log gets first 500 lines or 10000 characters (the
-				// smaller of the two)
-				if (i < 500 && res.logStart.length() < 10000)
-					res.logStart += nl + line;
+                // Fuller log gets first 10k lines, then last 1k lines.
+                if (returnFullerLog)
+                {
+                    if (i < Constants.MAX_RETURNED_BIG_LOG_LINES)
+                    {
+                        res.fullerLog += line;
+                    }
+                    else
+                    {
+                        endBuffer.put(i, line);
+                    }
+                }
 
-				// Scheduler internal log gets first line only
-				if (i == 1)
-					log.debug(String.format("Job running. First line of output is: %s", line));
+                // Analysis: there may be a new variable definition in the line
+                matcher.reset(line);
+                if (matcher.find())
+                {
+                    log.debug("Key detected :" + matcher.group(1));
+                    log.debug("Value detected :" + matcher.group(2));
+                    res.newEnvVars.put(matcher.group(1), matcher.group(2));
+                }
+                line = br.readLine();
+            }
+            IOUtils.closeQuietly(br);
 
-				// Fuller log gets first 10k lines, then last 1k lines.
-				if (returnFullerLog)
-				{
-					if (i < 10000)
-						res.fullerLog += line;
-					if (i >= 10000)
-						endBuffer.put(i, line);
-				}
+            if (i > Constants.MAX_RETURNED_BIG_LOG_LINES
+                    && i < Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && returnFullerLog)
+            {
+                res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
+            }
+            if (i >= Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && returnFullerLog)
+            {
+                res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
+                        + Arrays.toString(endBuffer.entrySet().toArray());
+            }
 
-				// Analyse: there may be a new variable definition in the line
-				matcher.reset(line);
-				if (matcher.find())
-				{
-					log.debug("Key detected :" + matcher.group(1));
-					log.debug("Value detected :" + matcher.group(2));
-					res.newEnvVars.put(matcher.group(1), matcher.group(2));
-				}
-			}
+            // Done: close log file
+            if (storeLogFile)
+            {
+                IOUtils.closeQuietly(output);
+                File f = new File(logFilePath);
+                res.logSizeBytes = f.length();
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("error occurred while running job", e);
+            res.logStart = e.getMessage();
+            res.returnCode = -1;
+            IOUtils.closeQuietly(br);
+            IOUtils.closeQuietly(output);
+            return res;
+        }
 
-			if (i > 10000 && i < 11000 && returnFullerLog)
-				res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
-			if (i >= 11000 && returnFullerLog)
-				res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
-						+ Arrays.toString(endBuffer.entrySet().toArray());
+        // Return
+        res.returnCode = p.exitValue();
+        res.logPath = logFilePath;
+        res.envtUser = System.getProperty("user.name");
+        try
+        {
+            res.envtServer = InetAddress.getLocalHost().getHostName();
+        }
+        catch (UnknownHostException e)
+        {
+            res.envtServer = "unknown";
+        }
+        log.info(String.format("Job ended, RC is %s", res.returnCode));
+        return res;
+    }
 
-			// Done: close log file
-			if (storeLogFile)
-			{
-				output.close();
-				File f = new File(logFilePath);
-				res.logSizeBytes = f.length();
-			}
-		} catch (IOException e)
-		{
-			log.error("error occurred while running job", e);
-			res.logStart = e.getMessage();
-			res.returnCode = -1;
-			return res;
-		}
+    private static String getEncoding(RunDescription rd)
+    {
+        String encoding = System.getProperty("file.encoding");
+        if (rd.subMethod.equals(CMD_CMD) || rd.subMethod.equals(POWERSHELL_CMD))
+        {
+            try
+            {
+                encoding = "cp"
+                        + WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
+                                "OEMCP");
+            }
+            catch (Exception e)
+            {
+                // nothing - keep default system-wide encoding
+            }
+        }
+        return encoding;
+    }
 
-		// Return
-		res.returnCode = p.exitValue();
-		res.logPath = logFilePath;
-		res.envtUser = System.getProperty("user.name");
-		try
-		{
-			res.envtServer = InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e)
-		{
-			res.envtServer = "unknown";
-		}
-		log.info(String.format("Job ended, RC is %s", res.returnCode));
-		return res;
-	}
+    private static List<String> buildCommand(RunDescription rd)
+    {
+        ArrayList<String> argsStrings = new ArrayList<String>();
+
+        // First line is the shell name
+        argsStrings.add(rd.subMethod);
+
+        // Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
+        if (rd.subMethod.equals(CMD_CMD))
+        {
+            argsStrings.add("/U");
+            argsStrings.add("/C");
+        }
+        else if (rd.subMethod.equals(POWERSHELL_CMD))
+        {
+            argsStrings.add("-NoLogo");
+            argsStrings.add("-NonInteractive");
+            argsStrings.add("-WindowStyle");
+            argsStrings.add("Hidden");
+            argsStrings.add("-Command");
+        }
+
+        // Then add the command itself
+        argsStrings.add(rd.command);
+
+        // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
+        for (int i = 0; i < rd.paramNames.size(); i++)
+        {
+            String key = rd.paramNames.get(i);
+            String value = rd.paramValues.get(i);
+            String arg = "";
+            if (key != null && !"".equals(key))
+            {
+                arg = key;
+            }
+            if (value != null && !"".equals(value) && (key != null && !"".equals(key)))
+            {
+                arg += " " + value;
+            }
+            if (value != null && !"".equals(value) && !(key != null && !"".equals(key)))
+            {
+                arg += value;
+            }
+
+            argsStrings.add(arg);
+        }
+
+        return argsStrings;
+    }
 }

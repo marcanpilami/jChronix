@@ -28,387 +28,371 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.jms.Session;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.TokenRequest.TokenRequestType;
+import org.oxymores.chronix.engine.data.TokenRequest;
+import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 
-class Pipeline extends Thread implements MessageListener
+class Pipeline extends BaseListener implements Runnable
 {
-	private static Logger log = Logger.getLogger(Pipeline.class);
+    private static Logger log = Logger.getLogger(Pipeline.class);
 
-	private ChronixContext ctx;
-	private Session jmsSession;
-	private Destination jmsPipelineQueue;
-	private Connection jmsConnection;
-	private MessageConsumer jmsPipelineConsumer;
-	private MessageProducer jmsJRProducer;
+    private MessageProducer jmsJRProducer;
 
-	EntityManagerFactory emf;
-	EntityManager em_mainloop, em_injector;
-	EntityTransaction transac_mainloop, transac_injector;
+    private EntityManager emInjector;
+    private EntityTransaction transacMainLoop, transacInjector;
 
-	private LinkedBlockingQueue<PipelineJob> entering;
-	private ArrayList<PipelineJob> waiting_sequence;
-	private ArrayList<PipelineJob> waiting_token;
-	private ArrayList<PipelineJob> waiting_token_answer;
-	private ArrayList<PipelineJob> waiting_exclusion;
-	private ArrayList<PipelineJob> waiting_run;
+    private LinkedBlockingQueue<PipelineJob> entering;
+    private List<PipelineJob> waitingSequence;
+    private List<PipelineJob> waitingToken;
+    private List<PipelineJob> waitingTokenAnswer;
+    private List<PipelineJob> waitingExclusion;
+    private List<PipelineJob> waitingRun;
 
-	private Boolean run = true;
-	private Semaphore analyze;
+    private Boolean run = true;
+    private Semaphore analyze;
 
-	void startListening(Connection cnx, String brokerName, ChronixContext ctx, EntityManagerFactory emf) throws JMSException
-	{
-		// Pointers
-		this.ctx = ctx;
-		this.jmsConnection = cnx;
-		this.analyze = new Semaphore(1);
+    void startListening(Broker broker) throws JMSException
+    {
+        this.init(broker);
 
-		// Register on incoming queue
-		String qName = String.format("Q.%s.PJ", brokerName);
-		log.debug(String.format("(%s) Registering a pipeline listener on queue %s", ctx.configurationDirectoryPath, qName));
-		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
-		this.jmsPipelineQueue = this.jmsSession.createQueue(qName);
-		this.jmsPipelineConsumer = this.jmsSession.createConsumer(this.jmsPipelineQueue);
-		this.jmsPipelineConsumer.setMessageListener(this);
+        this.analyze = new Semaphore(1);
 
-		// Outgoing producer for job runner
-		this.jmsJRProducer = this.jmsSession.createProducer(null);
+        // Outgoing producer for job runner
+        this.jmsJRProducer = this.jmsSession.createProducer(null);
 
-		// OpenJPA stuff
-		this.emf = emf;
-		em_mainloop = emf.createEntityManager();
-		transac_mainloop = em_mainloop.getTransaction();
+        // OpenJPA stuff
+        EntityManager emMainLoop = broker.getCtx().getTransacEM();
+        transacMainLoop = emMainLoop.getTransaction();
 
-		em_injector = emf.createEntityManager();
-		transac_injector = em_injector.getTransaction();
+        emInjector = broker.getCtx().getTransacEM();
+        transacInjector = emInjector.getTransaction();
 
-		// Create analysis queues
-		entering = new LinkedBlockingQueue<PipelineJob>();
-		waiting_sequence = new ArrayList<PipelineJob>();
-		waiting_token = new ArrayList<PipelineJob>();
-		waiting_exclusion = new ArrayList<PipelineJob>();
-		waiting_run = new ArrayList<PipelineJob>();
-		waiting_token_answer = new ArrayList<PipelineJob>();
+        // Create analysis queues
+        entering = new LinkedBlockingQueue<PipelineJob>();
+        waitingSequence = new ArrayList<PipelineJob>();
+        waitingToken = new ArrayList<PipelineJob>();
+        waitingExclusion = new ArrayList<PipelineJob>();
+        waitingRun = new ArrayList<PipelineJob>();
+        waitingTokenAnswer = new ArrayList<PipelineJob>();
 
-		// Retrieve jobs from previous service launches
-		Query q = em_mainloop.createQuery("SELECT j FROM PipelineJob j WHERE j.status = ?1");
-		q.setParameter(1, "CHECK_SYNC_CONDS");
-		@SuppressWarnings("unchecked")
-		List<PipelineJob> sessionEvents = q.getResultList();
-		entering.addAll(sessionEvents);
+        // Retrieve jobs from previous service launches
+        Query q = emMainLoop.createQuery("SELECT j FROM PipelineJob j WHERE j.status = ?1");
+        q.setParameter(1, "CHECK_SYNC_CONDS");
+        @SuppressWarnings("unchecked")
+        List<PipelineJob> sessionEvents = q.getResultList();
+        entering.addAll(sessionEvents);
 
-		// Start thread
-		this.start();
-	}
+        // Register on incoming queue
+        qName = String.format("Q.%s.PJ", brokerName);
+        this.subscribeTo(qName);
 
-	void stopListening() throws JMSException
-	{
-		try
-		{
-			this.analyze.acquire(); // wait for end of analysis
-		} catch (InterruptedException e)
-		{
-			// Do nothing
-		}
-		this.run = false;
-		this.jmsJRProducer.close();
-		this.jmsPipelineConsumer.close();
-		this.jmsSession.close();
-		this.analyze.release();
-	}
+        // Start thread
+        (new Thread(this)).start();
+    }
 
-	@Override
-	public void run()
-	{
-		while (this.run)
-		{
-			// Poll for a job
-			try
-			{
-				PipelineJob pj = entering.poll(1, TimeUnit.MINUTES);
-				if (pj != null && pj.getAppID() != null)
-				{
-					Place p = null;
-					org.oxymores.chronix.core.State s = null;
-					Application a = null;
-					try
-					{
-						a = pj.getApplication(ctx);
-						p = pj.getPlace(ctx);
-						s = pj.getState(ctx);
-					} catch (Exception e)
-					{
-					}
-					if (s == null || p == null || a == null)
-					{
-						log.error("A job was received in the pipeline without any corresponding local application data - ignored");
-					}
-					else
-					{
-						waiting_sequence.add(pj);
-						log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
-					}
-				}
-			} catch (InterruptedException e)
-			{
-				// Interruption is all right - we want to loop from time to time
-			}
+    @Override
+    void stopListening()
+    {
+        try
+        {
+            // wait for end of analysis
+            this.analyze.acquire();
+        }
+        catch (InterruptedException e)
+        {
+            // Do nothing
+        }
+        super.stopListening();
+        this.run = false;
+        try
+        {
+            this.jmsJRProducer.close();
+        }
+        catch (JMSException e)
+        {
+            log.warn("An error occurred while closing the Pipleine. Not a real issue, but please report it", e);
+        }
+        this.analyze.release();
+    }
 
-			// Synchro - helps to stop properly
-			try
-			{
-				this.analyze.acquire();
-			} catch (InterruptedException e1)
-			{
-				// Do nothing
-			}
-			if (!this.run)
-				break;
+    @Override
+    public void run()
+    {
+        while (this.run)
+        {
+            // Poll for a job
+            PipelineJob pj = null;
+            try
+            {
+                pj = entering.poll(1, TimeUnit.MINUTES);
+            }
+            catch (InterruptedException e2)
+            {
+                // Normal
+            }
+            if (pj != null && pj.getAppID() != null)
+            {
+                Place p = null;
+                org.oxymores.chronix.core.State s = null;
+                Application a = null;
+                try
+                {
+                    a = pj.getApplication(ctx);
+                    p = pj.getPlace(ctx);
+                    s = pj.getState(ctx);
+                }
+                catch (Exception e)
+                {
+                    a = null;
+                }
+                if (s == null || p == null || a == null)
+                {
+                    log.error("A job was received in the pipeline without any corresponding local application data - ignored");
+                }
+                else
+                {
+                    waitingSequence.add(pj);
+                    log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
+                }
+            }
 
-			// On to analysis
-			ArrayList<PipelineJob> toAnalyse = new ArrayList<PipelineJob>();
+            // Synchro - helps to stop properly
+            try
+            {
+                this.analyze.acquire();
+            }
+            catch (InterruptedException e1)
+            {
+                // Do nothing
+            }
+            if (!this.run)
+            {
+                break;
+            }
 
-			toAnalyse.clear();
-			toAnalyse.addAll(waiting_sequence);
-			for (PipelineJob j : toAnalyse)
-			{
-				anSequence(j);
-			}
+            // On to analysis
+            ArrayList<PipelineJob> toAnalyse = new ArrayList<PipelineJob>();
 
-			toAnalyse.clear();
-			toAnalyse.addAll(waiting_token);
-			for (PipelineJob j : toAnalyse)
-			{
-				anToken(j);
-			}
+            toAnalyse.clear();
+            toAnalyse.addAll(waitingSequence);
+            for (PipelineJob j : toAnalyse)
+            {
+                anSequence(j);
+            }
 
-			toAnalyse.clear();
-			toAnalyse.addAll(waiting_exclusion);
-			for (PipelineJob j : toAnalyse)
-			{
-				anExclusion(j);
-			}
+            toAnalyse.clear();
+            toAnalyse.addAll(waitingToken);
+            for (PipelineJob j : toAnalyse)
+            {
+                anToken(j);
+            }
 
-			toAnalyse.clear();
-			toAnalyse.addAll(waiting_run);
-			for (PipelineJob j : toAnalyse)
-			{
-				runPJ(j);
-			}
-			this.analyze.release();
-		}
-	}
+            toAnalyse.clear();
+            toAnalyse.addAll(waitingExclusion);
+            for (PipelineJob j : toAnalyse)
+            {
+                anExclusion(j);
+            }
 
-	@Override
-	public void onMessage(Message msg)
-	{
-		ObjectMessage omsg = (ObjectMessage) msg;
-		PipelineJob pj = null;
-		TokenRequest rq = null;
-		try
-		{
-			Object o = omsg.getObject();
-			if (o instanceof PipelineJob)
-			{
-				pj = (PipelineJob) o;
-			}
-			else if (o instanceof TokenRequest)
-			{
-				rq = (TokenRequest) o;
-			}
-			else
-			{
-				log.warn("An object was received on the pipeline queue but was not a job or a token request answer! Ignored.");
-				commit();
-				return;
-			}
+            toAnalyse.clear();
+            toAnalyse.addAll(waitingRun);
+            for (PipelineJob j : toAnalyse)
+            {
+                runPJ(j);
+            }
+            this.analyze.release();
+        }
+    }
 
-		} catch (JMSException e)
-		{
-			log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
-			rollback();
-			return;
-		}
+    @Override
+    public void onMessage(Message msg)
+    {
+        ObjectMessage omsg = (ObjectMessage) msg;
+        PipelineJob pj = null;
+        TokenRequest rq = null;
+        try
+        {
+            Object o = omsg.getObject();
+            if (o instanceof PipelineJob)
+            {
+                pj = (PipelineJob) o;
+            }
+            else if (o instanceof TokenRequest)
+            {
+                rq = (TokenRequest) o;
+            }
+            else
+            {
+                log.warn("An object was received on the pipeline queue but was not a job or a token request answer! Ignored.");
+                jmsCommit();
+                return;
+            }
 
-		if (pj != null)
-		{
-			transac_injector.begin();
+        }
+        catch (JMSException e)
+        {
+            log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
+            jmsRollback();
+            return;
+        }
 
-			pj.setStatus("CHECK_SYNC_CONDS"); // So that we find it again after a crash/stop
-			pj.setEnteredPipeAt(DateTime.now().toDate());
-			em_injector.merge(pj);
+        if (pj != null)
+        {
+            if (transacInjector == null)
+            {
+                log.error("Euh ?");
+            }
+            transacInjector.begin();
 
-			transac_injector.commit();
+            // So that we find it again after a crash/stop
+            pj.setStatus(Constants.JI_STATUS_CHECK_SYNC_CONDS);
+            pj.setEnteredPipeAt(DateTime.now().toDate());
+            emInjector.merge(pj);
 
-			log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
-			commit(); // JMS
-			entering.add(pj);
-		}
+            transacInjector.commit();
 
-		if (rq != null)
-		{
-			log.debug("Token message received");
-			try
-			{
-				this.analyze.acquire();
-			} catch (InterruptedException e1)
-			{
-			}
+            log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
+            jmsCommit();
+            entering.add(pj);
+        }
 
-			pj = null;
-			for (PipelineJob jj : waiting_token_answer)
-			{
-				if (jj.getIdU().equals(rq.pipelineJobID))
-					pj = jj;
-			}
-			if (pj == null)
-			{
-				log.warn("A token was given to an unexisting PJ. Ignored");
-				this.analyze.release();
-				commit();
-				return;
-			}
+        if (rq != null)
+        {
+            log.debug("Token message received");
+            try
+            {
+                this.analyze.acquire();
+            }
+            catch (InterruptedException e1)
+            {
+                // Not an issue
+            }
 
-			waiting_token_answer.remove(pj);
-			waiting_exclusion.add(pj);
-			log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
+            pj = null;
+            for (PipelineJob jj : waitingTokenAnswer)
+            {
+                if (jj.getIdU().equals(rq.pipelineJobID))
+                {
+                    pj = jj;
+                }
+            }
+            if (pj == null)
+            {
+                log.warn("A token was given to an unexisting PJ. Ignored");
+                this.analyze.release();
+                jmsCommit();
+                return;
+            }
 
-			this.analyze.release();
-			commit(); // JMS
-			entering.add(new PipelineJob());
-		}
+            waitingTokenAnswer.remove(pj);
+            waitingExclusion.add(pj);
+            log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
 
-	}
+            this.analyze.release();
+            jmsCommit();
+            entering.add(new PipelineJob());
+        }
+    }
 
-	private void commit()
-	{
-		try
-		{
-			jmsSession.commit();
-		} catch (JMSException e)
-		{
-			log.error("failure to acknowledge a message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
-			// TODO: stop the engine. Well, as soon as we HAVE an engine to
-			// stop.
-			return;
-		}
-	}
+    private void anSequence(PipelineJob pj)
+    {
+        // TODO: really check sequences
+        waitingSequence.remove(pj);
+        waitingToken.add(pj);
+        log.debug(String.format("Job %s has finished sequence analysis - on to token analysis", pj.getId()));
+    }
 
-	private void rollback()
-	{
-		try
-		{
-			jmsSession.rollback();
-		} catch (JMSException e)
-		{
-			log.error("failure to rollback an message in the JMS queue. Scheduler will now abort as it is a dangerous situation.", e);
-			// TODO: stop the engine. Well, as soon as we HAVE an engine to
-			// stop.
-			return;
-		}
-	}
+    private void anToken(PipelineJob pj)
+    {
+        org.oxymores.chronix.core.State s = pj.getState(ctx);
+        if (s.getTokens().size() > 0)
+        {
+            for (Token tk : s.getTokens())
+            {
+                TokenRequest tr = new TokenRequest();
+                tr.applicationID = UUID.fromString(pj.getAppID());
+                tr.local = true;
+                tr.placeID = UUID.fromString(pj.getPlaceID());
+                tr.requestedAt = new DateTime();
+                tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
+                tr.stateID = pj.getStateIDU();
+                tr.tokenID = tk.getId();
+                tr.type = TokenRequestType.REQUEST;
+                tr.pipelineJobID = pj.getIdU();
 
-	private void anSequence(PipelineJob pj)
-	{
-		// TODO: really check sequences
-		waiting_sequence.remove(pj);
-		waiting_token.add(pj);
-		log.debug(String.format("Job %s has finished sequence analysis - on to token analysis", pj.getId()));
-	}
+                try
+                {
+                    SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, jmsJRProducer, true);
+                }
+                catch (JMSException e)
+                {
+                    log.error("Could not send a token request. This will likely block the plan.", e);
+                    jmsRollback();
+                }
 
-	private void anToken(PipelineJob pj)
-	{
-		org.oxymores.chronix.core.State s = pj.getState(ctx);
-		if (s.getTokens().size() > 0)
-		{
-			for (Token tk : s.getTokens())
-			{
-				TokenRequest tr = new TokenRequest();
-				tr.applicationID = UUID.fromString(pj.getAppID());
-				tr.local = true;
-				tr.placeID = UUID.fromString(pj.getPlaceID());
-				tr.requestedAt = new DateTime();
-				tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
-				tr.stateID = pj.getStateIDU();
-				tr.tokenID = tk.getId();
-				tr.type = TokenRequestType.REQUEST;
-				tr.pipelineJobID = pj.getIdU();
+                waitingToken.remove(pj);
+                waitingTokenAnswer.add(pj);
+            }
+        }
+        else
+        {
+            // No tokens to analyse - continue advancing in the pipeline
+            waitingToken.remove(pj);
+            waitingExclusion.add(pj);
+            log.debug(String.format("Job %s has finished token analysis (no tokens!) - on to exclusion analysis", pj.getId()));
+        }
+    }
 
-				try
-				{
-					SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, jmsJRProducer, true);
-				} catch (JMSException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+    private void anExclusion(PipelineJob pj)
+    {
+        // TODO: really check exclusions
+        waitingExclusion.remove(pj);
+        waitingRun.add(pj);
+        log.debug(String.format("Job %s has finished exclusion analysis - on to run", pj.getId()));
+    }
 
-				waiting_token.remove(pj);
-				waiting_token_answer.add(pj);
-			}
-		}
-		else
-		{
-			// No tokens to analyse - continue advancing in the pipeline
-			waiting_token.remove(pj);
-			waiting_exclusion.add(pj);
-			log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
-		}
-	}
+    private void runPJ(PipelineJob pj)
+    {
+        // Remove from queue
+        waitingRun.remove(pj);
 
-	private void anExclusion(PipelineJob pj)
-	{
-		// TODO: really check exclusions
-		waiting_exclusion.remove(pj);
-		waiting_run.add(pj);
-		log.debug(String.format("Job %s has finished exclusion analysis - on to run", pj.getId()));
-	}
+        transacMainLoop.begin();
 
-	private void runPJ(PipelineJob pj)
-	{
-		// Remove from queue
-		waiting_run.remove(pj);
+        String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getHost().getBrokerName());
+        try
+        {
+            Destination d = jmsSession.createQueue(qName);
+            ObjectMessage om = jmsSession.createObjectMessage(pj);
+            jmsJRProducer.send(d, om);
+        }
+        catch (JMSException e1)
+        {
+            log.error("Could not launch a job! Probable bug. Job request will be ignored to allow resuming the scheduler", e1);
+            jmsCommit();
+            return;
+        }
 
-		transac_mainloop.begin(); // JPA transaction
+        pj.setStatus(Constants.JI_STATUS_RUNNING);
+        pj.setMarkedForRunAt(new Date());
 
-		String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getHost().getBrokerName());
-		try
-		{
-			Destination d = jmsSession.createQueue(qName);
-			ObjectMessage om = jmsSession.createObjectMessage(pj);
-			jmsJRProducer.send(d, om);
-		} catch (JMSException e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+        transacMainLoop.commit();
+        jmsCommit();
 
-		pj.setStatus("RUNNING");
-		pj.setMarkedForRunAt(new Date());
-
-		transac_mainloop.commit(); // JPA
-		commit(); // JMS
-
-		log.debug(String.format("Job %s was given to the runner queue %s", pj.getId(), qName));
-	}
+        log.debug(String.format("Job %s was given to the runner queue %s", pj.getId(), qName));
+    }
 }

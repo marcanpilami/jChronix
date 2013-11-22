@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package org.oxymores.chronix.demo;
+package org.oxymores.chronix.planbuilder;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
