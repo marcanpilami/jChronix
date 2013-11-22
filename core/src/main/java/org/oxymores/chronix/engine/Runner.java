@@ -94,19 +94,19 @@ public class Runner extends BaseListener
             this.qName = String.format("Q.%s.RUNNERMGR", brokerName);
             log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.configurationDirectoryPath, qName));
 
+            // Outgoing producer for running commands
+            this.producerRunDescription = this.jmsSession.createProducer(null);
+            this.producerHistory = this.jmsSession.createProducer(null);
+            this.producerEvents = this.jmsSession.createProducer(null);
+
+            // Register on Log Shipping queue
+            this.subscribeTo(String.format("Q.%s.LOGFILE", brokerName));
+
             // Register on Request queue
             this.subscribeTo(qName);
 
             // Register on End of job queue
             destEndJob = this.subscribeTo(String.format("Q.%s.ENDOFJOB", brokerName));
-
-            // Register on Log Shipping queue
-            this.subscribeTo(String.format("Q.%s.LOGFILE", brokerName));
-
-            // Outgoing producer for running commands
-            this.producerRunDescription = this.jmsSession.createProducer(null);
-            this.producerHistory = this.jmsSession.createProducer(null);
-            this.producerEvents = this.jmsSession.createProducer(null);
         }
         catch (JMSException e)
         {

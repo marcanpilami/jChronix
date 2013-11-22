@@ -50,7 +50,7 @@ public class ChronixEngine extends Thread
     protected Broker broker;
     protected SelfTriggerAgent stAgent;
 
-    protected Semaphore startCritical, stop, threadInit, stopped;
+    protected Semaphore startCritical, stop, threadInit, stopped, stopping;
     protected boolean run = true;
     protected int nbRunner;
 
@@ -91,10 +91,15 @@ public class ChronixEngine extends Thread
         this.ctx.transacUnitName = transacUnitName;
         this.ctx.historyUnitName = historyUnitName;
 
+        // Startup phase is synchronized with this
         this.startCritical = new Semaphore(1);
+        // Putting a token in this will stop the engine
         this.stop = new Semaphore(0);
         this.threadInit = new Semaphore(0);
+        // A token is created when the engines stops. (not when it reboots)
         this.stopped = new Semaphore(0);
+        // The stop & start sequence is protected with this
+        this.stopping = new Semaphore(1);
     }
 
     //
@@ -114,7 +119,7 @@ public class ChronixEngine extends Thread
             postContextLoad();
 
             // Broker with all the consumer threads
-            this.broker = new Broker(this, purgeQueues);
+            this.broker = new Broker(this.ctx, purgeQueues, !this.runnerMode, true);
             this.broker.setNbRunners(this.nbRunner);
             if (!runnerMode)
             {
@@ -134,6 +139,7 @@ public class ChronixEngine extends Thread
 
             // Done
             this.startCritical.release();
+            log.info("Engine for context " + this.ctx.configurationDirectoryPath + " has finished its boot sequence");
 
             if (blocking)
             {
@@ -167,6 +173,7 @@ public class ChronixEngine extends Thread
             // Then, wait for the end signal
             try
             {
+                this.stopping.acquire();
                 this.stop.acquire();
             }
             catch (InterruptedException e)
@@ -191,10 +198,28 @@ public class ChronixEngine extends Thread
                 log.info("Interruption while waiting for port freeing");
             }
 
+            this.stopping.release(1);
             // Done. If 'run' is still true, will restart the engine
         }
         this.stopped.release();
         log.info("The scheduler has stopped");
+    }
+
+    /**
+     * Wait for a reboot to occur & end. If no reboot happens, this function blocks for ever, so it's a little dangerous.
+     */
+    public void waitForRebootEnd()
+    {
+        try
+        {
+            this.stopping.acquire();
+        }
+        catch (InterruptedException e)
+        {
+            log.warn("Interruption while waiting for engine to reboot");
+        }
+        this.stopping.release();
+        waitForInitEnd();
     }
 
     public void waitForInitEnd()

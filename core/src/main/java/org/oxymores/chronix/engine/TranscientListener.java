@@ -47,7 +47,7 @@ class TranscientListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker);
-        log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing TranscientListener", ctx.configurationDirectory));
 
         // Register current object as a listener on LOG queue
         qName = String.format("Q.%s.CALENDARPOINTER", brokerName);

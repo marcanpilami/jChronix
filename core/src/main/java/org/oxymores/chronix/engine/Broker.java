@@ -100,7 +100,7 @@ class Broker
                 ctx.configurationDirectory));
         this.ctx = ctx;
         brokerName = this.ctx.getBrokerName();
-        if (ctx.applicationsById.values().size() > 0)
+        if (persistent)
         {
             this.emf = ctx.getTransacEMF();
         }
@@ -349,6 +349,7 @@ class Broker
             broker.waitUntilStopped();
             this.factory = null;
             this.engine = null;
+            log.debug("Broker has ended its stop sequence " + this.ctx.configurationDirectoryPath);
         }
         catch (Exception e)
         {
