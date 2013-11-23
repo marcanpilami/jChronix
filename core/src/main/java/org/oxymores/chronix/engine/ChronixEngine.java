@@ -85,12 +85,7 @@ public class ChronixEngine extends Thread
         this.nbRunner = nbRunner;
 
         // To allow some basic configuration before starting nodes, we init the minimal fields inside the context
-        this.ctx = new ChronixContext();
-        this.ctx.configurationDirectoryPath = dbPath;
-        this.ctx.configurationDirectory = new File(dbPath);
-        this.ctx.localUrl = mainInterface;
-        this.ctx.transacUnitName = transacUnitName;
-        this.ctx.historyUnitName = historyUnitName;
+        this.ctx = ChronixContext.initContext(dbPath, transacUnitName, historyUnitName, mainInterface, false);
 
         // Startup phase is synchronized with this
         this.startCritical = new Semaphore(1);
@@ -140,7 +135,7 @@ public class ChronixEngine extends Thread
 
             // Done
             this.startCritical.release();
-            log.info("Engine for context " + this.ctx.configurationDirectoryPath + " has finished its boot sequence");
+            log.info("Engine for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
 
             if (blocking)
             {
@@ -291,7 +286,7 @@ public class ChronixEngine extends Thread
     protected void postContextLoad() throws ChronixInitializationException
     {
         // First start?
-        if (this.ctx.applicationsById.values().size() == 0 && !this.runnerMode)
+        if (this.ctx.getApplications().size() == 0 && !this.runnerMode)
         {
             try
             {

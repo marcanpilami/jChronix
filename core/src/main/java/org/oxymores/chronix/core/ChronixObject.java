@@ -25,36 +25,43 @@ import java.util.UUID;
 
 public class ChronixObject implements Serializable
 {
-	private static final long serialVersionUID = 1106120751950998543L;
+    private static final long serialVersionUID = 1106120751950998543L;
 
-	protected UUID id;
+    protected UUID id;
 
-	public ChronixObject()
-	{
-		id = UUID.randomUUID();
+    public ChronixObject()
+    {
+        id = UUID.randomUUID();
+    }
 
-	}
+    public UUID getId()
+    {
+        return id;
+    }
 
-	public UUID getId()
-	{
-		return id;
-	}
+    @Override
+    public boolean equals(Object o)
+    {
+        if (!(o instanceof ChronixObject))
+        {
+            return false;
+        }
+        return ((ChronixObject) o).getId().equals(this.getId());
+    }
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (!(o instanceof ChronixObject))
-			return false;
-		return ((ChronixObject) o).getId().equals(this.getId());
-	}
+    @Override
+    public int hashCode()
+    {
+        return this.id.hashCode();
+    }
 
-	public boolean validate()
-	{
-		return false;
-	}
+    public boolean validate()
+    {
+        return false;
+    }
 
-	public void setId(UUID id)
-	{
-		this.id = id;
-	}
+    public void setId(UUID id)
+    {
+        this.id = id;
+    }
 }

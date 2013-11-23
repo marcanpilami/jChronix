@@ -56,7 +56,6 @@ import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
-import org.oxymores.chronix.exceptions.ChronixNoCalendarException;
 
 /**
  * <strong>Note: </strong> this class cannot be multi instanciated - there must be only one Runner. Due to parameter resolution cache.
@@ -81,7 +80,7 @@ public class Runner extends BaseListener
             this.init(broker, true, false);
 
             // Log repository
-            this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));
+            this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.getContextRoot(), "GLOBALJOBLOG"));
             if (!(new File(this.logDbPath)).exists() && !(new File(this.logDbPath)).mkdir())
             {
                 throw new ChronixInitializationException("Could not create directory " + this.logDbPath);
@@ -92,7 +91,7 @@ public class Runner extends BaseListener
 
             // Log
             this.qName = String.format("Q.%s.RUNNERMGR", brokerName);
-            log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.configurationDirectoryPath, qName));
+            log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.getContextRoot(), qName));
 
             // Outgoing producer for running commands
             this.producerRunDescription = this.jmsSession.createProducer(null);
@@ -305,14 +304,14 @@ public class Runner extends BaseListener
             toRun.internalRun(emTransac, ctx, j, this.producerRunDescription, this.jmsSession);
             recvRR(res);
         }
-        else if (!ctx.simulateExternalPayloads && toRun.hasInternalPayload())
+        else if (!ctx.isSimulator() && toRun.hasInternalPayload())
         {
             // Asynchronous local run
             log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution",
                     j.getId(), toRun.getClass()));
             toRun.internalRun(emTransac, ctx, j, this.producerRunDescription, this.jmsSession);
         }
-        else if (!ctx.simulateExternalPayloads && j.isReady(ctx))
+        else if (!ctx.isSimulator() && j.isReady(ctx))
         {
             // It has an active part, but no need for dynamic parameters -> just run it (i.e. send it to a runner agent)
             log.debug(String.format(
@@ -321,7 +320,7 @@ public class Runner extends BaseListener
             SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
             this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
         }
-        else if (!ctx.simulateExternalPayloads)
+        else if (!ctx.isSimulator())
         {
             // implicit && !j.isReady(ctx)
             // Active part, and dynamic parameters -> resolve parameters.
@@ -429,16 +428,7 @@ public class Runner extends BaseListener
         Calendar c = a.getCalendar(UUID.fromString(pj.getCalendarID()));
         CalendarDay justDone = c.getDay(UUID.fromString(pj.getCalendarOccurrenceID()));
         CalendarDay next = c.getOccurrenceAfter(justDone);
-        CalendarPointer cp = null;
-        try
-        {
-            cp = s.getCurrentCalendarPointer(emTransac, p);
-        }
-        catch (ChronixNoCalendarException e1)
-        {
-            // Really cannot happen. Let's joke about the stupid exception.
-            log.error("Something that cannot happen has happened. ooops.", e1);
-        }
+        CalendarPointer cp = s.getCurrentCalendarPointer(emTransac, p);
 
         trTransac.begin();
         cp.setLastEndedOccurrenceCd(justDone);

@@ -38,7 +38,7 @@ class LogListener extends BaseListener
     {
         // Base initialization
         this.init(b, true, true);
-        log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing LogListener", ctx.getContextRoot()));
 
         // Register current object as a listener on LOG queue
         qName = String.format("Q.%s.LOG", brokerName);
@@ -70,17 +70,17 @@ class LogListener extends BaseListener
         trHistory.begin();
         trTransac.begin();
 
-        log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.id, rlog.activeNodeName,
-                rlog.placeName, rlog.stateId));
+        log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.getId(),
+                rlog.getActiveNodeName(), rlog.getPlaceName(), rlog.getStateId()));
         log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
-        rlog.lastLocallyModified = new Date();
+        rlog.setLastLocallyModified(new Date());
         emHistory.merge(rlog);
         RunStats.storeMetrics(rlog, emTransac);
         trHistory.commit();
         trTransac.commit();
         jmsCommit();
 
-        if (!ctx.simulateExternalPayloads)
+        if (!ctx.isSimulator())
         {
             trTransac.begin();
             RunStats.updateStats(rlog, emTransac);

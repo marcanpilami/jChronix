@@ -1,6 +1,5 @@
 package org.oxymores.chronix.main;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -96,8 +95,7 @@ public class Scheduler
         s3.connectTo(s4, 0);
         s4.connectTo(s5);
 
-        ChronixContext ctx = new ChronixContext();
-        ctx.configurationDirectory = new File(repoPath);
+        ChronixContext ctx = ChronixContext.initContext(repoPath, "", "", "", false);
         ChronixEngine tmp = new ChronixEngine(repoPath, mainDataInterface + ":" + mainDataPort);
         tmp.emptyDb();
         ctx.saveApplication(a);

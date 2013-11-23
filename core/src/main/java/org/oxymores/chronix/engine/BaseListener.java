@@ -111,7 +111,7 @@ public class BaseListener implements MessageListener
 
     void stopListening()
     {
-        log.trace("Stop request received for thread " + this.getClass() + "(context " + this.ctx.configurationDirectoryPath + ")");
+        log.trace("Stop request received for thread " + this.getClass() + "(context " + this.ctx.getContextRoot() + ")");
         try
         {
             for (MessageConsumer mc : this.qConsumers)

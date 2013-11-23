@@ -31,134 +31,119 @@ import org.joda.time.DateTime;
 
 public class SelfTriggerAgentSim extends SelfTriggerAgent
 {
-	private static Logger log = Logger.getLogger(SelfTriggerAgentSim.class);
-	protected DateTime beginTime, endTime;
+    private static Logger log = Logger.getLogger(SelfTriggerAgentSim.class);
+    protected DateTime beginTime, endTime;
 
-	@Override
-	protected long getNextLoopTime()
-	{
-		// During a simulation, no need to actually wait for the correct time to come, just loop!
-		return 0;
-	}
+    @Override
+    protected long getNextLoopTime()
+    {
+        // During a simulation, no need to actually wait for the correct time to come, just loop!
+        return 0;
+    }
 
-	@Override
-	protected void preLoopHook()
-	{
-		// The clocks can only advance if there are no running elements. That way, multiple runs will not occur simultaneously.
-		Long running = this.em.createQuery("SELECT COUNT(e) FROM Event e WHERE e.analysed = False", Long.class).getSingleResult()
-				+ this.em.createQuery("SELECT COUNT(p) FROM PipelineJob p WHERE p.status <> 'DONE'", Long.class).getSingleResult();
+    private Long getRunningCount()
+    {
+        Long running = this.em.createQuery("SELECT COUNT(e) FROM Event e WHERE e.analysed = False", Long.class).getSingleResult()
+                + this.em.createQuery("SELECT COUNT(p) FROM PipelineJob p WHERE p.status <> 'DONE'", Long.class).getSingleResult();
+        log.debug(String.format("There are %s elements unack in the db", running));
 
-		QueueBrowser events = null;
-		QueueBrowser pjs = null;
-		Queue devents, dpjs;
-		@SuppressWarnings("rawtypes")
-		Enumeration enu = null;
-		try
-		{
-			String event_queue_name = String.format("Q.%s.EVENT", this.ctx.getBrokerName());
-			String pj_queue_name = String.format("Q.%s.PJ", this.ctx.getBrokerName());
-			devents = this.jmsSession.createQueue(event_queue_name);
-			dpjs = this.jmsSession.createQueue(pj_queue_name);
-			events = this.jmsSession.createBrowser(devents);
-			pjs = this.jmsSession.createBrowser(dpjs);
-			enu = events.getEnumeration();
-			while (enu.hasMoreElements())
-			{
-				enu.nextElement();
-				running++;
-			}
-			enu = pjs.getEnumeration();
-			while (enu.hasMoreElements())
-			{
-				enu.nextElement();
-				running++;
-			}
-			pjs.close();
-			events.close();
-		} catch (JMSException e1)
-		{
-			e1.printStackTrace();
-			return;
-		}
+        QueueBrowser events = null;
+        QueueBrowser pjs = null;
+        Queue devents, dpjs;
+        @SuppressWarnings("rawtypes")
+        Enumeration enu = null;
+        try
+        {
+            String eventQueueName = String.format("Q.%s.EVENT", this.ctx.getBrokerName());
+            String pjQueueName = String.format("Q.%s.PJ", this.ctx.getBrokerName());
+            devents = this.jmsSession.createQueue(eventQueueName);
+            dpjs = this.jmsSession.createQueue(pjQueueName);
+            events = this.jmsSession.createBrowser(devents);
+            pjs = this.jmsSession.createBrowser(dpjs);
+            enu = events.getEnumeration();
+            while (enu.hasMoreElements())
+            {
+                enu.nextElement();
+                running++;
+            }
+            enu = pjs.getEnumeration();
+            while (enu.hasMoreElements())
+            {
+                enu.nextElement();
+                running++;
+            }
+            pjs.close();
+            events.close();
+        }
+        catch (JMSException e1)
+        {
+            // Just log - simulation is not critical.
+            log.error("An error occured during simulation", e1);
+        }
+        log.debug(String.format("There are %s elements unack in the db + mq", running));
+        return running;
+    }
 
-		while (running > 0)
-		{
-			try
-			{
-				Thread.sleep(500);
-			} catch (InterruptedException e)
-			{
-			}
+    @Override
+    protected void preLoopHook()
+    {
+        // The clocks can only advance if there are no running elements. That way, multiple runs will not occur simultaneously.
+        Long running = getRunningCount();
 
-			running = this.em.createQuery("SELECT COUNT(e) FROM Event e WHERE e.analysed = False", Long.class).getSingleResult()
-					+ this.em.createQuery("SELECT COUNT(p) FROM PipelineJob p WHERE p.status <> 'DONE'", Long.class).getSingleResult();
-			log.debug(String.format("There are %s elements unack in the db", running));
+        while (running > 0)
+        {
+            try
+            {
+                Thread.sleep(500);
+            }
+            catch (InterruptedException e)
+            {
+                // We'll just loop again, no panic.
+            }
 
-			try
-			{
-				events = this.jmsSession.createBrowser(devents);
-				pjs = this.jmsSession.createBrowser(dpjs);
-				enu = events.getEnumeration();
-				while (enu.hasMoreElements())
-				{
-					enu.nextElement();
-					running++;
-				}
-				enu = pjs.getEnumeration();
-				while (enu.hasMoreElements())
-				{
-					enu.nextElement();
-					running++;
-				}
-				pjs.close();
-				events.close();
-			} catch (JMSException e1)
-			{
-				e1.printStackTrace();
-			}
-			log.debug(String.format("There are %s elements unack in the db + mq", running));
+            running = getRunningCount();
+        }
 
-		}
+        // Here, should trigger external events
+        // TODO: external events simulation
 
-		// Here, should trigger external events
-		// TODO: external events simulation
+        // Exit if we are now out of the simulation window
+        if (this.endTime.isBefore(this.nextLoopVirtualTime))
+        {
+            log.debug("STAS will stop");
+            try
+            {
+                this.producerEvents.close();
+                this.jmsSession.close();
+            }
+            catch (JMSException e)
+            {
+                // Don't care. We are dying anyway.
+            }
+            run = false;
+            loop.release();
+        }
+    }
 
-		// Exit if we are now out of the simulation window
-		if (this.endTime.isBefore(this.nextLoopVirtualTime))
-		{
-			log.debug("STAS will stop");
-			try
-			{
-				this.producerEvents.close();
-				this.jmsSession.close();
-			} catch (JMSException e)
-			{
-				e.printStackTrace();
-			}
-			run = false;
-			loop.release();
-		}
-	}
+    public DateTime getBeginTime()
+    {
+        return beginTime;
+    }
 
-	public DateTime getBeginTime()
-	{
-		return beginTime;
-	}
+    public void setBeginTime(DateTime beginTime)
+    {
+        this.beginTime = beginTime;
+        this.nextLoopVirtualTime = beginTime;
+    }
 
-	public void setBeginTime(DateTime beginTime)
-	{
-		this.beginTime = beginTime;
-		this.nextLoopVirtualTime = beginTime;
-	}
+    public DateTime getEndTime()
+    {
+        return endTime;
+    }
 
-	public DateTime getEndTime()
-	{
-		return endTime;
-	}
-
-	public void setEndTime(DateTime endTime)
-	{
-		log.debug("End of simulation : " + endTime);
-		this.endTime = endTime;
-	}
+    public void setEndTime(DateTime endTime)
+    {
+        log.debug("End of simulation : " + endTime);
+        this.endTime = endTime;
+    }
 }

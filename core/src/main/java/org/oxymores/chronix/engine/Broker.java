@@ -96,8 +96,8 @@ class Broker
 
     Broker(ChronixContext ctx, boolean purge, boolean persistent, boolean tcp) throws ChronixInitializationException
     {
-        log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.localUrl,
-                ctx.configurationDirectory));
+        log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.getBrokerUrl(),
+                ctx.getContextRoot()));
         this.ctx = ctx;
         brokerName = this.ctx.getBrokerName();
         if (persistent)
@@ -112,7 +112,7 @@ class Broker
         // Basic configuration
         broker.setBrokerName(brokerName);
         broker.setPersistent(true);
-        broker.setDataDirectory(ctx.configurationDirectoryPath + File.separator + "activemq-data");
+        broker.setDataDirectory(ctx.getContextRoot() + File.separator + "activemq-data");
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(purge);
         broker.setEnableStatistics(false);
@@ -141,7 +141,7 @@ class Broker
         {
             try
             {
-                broker.addConnector("tcp://" + this.ctx.localUrl);
+                broker.addConnector("tcp://" + this.ctx.getBrokerUrl());
             }
             catch (Exception e1)
             {
@@ -162,7 +162,7 @@ class Broker
 
         // Add channels to other nodes
         ArrayList<String> opened = new ArrayList<String>();
-        for (Application a : this.ctx.applicationsById.values())
+        for (Application a : this.ctx.getApplications())
         {
             for (NodeLink nl : a.getLocalNode().getCanSendTo())
             {
@@ -176,7 +176,7 @@ class Broker
                 opened.add(nl.getNodeTo().getBrokerUrl());
 
                 String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
-                log.info(String.format("(%s) This broker will be able to open a channel towards %s", ctx.configurationDirectoryPath, url));
+                log.info(String.format("(%s) This broker will be able to open a channel towards %s", ctx.getContextRoot(), url));
                 NetworkConnector tc;
                 try
                 {
@@ -195,14 +195,14 @@ class Broker
             {
                 if (nl.getMethod().equals(NodeConnectionMethod.TCP))
                 {
-                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s)", ctx.configurationDirectoryPath,
-                            nl.getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
+                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s)", ctx.getContextRoot(), nl
+                            .getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
                 }
             }
         }
 
         // Start
-        log.info(String.format("(%s) The message broker will now start", ctx.configurationDirectoryPath));
+        log.info(String.format("(%s) The message broker will now start", ctx.getContextRoot()));
         try
         {
             broker.start();
@@ -300,7 +300,7 @@ class Broker
 
     void stop()
     {
-        log.info(String.format("(%s) The message broker will now stop", this.ctx.configurationDirectoryPath));
+        log.info(String.format("(%s) The message broker will now stop", this.ctx.getContextRoot()));
         try
         {
             if (this.thrML != null)
@@ -354,7 +354,7 @@ class Broker
             broker.waitUntilStopped();
             this.factory = null;
             this.engine = null;
-            log.debug("Broker has ended its stop sequence " + this.ctx.configurationDirectoryPath);
+            log.debug("Broker has ended its stop sequence " + this.ctx.getContextRoot());
         }
         catch (Exception e)
         {

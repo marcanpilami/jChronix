@@ -85,7 +85,7 @@ class SelfTriggerAgent extends Thread
 
     void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
     {
-        log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.configurationDirectoryPath));
+        log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.getContextRoot()));
 
         // Save pointers
         this.loop = new Semaphore(0);
@@ -99,7 +99,7 @@ class SelfTriggerAgent extends Thread
 
         // Get all self triggered nodes
         this.nodes = new ArrayList<ActiveNodeBase>();
-        for (Application a : this.ctx.applicationsById.values())
+        for (Application a : this.ctx.getApplications())
         {
             for (ActiveNodeBase n : a.getActiveElements().values())
             {
@@ -110,8 +110,7 @@ class SelfTriggerAgent extends Thread
             }
             // TODO: select only clocks with local consequences
         }
-        log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.configurationDirectoryPath,
-                this.nodes.size()));
+        log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.getContextRoot(), this.nodes.size()));
         for (int i = 0; i < this.nodes.size(); i++)
         {
             log.debug(String.format("\t\t" + this.nodes.get(i).getName()));

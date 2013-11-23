@@ -25,8 +25,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Date;
-import java.util.Hashtable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -35,7 +36,9 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
@@ -43,37 +46,67 @@ public class ChronixContext
 {
     private static Logger log = Logger.getLogger(ChronixContext.class);
 
-    public Date loaded;
-    public String configurationDirectoryPath;
-    public File configurationDirectory;
-    public Hashtable<UUID, Application> applicationsById;
-    public Hashtable<String, Application> applicationsByName;
-    public String localUrl = "";
-    public String dns;
-    public int port;
-    public String transacUnitName, historyUnitName;
-    public boolean simulateExternalPayloads = false;
+    private DateTime loaded;
+    private String configurationDirectoryPath;
+    private File configurationDirectory;
+    private Map<UUID, Application> applicationsById;
+    private Map<String, Application> applicationsByName;
+    private String localUrl = "";
+    private String dns;
+    private int port;
+    private String transacUnitName, historyUnitName;
+    private boolean simulateExternalPayloads = false;
 
-    public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName,
-            String brokerInterface, boolean loadNotLocalApps) throws ChronixPlanStorageException
+    /**
+     * Creates a minimal Context with no applications loaded.
+     * 
+     * @param appConfDirectory
+     * @param transacUnitName
+     * @param historyUnitName
+     * @param brokerInterface
+     * @param simulation
+     * @return
+     */
+    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName,
+            String brokerInterface, boolean simulation)
     {
-        log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
-
         ChronixContext ctx = new ChronixContext();
-        ctx.loaded = new Date();
+        ctx.loaded = org.joda.time.DateTime.now();
         ctx.configurationDirectoryPath = FilenameUtils.normalize(appConfDirectory);
         ctx.configurationDirectory = new File(ctx.configurationDirectoryPath);
-        ctx.applicationsById = new Hashtable<UUID, Application>();
-        ctx.applicationsByName = new Hashtable<String, Application>();
+        ctx.applicationsById = new HashMap<UUID, Application>();
+        ctx.applicationsByName = new HashMap<String, Application>();
         ctx.historyUnitName = historyUnitName;
         ctx.transacUnitName = transacUnitName;
         ctx.localUrl = brokerInterface;
         ctx.dns = ctx.localUrl.split(":")[0];
         ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
+        ctx.setSimulation(simulation);
+
+        return ctx;
+    }
+
+    /**
+     * Creates a new Context. This calls initContext, so no need to call it beforehand.
+     * 
+     * @param appConfDirectory
+     * @param transacUnitName
+     * @param historyUnitName
+     * @param brokerInterface
+     * @param simulation
+     * @return
+     * @throws ChronixPlanStorageException
+     */
+    public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName,
+            String brokerInterface, boolean simulation) throws ChronixPlanStorageException
+    {
+        log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
+
+        ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, brokerInterface, simulation);
 
         // List files in directory - and therefore applications
         File[] fileList = ctx.configurationDirectory.listFiles();
-        Hashtable<String, File[]> toLoad = new Hashtable<String, File[]>();
+        HashMap<String, File[]> toLoad = new HashMap<String, File[]>();
 
         for (int i = 0; i < fileList.length; i++)
         {
@@ -87,20 +120,20 @@ public class ChronixContext
                 // This is a current app DATA file.
                 String id = fileName.split("_")[2];
                 if (!toLoad.containsKey(id))
+                {
                     toLoad.put(id, new File[2]);
+                }
                 toLoad.get(id)[0] = f;
             }
-
-            // TODO: load version file
         }
 
         // ///////////////////
         // Load apps
         // ///////////////////
 
-        for (String ss : toLoad.keySet())
+        for (File[] ss : toLoad.values())
         {
-            ctx.loadApplication(toLoad.get(ss)[0], loadNotLocalApps);
+            ctx.loadApplication(ss[0], simulation);
         }
 
         // ///////////////////
@@ -115,14 +148,18 @@ public class ChronixContext
             for (Application a : ctx.applicationsById.values())
             {
                 for (Calendar c : a.calendars.values())
+                {
                     c.createPointers(em);
+                }
             }
             tr.commit();
             tr.begin();
             for (Application a : ctx.applicationsById.values())
             {
                 for (State s : a.getStates())
+                {
                     s.createPointers(em);
+                }
             }
             tr.commit();
         }
@@ -139,9 +176,13 @@ public class ChronixContext
     public Application loadApplication(UUID id, boolean workincopy, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
         if (workincopy)
+        {
             return loadApplication(new File(getWorkingPath(id)), loadNotLocalApps);
+        }
         else
+        {
             return loadApplication(new File(getActivePath(id)), loadNotLocalApps);
+        }
     }
 
     public Application loadApplication(File dataFile, boolean loadNotLocalApps) throws ChronixPlanStorageException
@@ -195,15 +236,20 @@ public class ChronixContext
     public void saveApplication(Application a) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
+        FileOutputStream fos = null;
+        ObjectOutputStream oos = null;
         try
         {
-            FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id));
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            fos = new FileOutputStream(getWorkingPath(a.id));
+            oos = new ObjectOutputStream(fos);
             oos.writeObject(a);
-            fos.close();
+            IOUtils.closeQuietly(fos);
+            IOUtils.closeQuietly(oos);
         }
         catch (Exception e)
         {
+            IOUtils.closeQuietly(fos);
+            IOUtils.closeQuietly(oos);
             throw new ChronixPlanStorageException("Could not save application to temp file", e);
         }
     }
@@ -232,7 +278,9 @@ public class ChronixContext
 
         File workingData = new File(workingDataFilePath);
         if (!workingData.exists())
+        {
             throw new ChronixPlanStorageException("work file does not exist. You sure 'bout that? You seem to have made no changes!", null);
+        }
         File currentData = new File(currentDataFilePath);
 
         // Get latest version
@@ -255,7 +303,9 @@ public class ChronixContext
                     tmp = 0;
                 }
                 if (tmp > v)
+                {
                     v = tmp;
+                }
             }
         }
         v++;
@@ -266,19 +316,22 @@ public class ChronixContext
         File nextArchiveDataFile = new File(nextArchiveDataFilePath);
 
         // Move CURRENT to the new archive version
-        if (currentData.exists())
+        if (currentData.exists() && !currentData.renameTo(nextArchiveDataFile))
         {
-            currentData.renameTo(nextArchiveDataFile);
+            throw new ChronixPlanStorageException("Could not archive current WORKING file", null);
         }
 
         // Move WORKING as the new CURRENT
         log.debug(String.format("(%s) New path will be %s", this.configurationDirectory, currentDataFilePath));
-        workingData.renameTo(new File(currentDataFilePath));
+        if (!workingData.renameTo(new File(currentDataFilePath)))
+        {
+            throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
+        }
     }
 
-    public Hashtable<UUID, ExecutionNode> getNetwork()
+    public Map<UUID, ExecutionNode> getNetwork()
     {
-        Hashtable<UUID, ExecutionNode> res = new Hashtable<UUID, ExecutionNode>();
+        Map<UUID, ExecutionNode> res = new HashMap<UUID, ExecutionNode>();
         for (Application a : applicationsById.values())
         {
             res.putAll(a.nodes);
@@ -323,8 +376,66 @@ public class ChronixContext
         for (Application a : this.applicationsById.values())
         {
             if (a.getConsoleNode() != null && a.getLocalNode() == a.getConsoleNode())
+            {
                 return true;
+            }
         }
         return false;
+    }
+
+    private void setSimulation(boolean simulation)
+    {
+        this.simulateExternalPayloads = simulation;
+    }
+
+    public boolean isSimulator()
+    {
+        return simulateExternalPayloads;
+    }
+
+    public void setSimulator()
+    {
+        this.simulateExternalPayloads = true;
+    }
+
+    public Application getApplication(UUID id)
+    {
+        return this.applicationsById.get(id);
+    }
+
+    public Application getApplication(String id)
+    {
+        return this.getApplication(UUID.fromString(id));
+    }
+
+    public Application getApplicationByName(String name)
+    {
+        return this.applicationsByName.get(name);
+    }
+
+    public Collection<Application> getApplications()
+    {
+        return this.applicationsById.values();
+    }
+
+    public String getContextRoot()
+    {
+        return this.configurationDirectoryPath;
+    }
+
+    public void addApplicationToCache(Application a)
+    {
+        this.applicationsById.put(a.getId(), a);
+        this.applicationsByName.put(a.getName(), a);
+    }
+
+    public String getBrokerUrl()
+    {
+        return this.localUrl;
+    }
+
+    public DateTime getLoadTime()
+    {
+        return loaded;
     }
 }

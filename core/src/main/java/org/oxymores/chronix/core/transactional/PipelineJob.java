@@ -430,47 +430,47 @@ public class PipelineJob extends TranscientBase
     public RunLog getEventLog(ChronixContext ctx, RunResult rr)
     {
         RunLog rlog = new RunLog();
-        Application a = ctx.applicationsById.get(UUID.fromString(this.appID));
+        Application a = ctx.getApplication(this.appID);
         Place p = a.getPlace(UUID.fromString(this.placeID));
         ActiveNodeBase act = this.getActive(ctx);
 
-        rlog.activeNodeId = this.activeID;
-        rlog.activeNodeName = act.getName();
-        rlog.applicationId = this.appID;
-        rlog.applicationName = a.getName();
-        rlog.beganRunningAt = this.beganRunningAt;
-        rlog.chainLaunchId = this.level1Id;
-        rlog.chainId = this.level0Id;
+        rlog.setActiveNodeId(this.activeID);
+        rlog.setActiveNodeName(act.getName());
+        rlog.setApplicationId(this.appID);
+        rlog.setApplicationName(a.getName());
+        rlog.setBeganRunningAt(this.beganRunningAt);
+        rlog.setChainLaunchId(this.level1Id);
+        rlog.setChainId(this.level0Id);
         // rlog.chainLev1Id = this.level1Id;
         // rlog.chainLev1Name
-        rlog.chainName = a.getActiveNode(UUID.fromString(this.level0Id)).getName();
+        rlog.setChainName(a.getActiveNode(UUID.fromString(this.level0Id)).getName());
         // rlog.dataIn =
         // rlog.dataOut =
-        rlog.dns = rr.envtServer;
-        rlog.enteredPipeAt = this.enteredPipeAt;
-        rlog.executionNodeId = p.getNode().getId().toString();
-        rlog.executionNodeName = p.getNode().getBrokerUrl();
-        rlog.id = this.id.toString();
-        rlog.lastKnownStatus = this.status;
-        rlog.markedForUnAt = this.markedForRunAt;
-        rlog.osAccount = rr.envtUser;
-        rlog.placeId = this.placeID;
-        rlog.placeName = p.getName();
-        rlog.resultCode = this.resultCode;
+        rlog.setDns(rr.envtServer);
+        rlog.setEnteredPipeAt(this.enteredPipeAt);
+        rlog.setExecutionNodeId(p.getNode().getId().toString());
+        rlog.setExecutionNodeName(p.getNode().getBrokerUrl());
+        rlog.setId(this.id.toString());
+        rlog.setLastKnownStatus(this.status);
+        rlog.setMarkedForUnAt(this.markedForRunAt);
+        rlog.setOsAccount(rr.envtUser);
+        rlog.setPlaceId(this.placeID);
+        rlog.setPlaceName(p.getName());
+        rlog.setResultCode(this.resultCode);
         // rlog.sequence =
-        rlog.shortLog = rr.logStart;
-        rlog.stateId = this.stateID;
-        rlog.stoppedRunningAt = this.stoppedRunningAt;
-        rlog.visible = act.visibleInHistory();
-        rlog.whatWasRun = this.runThis;
-        rlog.logPath = rr.logPath;
+        rlog.setShortLog(rr.logStart);
+        rlog.setStateId(this.stateID);
+        rlog.setStoppedRunningAt(this.stoppedRunningAt);
+        rlog.setVisible(act.visibleInHistory());
+        rlog.setWhatWasRun(this.runThis);
+        rlog.setLogPath(rr.logPath);
 
         // Calendar
         if (this.calendarID != null)
         {
             Calendar c = a.getCalendar(UUID.fromString(this.calendarID));
-            rlog.calendarName = c.getName();
-            rlog.calendarOccurrence = c.getDay(UUID.fromString(this.calendarOccurrenceID)).getValue();
+            rlog.setCalendarName(c.getName());
+            rlog.setCalendarOccurrence(c.getDay(UUID.fromString(this.calendarOccurrenceID)).getValue());
         }
 
         return rlog;

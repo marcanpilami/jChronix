@@ -245,17 +245,17 @@ public class TestParallelism
         Assert.assertEquals(7, res.size());
         for (RunLog rl : res)
         {
-            log.info(rl.shortLog);
+            log.info(rl.getShortLog());
         }
 
         // Test auto variable
-        Assert.assertEquals(nl + "Display jobname", res.get(2).shortLog);
+        Assert.assertEquals(nl + "Display jobname", res.get(2).getShortLog());
 
         // Test propagated variable on the local node
-        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(4).shortLog);
+        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(4).getShortLog());
 
         // Test propagated variable on the remotely hosted node
-        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(5).shortLog);
+        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(5).getShortLog());
     }
 
     @Test
@@ -325,8 +325,8 @@ public class TestParallelism
         RunLog failedLog = null;
         for (RunLog rl : res)
         {
-            log.info(rl.shortLog);
-            if (rl.placeName.startsWith("P21"))
+            log.info(rl.getShortLog());
+            if (rl.getPlaceName().startsWith("P21"))
                 failedLog = rl;
         }
 
@@ -335,7 +335,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO RESTART*******************************************************");
         try
         {
-            SenderHelpers.sendOrderRestartAfterFailure(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderRestartAfterFailure(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -350,7 +350,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -432,7 +432,7 @@ public class TestParallelism
         RunLog failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.placeName.startsWith("P21"))
+            if (rl.getPlaceName().startsWith("P21"))
                 failedLog = rl;
         }
 
@@ -441,7 +441,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -528,7 +528,7 @@ public class TestParallelism
         RunLog failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.placeName.startsWith("P21"))
+            if (rl.getPlaceName().startsWith("P21"))
                 failedLog = rl;
         }
 
@@ -537,7 +537,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -621,8 +621,8 @@ public class TestParallelism
         RunLog failedLog = null;
         for (RunLog rl : res)
         {
-            log.debug(rl.stateId);
-            if (rl.placeName.startsWith("P21") && rl.stateId.equals(s1.getId().toString()))
+            log.debug(rl.getStateId());
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s1.getId().toString()))
                 failedLog = rl;
         }
 
@@ -631,7 +631,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -644,7 +644,7 @@ public class TestParallelism
         failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.placeName.startsWith("P21") && rl.stateId.equals(s2.getId().toString()))
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s2.getId().toString()))
                 failedLog = rl;
         }
 
@@ -653,7 +653,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 2*********************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)
@@ -665,7 +665,7 @@ public class TestParallelism
         failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.placeName.startsWith("P21") && rl.stateId.equals(s3.getId().toString()))
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s3.getId().toString()))
                 failedLog = rl;
         }
 
@@ -674,7 +674,7 @@ public class TestParallelism
         log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 3*********************************************");
         try
         {
-            SenderHelpers.sendOrderForceOk(failedLog.id, en2, e1.ctx);
+            SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
             Thread.sleep(2000);
         }
         catch (Exception e)

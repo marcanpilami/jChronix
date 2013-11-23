@@ -52,7 +52,7 @@ class OrderListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, true);
-        log.debug(String.format("(%s) Initializing OrderListener", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing OrderListener", ctx.getContextRoot()));
 
         // Register current object as a listener on ORDER queue
         this.qName = String.format("Q.%s.ORDER", brokerName);
@@ -171,7 +171,7 @@ class OrderListener extends BaseListener
     {
         // Find the external node
         State s = null;
-        for (Application a : ctx.applicationsByName.values())
+        for (Application a : ctx.getApplications())
         {
             s = a.getState((UUID) order.data);
             if (s != null)

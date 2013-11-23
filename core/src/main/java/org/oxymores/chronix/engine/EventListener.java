@@ -48,7 +48,7 @@ class EventListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, false);
-        log.info(String.format("(%s) Starting an event engine", ctx.configurationDirectoryPath));
+        log.info(String.format("(%s) Starting an event engine", ctx.getContextRoot()));
 
         this.qName = String.format("Q.%s.EVENT", brokerName);
         this.subscribeTo(qName);
@@ -121,7 +121,7 @@ class EventListener extends BaseListener
         }
 
         // All clients
-        ArrayList<State> clientStates = s.getClientStates();
+        List<State> clientStates = s.getClientStates();
 
         // All client physical nodes
         ArrayList<ExecutionNode> clientPN = new ArrayList<ExecutionNode>();
@@ -179,7 +179,7 @@ class EventListener extends BaseListener
         {
             boolean shouldPurge = true;
             State s = e.getState(ctx);
-            ArrayList<State> clientStates = s.getClientStates();
+            List<State> clientStates = s.getClientStates();
 
             for (State cs : clientStates)
             {

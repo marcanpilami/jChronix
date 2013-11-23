@@ -42,293 +42,300 @@ import org.oxymores.chronix.core.State;
 @Entity
 public class TranscientBase implements Serializable
 {
-	private static final long serialVersionUID = 8976655465578L;
-	// private static Logger log = Logger.getLogger(TranscientBase.class);
+    private static final long serialVersionUID = 8976655465578L;
+    // private static Logger log = Logger.getLogger(TranscientBase.class);
 
-	@Id
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String id;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String stateID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String activeID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String placeID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String appID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String calendarOccurrenceID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String calendarID;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	protected String simulationID;
-	protected Boolean outsideChainLaunch = false;
-	protected Boolean ignoreCalendarUpdating = false;
+    @Id
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String id;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String stateID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String activeID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String placeID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String appID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String calendarOccurrenceID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String calendarID;
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    protected String simulationID;
+    protected Boolean outsideChainLaunch = false;
+    protected Boolean ignoreCalendarUpdating = false;
 
-	protected Date createdAt;
-	protected Date virtualTime;
+    protected Date createdAt;
+    protected Date virtualTime;
 
-	@OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
-	protected ArrayList<EnvironmentValue> envParams;
+    @OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
+    protected ArrayList<EnvironmentValue> envParams;
 
-	public TranscientBase()
-	{
-		id = UUID.randomUUID().toString();
-		createdAt = new Date();
-		envParams = new ArrayList<EnvironmentValue>();
-	}
+    public TranscientBase()
+    {
+        id = UUID.randomUUID().toString();
+        createdAt = new Date();
+        envParams = new ArrayList<EnvironmentValue>();
+    }
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (!(o instanceof TranscientBase))
-			return false;
-		return ((TranscientBase) o).getId().equals(this.getId());
-	}
+    @Override
+    public boolean equals(Object o)
+    {
+        if (!(o instanceof TranscientBase))
+            return false;
+        return ((TranscientBase) o).getId().equals(this.getId());
+    }
 
-	// //////////////////////////////////////////////
-	// Calendar & co
-	public String getCalendarID()
-	{
-		return calendarID;
-	}
+    @Override
+    public int hashCode()
+    {
+        return UUID.fromString(this.id).hashCode();
+    }
 
-	public void setCalendarID(String id)
-	{
-		this.calendarID = id;
-	}
+    // //////////////////////////////////////////////
+    // Calendar & co
+    public String getCalendarID()
+    {
+        return calendarID;
+    }
 
-	public Calendar getCalendar(ChronixContext ctx)
-	{
-		return this.getApplication(ctx).getCalendar(UUID.fromString(this.calendarID));
-	}
+    public void setCalendarID(String id)
+    {
+        this.calendarID = id;
+    }
 
-	public void setCalendar(Calendar c)
-	{
-		if (c == null)
-		{
-			this.calendarID = null;
-		}
-		else
-		{
-			this.calendarID = c.getId().toString();
-		}
-	}
+    public Calendar getCalendar(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getCalendar(UUID.fromString(this.calendarID));
+    }
 
-	public String getCalendarOccurrenceID()
-	{
-		return calendarOccurrenceID;
-	}
+    public void setCalendar(Calendar c)
+    {
+        if (c == null)
+        {
+            this.calendarID = null;
+        }
+        else
+        {
+            this.calendarID = c.getId().toString();
+        }
+    }
 
-	public void setCalendarOccurrenceID(String calendarOccurrenceID)
-	{
-		this.calendarOccurrenceID = calendarOccurrenceID;
-	}
+    public String getCalendarOccurrenceID()
+    {
+        return calendarOccurrenceID;
+    }
 
-	//
-	// //////////////////////////////////////////////
+    public void setCalendarOccurrenceID(String calendarOccurrenceID)
+    {
+        this.calendarOccurrenceID = calendarOccurrenceID;
+    }
 
-	// //////////////////////////////////////////////
-	// State
-	protected void setStateID(String stateID)
-	{
-		this.stateID = stateID;
-	}
+    //
+    // //////////////////////////////////////////////
 
-	public void setState(State state)
-	{
-		if (state != null)
-		{
-			this.stateID = state.getId().toString();
-			this.setActive(state.getRepresents());
-			this.setApplication(state.getApplication());
-		}
-		else
-		{
-			this.stateID = null;
-		}
-	}
+    // //////////////////////////////////////////////
+    // State
+    protected void setStateID(String stateID)
+    {
+        this.stateID = stateID;
+    }
 
-	public State getState(ChronixContext ctx)
-	{
-		return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
-	}
+    public void setState(State state)
+    {
+        if (state != null)
+        {
+            this.stateID = state.getId().toString();
+            this.setActive(state.getRepresents());
+            this.setApplication(state.getApplication());
+        }
+        else
+        {
+            this.stateID = null;
+        }
+    }
 
-	public String getStateID()
-	{
-		return this.stateID;
-	}
+    public State getState(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
+    }
 
-	public UUID getStateIDU()
-	{
-		return UUID.fromString(this.stateID);
-	}
+    public String getStateID()
+    {
+        return this.stateID;
+    }
 
-	//
-	// //////////////////////////////////////////////
+    public UUID getStateIDU()
+    {
+        return UUID.fromString(this.stateID);
+    }
 
-	// //////////////////////////////////////////////
-	// Active node
-	public String getActiveID()
-	{
-		return activeID;
-	}
+    //
+    // //////////////////////////////////////////////
 
-	protected void setActiveID(String activeID)
-	{
-		this.activeID = activeID;
-	}
+    // //////////////////////////////////////////////
+    // Active node
+    public String getActiveID()
+    {
+        return activeID;
+    }
 
-	private void setActive(ActiveNodeBase active)
-	{
-		this.activeID = active.getId().toString();
-	}
+    protected void setActiveID(String activeID)
+    {
+        this.activeID = activeID;
+    }
 
-	public ActiveNodeBase getActive(ChronixContext ctx)
-	{
-		return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
-	}
+    private void setActive(ActiveNodeBase active)
+    {
+        this.activeID = active.getId().toString();
+    }
 
-	//
-	// //////////////////////////////////////////////
+    public ActiveNodeBase getActive(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
+    }
 
-	// //////////////////////////////////////////////
-	// Network
-	public String getPlaceID()
-	{
-		return placeID;
-	}
+    //
+    // //////////////////////////////////////////////
 
-	protected void setPlaceID(String placeID)
-	{
-		this.placeID = placeID;
-	}
+    // //////////////////////////////////////////////
+    // Network
+    public String getPlaceID()
+    {
+        return placeID;
+    }
 
-	public void setPlace(Place place)
-	{
-		if (place != null)
-		{
-			this.placeID = place.getId().toString();
-			this.appID = place.getApplication().getId().toString();
-		}
-		else
-			this.placeID = null;
-	}
+    protected void setPlaceID(String placeID)
+    {
+        this.placeID = placeID;
+    }
 
-	public Place getPlace(ChronixContext ctx)
-	{
-		return this.getApplication(ctx).getPlace(UUID.fromString(this.placeID));
-	}
+    public void setPlace(Place place)
+    {
+        if (place != null)
+        {
+            this.placeID = place.getId().toString();
+            this.appID = place.getApplication().getId().toString();
+        }
+        else
+            this.placeID = null;
+    }
 
-	//
-	// //////////////////////////////////////////////
+    public Place getPlace(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getPlace(UUID.fromString(this.placeID));
+    }
 
-	// //////////////////////////////////////////////
-	// Misc.
-	public String getAppID()
-	{
-		return appID;
-	}
+    //
+    // //////////////////////////////////////////////
 
-	protected void setAppID(String appID)
-	{
-		this.appID = appID;
-	}
+    // //////////////////////////////////////////////
+    // Misc.
+    public String getAppID()
+    {
+        return appID;
+    }
 
-	public Application getApplication(ChronixContext ctx)
-	{
-		return ctx.applicationsById.get(UUID.fromString(this.appID));
-	}
+    protected void setAppID(String appID)
+    {
+        this.appID = appID;
+    }
 
-	public void setApplication(Application application)
-	{
-		if (application != null)
-			this.appID = application.getId().toString();
-		else
-			this.appID = null;
-	}
+    public Application getApplication(ChronixContext ctx)
+    {
+        return ctx.getApplication(this.appID);
+    }
 
-	public Date getCreatedAt()
-	{
-		return createdAt;
-	}
+    public void setApplication(Application application)
+    {
+        if (application != null)
+            this.appID = application.getId().toString();
+        else
+            this.appID = null;
+    }
 
-	@SuppressWarnings("unused")
-	private void setCreatedAt(Date created)
-	{
-		this.createdAt = created;
-	}
+    public Date getCreatedAt()
+    {
+        return createdAt;
+    }
 
-	public String getId()
-	{
-		return id;
-	}
+    @SuppressWarnings("unused")
+    private void setCreatedAt(Date created)
+    {
+        this.createdAt = created;
+    }
 
-	public UUID getIdU()
-	{
-		return UUID.fromString(this.id);
-	}
+    public String getId()
+    {
+        return id;
+    }
 
-	@SuppressWarnings("unused")
-	private void setId(String id)
-	{
-		this.id = id;
-	}
+    public UUID getIdU()
+    {
+        return UUID.fromString(this.id);
+    }
 
-	public ArrayList<EnvironmentValue> getEnvParams()
-	{
-		return envParams;
-	}
+    @SuppressWarnings("unused")
+    private void setId(String id)
+    {
+        this.id = id;
+    }
 
-	protected void setEnvParams(ArrayList<EnvironmentValue> values)
-	{
-		this.envParams = values;
-	}
+    public ArrayList<EnvironmentValue> getEnvParams()
+    {
+        return envParams;
+    }
 
-	public void addValue(String key, String value)
-	{
-		this.envParams.add(new EnvironmentValue(key, value));
-	}
+    protected void setEnvParams(ArrayList<EnvironmentValue> values)
+    {
+        this.envParams = values;
+    }
 
-	public Boolean getOutsideChain()
-	{
-		return outsideChainLaunch;
-	}
+    public void addValue(String key, String value)
+    {
+        this.envParams.add(new EnvironmentValue(key, value));
+    }
 
-	public void setOutsideChain(Boolean outsideChain)
-	{
-		this.outsideChainLaunch = outsideChain;
-	}
+    public Boolean getOutsideChain()
+    {
+        return outsideChainLaunch;
+    }
 
-	public Boolean getIgnoreCalendarUpdating()
-	{
-		return ignoreCalendarUpdating;
-	}
+    public void setOutsideChain(Boolean outsideChain)
+    {
+        this.outsideChainLaunch = outsideChain;
+    }
 
-	public void setIgnoreCalendarUpdating(Boolean ignoreCalendarUpdating)
-	{
-		this.ignoreCalendarUpdating = ignoreCalendarUpdating;
-	}
+    public Boolean getIgnoreCalendarUpdating()
+    {
+        return ignoreCalendarUpdating;
+    }
 
-	public String getSimulationID()
-	{
-		return simulationID;
-	}
+    public void setIgnoreCalendarUpdating(Boolean ignoreCalendarUpdating)
+    {
+        this.ignoreCalendarUpdating = ignoreCalendarUpdating;
+    }
 
-	public void setSimulationID(String simulationID)
-	{
-		this.simulationID = simulationID;
-	}
-	//
-	// //////////////////////////////////////////////
+    public String getSimulationID()
+    {
+        return simulationID;
+    }
 
-	public Date getVirtualTime()
-	{
-		return virtualTime;
-	}
+    public void setSimulationID(String simulationID)
+    {
+        this.simulationID = simulationID;
+    }
 
-	public void setVirtualTime(Date virtualTime)
-	{
-		this.virtualTime = virtualTime;
-	}
+    //
+    // //////////////////////////////////////////////
+
+    public Date getVirtualTime()
+    {
+        return virtualTime;
+    }
+
+    public void setVirtualTime(Date virtualTime)
+    {
+        this.virtualTime = virtualTime;
+    }
 }

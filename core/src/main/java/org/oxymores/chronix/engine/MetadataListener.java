@@ -35,7 +35,7 @@ class MetadataListener extends BaseListener
     void startListening(Broker b, ChronixEngine engine) throws JMSException
     {
         this.init(b, false, false);
-        log.debug(String.format("(%s) Initializing MetadataListener", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing MetadataListener", ctx.getContextRoot()));
 
         // Pointers
         this.engine = engine;
@@ -48,7 +48,7 @@ class MetadataListener extends BaseListener
     @Override
     public void onMessage(Message msg)
     {
-        log.debug(String.format("An application was received (local node db is %s)", ctx.configurationDirectory));
+        log.debug(String.format("An application was received (local node db is %s)", ctx.getContextRoot()));
         ObjectMessage omsg = (ObjectMessage) msg;
         Application a;
         try

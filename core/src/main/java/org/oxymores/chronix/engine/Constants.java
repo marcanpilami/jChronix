@@ -37,7 +37,17 @@ public final class Constants
     public static final String JI_STATUS_DONE = "DONE";
     public static final String JI_STATUS_RUNNING = "RUNNING";
     public static final String JI_STATUS_CHECK_SYNC_CONDS = "CHECK_SYNC_CONDS";
-    
+
     // RUN METHODS
     public static final String JD_METHOD_SHELL = "Shell";
+
+    // ENV VARS
+    public static final String ENV_AUTO_CHR_CALENDAR = "CHR_CALENDAR";
+    public static final String ENV_AUTO_CHR_CHR_CALENDARID = "CHR_CALENDARID";
+    public static final String ENV_AUTO_CHR_CHR_CALENDARDATE = "CHR_CALENDARDATE";
+
+    // QUEUES
+    public static final String Q_LOG = "Q.%s.LOG";
+    public static final String Q_ORDER = "Q.%s.ORDER";
+    public static final String Q_TOKEN = "Q.%s.TOKEN";
 }

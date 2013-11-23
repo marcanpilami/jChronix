@@ -1,7 +1,5 @@
 package org.oxymores.chronix.engine;
 
-import java.io.File;
-
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
@@ -59,10 +57,10 @@ public class TestStart
         e.stopEngine();
         e.waitForStopEnd();
 
-        Assert.assertEquals(2, e.ctx.applicationsById.values().size());
+        Assert.assertEquals(2, e.ctx.getApplications().size());
 
-        Application a1 = e.ctx.applicationsByName.get("Operations");
-        Application a2 = e.ctx.applicationsByName.get("Chronix Maintenance");
+        Application a1 = e.ctx.getApplicationByName("Operations");
+        Application a2 = e.ctx.getApplicationByName("Chronix Maintenance");
 
         Assert.assertEquals(1, a1.getChains().size());
         Assert.assertEquals(1, a2.getChains().size());
@@ -78,8 +76,7 @@ public class TestStart
         LogHelpers.clearAllTranscientElements(e.ctx);
 
         Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
-        ChronixContext ctx = new ChronixContext();
-        ctx.configurationDirectory = new File("C:\\TEMP\\db1");
+        ChronixContext ctx = ChronixContext.initContext("C:\\TEMP\\db1", "", "", "localhost:1789", false);
         ctx.saveApplication(a);
         ctx.setWorkingAsCurrent(a);
         e.start();
@@ -87,7 +84,7 @@ public class TestStart
         e.stopEngine();
         e.waitForStopEnd();
 
-        EntityManager em = ctx.getTransacEM();
+        EntityManager em = e.ctx.getTransacEM();
         TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
         Assert.assertEquals(3, q.getResultList().size());

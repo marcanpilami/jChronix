@@ -166,7 +166,7 @@ public class TestMultiNode
 
         try
         {
-            SenderHelpers.sendApplication(e1.ctx.applicationsByName.get("Multinode test"), en2, e1.ctx);
+            SenderHelpers.sendApplication(e1.ctx.getApplicationByName("Multinode test"), en2, e1.ctx);
             e2.waitForRebootEnd();
         }
         catch (Exception e)
@@ -178,7 +178,7 @@ public class TestMultiNode
         Application a2 = null;
         try
         {
-            a2 = e2.ctx.applicationsByName.get("Multinode test");
+            a2 = e2.ctx.getApplicationByName("Multinode test");
         }
         catch (Exception e)
         {
@@ -231,7 +231,7 @@ public class TestMultiNode
         }
 
         // Test reception is OK
-        Application a2 = e2.ctx.applicationsByName.get("Multinode test");
+        Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
             Assert.fail("No application in remote context after reception");
 
@@ -321,7 +321,7 @@ public class TestMultiNode
         }
 
         // Test reception is OK
-        Application a2 = e2.ctx.applicationsByName.get("Multinode test");
+        Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
             Assert.fail("No application in remote context after reception");
         Assert.assertEquals(3, a2.getPlaces().values().size());
@@ -477,7 +477,7 @@ public class TestMultiNode
         }
 
         // Test reception is OK
-        Application a2 = e2.ctx.applicationsByName.get("Multinode test");
+        Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
             Assert.fail("No application in remote context after reception");
         Assert.assertEquals(3, a2.getPlaces().values().size());

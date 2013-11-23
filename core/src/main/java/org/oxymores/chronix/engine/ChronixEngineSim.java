@@ -31,7 +31,7 @@ public class ChronixEngineSim extends ChronixEngine
     {
         super(configurationDirectoryPath, "raccoon:9999", "TransacUnitSim", "HistoryUnitSim", false, 0);
         this.appToSimulateId = appID;
-        this.ctx.simulateExternalPayloads = true;
+        this.ctx.setSimulator();
         this.start = start;
         this.end = end;
     }
@@ -40,7 +40,7 @@ public class ChronixEngineSim extends ChronixEngine
     @Override
     protected void startEngine(boolean blocking, boolean purgeQueues)
     {
-        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.configurationDirectoryPath,
+        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.getContextRoot(),
                 this.start, this.end));
         try
         {
@@ -49,14 +49,14 @@ public class ChronixEngineSim extends ChronixEngine
 
             // Context
             this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, true);
-            this.ctx.simulateExternalPayloads = true;
+            this.ctx.setSimulator();
 
             // This is a simulation: we are only interested in a single application
-            Application a = this.ctx.applicationsById.get(this.appToSimulateId);
-            for (UUID i : this.ctx.applicationsById.keySet())
+            Application a = this.ctx.getApplication(this.appToSimulateId);
+            for (Application ap : this.ctx.getApplications())
             {
-                if (!i.equals(appToSimulateId))
-                    this.ctx.removeApplicationFromCache(i);
+                if (!ap.getId().equals(appToSimulateId))
+                    this.ctx.removeApplicationFromCache(ap.getId());
             }
 
             // This is a simulation: there is no network, only one simulation node.
@@ -88,7 +88,7 @@ public class ChronixEngineSim extends ChronixEngine
 
             // Done
             this.startCritical.release();
-            log.info("Simulator for context " + this.ctx.configurationDirectoryPath + " has finished its boot sequence");
+            log.info("Simulator for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
 
         }
         catch (Exception e)

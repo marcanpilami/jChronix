@@ -58,7 +58,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, false);
-        log.debug(String.format("(%s) Initializing TokenDistributionCenter", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing TokenDistributionCenter", ctx.getContextRoot()));
 
         // Sync
         mainLoop = new Semaphore(0);
@@ -118,7 +118,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         // Check.
-        Application a = ctx.applicationsById.get(request.applicationID);
+        Application a = ctx.getApplication(request.applicationID);
         if (a == null)
         {
             log.warn("A token for an application that does not run locally was received. Ignored.");
@@ -273,7 +273,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             q.setParameter(1, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
             for (TokenReservation tr : q.getResultList())
             {
-                Application aa = ctx.applicationsById.get(UUID.fromString(tr.applicationId));
+                Application aa = ctx.getApplication(tr.applicationId);
                 org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.stateId));
                 Place pp = aa.getPlace(UUID.fromString(tr.placeId));
                 ExecutionNode enn = aa.getNode(UUID.fromString(tr.requestedBy));
@@ -315,7 +315,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     private void processRequest(TokenRequest request)
     {
         // Get data
-        Application a = ctx.applicationsById.get(request.applicationID);
+        Application a = ctx.getApplication(request.applicationID);
         Token tk = a.getToken(request.tokenID);
         Place p = a.getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
@@ -327,7 +327,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     private void processRequest(TokenReservation tr)
     {
         // Get data
-        Application a = ctx.applicationsById.get(UUID.fromString(tr.applicationId));
+        Application a = ctx.getApplication(tr.applicationId);
         Token tk = a.getToken(UUID.fromString(tr.tokenId));
         Place p = a.getPlace(UUID.fromString(tr.placeId));
         org.oxymores.chronix.core.State s = a.getState(UUID.fromString(tr.stateId));

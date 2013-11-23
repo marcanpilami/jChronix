@@ -52,7 +52,7 @@ class RunnerAgent extends BaseListener
         log.info(String.format("(%s) Starting a runner agent", brokerName));
 
         // Log repository
-        this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.configurationDirectoryPath, "LOCALJOBLOG"));
+        this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.getContextRoot(), "LOCALJOBLOG"));
         if (!(new File(this.logDbPath)).exists())
         {
             (new File(this.logDbPath)).mkdir();

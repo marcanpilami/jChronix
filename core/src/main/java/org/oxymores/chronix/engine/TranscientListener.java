@@ -36,7 +36,6 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.exceptions.ChronixNoCalendarException;
 
 class TranscientListener extends BaseListener
 {
@@ -47,7 +46,7 @@ class TranscientListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, false);
-        log.debug(String.format("(%s) Initializing TranscientListener", ctx.configurationDirectory));
+        log.debug(String.format("(%s) Initializing TranscientListener", ctx.getContextRoot()));
 
         // Register current object as a listener on LOG queue
         qName = String.format("Q.%s.CALENDARPOINTER", brokerName);
@@ -185,7 +184,7 @@ class TranscientListener extends BaseListener
             {
                 ca.processStragglers(emTransac);
             }
-            catch (ChronixNoCalendarException e1)
+            catch (NullPointerException e1)
             {
                 // Pointer updates cannot happen on states without calendars... just ignore it.
                 jmsCommit();
