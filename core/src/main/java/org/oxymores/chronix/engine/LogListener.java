@@ -37,7 +37,7 @@ class LogListener extends BaseListener
     void startListening(Broker b) throws JMSException
     {
         // Base initialization
-        this.init(b);
+        this.init(b, true, true);
         log.debug(String.format("(%s) Initializing LogListener", ctx.configurationDirectory));
 
         // Register current object as a listener on LOG queue

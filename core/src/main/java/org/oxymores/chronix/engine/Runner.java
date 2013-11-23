@@ -78,7 +78,7 @@ public class Runner extends BaseListener
     {
         try
         {
-            this.init(broker);
+            this.init(broker, true, false);
 
             // Log repository
             this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.configurationDirectoryPath, "GLOBALJOBLOG"));

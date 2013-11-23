@@ -36,12 +36,7 @@ public class BaseListener implements MessageListener
     private List<Destination> qDestinations = new ArrayList<Destination>();
     private List<MessageConsumer> qConsumers = new ArrayList<MessageConsumer>();
 
-    protected void init(Broker b) throws JMSException
-    {
-        init(b, true);
-    }
-
-    protected void init(Broker b, boolean initJPA) throws JMSException
+    protected void init(Broker b, boolean initTransacContext, boolean initHistoryContext) throws JMSException
     {
         // Save pointers
         this.broker = b;
@@ -50,11 +45,13 @@ public class BaseListener implements MessageListener
         this.brokerName = broker.getBrokerName();
 
         // Persistence on two contexts
-        if (initJPA)
+        if (initHistoryContext)
         {
             this.emHistory = this.ctx.getHistoryEM();
             this.trHistory = this.emHistory.getTransaction();
-
+        }
+        if (initTransacContext)
+        {
             this.emTransac = this.ctx.getTransacEM();
             this.trTransac = this.emTransac.getTransaction();
         }
@@ -126,6 +123,14 @@ public class BaseListener implements MessageListener
         catch (JMSException e)
         {
             log.warn("An error occurred while closing a listener. Shutdown issues are just warnings, but please report this.", e);
+        }
+        if (emTransac != null)
+        {
+            emTransac.close();
+        }
+        if (emHistory != null)
+        {
+            emHistory.close();
         }
     }
 

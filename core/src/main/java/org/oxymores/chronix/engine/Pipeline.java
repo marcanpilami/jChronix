@@ -68,7 +68,7 @@ class Pipeline extends BaseListener implements Runnable
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker);
+        this.init(broker, false, false);
 
         this.analyze = new Semaphore(1);
 

@@ -57,7 +57,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker);
+        this.init(broker, true, false);
         log.debug(String.format("(%s) Initializing TokenDistributionCenter", ctx.configurationDirectory));
 
         // Sync
@@ -488,7 +488,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 // Loop every minute or so. No need to be precise here.
                 if (mainLoop.tryAcquire(Constants.TOKEN_AUTO_RENEWAL_LOOP_PERIOD_S, TimeUnit.SECONDS))
                 {
-                    log.debug("TokenDistributionCenter will loop because engine is stopping");
+                    log.trace("TokenDistributionCenter will loop because engine is stopping");
                 }
             }
             catch (InterruptedException e)

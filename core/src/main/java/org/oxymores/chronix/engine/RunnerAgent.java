@@ -48,7 +48,7 @@ class RunnerAgent extends BaseListener
 
     void startListening(Broker broker) throws JMSException, IOException
     {
-        this.init(broker, false);
+        this.init(broker, false, false);
         log.info(String.format("(%s) Starting a runner agent", brokerName));
 
         // Log repository

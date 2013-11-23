@@ -47,7 +47,7 @@ class EventListener extends BaseListener
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker);
+        this.init(broker, true, false);
         log.info(String.format("(%s) Starting an event engine", ctx.configurationDirectoryPath));
 
         this.qName = String.format("Q.%s.EVENT", brokerName);

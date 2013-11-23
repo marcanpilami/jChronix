@@ -51,7 +51,7 @@ class OrderListener extends BaseListener
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker);
+        this.init(broker, true, true);
         log.debug(String.format("(%s) Initializing OrderListener", ctx.configurationDirectory));
 
         // Register current object as a listener on ORDER queue
