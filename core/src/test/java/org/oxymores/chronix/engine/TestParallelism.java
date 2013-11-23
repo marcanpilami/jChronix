@@ -203,7 +203,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
-            e1.waitForInitEnd();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -218,8 +218,7 @@ public class TestParallelism
         try
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
-            Thread.sleep(2000); // integrate the application, restart node...
-            e2.waitForInitEnd();
+            e2.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -284,6 +283,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -298,7 +298,6 @@ public class TestParallelism
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -391,6 +390,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -405,7 +405,6 @@ public class TestParallelism
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -487,6 +486,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -501,7 +501,6 @@ public class TestParallelism
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -580,6 +579,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -594,7 +594,6 @@ public class TestParallelism
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -720,6 +719,7 @@ public class TestParallelism
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -734,7 +734,6 @@ public class TestParallelism
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {

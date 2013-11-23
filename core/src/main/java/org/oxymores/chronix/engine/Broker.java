@@ -31,6 +31,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
@@ -115,6 +116,10 @@ class Broker
         broker.setDataDirectory(ctx.configurationDirectoryPath + File.separator + "activemq-data");
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(purge);
+        broker.setEnableStatistics(false);
+        broker.setPersistent(true);
+        broker.setRestartAllowed(false);
+        broker.setSupportFailOver(false);
 
         // System resources
         MemoryUsage mu = new MemoryUsage();
@@ -183,7 +188,8 @@ class Broker
                     throw new ChronixInitializationException("Could not create a JMS network connector", e);
                 }
                 tc.setDuplex(true);
-                tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
+                tc.setAlwaysSyncSend(true);
+                // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
             }
 
             for (NodeLink nl : a.getLocalNode().getCanReceiveFrom())

@@ -155,12 +155,6 @@ public class TestMultiNode
         log.debug("All engines inits done");
     }
 
-    public void sendA(Application a) throws JMSException
-    {
-        log.debug("**************************************************************************************");
-        SenderHelpers.sendApplication(a, en2, e1.ctx);
-    }
-
     @Test
     public void testSend()
     {
@@ -172,7 +166,7 @@ public class TestMultiNode
 
         try
         {
-            sendA(e1.ctx.applicationsByName.get("Multinode test"));
+            SenderHelpers.sendApplication(e1.ctx.applicationsByName.get("Multinode test"), en2, e1.ctx);
             e2.waitForRebootEnd();
         }
         catch (Exception e)
@@ -216,6 +210,7 @@ public class TestMultiNode
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -226,10 +221,8 @@ public class TestMultiNode
         // Send the chain to node 2
         try
         {
-            prepare();
-            sendA(a1);
+            SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -304,6 +297,7 @@ public class TestMultiNode
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -316,10 +310,8 @@ public class TestMultiNode
         // Send the chain to node 2
         try
         {
-            prepare();
-            sendA(a1);
+            SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
             log.debug("Application integration should be over by now...");
         }
         catch (Exception e)
@@ -390,7 +382,7 @@ public class TestMultiNode
 
         try
         {
-            Thread.sleep(2000); // Process events
+            Thread.sleep(4000); // Process events
         }
         catch (InterruptedException e3)
         {
@@ -462,6 +454,7 @@ public class TestMultiNode
             e1.ctx.saveApplication(a1);
             e1.ctx.setWorkingAsCurrent(a1);
             e1.queueReloadConfiguration();
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -474,10 +467,8 @@ public class TestMultiNode
         // Send the chain to node 2
         try
         {
-            prepare();
-            sendA(a1);
+            SenderHelpers.sendApplication(a1, en2, e1.ctx);
             e2.waitForRebootEnd();
-            e1.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -547,7 +538,7 @@ public class TestMultiNode
 
         try
         {
-            Thread.sleep(2000); // Process events
+            Thread.sleep(4000); // Process events
         }
         catch (InterruptedException e3)
         {

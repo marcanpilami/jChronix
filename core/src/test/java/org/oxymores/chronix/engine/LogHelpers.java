@@ -29,57 +29,63 @@ import javax.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.core.transactional.TranscientBase;
 
 class LogHelpers
 {
-	private static Logger log = Logger.getLogger(LogHelpers.class);
+    private static Logger log = Logger.getLogger(LogHelpers.class);
 
-	public static List<RunLog> displayAllHistory(ChronixContext ctx)
-	{
-		EntityManager em = ctx.getHistoryEM();
-		TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
-		List<RunLog> res = q.getResultList();
+    public static List<RunLog> displayAllHistory(ChronixContext ctx)
+    {
+        EntityManager em = ctx.getHistoryEM();
+        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
+        List<RunLog> res = q.getResultList();
 
-		log.info(RunLog.getTitle());
-		for (RunLog l : res)
-		{
-			log.info(l.getLine());
-		}
+        log.info(RunLog.getTitle());
+        for (RunLog l : res)
+        {
+            log.info(l.getLine());
+        }
 
-		return res;
-	}
+        return res;
+    }
 
-	public static void clearAllTranscientElements(ChronixContext ctx)
-	{
-		try
-		{
-			// Clean history db
-			EntityManager em1 = ctx.getHistoryEM();
-			TypedQuery<RunLog> q = em1.createQuery("SELECT r FROM RunLog r", RunLog.class);
+    public static void clearAllTranscientElements(ChronixContext ctx)
+    {
+        try
+        {
+            // Clean history db
+            EntityManager em1 = ctx.getHistoryEM();
+            EntityTransaction tr1 = em1.getTransaction();
 
-			EntityTransaction tr1 = em1.getTransaction();
-			tr1.begin();
-			for (RunLog l : q.getResultList())
-				em1.remove(l);
+            tr1.begin();
+            em1.createQuery("DELETE FROM RunLog r").executeUpdate();
+            em1.createQuery("DELETE FROM UserTrace r").executeUpdate();
+            tr1.commit();
+            em1.close();
 
-			tr1.commit();
+            // Clean OP db
+            EntityManager em2 = ctx.getTransacEM();
+            EntityTransaction tr2 = em2.getTransaction();
 
-			// Clean OP db
-			EntityManager em2 = ctx.getTransacEM();
-			TypedQuery<TranscientBase> q2 = em2.createQuery("SELECT r FROM TranscientBase r", TranscientBase.class);
+            tr2.begin();
+            em2.createQuery("DELETE FROM EnvironmentValue r").executeUpdate();
+            em2.createQuery("DELETE FROM ClockTick r").executeUpdate();
+            em2.createQuery("DELETE FROM EventConsumption r").executeUpdate();
+            em2.createQuery("DELETE FROM TokenReservation r").executeUpdate();
 
-			EntityTransaction tr2 = em2.getTransaction();
-			tr2.begin();
-			for (TranscientBase b : q2.getResultList())
-				em2.remove(b);
+            em2.createQuery("DELETE FROM Event r").executeUpdate();
+            em2.createQuery("DELETE FROM PipelineJob r").executeUpdate();
+            em2.createQuery("DELETE FROM CalendarPointer r").executeUpdate();
+            em2.createQuery("DELETE FROM TranscientBase r").executeUpdate();
 
-			em2.createQuery("DELETE FROM TokenReservation r").executeUpdate();
-			em2.createQuery("DELETE FROM ClockTick r").executeUpdate();
-			tr2.commit();
-		} catch (Exception e)
-		{
-			log.warn(e.getMessage(), e);
-		}
-	}
+            em2.createQuery("DELETE FROM RunStats r").executeUpdate();
+            em2.createQuery("DELETE FROM RunMetrics r").executeUpdate();
+            tr2.commit();
+            em2.close();
+        }
+        catch (Exception e)
+        {
+            log.warn(e.getMessage(), e);
+        }
+    }
 }

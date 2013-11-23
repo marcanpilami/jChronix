@@ -45,7 +45,7 @@ public class TestStart
 	}
 
 	@Test
-	public void testCreateAutoApplications() throws Exception
+    public void testCreateAutoApplications() throws Exception
 	{
 		log.info("***** Test: with an empty db, the scheduler creates two auto applications");
 
