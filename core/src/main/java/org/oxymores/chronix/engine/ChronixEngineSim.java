@@ -40,7 +40,8 @@ public class ChronixEngineSim extends ChronixEngine
     @Override
     protected void startEngine(boolean blocking, boolean purgeQueues)
     {
-        log.info(String.format("(%s) simulation engine starting (%s)", this.dbPath, this));
+        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.configurationDirectoryPath,
+                this.start, this.end));
         try
         {
             this.startCritical.acquire();
@@ -71,8 +72,8 @@ public class ChronixEngineSim extends ChronixEngine
                 p.setNode(simulationNode);
             }
 
-            // Broker with some of the consumer threads. Not started: meta, runner agent, order
-            this.broker = new Broker(this.ctx, false, false, false); // In memory, no networking
+            // Broker with some of the consumer threads. Not started: meta, runner agent, order. In memory borker, no networking, with EM.
+            this.broker = new Broker(this.ctx, false, true, false);
             this.broker.setNbRunners(this.nbRunner);
             this.broker.registerListeners(this, false, false, true, true, true, true, true, false, true);
 
@@ -82,11 +83,12 @@ public class ChronixEngineSim extends ChronixEngine
                 this.stAgent = new SelfTriggerAgentSim();
                 ((SelfTriggerAgentSim) this.stAgent).setBeginTime(start);
                 ((SelfTriggerAgentSim) this.stAgent).setEndTime(end);
-                this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+                this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection(), this.start);
             }
 
             // Done
             this.startCritical.release();
+            log.info("Simulator for context " + this.ctx.configurationDirectoryPath + " has finished its boot sequence");
 
         }
         catch (Exception e)
@@ -99,6 +101,7 @@ public class ChronixEngineSim extends ChronixEngine
     public List<RunLog> waitForSimEnd()
     {
         this.waitForInitEnd();
+        log.info("Simulation has started. Waiting for simulation end");
         try
         {
             this.stAgent.join();
@@ -106,6 +109,7 @@ public class ChronixEngineSim extends ChronixEngine
         catch (InterruptedException e)
         {
         }
+        log.info("Simulation has ended. Returning results");
 
         EntityManager em = this.ctx.getHistoryEM();
         return em.createQuery("SELECT h from RunLog h", RunLog.class).getResultList();

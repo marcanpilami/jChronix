@@ -168,7 +168,7 @@ class SelfTriggerAgent extends Thread
             DateTime loopVirtualTime = this.nextLoopVirtualTime;
             this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
-            // Loop through all the self triggered nodes and get their next loop time
+            // Loop through all the self triggered nodes and get their next loop virtual time
             jpaTransaction.begin();
             DateTime tmp = null;
             for (ActiveNodeBase n : this.nodes)

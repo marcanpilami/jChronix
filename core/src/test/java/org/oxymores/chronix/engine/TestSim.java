@@ -49,15 +49,15 @@ public class TestSim
         e.ctx.setWorkingAsCurrent(a);
 
         // Start the engine.
-        e.start();
+        // e.start();
 
         // Now start the simulation
         List<RunLog> res = ChronixEngineSim.simulate(dbPath, a.getId(), DateTime.now(), DateTime.now().plusSeconds(10));
         Assert.assertEquals(1, res.size());
 
         // Stop the true engine...
-        e.stopEngine();
-        e.waitForStopEnd();
+        // e.stopEngine();
+        // e.waitForStopEnd();
     }
 
 }

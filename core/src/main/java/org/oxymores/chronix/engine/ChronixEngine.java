@@ -23,6 +23,7 @@ package org.oxymores.chronix.engine;
 import java.io.File;
 import java.util.concurrent.Semaphore;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -320,7 +321,7 @@ public class ChronixEngine extends Thread
         File[] fileList = new File(this.dbPath).listFiles();
         for (int i = 0; i < fileList.length; i++)
         {
-            if (!fileList[i].delete())
+            if (!FileUtils.deleteQuietly(fileList[i]))
             {
                 log.error("Purge has failed for directory " + fileList[i].getAbsolutePath());
             }
