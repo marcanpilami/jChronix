@@ -25,28 +25,30 @@ import javax.jms.JMSException;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.Runner;
 import org.oxymores.chronix.engine.data.RunDescription;
 
 public class ShellParameter extends Parameter
 {
-	private static final long serialVersionUID = 7528888158440570804L;
+    private static final long serialVersionUID = 7528888158440570804L;
 
-	@Override
-	public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
-	{
-		RunDescription rd = new RunDescription();
-		rd.command = this.value;
-		rd.Method = "Shell";
-		rd.helperExecRequest = true;
+    @Override
+    public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
+    {
+        RunDescription rd = new RunDescription();
+        rd.setCommand(this.value);
+        rd.setMethod(Constants.JD_METHOD_SHELL);
+        rd.setHelperExecRequest(true);
 
-		try
-		{
-			sender.getParameterValue(rd, pj, this.getId());
-		} catch (JMSException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+        try
+        {
+            sender.getParameterValue(rd, pj, this.getId());
+        }
+        catch (JMSException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }

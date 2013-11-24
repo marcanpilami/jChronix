@@ -92,20 +92,20 @@ class RunnerAgent extends BaseListener
             return;
         }
 
-        if (!rd.helperExecRequest)
+        if (!rd.getHelperExecRequest())
         {
-            log.info(String.format("Running command %s", rd.command));
+            log.info(String.format("Running command %s", rd.getCommand()));
         }
         else
         {
-            log.debug(String.format("Running helper internal command %s", rd.command));
+            log.debug(String.format("Running helper internal command %s", rd.getCommand()));
         }
 
         // Log file (only if true run)
         String logFilePath = null;
         String logFileName = null;
         Date start = new Date();
-        if (!rd.helperExecRequest)
+        if (!rd.getHelperExecRequest())
         {
             SimpleDateFormat myFormatDir = new SimpleDateFormat("yyyyMMdd");
             SimpleDateFormat myFormatFile = new SimpleDateFormat("yyyyMMddhhmmssSSS");
@@ -118,22 +118,22 @@ class RunnerAgent extends BaseListener
                 jmsRollback();
                 return;
             }
-            logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.placeName.replace(" ", "-"),
-                    rd.activeSourceName.replace(" ", "-"), rd.id1);
+            logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.getPlaceName().replace(" ", "-"), rd
+                    .getActiveSourceName().replace(" ", "-"), rd.getId1());
             logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
         }
 
         // Run the command according to its method
-        if (rd.Method.equals(Constants.JD_METHOD_SHELL))
+        if (rd.getMethod().equals(Constants.JD_METHOD_SHELL))
         {
-            res = RunnerShell.run(rd, logFilePath, !rd.helperExecRequest, rd.shouldSendLogFile);
+            res = RunnerShell.run(rd, logFilePath, !rd.getHelperExecRequest(), rd.getShouldSendLogFile());
         }
         else
         {
             res = new RunResult();
             res.returnCode = -1;
-            res.logStart = String.format("An unimplemented exec method (%s) was called!", rd.Method);
-            log.error(String.format("An unimplemented exec method (%s) was called! Job will be failed.", rd.Method));
+            res.logStart = String.format("An unimplemented exec method (%s) was called!", rd.getMethod());
+            log.error(String.format("An unimplemented exec method (%s) was called! Job will be failed.", rd.getMethod()));
         }
         res.start = start;
         res.end = new Date();
@@ -142,13 +142,13 @@ class RunnerAgent extends BaseListener
 
         // Copy the engine ids - that way it will be able to identify the launch
         // Part of the ids are in the JMS correlation id too
-        res.id1 = rd.id1;
-        res.id2 = rd.id2;
-        res.outOfPlan = rd.outOfPlan;
+        res.id1 = rd.getId1();
+        res.id2 = rd.getId2();
+        res.outOfPlan = rd.getOutOfPlan();
 
         // Send the result!
         Message response;
-        if (!rd.helperExecRequest)
+        if (!rd.getHelperExecRequest())
         {
             InputStream is = null;
             try

@@ -23,6 +23,7 @@ package org.oxymores.chronix.core.transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -57,10 +58,12 @@ public class PipelineJob extends TranscientBase
     @Column(length = 255)
     String runThis;
     Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    String level0Id, level1Id, level2Id, level3Id; // Actually UUID
 
-    HashMap<Integer, String> paramValues;
+    // The following values are String representation of UUID
+    @Column(columnDefinition = "CHAR(36)", length = 36)
+    String level0Id, level1Id, level2Id, level3Id;
+
+    Map<Integer, String> paramValues;
 
     Boolean outOfPlan = false;
     Integer resultCode = -1;
@@ -103,22 +106,15 @@ public class PipelineJob extends TranscientBase
 
     public String getParamValue(int index)
     {
-        try
-        {
-            return paramValues.get(index);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
+        return paramValues.get(index);
     }
 
-    protected HashMap<Integer, String> getParamValues()
+    protected Map<Integer, String> getParamValues()
     {
         return paramValues;
     }
 
-    protected void setParamValues(HashMap<Integer, String> paramValues)
+    protected void setParamValues(Map<Integer, String> paramValues)
     {
         this.paramValues = paramValues;
     }
@@ -143,9 +139,13 @@ public class PipelineJob extends TranscientBase
     public void setRunThis(String runThis)
     {
         if (runThis == null)
+        {
             this.runThis = null;
+        }
         else
+        {
             this.runThis = runThis.substring(0, Math.min(255, runThis.length()));
+        }
     }
 
     public Date getWarnNotEndedAt()
@@ -236,61 +236,85 @@ public class PipelineJob extends TranscientBase
     public UUID getLevel0IdU()
     {
         if (this.level0Id == null)
+        {
             return null;
+        }
         return UUID.fromString(level0Id);
     }
 
     public void setLevel0IdU(UUID level0Id)
     {
         if (level0Id == null)
+        {
             this.level0Id = null;
+        }
         else
+        {
             this.level0Id = level0Id.toString();
+        }
     }
 
     public UUID getLevel1IdU()
     {
         if (this.level1Id == null)
+        {
             return null;
+        }
         return UUID.fromString(level1Id);
     }
 
     public void setLevel1IdU(UUID level1Id)
     {
         if (level1Id == null)
+        {
             this.level1Id = null;
+        }
         else
+        {
             this.level1Id = level1Id.toString();
+        }
     }
 
     public UUID getLevel2IdU()
     {
         if (this.level2Id == null)
+        {
             return null;
+        }
         return UUID.fromString(level2Id);
     }
 
     public void setLevel2IdU(UUID level2Id)
     {
         if (level2Id == null)
+        {
             this.level2Id = null;
+        }
         else
+        {
             this.level2Id = level2Id.toString();
+        }
     }
 
     public UUID getLevel3IdU()
     {
         if (this.level3Id == null)
+        {
             return null;
+        }
         return UUID.fromString(level3Id);
     }
 
     public void setLevel3IdU(UUID level3Id)
     {
         if (level3Id == null)
+        {
             this.level3Id = null;
+        }
         else
+        {
             this.level3Id = level3Id.toString();
+        }
     }
 
     protected String getLevel0Id()
@@ -347,36 +371,34 @@ public class PipelineJob extends TranscientBase
         RunDescription rd = new RunDescription();
 
         // Command to run
-        rd.command = this.runThis;
+        rd.setCommand(this.runThis);
 
         // Misc.
-        rd.outOfPlan = this.outOfPlan;
-        rd.placeName = this.getPlace(ctx).getName();
-        rd.activeSourceName = this.getActive(ctx).getName();
-        rd.appID = this.appID;
+        rd.setOutOfPlan(this.outOfPlan);
+        rd.setPlaceName(this.getPlace(ctx).getName());
+        rd.setActiveSourceName(this.getActive(ctx).getName());
+        rd.setAppID(this.appID);
 
         // The IDs that will allow to find the PJ at the end
-        rd.id1 = this.getId();
-        rd.id2 = this.getActive(ctx).getId();
+        rd.setId1(this.getId());
+        rd.setId2(this.getActive(ctx).getId());
 
         // All resolved parameters should be described
         ArrayList<Parameter> prms = this.getActive(ctx).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
-            rd.paramNames.add(prms.get(i).getKey());
-            rd.paramValues.add(this.paramValues.get(i));
+            rd.addParameter(prms.get(i).getKey(), this.paramValues.get(i));
         }
 
         // All environment variables should be included
         for (EnvironmentValue ev : this.envParams)
         {
-            rd.envNames.add(ev.getKey());
-            rd.envValues.add(ev.getValue());
+            rd.addEnvVar(ev.getKey(), ev.getValue());
         }
 
         // Execution method is determined by the source
-        rd.Method = this.getActive(ctx).getActivityMethod();
-        rd.subMethod = this.getActive(ctx).getSubActivityMethod();
+        rd.setMethod(this.getActive(ctx).getActivityMethod());
+        rd.setSubMethod(this.getActive(ctx).getSubActivityMethod());
 
         // Run description is complete, on to the actual execution!
         return rd;
@@ -441,11 +463,7 @@ public class PipelineJob extends TranscientBase
         rlog.setBeganRunningAt(this.beganRunningAt);
         rlog.setChainLaunchId(this.level1Id);
         rlog.setChainId(this.level0Id);
-        // rlog.chainLev1Id = this.level1Id;
-        // rlog.chainLev1Name
         rlog.setChainName(a.getActiveNode(UUID.fromString(this.level0Id)).getName());
-        // rlog.dataIn =
-        // rlog.dataOut =
         rlog.setDns(rr.envtServer);
         rlog.setEnteredPipeAt(this.enteredPipeAt);
         rlog.setExecutionNodeId(p.getNode().getId().toString());
@@ -457,7 +475,6 @@ public class PipelineJob extends TranscientBase
         rlog.setPlaceId(this.placeID);
         rlog.setPlaceName(p.getName());
         rlog.setResultCode(this.resultCode);
-        // rlog.sequence =
         rlog.setShortLog(rr.logStart);
         rlog.setStateId(this.stateID);
         rlog.setStoppedRunningAt(this.stoppedRunningAt);

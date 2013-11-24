@@ -77,9 +77,9 @@ public final class RunnerShell
 
         // Create array containing environment
         Map<String, String> env = pb.environment();
-        for (int i = 0; i < rd.envNames.size(); i++)
+        for (int i = 0; i < rd.getEnvNames().size(); i++)
         {
-            env.put(rd.envNames.get(i), rd.envValues.get(i));
+            env.put(rd.getEnvNames().get(i), rd.getEnvValues().get(i));
         }
 
         BufferedReader br = null;
@@ -87,7 +87,7 @@ public final class RunnerShell
         try
         {
             // Start!
-            log.debug("GO (" + rd.subMethod + ")");
+            log.debug("GO (" + rd.getSubMethod() + ")");
             p = pb.start();
 
             // Read output (err & out), write it to file
@@ -207,7 +207,7 @@ public final class RunnerShell
     private static String getEncoding(RunDescription rd)
     {
         String encoding = System.getProperty("file.encoding");
-        if (rd.subMethod.equals(CMD_CMD) || rd.subMethod.equals(POWERSHELL_CMD))
+        if (rd.getSubMethod().equals(CMD_CMD) || rd.getSubMethod().equals(POWERSHELL_CMD))
         {
             try
             {
@@ -228,14 +228,14 @@ public final class RunnerShell
         ArrayList<String> argsStrings = new ArrayList<String>();
 
         // First line is the shell name
-        argsStrings.add(rd.subMethod);
+        argsStrings.add(rd.getSubMethod());
 
         // Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
-        if (rd.subMethod.equals(CMD_CMD))
+        if (rd.getSubMethod().equals(CMD_CMD))
         {
             argsStrings.add("/C");
         }
-        else if (rd.subMethod.equals(POWERSHELL_CMD))
+        else if (rd.getSubMethod().equals(POWERSHELL_CMD))
         {
             argsStrings.add("-NoLogo");
             argsStrings.add("-NonInteractive");
@@ -245,13 +245,13 @@ public final class RunnerShell
         }
 
         // Then add the command itself
-        argsStrings.add(rd.command);
+        argsStrings.add(rd.getCommand());
 
         // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
-        for (int i = 0; i < rd.paramNames.size(); i++)
+        for (int i = 0; i < rd.getParamNames().size(); i++)
         {
-            String key = rd.paramNames.get(i);
-            String value = rd.paramValues.get(i);
+            String key = rd.getParamNames().get(i);
+            String value = rd.getParamValues().get(i);
             String arg = "";
             if (key != null && !"".equals(key))
             {

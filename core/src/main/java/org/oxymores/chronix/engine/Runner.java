@@ -469,7 +469,7 @@ public class Runner extends BaseListener
     {
         // Always send to the node, not its hosting node.
         String qName = String.format(RUNNER_QUEUE_NAME, p.getNode().getBrokerName());
-        log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.command));
+        log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
         Destination destination = jmsSession.createQueue(qName);
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);
@@ -489,7 +489,7 @@ public class Runner extends BaseListener
         // Always send to the node, not its hosting node.
         Place p = pj.getPlace(ctx);
         String qName = String.format(RUNNER_QUEUE_NAME, p.getNode().getBrokerName());
-        log.info(String.format("A command for parameter resolution will be sent for execution on queue %s (%s)", qName, rd.command));
+        log.info(String.format("A command for parameter resolution will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
         Destination destination = jmsSession.createQueue(qName);
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);

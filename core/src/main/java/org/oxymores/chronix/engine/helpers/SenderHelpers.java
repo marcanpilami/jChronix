@@ -276,9 +276,9 @@ public class SenderHelpers
     {
 
         RunDescription rd = new RunDescription();
-        rd.command = cmd;
-        rd.outOfPlan = true;
-        rd.Method = "Shell";
+        rd.setCommand(cmd);
+        rd.setOutOfPlan(true);
+        rd.setMethod(Constants.JD_METHOD_SHELL);
 
         String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
         log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, cmd));
