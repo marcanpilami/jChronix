@@ -115,7 +115,14 @@ public class ChronixEngine extends Thread
             postContextLoad();
 
             // Broker with all the consumer threads
-            this.broker = new Broker(this.ctx, purgeQueues, !this.runnerMode, true);
+            if (this.broker == null)
+            {
+                this.broker = new Broker(this.ctx, purgeQueues, !this.runnerMode, true);
+            }
+            else
+            {
+                this.broker.resetContext(ctx);
+            }
             this.broker.setNbRunners(this.nbRunner);
             if (!runnerMode)
             {
@@ -182,7 +189,7 @@ public class ChronixEngine extends Thread
             {
                 this.stAgent.stopAgent();
             }
-            this.broker.stop();
+            this.broker.stopEngineListeners();
 
             // TCP port release is not immediate, sad.
             try
@@ -197,6 +204,10 @@ public class ChronixEngine extends Thread
             this.stopping.release(1);
             // Done. If 'run' is still true, will restart the engine
         }
+
+        // Stop every thread, not only the event engine threads.
+        this.broker.stopRunnerAgents();
+        this.broker.stopBroker();
         this.stopped.release();
         log.info("The scheduler has stopped");
     }

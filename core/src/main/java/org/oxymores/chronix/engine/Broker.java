@@ -31,6 +31,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
@@ -141,7 +142,8 @@ class Broker
         {
             try
             {
-                broker.addConnector("tcp://" + this.ctx.getBrokerUrl());
+                TransportConnector tc = broker.addConnector("tcp://" + this.ctx.getBrokerUrl());
+                tc.setDiscoveryUri(null);
             }
             catch (Exception e1)
             {
@@ -161,45 +163,7 @@ class Broker
         }
 
         // Add channels to other nodes
-        ArrayList<String> opened = new ArrayList<String>();
-        for (Application a : this.ctx.getApplications())
-        {
-            for (NodeLink nl : a.getLocalNode().getCanSendTo())
-            {
-                // Only if TCP or RCTRL
-                // Only if not already opened
-                if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL))
-                        || opened.contains(nl.getNodeTo().getBrokerUrl()))
-                {
-                    break;
-                }
-                opened.add(nl.getNodeTo().getBrokerUrl());
-
-                String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
-                log.info(String.format("(%s) This broker will be able to open a channel towards %s", ctx.getContextRoot(), url));
-                NetworkConnector tc;
-                try
-                {
-                    tc = broker.addNetworkConnector(url);
-                }
-                catch (Exception e)
-                {
-                    throw new ChronixInitializationException("Could not create a JMS network connector", e);
-                }
-                tc.setDuplex(true);
-                tc.setAlwaysSyncSend(true);
-                // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
-            }
-
-            for (NodeLink nl : a.getLocalNode().getCanReceiveFrom())
-            {
-                if (nl.getMethod().equals(NodeConnectionMethod.TCP))
-                {
-                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s)", ctx.getContextRoot(), nl
-                            .getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
-                }
-            }
-        }
+        resetLinks();
 
         // Start
         log.info(String.format("(%s) The message broker will now start", ctx.getContextRoot()));
@@ -228,6 +192,14 @@ class Broker
         }
     }
 
+    void resetContext(ChronixContext ctx) throws ChronixInitializationException
+    {
+        log.debug("The broker context will be reset " + ctx.getContextRoot());
+        this.ctx = ctx;
+        broker.setBrokerName(brokerName);
+        resetLinks();
+    }
+
     void registerListeners(ChronixEngine engine) throws JMSException, IOException, ChronixInitializationException
     {
         registerListeners(engine, true, true, true, true, true, true, true, true, true);
@@ -239,13 +211,13 @@ class Broker
     {
         this.engine = engine;
 
-        if (startMeta)
+        if (startMeta && this.thrML == null)
         {
             this.thrML = new MetadataListener();
             this.thrML.startListening(this, this.engine);
         }
 
-        if (startRunnerAgent)
+        if (startRunnerAgent && this.thrsRA.size() == 0)
         {
             for (int i = 0; i < this.nbRunners; i++)
             {
@@ -255,103 +227,116 @@ class Broker
             }
         }
 
-        if (startEventListener && this.emf != null)
+        if (startEventListener && this.emf != null && this.thrEL == null)
         {
             this.thrEL = new EventListener();
             this.thrEL.startListening(this);
         }
 
-        if (startPipeline && this.emf != null)
+        if (startPipeline && this.emf != null && this.thrPL == null)
         {
             this.thrPL = new Pipeline();
             this.thrPL.startListening(this);
         }
 
-        if (startRunner && this.emf != null)
+        if (startRunner && this.emf != null && this.thrRU == null)
         {
             this.thrRU = new Runner();
             this.thrRU.startListening(this);
         }
 
-        if (startLog)
+        if (startLog && this.thrLL == null)
         {
             this.thrLL = new LogListener();
             this.thrLL.startListening(this);
         }
 
-        if (startTranscient && this.emf != null)
+        if (startTranscient && this.emf != null && this.thrTL == null)
         {
             this.thrTL = new TranscientListener();
             this.thrTL.startListening(this);
         }
 
-        if (startOrderListener && this.emf != null)
+        if (startOrderListener && this.emf != null && this.thrOL == null)
         {
             this.thrOL = new OrderListener();
             this.thrOL.startListening(this);
         }
 
-        if (startTokenDistributionCenter && this.emf != null)
+        if (startTokenDistributionCenter && this.emf != null && this.thrTC == null)
         {
             this.thrTC = new TokenDistributionCenter();
             this.thrTC.startListening(this);
         }
     }
 
-    void stop()
+    void stopEngineListeners()
+    {
+        log.debug("Stopping all engine threads " + ctx.getContextRoot());
+        if (this.thrML != null)
+        {
+            this.thrML.stopListening();
+            this.thrML = null;
+        }
+        if (this.thrEL != null)
+        {
+            this.thrEL.stopListening();
+            this.thrEL = null;
+        }
+        if (this.thrPL != null)
+        {
+            this.thrPL.stopListening();
+            this.thrPL = null;
+        }
+        if (this.thrRU != null)
+        {
+            this.thrRU.stopListening();
+            this.thrRU = null;
+        }
+        if (this.thrLL != null)
+        {
+            this.thrLL.stopListening();
+            this.thrLL = null;
+        }
+        if (this.thrTL != null)
+        {
+            this.thrTL.stopListening();
+            this.thrTL = null;
+        }
+        if (this.thrOL != null)
+        {
+            this.thrOL.stopListening();
+            this.thrOL = null;
+        }
+        if (this.thrTC != null)
+        {
+            this.thrTC.stopListening();
+            this.thrTC = null;
+        }
+    }
+
+    void stopRunnerAgents()
+    {
+        log.debug("Stopping all runner agent threads " + ctx.getContextRoot());
+        if (this.thrsRA.size() > 0)
+        {
+            for (RunnerAgent ra : this.thrsRA)
+            {
+                ra.stopListening();
+            }
+            this.thrsRA.clear();
+        }
+    }
+
+    void stopBroker()
     {
         log.info(String.format("(%s) The message broker will now stop", this.ctx.getContextRoot()));
         try
         {
-            if (this.thrML != null)
-            {
-                this.thrML.stopListening();
-            }
-            if (this.thrsRA.size() > 0)
-            {
-                for (RunnerAgent ra : this.thrsRA)
-                {
-                    ra.stopListening();
-                }
-            }
-            if (this.thrEL != null)
-            {
-                this.thrEL.stopListening();
-            }
-            if (this.thrPL != null)
-            {
-                this.thrPL.stopListening();
-            }
-            if (this.thrRU != null)
-            {
-                this.thrRU.stopListening();
-            }
-            if (this.thrLL != null)
-            {
-                this.thrLL.stopListening();
-            }
-            if (this.thrTL != null)
-            {
-                this.thrTL.stopListening();
-            }
-            if (this.thrOL != null)
-            {
-                this.thrOL.stopListening();
-            }
-            if (this.thrTC != null)
-            {
-                this.thrTC.stopListening();
-            }
-
-            for (NetworkConnector nc : this.broker.getNetworkConnectors())
-            {
-                nc.stop();
-                this.broker.removeNetworkConnector(nc);
-            }
-
+            stopAllOutgoingLinks();
             this.connection.close();
-            broker.stop();
-            broker.waitUntilStopped();
+            this.broker.stop();
+            this.broker.waitUntilStopped();
             this.factory = null;
             this.engine = null;
             log.debug("Broker has ended its stop sequence " + this.ctx.getContextRoot());
@@ -359,6 +344,80 @@ class Broker
         catch (Exception e)
         {
             log.warn("an error occured while trying to stop the broker", e);
+        }
+    }
+
+    void stop()
+    {
+        stopRunnerAgents();
+        stopEngineListeners();
+        stopBroker();
+    }
+
+    private void stopAllOutgoingLinks() throws ChronixInitializationException
+    {
+        log.debug("Stopping all outgoing network connectors " + ctx.getContextRoot());
+        try
+        {
+            for (NetworkConnector nc : this.broker.getNetworkConnectors())
+            {
+                nc.stop();
+                this.broker.removeNetworkConnector(nc);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new ChronixInitializationException("an error occured while trying to stop an outgoing link to another node", e);
+        }
+    }
+
+    void resetLinks() throws ChronixInitializationException
+    {
+        stopAllOutgoingLinks();
+
+        ArrayList<String> opened = new ArrayList<String>();
+        for (Application a : this.ctx.getApplications())
+        {
+            for (NodeLink nl : a.getLocalNode().getCanSendTo())
+            {
+                // Only if TCP or RCTRL
+                // Only if not already opened
+                if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL))
+                        || opened.contains(nl.getNodeTo().getBrokerUrl()))
+                {
+                    break;
+                }
+                opened.add(nl.getNodeTo().getBrokerUrl());
+
+                String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
+                log.info(String.format("(%s) This broker will open a channel towards %s", ctx.getContextRoot(), url));
+                NetworkConnector tc;
+                try
+                {
+                    tc = broker.addNetworkConnector(url);
+                    if (broker.isStarted())
+                    {
+                        // Connectors are auto started on broker startup, but not started otherwise.
+                        tc.start();
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ChronixInitializationException("Could not create a JMS network connector", e);
+                }
+                tc.setDuplex(true);
+                tc.setAlwaysSyncSend(true);
+                // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
+            }
+
+            for (NodeLink nl : a.getLocalNode().getCanReceiveFrom())
+            {
+                if (nl.getMethod().equals(NodeConnectionMethod.TCP))
+                {
+                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s", ctx.getContextRoot(), nl
+                            .getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
+                }
+            }
         }
     }
 

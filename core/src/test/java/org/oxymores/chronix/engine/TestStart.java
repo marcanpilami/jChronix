@@ -1,5 +1,6 @@
 package org.oxymores.chronix.engine;
 
+import javax.jms.JMSException;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
@@ -9,8 +10,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.DemoApplication;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestStart
 {
@@ -88,5 +93,41 @@ public class TestStart
         TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
         Assert.assertEquals(3, q.getResultList().size());
+    }
+
+    @Test
+    public void testRestart() throws JMSException
+    {
+        ChronixEngine e1 = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
+        e1.emptyDb();
+        LogHelpers.clearAllTranscientElements(e1.ctx);
+        e1.start();
+        e1.waitForInitEnd();
+
+        ChronixEngine e2 = new ChronixEngine("C:\\TEMP\\db2", "localhost:1400");
+        e2.emptyDb();
+        LogHelpers.clearAllTranscientElements(e2.ctx);
+        e2.start();
+        e2.waitForInitEnd();
+
+        Application a = PlanBuilder.buildApplication("test", "description");
+        PlanBuilder.buildDefaultLocalNetwork(a, 1789, "localhost");
+        ExecutionNode n1 = a.getNodesList().get(0);
+        ExecutionNode n2 = PlanBuilder.buildExecutionNode(a, "localhost", 1400);
+        n1.connectTo(n2, NodeConnectionMethod.TCP);
+
+        SenderHelpers.sendApplication(a, n1, e1.ctx); // Send through 2 - it won't reboot
+        e1.waitForRebootEnd();
+
+        SenderHelpers.sendApplication(a, n1, e1.ctx);
+        e1.waitForRebootEnd();
+
+        SenderHelpers.sendApplication(a, n1, e1.ctx);
+        e1.waitForRebootEnd();
+
+        e1.stopEngine();
+        e1.waitForStopEnd();
+        e2.stopEngine();
+        e2.waitForStopEnd();
     }
 }
