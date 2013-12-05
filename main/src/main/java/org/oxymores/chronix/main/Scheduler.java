@@ -95,7 +95,7 @@ public class Scheduler
         s3.connectTo(s4, 0);
         s4.connectTo(s5);
 
-        ChronixContext ctx = ChronixContext.initContext(repoPath, "", "", "", false);
+        ChronixContext ctx = ChronixContext.initContext(repoPath, "", "", mainDataInterface + ":" + mainDataPort, false);
         ChronixEngine tmp = new ChronixEngine(repoPath, mainDataInterface + ":" + mainDataPort);
         tmp.emptyDb();
         ctx.saveApplication(a);

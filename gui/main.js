@@ -59,6 +59,8 @@ function handleTabs(tabId)
 		n = new NPPanel("tab-pn", cxfApplication);
 	if (tabId === 'tab-ln')
 		n = new LogicalNetworkPanel('tab-ln', cxfApplication);
+	if (tabId === 'tab-cal')
+		n = new CalendarPanel('tab-cal', cxfApplication);
 
 	loaded[tabId] = n;
 }
