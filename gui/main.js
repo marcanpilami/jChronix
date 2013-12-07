@@ -38,7 +38,7 @@ $(document).ready(function()
 });
 
 // Function to create panels only when they are displayed (Slickgrid requires a displayed div with known size to init)
-var loaded = new Array();
+loaded = new Array();
 function handleTabs(tabId)
 {
 	if (loaded[tabId] !== undefined && loaded[tabId] !== null)

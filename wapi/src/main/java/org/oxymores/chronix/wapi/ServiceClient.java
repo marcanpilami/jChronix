@@ -35,6 +35,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
@@ -189,6 +190,7 @@ public class ServiceClient implements IServiceClient
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
         ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);
         PlanBuilder.buildClock(a, "once a week day", "day clock", r);
+        PlanBuilder.buildChain(a, "first chain", "plan", a.getGroupsList().get(0));
 
         return Frontier.getApplication(a);
     }

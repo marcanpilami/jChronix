@@ -25,6 +25,13 @@ function getApplicationOK(responseObject)
 
 	// Reset panels
 	loaded = new Array();
+	$("#tab-ln").empty();
+	$("#tab-pn").empty();
+	$("#tab-cal").empty();
+	$("#tab-schedule").empty();
+	$("#gridCommands").empty();
+	$("#chaintabs").empty();
+	$("#chaintabs").append($("<ul></ul>"));
 
 	// Quick access shortcuts
 	cxfApplication.places = new Array();
@@ -136,7 +143,8 @@ function ChangeApp()
 		"bottom" : "0",
 		"left" : "0",
 		"right" : "0",
-		"background-color" : "grey"
+		"background-color" : "grey",
+		"z-index" : "999",
 	});
 
 	this.appListDiv = $("<div></div>");
