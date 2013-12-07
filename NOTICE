@@ -1,0 +1,54 @@
+﻿Oxymores jChronix
+Copyright 2012-2013 Marc-Antoine Gouillart
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+Top level project used are :
+	- Apache CXF
+	- Apache ActiveMQ
+	- Apache OpenJPA
+	- Apache log4j
+
+This software reuses preparatory works created for the
+original open source Chronix project by
+	- Grégoire Barbier
+	- Marc-Antoine Gouillart
+	- Sébastien Renard
+
+iCal support is provided by the iCal4j library package,
+which is open source software by Ben Fortuna. The original
+software is available from http://build.mnode.org/projects/ical4j
+	Copyright (c) 2012, Ben Fortuna
+	All rights reserved.
+
+Database support is provided by the HSQLDB library package, which is
+open source software under a BSD licence. Original
+software is available at http://hsqldb.org
+
+Command line parsing is provided by the args4j library package,
+which is open source software under a MIT license by Kohsuke Kawaguchi. 
+The original software is available at http://args4j.kohsuke.org/
+
+Additional logging support is provided by slf4j, which is open source
+software under a MIT license by QOS.ch. The original software is
+available at http://www.slf4j.org
+
+Basic and advanced date computations are provided by Joda Time, 
+which is open source software under an Apache 2 license, by the
+Joda Project. The original software is available at 
+http://joda-time.sourceforge.net/
+
+Some level of sanity in JavaScript programming is provided by jQuery,
+which is open source software under a MIT license by the jQuery Foundation.
+The original software is available at http://jquery.org
+
+Javascript SVG drawing is provided by Raphael, which is open source
+software under a MIT license by Dmitry Baranovskiy. The original 
+software is available at http://raphaeljs.com
+
+HTML data tables are provided by SlickGrid, which is open source software
+under a MIT license by Michael Leibman. The original software is available at
+https://github.com/mleibman/SlickGrid
+
+
+
