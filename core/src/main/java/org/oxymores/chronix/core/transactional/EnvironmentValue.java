@@ -31,10 +31,12 @@ import javax.persistence.Id;
 public class EnvironmentValue implements Serializable
 {
     private static final long serialVersionUID = -3301527648471127170L;
+    protected static final int UUID_LENGTH = 36;
 
     @Id
-    @Column(nullable = false, length = 36)
+    @Column(length = UUID_LENGTH)
     private String id;
+
     @Column(length = 50)
     private String key, value;
 

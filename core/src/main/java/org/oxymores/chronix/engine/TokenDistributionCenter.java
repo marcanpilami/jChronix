@@ -139,16 +139,16 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         {
             // Should be stored locally, so as to refresh the request every 5 minutes
             TokenReservation tr = new TokenReservation();
-            tr.applicationId = request.applicationID.toString();
-            tr.grantedOn = new Date();
-            tr.localRenew = true;
-            tr.placeId = request.placeID.toString();
-            tr.renewedOn = tr.grantedOn;
-            tr.requestedOn = tr.grantedOn;
-            tr.stateId = request.stateID.toString();
-            tr.tokenId = request.tokenID.toString();
-            tr.pending = true;
-            tr.requestedBy = request.requestingNodeID.toString();
+            tr.setApplicationId(request.applicationID.toString());
+            tr.setGrantedOn(new Date());
+            tr.setLocalRenew(true);
+            tr.setPlaceId(request.placeID.toString());
+            tr.setRenewedOn(tr.getGrantedOn());
+            tr.setRequestedOn(tr.getGrantedOn());
+            tr.setStateId(request.stateID.toString());
+            tr.setTokenId(request.tokenID.toString());
+            tr.setPending(true);
+            tr.setRequestedBy(request.requestingNodeID.toString());
 
             trTransac.begin();
             emTransac.persist(tr);
@@ -177,7 +177,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             TokenReservation toRemove = null;
             for (TokenReservation tr : shouldRenew)
             {
-                if (tr.stateId.equals(request.stateID.toString()) && tr.placeId.equals(request.placeID.toString()))
+                if (tr.getStateId().equals(request.stateID.toString()) && tr.getPlaceId().equals(request.placeID.toString()))
                 {
                     toRemove = tr;
                 }
@@ -239,7 +239,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             TokenReservation tr = getTR(request);
 
             trTransac.begin();
-            tr.renewedOn = new Date();
+            tr.setRenewedOn(new Date());
             trTransac.commit();
         }
 
@@ -273,10 +273,10 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             q.setParameter(1, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
             for (TokenReservation tr : q.getResultList())
             {
-                Application aa = ctx.getApplication(tr.applicationId);
-                org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.stateId));
-                Place pp = aa.getPlace(UUID.fromString(tr.placeId));
-                ExecutionNode enn = aa.getNode(UUID.fromString(tr.requestedBy));
+                Application aa = ctx.getApplication(tr.getApplicationId());
+                org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.getStateId()));
+                Place pp = aa.getPlace(UUID.fromString(tr.getPlaceId()));
+                ExecutionNode enn = aa.getNode(UUID.fromString(tr.getRequestedBy()));
                 log.info(String
                         .format("A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
                                 pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
@@ -286,14 +286,14 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             }
         }
 
-        // TDC: Step 2: Now that the purge is gone, analyse pending requests again - tokens may have freed
+        // TDC: Step 2: Now that the purge is done, analyse pending requests again - tokens may have freed
         if (!request.local)
         {
             TypedQuery<TokenReservation> q = emTransac.createQuery(
                     "SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE", TokenReservation.class);
             for (TokenReservation tr : q.getResultList())
             {
-                log.debug(String.format("Re-analysing token request for PJ %s", tr.pipelineJobId));
+                log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
                 processRequest(tr);
             }
             trTransac.commit();
@@ -327,13 +327,13 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     private void processRequest(TokenReservation tr)
     {
         // Get data
-        Application a = ctx.getApplication(tr.applicationId);
-        Token tk = a.getToken(UUID.fromString(tr.tokenId));
-        Place p = a.getPlace(UUID.fromString(tr.placeId));
-        org.oxymores.chronix.core.State s = a.getState(UUID.fromString(tr.stateId));
+        Application a = ctx.getApplication(tr.getApplicationId());
+        Token tk = a.getToken(UUID.fromString(tr.getTokenId()));
+        Place p = a.getPlace(UUID.fromString(tr.getPlaceId()));
+        org.oxymores.chronix.core.State s = a.getState(UUID.fromString(tr.getStateId()));
 
         // Process
-        processRequest(a, tk, p, new DateTime(tr.requestedOn), s, tr, tr.pipelineJobId, tr.requestedBy);
+        processRequest(a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
     }
 
     private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
@@ -372,24 +372,24 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             if (existing == null)
             {
                 TokenReservation trs = new TokenReservation();
-                trs.grantedOn = null;
-                trs.localRenew = false;
+                trs.setGrantedOn(null);
+                trs.setLocalRenew(false);
                 // PENDING means not given yet
-                trs.pending = true;
-                trs.placeId = p.getId().toString();
-                trs.renewedOn = null;
-                trs.requestedOn = requestedOn.toDate();
-                trs.stateId = s.getId().toString();
-                trs.tokenId = tk.getId().toString();
-                trs.pipelineJobId = pipelineJobId;
-                trs.applicationId = a.getId().toString();
-                trs.requestedBy = requestingNodeId;
+                trs.setPending(true);
+                trs.setPlaceId(p.getId().toString());
+                trs.setRenewedOn(null);
+                trs.setRequestedOn(requestedOn.toDate());
+                trs.setStateId(s.getId().toString());
+                trs.setTokenId(tk.getId().toString());
+                trs.setPipelineJobId(pipelineJobId);
+                trs.setApplicationId(a.getId().toString());
+                trs.setRequestedBy(requestingNodeId);
 
                 emTransac.persist(trs);
             }
             else
             {
-                existing.renewedOn = new Date();
+                existing.setRenewedOn(new Date());
             }
 
             // Don't send an answer to the caller.
@@ -403,26 +403,26 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             if (existing == null)
             {
                 TokenReservation trs = new TokenReservation();
-                trs.grantedOn = new Date();
-                trs.localRenew = false;
-                trs.pending = false;
-                trs.placeId = p.getId().toString();
-                trs.renewedOn = trs.grantedOn;
-                trs.requestedOn = requestedOn.toDate();
-                trs.stateId = s.getId().toString();
-                trs.tokenId = tk.getId().toString();
-                trs.pipelineJobId = pipelineJobId;
-                trs.applicationId = a.getId().toString();
-                trs.requestedBy = requestingNodeId;
+                trs.setGrantedOn(new Date());
+                trs.setLocalRenew(false);
+                trs.setPending(false);
+                trs.setPlaceId(p.getId().toString());
+                trs.setRenewedOn(trs.getGrantedOn());
+                trs.setRequestedOn(requestedOn.toDate());
+                trs.setStateId(s.getId().toString());
+                trs.setTokenId(tk.getId().toString());
+                trs.setPipelineJobId(pipelineJobId);
+                trs.setApplicationId(a.getId().toString());
+                trs.setRequestedBy(requestingNodeId);
 
                 emTransac.persist(trs);
                 answer = trs.getAgreeRequest();
             }
             else
             {
-                existing.pending = false;
-                existing.grantedOn = new Date();
-                existing.renewedOn = existing.grantedOn;
+                existing.setPending(false);
+                existing.setGrantedOn(new Date());
+                existing.setRenewedOn(existing.getGrantedOn());
                 answer = existing.getAgreeRequest();
             }
 
@@ -464,7 +464,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             // Renew token location for all boring
             for (TokenReservation tr : shouldRenew)
             {
-                if (now.minusMinutes(Constants.TOKEN_RENEWAL_MN).compareTo(new DateTime(tr.renewedOn)) <= 0)
+                if (now.minusMinutes(Constants.TOKEN_RENEWAL_MN).compareTo(new DateTime(tr.getRenewedOn())) <= 0)
                 {
                     try
                     {

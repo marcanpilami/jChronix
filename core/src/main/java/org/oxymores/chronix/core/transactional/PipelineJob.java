@@ -32,7 +32,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
@@ -50,22 +49,22 @@ import org.oxymores.chronix.engine.data.RunResult;
 public class PipelineJob extends TranscientBase
 {
     private static final long serialVersionUID = -3301527645931127170L;
-    @SuppressWarnings("unused")
-    private static Logger log = Logger.getLogger(PipelineJob.class);
 
     @Column(length = 20)
     String status;
-    @Column(length = 255)
+
+    @Column(length = PATH_LENGTH)
     String runThis;
+
     Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
 
-    // The following values are String representation of UUID
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+    @Column(length = UUID_LENGTH)
     String level0Id, level1Id, level2Id, level3Id;
 
     Map<Integer, String> paramValues;
 
     Boolean outOfPlan = false;
+
     Integer resultCode = -1;
 
     public PipelineJob()
@@ -414,22 +413,22 @@ public class PipelineJob extends TranscientBase
     public Event createEvent(RunResult rr)
     {
         Event e = new Event();
-        e.localOnly = false;
-        e.analysed = false;
-        e.conditionData1 = rr.returnCode;
-        e.conditionData2 = rr.conditionData2;
-        e.conditionData3 = rr.conditionData3;
-        e.conditionData4 = rr.conditionData4;
-        e.level0Id = this.level0Id;
-        e.level1Id = this.level1Id;
-        e.level2Id = this.level2Id;
-        e.level3Id = this.level3Id;
-        e.placeID = this.placeID;
-        e.stateID = this.stateID;
-        e.appID = this.appID;
-        e.activeID = this.activeID;
-        e.createdAt = new Date();
-        e.virtualTime = this.virtualTime;
+        e.setLocalOnly(false);
+        e.setAnalysed(false);
+        e.setConditionData1(rr.returnCode);
+        e.setConditionData2(rr.conditionData2);
+        e.setConditionData3(rr.conditionData3);
+        e.setConditionData4(rr.conditionData4);
+        e.setLevel0Id(this.level0Id);
+        e.setLevel1Id(this.level1Id);
+        e.setLevel2Id(this.level2Id);
+        e.setLevel3Id(this.level3Id);
+        e.setPlaceID(this.placeID);
+        e.setStateID(this.stateID);
+        e.setAppID(this.appID);
+        e.setActiveID(this.activeID);
+        e.setCreatedAt(new Date());
+        e.setVirtualTime(this.virtualTime);
 
         // Report environment
         for (EnvironmentValue ev : this.envParams)

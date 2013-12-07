@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 import org.joda.time.DateTime;
@@ -33,54 +34,186 @@ import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 @Entity
 public class TokenReservation implements Serializable
 {
-	private static final long serialVersionUID = 4126830397920944723L;
+    private static final long serialVersionUID = 4126830397920944723L;
+    protected static final int UUID_LENGTH = 36;
 
-	public String applicationId;
-	public String placeId;
-	public String stateId;
-	public String tokenId;
-	public String pipelineJobId;
+    @Column(length = UUID_LENGTH)
+    private String applicationId;
 
-	public String requestedBy; // ExecutionNodeId
+    @Column(length = UUID_LENGTH)
+    private String placeId;
 
-	public Date requestedOn;
-	public Date grantedOn;
-	public Date renewedOn;
-	public boolean localRenew = false;
-	public boolean pending = false;
+    @Column(length = UUID_LENGTH)
+    private String stateId;
 
-	public TokenRequest getRenewalRequest()
-	{
-		TokenRequest tr = getRequest();
-		tr.type = TokenRequestType.RENEW;
-		return tr;
-	}
+    @Column(length = UUID_LENGTH)
+    private String tokenId;
 
-	public TokenRequest getReleaseRequest()
-	{
-		TokenRequest tr = getRequest();
-		tr.type = TokenRequestType.RELEASE;
-		return tr;
-	}
+    @Column(length = UUID_LENGTH)
+    private String pipelineJobId;
 
-	public TokenRequest getAgreeRequest()
-	{
-		TokenRequest tr = getRequest();
-		tr.type = TokenRequestType.AGREE;
-		return tr;
-	}
+    // ExecutionNodeId
+    @Column(length = UUID_LENGTH)
+    private String requestedBy;
 
-	private TokenRequest getRequest()
-	{
-		TokenRequest tr = new TokenRequest();
-		tr.applicationID = UUID.fromString(this.applicationId);
-		tr.placeID = UUID.fromString(this.placeId);
-		tr.tokenID = UUID.fromString(this.tokenId);
-		tr.stateID = UUID.fromString(this.stateId);
-		tr.requestedAt = new DateTime(this.grantedOn);
-		tr.requestingNodeID = UUID.fromString(this.requestedBy);
-		tr.pipelineJobID = UUID.fromString(this.pipelineJobId);
-		tr.local = false;
-		return tr;
-	}
+    private Date requestedOn;
+    private Date grantedOn;
+    private Date renewedOn;
+
+    private boolean localRenew = false;
+    private boolean pending = false;
+
+    // ///////////////////////////////////////////
+    // Helpers to create tokens
+    public TokenRequest getRenewalRequest()
+    {
+        TokenRequest tr = getRequest();
+        tr.type = TokenRequestType.RENEW;
+        return tr;
+    }
+
+    public TokenRequest getReleaseRequest()
+    {
+        TokenRequest tr = getRequest();
+        tr.type = TokenRequestType.RELEASE;
+        return tr;
+    }
+
+    public TokenRequest getAgreeRequest()
+    {
+        TokenRequest tr = getRequest();
+        tr.type = TokenRequestType.AGREE;
+        return tr;
+    }
+
+    private TokenRequest getRequest()
+    {
+        TokenRequest tr = new TokenRequest();
+        tr.applicationID = UUID.fromString(this.applicationId);
+        tr.placeID = UUID.fromString(this.placeId);
+        tr.tokenID = UUID.fromString(this.tokenId);
+        tr.stateID = UUID.fromString(this.stateId);
+        tr.requestedAt = new DateTime(this.grantedOn);
+        tr.requestingNodeID = UUID.fromString(this.requestedBy);
+        tr.pipelineJobID = UUID.fromString(this.pipelineJobId);
+        tr.local = false;
+        return tr;
+    }
+
+    //
+    // ///////////////////////////////////////////
+
+    // ///////////////////////////////////////////
+    // Stupid get/set
+    public String getApplicationId()
+    {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId)
+    {
+        this.applicationId = applicationId;
+    }
+
+    public String getPlaceId()
+    {
+        return placeId;
+    }
+
+    public void setPlaceId(String placeId)
+    {
+        this.placeId = placeId;
+    }
+
+    public String getStateId()
+    {
+        return stateId;
+    }
+
+    public void setStateId(String stateId)
+    {
+        this.stateId = stateId;
+    }
+
+    public String getTokenId()
+    {
+        return tokenId;
+    }
+
+    public void setTokenId(String tokenId)
+    {
+        this.tokenId = tokenId;
+    }
+
+    public String getPipelineJobId()
+    {
+        return pipelineJobId;
+    }
+
+    public void setPipelineJobId(String pipelineJobId)
+    {
+        this.pipelineJobId = pipelineJobId;
+    }
+
+    public String getRequestedBy()
+    {
+        return requestedBy;
+    }
+
+    public void setRequestedBy(String requestedBy)
+    {
+        this.requestedBy = requestedBy;
+    }
+
+    public Date getRequestedOn()
+    {
+        return requestedOn;
+    }
+
+    public void setRequestedOn(Date requestedOn)
+    {
+        this.requestedOn = requestedOn;
+    }
+
+    public Date getGrantedOn()
+    {
+        return grantedOn;
+    }
+
+    public void setGrantedOn(Date grantedOn)
+    {
+        this.grantedOn = grantedOn;
+    }
+
+    public Date getRenewedOn()
+    {
+        return renewedOn;
+    }
+
+    public void setRenewedOn(Date renewedOn)
+    {
+        this.renewedOn = renewedOn;
+    }
+
+    public boolean isLocalRenew()
+    {
+        return localRenew;
+    }
+
+    public void setLocalRenew(boolean localRenew)
+    {
+        this.localRenew = localRenew;
+    }
+
+    public boolean isPending()
+    {
+        return pending;
+    }
+
+    public void setPending(boolean pending)
+    {
+        this.pending = pending;
+    }
+    //
+    // ///////////////////////////////////////////
 }

@@ -23,6 +23,7 @@ package org.oxymores.chronix.core.transactional;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
@@ -43,33 +44,47 @@ import org.oxymores.chronix.core.State;
 public class TranscientBase implements Serializable
 {
     private static final long serialVersionUID = 8976655465578L;
-    // private static Logger log = Logger.getLogger(TranscientBase.class);
+    protected static final int UUID_LENGTH = 36;
+    protected static final int DESCR_LENGTH = 100;
+    protected static final int PATH_LENGTH = 1024;
+    protected static final int LOG_LENGTH = 10000;
+    protected static final String DATE_FORMAT = "dd/MM HH:mm:ss";
 
     @Id
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+    @Column(length = UUID_LENGTH)
     protected String id;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String stateID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String activeID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String placeID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String appID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String calendarOccurrenceID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String calendarID;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
+
+    @Column(length = UUID_LENGTH)
     protected String simulationID;
+
     protected Boolean outsideChainLaunch = false;
+
     protected Boolean ignoreCalendarUpdating = false;
 
     protected Date createdAt;
+
     protected Date virtualTime;
 
     @OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
-    protected ArrayList<EnvironmentValue> envParams;
+    protected List<EnvironmentValue> envParams;
 
     public TranscientBase()
     {
@@ -82,7 +97,9 @@ public class TranscientBase implements Serializable
     public boolean equals(Object o)
     {
         if (!(o instanceof TranscientBase))
+        {
             return false;
+        }
         return ((TranscientBase) o).getId().equals(this.getId());
     }
 
@@ -218,7 +235,9 @@ public class TranscientBase implements Serializable
             this.appID = place.getApplication().getId().toString();
         }
         else
+        {
             this.placeID = null;
+        }
     }
 
     public Place getPlace(ChronixContext ctx)
@@ -249,9 +268,13 @@ public class TranscientBase implements Serializable
     public void setApplication(Application application)
     {
         if (application != null)
+        {
             this.appID = application.getId().toString();
+        }
         else
+        {
             this.appID = null;
+        }
     }
 
     public Date getCreatedAt()
@@ -259,8 +282,7 @@ public class TranscientBase implements Serializable
         return createdAt;
     }
 
-    @SuppressWarnings("unused")
-    private void setCreatedAt(Date created)
+    protected void setCreatedAt(Date created)
     {
         this.createdAt = created;
     }
@@ -275,18 +297,17 @@ public class TranscientBase implements Serializable
         return UUID.fromString(this.id);
     }
 
-    @SuppressWarnings("unused")
-    private void setId(String id)
+    protected void setId(String id)
     {
         this.id = id;
     }
 
-    public ArrayList<EnvironmentValue> getEnvParams()
+    public List<EnvironmentValue> getEnvParams()
     {
         return envParams;
     }
 
-    protected void setEnvParams(ArrayList<EnvironmentValue> values)
+    protected void setEnvParams(List<EnvironmentValue> values)
     {
         this.envParams = values;
     }

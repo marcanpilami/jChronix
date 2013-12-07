@@ -28,8 +28,28 @@ import javax.persistence.Entity;
 @Entity
 public class ClockTick implements Serializable
 {
-	private static final long serialVersionUID = 4194251899101238989L;
+    private static final long serialVersionUID = 4194251899101238989L;
 
-	public String ClockId;
-	public Date TickTime;
+    private String clockId;
+    private Date tickTime;
+
+    public String getClockId()
+    {
+        return clockId;
+    }
+
+    public void setClockId(String clockId)
+    {
+        this.clockId = clockId;
+    }
+
+    public Date getTickTime()
+    {
+        return tickTime;
+    }
+
+    public void setTickTime(Date tickTime)
+    {
+        this.tickTime = tickTime;
+    }
 }

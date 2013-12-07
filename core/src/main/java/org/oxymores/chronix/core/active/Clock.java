@@ -296,8 +296,8 @@ public class Clock extends ActiveNodeBase
 
                     // Mark the tick as done
                     ClockTick ct = new ClockTick();
-                    ct.ClockId = this.id.toString();
-                    ct.TickTime = dt.toDate();
+                    ct.setClockId(this.id.toString());
+                    ct.setTickTime(dt.toDate());
                     em.persist(ct);
                 }
             }

@@ -32,19 +32,19 @@ import org.apache.openjpa.persistence.InverseLogical;
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class EventConsumption extends TranscientBase
 {
-	private static final long serialVersionUID = 4960077419503476652L;
+    private static final long serialVersionUID = 4960077419503476652L;
 
-	@ManyToOne(cascade = CascadeType.ALL)
-	@InverseLogical("consumptions")
-	public Event event;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @InverseLogical("consumptions")
+    private Event event;
 
-	public Event getEvent()
-	{
-		return event;
-	}
+    public Event getEvent()
+    {
+        return event;
+    }
 
-	public void setEvent(Event event)
-	{
-		this.event = event;
-	}
+    public void setEvent(Event event)
+    {
+        this.event = event;
+    }
 }
