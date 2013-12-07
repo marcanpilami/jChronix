@@ -39,29 +39,32 @@ public class RunStats implements Serializable
 {
     private static final long serialVersionUID = -3318147581838188039L;
     private static Logger log = Logger.getLogger(RunStats.class);
+    private static final int UUID_LENGTH = 36;
 
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    public String stateId;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    public String placeId;
-    public float meanDuration;
-    public float maxDuration;
-    public float minDuration;
+    @Column(length = UUID_LENGTH)
+    private String stateId;
 
+    @Column(length = UUID_LENGTH)
+    private String placeId;
+
+    private float meanDuration, maxDuration, minDuration;
+
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Statistics calculation
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
     private static RunStats getRS(EntityManager em, String stateId, String placeId)
     {
-        RunStats rs = null;
         TypedQuery<RunStats> q = em.createQuery("SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2", RunStats.class);
         q.setParameter(1, placeId);
         q.setParameter(2, stateId);
         try
         {
-            rs = q.getSingleResult();
+            return q.getSingleResult();
         }
         catch (NoResultException e)
         {
+            return null;
         }
-        return rs;
     }
 
     public static float getMean(EntityManager em, String stateId, String placeId)
@@ -88,10 +91,10 @@ public class RunStats implements Serializable
             DateTime e = new DateTime(rlog.getStoppedRunningAt());
             Interval i = new Interval(s, e);
             RunMetrics rm = new RunMetrics();
-            rm.duration = i.getEndMillis() - i.getStartMillis();
-            rm.placeId = rlog.getPlaceId();
-            rm.startTime = rlog.getBeganRunningAt();
-            rm.stateId = rlog.getStateId();
+            rm.setDuration(i.getEndMillis() - i.getStartMillis());
+            rm.setPlaceId(rlog.getPlaceId());
+            rm.setStartTime(rlog.getBeganRunningAt());
+            rm.setStateId(rlog.getStateId());
 
             em.persist(rm);
         }
@@ -134,7 +137,63 @@ public class RunStats implements Serializable
         if (res.size() > 10)
         {
             for (RunMetrics rm : res.subList(10, res.size()))
+            {
                 em.remove(rm);
+            }
         }
+    }
+
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Stupid accessors
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getStateId()
+    {
+        return stateId;
+    }
+
+    public void setStateId(String stateId)
+    {
+        this.stateId = stateId;
+    }
+
+    public String getPlaceId()
+    {
+        return placeId;
+    }
+
+    public void setPlaceId(String placeId)
+    {
+        this.placeId = placeId;
+    }
+
+    public float getMeanDuration()
+    {
+        return meanDuration;
+    }
+
+    public void setMeanDuration(float meanDuration)
+    {
+        this.meanDuration = meanDuration;
+    }
+
+    public float getMaxDuration()
+    {
+        return maxDuration;
+    }
+
+    public void setMaxDuration(float maxDuration)
+    {
+        this.maxDuration = maxDuration;
+    }
+
+    public float getMinDuration()
+    {
+        return minDuration;
+    }
+
+    public void setMinDuration(float minDuration)
+    {
+        this.minDuration = minDuration;
     }
 }

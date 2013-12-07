@@ -29,12 +29,59 @@ import javax.persistence.Entity;
 @Entity
 public class RunMetrics implements Serializable
 {
-	private static final long serialVersionUID = -4424619647312566179L;
+    private static final long serialVersionUID = -4424619647312566179L;
+    private static final int UUID_LENGTH = 36;
 
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	public String stateId;
-	@Column(columnDefinition = "CHAR(36)", length = 36)
-	public String placeId;
-	public Long duration;
-	public Date startTime;
+    @Column(length = UUID_LENGTH)
+    private String stateId;
+
+    @Column(length = UUID_LENGTH)
+    private String placeId;
+
+    private Long duration;
+
+    private Date startTime;
+
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Stupid accessors
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    public String getStateId()
+    {
+        return stateId;
+    }
+
+    public void setStateId(String stateId)
+    {
+        this.stateId = stateId;
+    }
+
+    public String getPlaceId()
+    {
+        return placeId;
+    }
+
+    public void setPlaceId(String placeId)
+    {
+        this.placeId = placeId;
+    }
+
+    public Long getDuration()
+    {
+        return duration;
+    }
+
+    public void setDuration(Long duration)
+    {
+        this.duration = duration;
+    }
+
+    public Date getStartTime()
+    {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime)
+    {
+        this.startTime = startTime;
+    }
 }

@@ -33,52 +33,123 @@ import org.apache.commons.lang.time.DateFormatUtils;
 public class RunLog implements Serializable
 {
     private static final long serialVersionUID = 154654512882124L;
+    private static final int UUID_LENGTH = 36;
+    private static final int DESCR_LENGTH = 100;
+    private static final int PATH_LENGTH = 1024;
+    private static final int LOG_LENGTH = 10000;
+    private static final String DATE_FORMAT = "dd/MM HH:mm:ss";
+
+    // /////////////////////////////
+    // Main ID is an UUID which is also the id of the pipelinejob)
+    @Column(length = UUID_LENGTH)
+    @Id
+    private String id;
+
+    private Boolean visible = true;
+
+    // /////////////////////////////
+    // Plan elements definition
+
+    @Column(length = UUID_LENGTH)
+    private String applicationId;
+
+    @Column(length = UUID_LENGTH)
+    private String chainId;
+
+    @Column(length = UUID_LENGTH)
+    private String stateId;
+
+    @Column(length = UUID_LENGTH)
+    private String activeNodeId;
+
+    @Column(length = UUID_LENGTH)
+    private String chainLev1Id;
+
+    @Column(length = UUID_LENGTH)
+    private String executionNodeId;
+
+    @Column(length = UUID_LENGTH)
+    private String placeId;
+
+    @Column(length = UUID_LENGTH)
+    private String chainLaunchId;
+
+    // /////////////////////////////
+    // Plan element names (helpers for end user + enables to be totally independent from plan definition)
+
+    @Column(length = DESCR_LENGTH)
+    private String chainName;
+
+    @Column(length = DESCR_LENGTH)
+    private String applicationName;
+
+    @Column(length = DESCR_LENGTH)
+    private String chainLev1Name;
+
+    @Column(length = DESCR_LENGTH)
+    private String activeNodeName;
+
+    @Column(length = DESCR_LENGTH)
+    private String placeName;
+
+    @Column(length = DESCR_LENGTH)
+    private String executionNodeName;
+
+    @Column(length = DESCR_LENGTH)
+    private String dns;
+
+    @Column(length = DESCR_LENGTH)
+    private String osAccount;
+
+    // ///////////////////////////////
+    // Status / result
+
+    @Column(length = PATH_LENGTH)
+    private String whatWasRun;
+
+    private int resultCode;
 
     @Column(length = 20)
     private String lastKnownStatus;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    @Id
-    private String id; // UUID (is the id of the pipelinejob)
-    private String chainName;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    private String chainId; // UUID
-    private String chainLev1Name;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    private String chainLev1Id; // UUID
-    private String applicationName;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    private String applicationId; // UUID
-    @Column(length = 36)
-    private String stateId; // UUID
-    private String activeNodeName;
-    @Column(length = 36)
-    private String activeNodeId; // UUID
-    private String placeName;
-    @Column(length = 36)
-    private String placeId; // UUID
-    private String executionNodeName;
-    @Column(length = 36)
-    private String executionNodeId; // UUID
-    private String dns;
-    private String osAccount;
-    private String whatWasRun;
-    @Column(length = 10000)
+
+    @Column(length = LOG_LENGTH)
     private String shortLog;
-    private int resultCode;
-    private Date enteredPipeAt;
-    private Date markedForUnAt;
-    private Date beganRunningAt;
-    private Date stoppedRunningAt;
-    private long dataIn, dataOut;
-    private long sequence;
-    private String calendarName;
-    private String calendarOccurrence;
+
+    @Column(length = PATH_LENGTH)
     private String logPath;
-    private Boolean visible = true;
-    @Column(columnDefinition = "CHAR(36)", length = 36)
-    private String chainLaunchId;
+
+    // /////////////////////////////
+    // Data/ capa planning
+
+    private long dataIn, dataOut;
+
+    // /////////////////////////////
+    // Calendar & seq
+
+    @Column(length = DESCR_LENGTH)
+    private String calendarName;
+
+    @Column(length = DESCR_LENGTH)
+    private String calendarOccurrence;
+
+    private long sequence;
+
+    // /////////////////////////////
+    // Dates
+
+    private Date enteredPipeAt;
+
+    private Date markedForUnAt;
+
+    private Date beganRunningAt;
+
+    private Date stoppedRunningAt;
+
     private Date lastLocallyModified;
 
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Helper accessors
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
     public static String getTitle()
     {
         String res = "";
@@ -100,16 +171,19 @@ public class RunLog implements Serializable
                                 Math.min(19, applicationName.length())),
                         activeNodeName.substring(0, Math.min(19, activeNodeName.length())), osAccount,
                         whatWasRun == null ? "" : whatWasRun.substring(0, Math.min(29, whatWasRun.length())), resultCode,
-                        enteredPipeAt == null ? null : DateFormatUtils.format(enteredPipeAt, "dd/MM HH:mm:ss"),
-                        beganRunningAt == null ? null : DateFormatUtils.format(beganRunningAt, "dd/MM HH:mm:ss"),
-                        stoppedRunningAt == null ? null : DateFormatUtils.format(stoppedRunningAt, "dd/MM HH:mm:ss"),
-                        markedForUnAt == null ? null : DateFormatUtils.format(markedForUnAt, "dd/MM HH:mm:ss"), calendarName == null ? null
+                        enteredPipeAt == null ? null : DateFormatUtils.format(enteredPipeAt, DATE_FORMAT), beganRunningAt == null ? null
+                                : DateFormatUtils.format(beganRunningAt, DATE_FORMAT),
+                        stoppedRunningAt == null ? null : DateFormatUtils.format(stoppedRunningAt, DATE_FORMAT),
+                        markedForUnAt == null ? null : DateFormatUtils.format(markedForUnAt, DATE_FORMAT), calendarName == null ? null
                                 : calendarName.substring(0, Math.min(14, calendarName.length())), calendarOccurrence == null ? null
                                 : calendarOccurrence.substring(0, Math.min(19, calendarOccurrence.length())), logPath == null ? null
                                 : logPath.substring(0, Math.min(9, logPath.length())), visible, chainLaunchId);
         return res;
     }
 
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Stupid accessors
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
     public String getLastKnownStatus()
     {
         return lastKnownStatus;
