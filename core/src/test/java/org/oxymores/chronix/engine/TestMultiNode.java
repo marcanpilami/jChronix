@@ -538,7 +538,7 @@ public class TestMultiNode
 
         try
         {
-            Thread.sleep(4000); // Process events
+            Thread.sleep(5000); // Process events
         }
         catch (InterruptedException e3)
         {

@@ -252,7 +252,7 @@ public class Clock extends ActiveNodeBase
         log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString("dd/MM/YYYY HH:mm:ss")));
 
         // Select the ones that are active
-        TypedQuery<ClockTick> q = em.createQuery("SELECT t FROM ClockTick t WHERE t.TickTime >= ?1 ORDER BY t.TickTime", ClockTick.class);
+        TypedQuery<ClockTick> q = em.createQuery("SELECT t FROM ClockTick t WHERE t.tickTime >= ?1 ORDER BY t.tickTime", ClockTick.class);
         q.setParameter(1, nowminusgrace.toDate());
         List<ClockTick> real = q.getResultList();
         log.debug(String.format("There are %s clock ticks that really are active", real.size()));
@@ -296,6 +296,7 @@ public class Clock extends ActiveNodeBase
 
                     // Mark the tick as done
                     ClockTick ct = new ClockTick();
+                    ct.setAppId(this.application.getId().toString());
                     ct.setClockId(this.id.toString());
                     ct.setTickTime(dt.toDate());
                     em.persist(ct);
@@ -304,7 +305,7 @@ public class Clock extends ActiveNodeBase
         }
 
         // Purge the past ticks
-        q = em.createQuery("SELECT t FROM ClockTick t WHERE t.TickTime < ?1 ORDER BY t.TickTime", ClockTick.class);
+        q = em.createQuery("SELECT t FROM ClockTick t WHERE t.tickTime < ?1 ORDER BY t.tickTime", ClockTick.class);
         q.setParameter(1, nowminusgrace.toDate());
         real = q.getResultList();
         for (ClockTick ct : real)

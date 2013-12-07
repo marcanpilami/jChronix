@@ -235,10 +235,8 @@ public class TestToken
         // Save plan
         try
         {
-            e1.ctx.saveApplication(a1);
-            e1.ctx.setWorkingAsCurrent(a1);
-            e1.queueReloadConfiguration();
-            e1.waitForInitEnd();
+            SenderHelpers.sendApplicationToAllClients(a1, e1.getContext());
+            e1.waitForRebootEnd();
         }
         catch (Exception e)
         {
@@ -248,7 +246,7 @@ public class TestToken
 
         // Start chain
         log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
+        log.debug("*** RUN ******************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
         Thread.sleep(5000); // Time to consume message
 

@@ -28,6 +28,11 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 
@@ -214,6 +219,27 @@ public class TokenReservation implements Serializable
     {
         this.pending = pending;
     }
+
     //
     // ///////////////////////////////////////////
+
+    public Application getApplication(ChronixContext ctx)
+    {
+        return ctx.getApplication(this.applicationId);
+    }
+
+    public Place getPlace(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getPlace(UUID.fromString(this.placeId));
+    }
+
+    public State getState(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getState(UUID.fromString(this.stateId));
+    }
+    
+    public Token getToken(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getToken(UUID.fromString(this.stateId));
+    }
 }

@@ -319,6 +319,12 @@ public class ChronixEngine extends Thread
                 throw new ChronixInitializationException("Could not create default applications", e);
             }
         }
+
+        // Cleanup
+        if (!this.runnerMode)
+        {
+            this.ctx.cleanTransanc();
+        }
     }
 
     public void emptyDb()

@@ -39,6 +39,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.core.transactional.ClockTick;
+import org.oxymores.chronix.core.transactional.TokenReservation;
+import org.oxymores.chronix.core.transactional.TranscientBase;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
@@ -327,6 +331,114 @@ public class ChronixContext
         {
             throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
         }
+    }
+
+    public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
+    {
+        log.info(String.format("(%s) Deleting active file for application %s", this.configurationDirectory, a.getName()));
+        String currentDataFilePath = getActivePath(a.id);
+
+        File f = new File(currentDataFilePath);
+        f.delete();
+        this.removeApplicationFromCache(a.getId());
+    }
+
+    // Will make the transactional data inside the database consistent with the application definition
+    public void cleanTransanc()
+    {
+        EntityManager em = this.getTransacEM();
+        em.getTransaction().begin();
+
+        // Remove elements from deleted applications
+        for (String appId : em.createQuery("SELECT DISTINCT tb.appID FROM TranscientBase tb", String.class).getResultList())
+        {
+            if (this.getApplication(appId) != null)
+            {
+                continue;
+            }
+            em.createQuery("DELETE FROM TranscientBase tb WHERE tb.appID = :a").setParameter("a", appId).executeUpdate();
+            em.createQuery("DELETE FROM ClockTick ct WHERE ct.appId = :a").setParameter("a", appId).executeUpdate();
+            em.createQuery("DELETE FROM TokenReservation tr WHERE tr.applicationId = :a").setParameter("a", appId).executeUpdate();
+        }
+
+        // For each application, purge...
+        for (Application a : this.applicationsByName.values())
+        {
+            // TB must have a State, a Place, a Source. Purging TB implies purging EV.
+            for (TranscientBase tb : em.createQuery("SELECT tb FROM TranscientBase tb WHERE tb.appID=:a", TranscientBase.class)
+                    .setParameter("a", a.getId().toString()).getResultList())
+            {
+                if (tb instanceof CalendarPointer)
+                {
+                    // CalendarPointer are special: there is one without Place & State per Calendar (the calendar main pointer)
+                    try
+                    {
+                        tb.getCalendar(this);
+                        if (tb.getStateID() != null || tb.getPlaceID() != null || tb.getActiveID() != null)
+                        {
+                            if (tb.getState(this) == null || tb.getPlace(this) == null)
+                            {
+                                em.remove(tb);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        em.remove(tb);
+                    }
+                    continue;
+                }
+                else
+                {
+                    // General case
+                    try
+                    {
+                        if (tb.getState(this) == null || tb.getPlace(this) == null || tb.getActive(this) == null)
+                        {
+                            em.remove(tb);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        em.remove(tb);
+                    }
+                }
+            }
+
+            // CT must have a clock
+            for (ClockTick ct : em.createQuery("SELECT ct FROM ClockTick ct WHERE ct.appId=:a", ClockTick.class)
+                    .setParameter("a", a.getId().toString()).getResultList())
+            {
+                try
+                {
+                    ct.getClock(this);
+                }
+                catch (Exception e)
+                {
+                    em.remove(ct);
+                }
+            }
+
+            // TR must have Place, State, Token
+            for (TokenReservation tr : em
+                    .createQuery("SELECT tr FROM TokenReservation tr WHERE tr.applicationId=:a", TokenReservation.class)
+                    .setParameter("a", a.getId().toString()).getResultList())
+            {
+                try
+                {
+                    tr.getState(this);
+                    tr.getPlace(this);
+                    tr.getToken(this);
+                }
+                catch (Exception e)
+                {
+                    em.remove(tr);
+                }
+            }
+        }
+
+        em.getTransaction().commit();
+        em.close();
     }
 
     public Map<UUID, ExecutionNode> getNetwork()

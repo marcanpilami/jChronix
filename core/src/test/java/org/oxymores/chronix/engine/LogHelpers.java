@@ -37,7 +37,7 @@ class LogHelpers
     public static List<RunLog> displayAllHistory(ChronixContext ctx)
     {
         EntityManager em = ctx.getHistoryEM();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
+        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.beganRunningAt", RunLog.class);
         List<RunLog> res = q.getResultList();
 
         log.info(RunLog.getTitle());
