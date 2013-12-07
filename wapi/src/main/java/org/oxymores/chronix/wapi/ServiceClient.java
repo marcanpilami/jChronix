@@ -24,6 +24,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jms.JMSException;
 
@@ -35,7 +36,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
@@ -185,6 +185,14 @@ public class ServiceClient implements IServiceClient
     @Override
     public DTOApplication createApplication(String name, String description)
     {
+        // Check if no app of this name
+        Application e = this.ctx.getApplicationByName(name);
+        if (e != null)
+        {
+            name = name + "-" + UUID.randomUUID().hashCode();
+        }
+
+        // Create app
         Application a = PlanBuilder.buildApplication(name, description);
         PlanBuilder.buildDefaultLocalNetwork(a);
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
