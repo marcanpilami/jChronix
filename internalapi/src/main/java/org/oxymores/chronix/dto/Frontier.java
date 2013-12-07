@@ -194,6 +194,11 @@ public class Frontier
             t.y = s.getY();
             t.label = s.getRepresents().getName();
             t.representsId = s.getRepresents().getId().toString();
+            if (s.getCalendar() != null)
+            {
+                t.calendarId = s.getCalendar().getId().toString();
+                t.calendarShift = s.getCalendarShift();
+            }
             try
             {
                 t.runsOnName = s.getRunsOn().getName();

@@ -2,211 +2,232 @@ package org.oxymores.chronix.dto;
 
 public class DTOState
 {
-	protected String id, representsId, runsOnId;
-	protected Integer x, y;
-	protected String label, runsOnName;
-	protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
-	protected boolean parallel;
-	protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
-			isEnd = false, isAnd = false, isOr = false;
+    protected String id, representsId, runsOnId, calendarId;
+    protected Integer x, y;
+    protected String label, runsOnName;
+    protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
+    protected Integer calendarShift = 0;
+    protected boolean parallel;
+    protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
+            isEnd = false, isAnd = false, isOr = false;
 
-	public String getRunsOnName()
-	{
-		return runsOnName;
-	}
+    public String getRunsOnName()
+    {
+        return runsOnName;
+    }
 
-	public void setRunsOnName(String runsOnName)
-	{
-		this.runsOnName = runsOnName;
-	}
+    public void setRunsOnName(String runsOnName)
+    {
+        this.runsOnName = runsOnName;
+    }
 
-	public String getLabel()
-	{
-		return label;
-	}
+    public String getLabel()
+    {
+        return label;
+    }
 
-	public void setLabel(String label)
-	{
-		this.label = label;
-	}
+    public void setLabel(String label)
+    {
+        this.label = label;
+    }
 
-	public Integer getWarnAfterMn()
-	{
-		return WarnAfterMn;
-	}
+    public Integer getWarnAfterMn()
+    {
+        return WarnAfterMn;
+    }
 
-	public void setWarnAfterMn(Integer warnAfterMn)
-	{
-		WarnAfterMn = warnAfterMn;
-	}
+    public void setWarnAfterMn(Integer warnAfterMn)
+    {
+        WarnAfterMn = warnAfterMn;
+    }
 
-	public Integer getKillAfterMn()
-	{
-		return KillAfterMn;
-	}
+    public Integer getKillAfterMn()
+    {
+        return KillAfterMn;
+    }
 
-	public void setKillAfterMn(Integer killAfterMn)
-	{
-		KillAfterMn = killAfterMn;
-	}
+    public void setKillAfterMn(Integer killAfterMn)
+    {
+        KillAfterMn = killAfterMn;
+    }
 
-	public Integer getMaxPipeWaitTime()
-	{
-		return MaxPipeWaitTime;
-	}
+    public Integer getMaxPipeWaitTime()
+    {
+        return MaxPipeWaitTime;
+    }
 
-	public void setMaxPipeWaitTime(Integer maxPipeWaitTime)
-	{
-		MaxPipeWaitTime = maxPipeWaitTime;
-	}
+    public void setMaxPipeWaitTime(Integer maxPipeWaitTime)
+    {
+        MaxPipeWaitTime = maxPipeWaitTime;
+    }
 
-	public Integer getEventValidityMn()
-	{
-		return EventValidityMn;
-	}
+    public Integer getEventValidityMn()
+    {
+        return EventValidityMn;
+    }
 
-	public void setEventValidityMn(Integer eventValidityMn)
-	{
-		EventValidityMn = eventValidityMn;
-	}
+    public void setEventValidityMn(Integer eventValidityMn)
+    {
+        EventValidityMn = eventValidityMn;
+    }
 
-	public Integer getX()
-	{
-		return x;
-	}
+    public Integer getX()
+    {
+        return x;
+    }
 
-	public void setX(Integer x)
-	{
-		this.x = x;
-	}
+    public void setX(Integer x)
+    {
+        this.x = x;
+    }
 
-	public Integer getY()
-	{
-		return y;
-	}
+    public Integer getY()
+    {
+        return y;
+    }
 
-	public void setY(Integer y)
-	{
-		this.y = y;
-	}
+    public void setY(Integer y)
+    {
+        this.y = y;
+    }
 
-	public String getId()
-	{
-		return id;
-	}
+    public String getId()
+    {
+        return id;
+    }
 
-	public void setId(String id)
-	{
-		this.id = id;
-	}
+    public void setId(String id)
+    {
+        this.id = id;
+    }
 
-	public String getRepresentsId()
-	{
-		return representsId;
-	}
+    public String getRepresentsId()
+    {
+        return representsId;
+    }
 
-	public void setRepresentsId(String representsId)
-	{
-		this.representsId = representsId;
-	}
+    public void setRepresentsId(String representsId)
+    {
+        this.representsId = representsId;
+    }
 
-	public String getRunsOnId()
-	{
-		return runsOnId;
-	}
+    public String getRunsOnId()
+    {
+        return runsOnId;
+    }
 
-	public void setRunsOnId(String runsOnId)
-	{
-		this.runsOnId = runsOnId;
-	}
+    public void setRunsOnId(String runsOnId)
+    {
+        this.runsOnId = runsOnId;
+    }
 
-	public boolean isCanReceiveLink()
-	{
-		return canReceiveLink;
-	}
+    public boolean isCanReceiveLink()
+    {
+        return canReceiveLink;
+    }
 
-	public void setCanReceiveLink(boolean canReceiveLink)
-	{
-		this.canReceiveLink = canReceiveLink;
-	}
+    public void setCanReceiveLink(boolean canReceiveLink)
+    {
+        this.canReceiveLink = canReceiveLink;
+    }
 
-	public boolean isCanEmitLinks()
-	{
-		return canEmitLinks;
-	}
+    public boolean isCanEmitLinks()
+    {
+        return canEmitLinks;
+    }
 
-	public void setCanEmitLinks(boolean canEmitLinks)
-	{
-		this.canEmitLinks = canEmitLinks;
-	}
+    public void setCanEmitLinks(boolean canEmitLinks)
+    {
+        this.canEmitLinks = canEmitLinks;
+    }
 
-	public boolean isCanBeRemoved()
-	{
-		return canBeRemoved;
-	}
+    public boolean isCanBeRemoved()
+    {
+        return canBeRemoved;
+    }
 
-	public void setCanBeRemoved(boolean canBeRemoved)
-	{
-		this.canBeRemoved = canBeRemoved;
-	}
+    public void setCanBeRemoved(boolean canBeRemoved)
+    {
+        this.canBeRemoved = canBeRemoved;
+    }
 
-	public boolean isCanReceiveMultipleLinks()
-	{
-		return canReceiveMultipleLinks;
-	}
+    public boolean isCanReceiveMultipleLinks()
+    {
+        return canReceiveMultipleLinks;
+    }
 
-	public void setCanReceiveMultipleLinks(boolean canReceiveMultipleLinks)
-	{
-		this.canReceiveMultipleLinks = canReceiveMultipleLinks;
-	}
+    public void setCanReceiveMultipleLinks(boolean canReceiveMultipleLinks)
+    {
+        this.canReceiveMultipleLinks = canReceiveMultipleLinks;
+    }
 
-	public boolean isStart()
-	{
-		return isStart;
-	}
+    public boolean isStart()
+    {
+        return isStart;
+    }
 
-	public void setStart(boolean isStart)
-	{
-		this.isStart = isStart;
-	}
+    public void setStart(boolean isStart)
+    {
+        this.isStart = isStart;
+    }
 
-	public boolean isEnd()
-	{
-		return isEnd;
-	}
+    public boolean isEnd()
+    {
+        return isEnd;
+    }
 
-	public void setEnd(boolean isEnd)
-	{
-		this.isEnd = isEnd;
-	}
+    public void setEnd(boolean isEnd)
+    {
+        this.isEnd = isEnd;
+    }
 
-	public boolean isAnd()
-	{
-		return isAnd;
-	}
+    public boolean isAnd()
+    {
+        return isAnd;
+    }
 
-	public void setAnd(boolean isAnd)
-	{
-		this.isAnd = isAnd;
-	}
+    public void setAnd(boolean isAnd)
+    {
+        this.isAnd = isAnd;
+    }
 
-	public boolean isOr()
-	{
-		return isOr;
-	}
+    public boolean isOr()
+    {
+        return isOr;
+    }
 
-	public void setOr(boolean isOr)
-	{
-		this.isOr = isOr;
-	}
+    public void setOr(boolean isOr)
+    {
+        this.isOr = isOr;
+    }
 
-	public boolean isParallel()
-	{
-		return parallel;
-	}
+    public boolean isParallel()
+    {
+        return parallel;
+    }
 
-	public void setParallel(boolean parallel)
-	{
-		this.parallel = parallel;
-	}
+    public void setParallel(boolean parallel)
+    {
+        this.parallel = parallel;
+    }
+
+    public String getCalendarId()
+    {
+        return calendarId;
+    }
+
+    public void setCalendarId(String calendarId)
+    {
+        this.calendarId = calendarId;
+    }
+
+    public Integer getCalendarShift()
+    {
+        return calendarShift;
+    }
+
+    public void setCalendarShift(Integer calendarShift)
+    {
+        this.calendarShift = calendarShift;
+    }
 }

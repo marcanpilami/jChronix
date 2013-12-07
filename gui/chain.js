@@ -457,6 +457,20 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 		'stroke-width' : 2
 	});
 
+	if (DTOState._calendarId !== null)
+	{
+		DTOState._calendarName = "Calendar";
+		var cals = this.cxfApplication.getCalendars().getDTOCalendar();
+		for ( var i = 0; i < cals.length; i++)
+		{
+			var cal = cals[i];
+			if (cal._id === DTOState._calendarId)
+			{
+				DTOState._calendarName = cal._name;
+				break;
+			}
+		}
+	}
 	circle.contents = new Object();
 
 	// Set reference between business model object and representation object
@@ -608,6 +622,12 @@ function addTextToState(stateDrawing)
 	var text = DTOState._label + "\n(" + DTOState._runsOnName + ")";
 	if (DTOState._parallel)
 		text += "\n//";
+	if (DTOState._calendarId)
+	{
+		text += "\n" + DTOState._calendarName;
+		if (DTOState._calendarShift !== 0)
+			text += "+/- " + DTOState._calendarShift;
+	}
 
 	if (stateDrawing.text)
 	{
@@ -733,6 +753,11 @@ function StateToolbar()
 	this.cbPar = $("<input type='checkbox'></input>");
 	this.mainDiv.append(this.cbPar);
 
+	this.slCalendar = $("<select></select>");
+	this.mainDiv.append(this.slCalendar);
+
+	this.txtCalShift = $("<input type='number' maxlength='2' max='30' min='-30' style='width:3em;'></input>");
+	this.mainDiv.append(this.txtCalShift);
 }
 
 StateToolbar.prototype.hide = function()
@@ -766,13 +791,17 @@ StateToolbar.prototype.show = function(dtoState)
 	{
 		this.cbPar.hide();
 		this.cbParLabel.hide();
+		this.slCalendar.hide();
+		this.txtCalShift.hide();
 	}
 	else
 	{
 		this.cbPar.show();
 		this.cbParLabel.show();
+		this.slCalendar.show();
+		this.txtCalShift.show();
 	}
-	bb = dtoState;
+
 	// Refresh place groups list
 	var panel = this.dtoState._drawing.chain_panel;
 	this.slPlaceGroup.empty();
@@ -790,6 +819,41 @@ StateToolbar.prototype.show = function(dtoState)
 	{
 		this.dtoState._runsOnId = this.slPlaceGroup.val();
 		this.dtoState._runsOnName = this.slPlaceGroup.children("option[value='" + this.slPlaceGroup.val() + "']").text();
+		addTextToState(this.dtoState._drawing);
+	}).bind(this));
+
+	// Calendar list
+	this.slCalendar.empty();
+	this.slCalendar.append($("<option value='null'>-------</option>"));
+	var calendars = panel.cxfApplication.getCalendars().getDTOCalendar();
+	for ( var i = 0; i < calendars.length; i++)
+	{
+		var elt = calendars[i];
+		var selected = "";
+		if (this.dtoState._calendarId === elt._id)
+			selected = "selected='selected'";
+
+		this.slCalendar.append($("<option value='" + elt._id + "'" + selected + ">" + elt._name + "</option>"));
+	}
+	this.slCalendar.change((function()
+	{
+		if (this.slCalendar.val() !== 'null')
+		{
+			this.dtoState._calendarId = this.slCalendar.val();
+			this.dtoState._calendarName = this.slCalendar.children("option[value='" + this.slCalendar.val() + "']").text();
+		}
+		else
+		{
+			this.dtoState._calendarId = null;
+		}
+		addTextToState(this.dtoState._drawing);
+	}).bind(this));
+
+	// Calendar shift
+	this.txtCalShift.val(this.dtoState._calendarShift);
+	this.txtCalShift.change((function(e)
+	{
+		this.dtoState._calendarShift = this.txtCalShift.val();
 		addTextToState(this.dtoState._drawing);
 	}).bind(this));
 
