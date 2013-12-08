@@ -1,0 +1,46 @@
+﻿<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.oxymores.chronix</groupId>
+		<artifactId>chronix-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>chronix-doc</artifactId>
+	<packaging>jar</packaging>
+	
+	<properties>
+	</properties>
+
+	
+	
+	
+	<build>
+  <plugins>
+    
+    <plugin>
+      <groupId>org.tomdz.maven</groupId>
+      <artifactId>sphinx-maven-plugin</artifactId>
+      <version>1.0.3</version>
+      <configuration>
+        <outputDirectory>${project.build.directory}/docs</outputDirectory>
+      </configuration>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>generate</goal>
+          </goals>
+        </execution>
+      </executions>	
+    </plugin>
+    
+  </plugins>
+</build>
+	
+	<dependencies>
+	</dependencies>
+
+</project>

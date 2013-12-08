@@ -19,6 +19,7 @@
 *.rar
 *.tar
 *.zip
+chronix-gui
 
 # Logs and databases #
 ######################
@@ -40,6 +41,12 @@ core/target/*
 activemq-data
 doc/html
 target
+
+# Eclipse files      #
+######################
+.settings
+.project
+.classpath
 
 # Library archive    #
 ######################
