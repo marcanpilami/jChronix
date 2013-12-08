@@ -41,6 +41,8 @@ core/target/*
 activemq-data
 doc/html
 target
+transac.db*
+history.db*
 
 # Eclipse files      #
 ######################

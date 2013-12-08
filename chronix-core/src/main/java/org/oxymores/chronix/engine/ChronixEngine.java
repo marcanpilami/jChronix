@@ -44,7 +44,7 @@ public class ChronixEngine extends Thread
 
     protected ChronixContext ctx;
     protected String dbPath;
-    protected String brokerInterface, transacUnitName, historyUnitName;
+    protected String brokerInterface, transacUnitName, historyUnitName, historyDbPath, transacDbPath;
     protected int brokerPort;
     protected String brokerInterfaceNoPort;
 
@@ -75,6 +75,12 @@ public class ChronixEngine extends Thread
     public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode,
             int nbRunner)
     {
+        this(dbPath, mainInterface, transacUnitName, historyUnitName, runnerMode, nbRunner, null, null);
+    }
+
+    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode,
+            int nbRunner, String historyDBPath, String transacDbPath)
+    {
         this.dbPath = dbPath;
         this.runnerMode = runnerMode;
         this.transacUnitName = transacUnitName;
@@ -83,6 +89,8 @@ public class ChronixEngine extends Thread
         this.brokerInterfaceNoPort = this.brokerInterface.split(":")[0];
         this.brokerPort = Integer.parseInt(this.brokerInterface.split(":")[1]);
         this.nbRunner = nbRunner;
+        this.historyDbPath = historyDBPath;
+        this.transacDbPath = transacDbPath;
 
         // To allow some basic configuration before starting nodes, we init the minimal fields inside the context
         this.ctx = ChronixContext.initContext(dbPath, transacUnitName, historyUnitName, mainInterface, false);
@@ -111,7 +119,8 @@ public class ChronixEngine extends Thread
 
             // Context
             preContextLoad();
-            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
+            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
+                    this.historyDbPath, this.transacDbPath);
             postContextLoad();
 
             // Broker with all the consumer threads
@@ -312,7 +321,8 @@ public class ChronixEngine extends Thread
                 this.ctx.setWorkingAsCurrent(a);
 
                 // Reload context to load new applications
-                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false);
+                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
+                        this.historyDbPath, this.transacDbPath);
             }
             catch (ChronixPlanStorageException e)
             {

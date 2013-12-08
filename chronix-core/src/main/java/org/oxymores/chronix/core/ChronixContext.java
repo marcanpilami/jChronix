@@ -28,6 +28,7 @@ import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -58,7 +59,7 @@ public class ChronixContext
     private String localUrl = "";
     private String dns;
     private int port;
-    private String transacUnitName, historyUnitName;
+    private String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
     private boolean simulateExternalPayloads = false;
 
     /**
@@ -102,11 +103,13 @@ public class ChronixContext
      * @throws ChronixPlanStorageException
      */
     public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName,
-            String brokerInterface, boolean simulation) throws ChronixPlanStorageException
+            String brokerInterface, boolean simulation, String historyDBPath, String transacDbPath) throws ChronixPlanStorageException
     {
         log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
         ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, brokerInterface, simulation);
+        ctx.historyDbPath = historyDBPath;
+        ctx.transacDbPath = transacDbPath;
 
         // List files in directory - and therefore applications
         File[] fileList = ctx.configurationDirectory.listFiles();
@@ -458,11 +461,21 @@ public class ChronixContext
 
     public EntityManagerFactory getTransacEMF()
     {
-        return Persistence.createEntityManagerFactory(this.transacUnitName);
+        Properties p = new Properties();
+        if (this.transacDbPath != null)
+        {
+            p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.transacDbPath);
+        }
+        return Persistence.createEntityManagerFactory(this.transacUnitName, p);
     }
 
     public EntityManagerFactory getHistoryEMF()
     {
+        Properties p = new Properties();
+        if (this.historyDbPath != null)
+        {
+            p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.historyDbPath);
+        }
         return Persistence.createEntityManagerFactory(this.historyUnitName);
     }
 

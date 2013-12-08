@@ -48,7 +48,8 @@ public class ChronixEngineSim extends ChronixEngine
             this.threadInit.release(1);
 
             // Context
-            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, true);
+            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, true,
+                    null, null);
             this.ctx.setSimulator();
 
             // This is a simulation: we are only interested in a single application
