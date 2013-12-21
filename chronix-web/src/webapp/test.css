@@ -4,35 +4,66 @@
 {
 	box-sizing:border-box;
 } */
-html,body {
+html {
+	height: 100%;
+	width: 100%;
+	font: normal 82.5% "Lucida Grande", Helvetica, Verdana, Arial;
+	padding: 0px;
+}
+
+#tabs {
+	border: none;
+}
+
+body {
 	height: 100%;
 	display: block;
+	padding: 0 15px;
+	font: normal 82.5% "Lucida Grande", Helvetica, Verdana, Arial;
+}
+
+body .ui-tabs {
+	padding: 0px;
 }
 
 .tabPanel {
 	padding: 0px !important;
 	position: absolute;
-	top: 50px;
-	bottom: 10px;
-	right: 10px;
-	left: 10px;
+	top: 35px;
+	bottom: 5px;
+	right: 5px;
+	left: 5px;
 }
 
 #container1,#container2 {
 	position: relative;
 }
 
+.raph {
+	border: 1px solid #0C24FF;
+}
+
+.floatingUpperLeft
+{
+	position: absolute;
+	z-index: 50;
+}
+
 .leftbar {
 	width: 170px;
 	height: 100%;
 	/*width: 13%;*/
-	background: #c99;
+	background-color: #DFE0FF;
 	/*float:left;*/
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	left: 0;
 	float: left;
+}
+
+#bar {
+	background-color: #8194FF;
 }
 
 .rightpanel {
@@ -176,7 +207,7 @@ button.chrConsoleButton {
 }
 
 .containerContainer {
-	height: calc(100% - 25px);
+	height: calc(100% -     25px);
 }
 
 .app-short {
@@ -448,11 +479,6 @@ select {
 	padding: 0;
 }
 
-body {
-	padding: 0 10px;
-	font: normal 82.5% "Lucida Grande", Helvetica, Verdana, Arial;
-}
-
 p {
 	margin: 10px 0;
 }
@@ -641,9 +667,9 @@ classes should alter those!
 
 .slick-row.loading {
 	opacity: 0.5;
-	filter: alpha(opacity =       
+	filter: alpha(opacity =         
 		                                                         
-		         50);
+		           50);
 }
 
 .slick-cell.invalid {

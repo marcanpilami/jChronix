@@ -33,15 +33,6 @@
 	<script type="text/javascript" src="main.js"></script>
 </head>
 <body>
-	<div id="alert"></div>
-	<div id="greetings"></div>
-	<div id="title">
-		Currently editing application <span id="appName"></span> (<span id="appDescr"></span>) - <span id="appActivity"></span>
-		<button onclick="send();">Send to server</button>
-		<button onclick="switchApp();">Set latest save as working set</button>
-		<button onclick="createOrLoadApp();">Load or create another application (cancel unsaved work)</button>
-	</div>
-	
 	<div id="raphBug" style="height: 0px;"></div>
 
 	<div id="tabs" style="width: 100%;">
@@ -97,5 +88,14 @@
 		
 	</div> 
 
+	<div id="bar">
+		Editing application <span id="appName"></span> (<span id="appDescr" class='descrtxt'></span>) - <span id="appActivity"></span>
+		<button onclick="send();">Save working copy on server</button>
+		<button onclick="switchApp();">Activate latest working copy</button>
+		<button onclick="createOrLoadApp();">Load/Create application (cancel unsaved work)</button>
+		<span id="alert"></span>
+		<span id="greetings"></span>
+	</div>
+	
 </body>
 </html>

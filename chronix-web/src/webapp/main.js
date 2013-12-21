@@ -88,5 +88,5 @@ function successCallback(responseObject)
 
 function onViewPortResize()
 {
-	$("#tabs").height($(window).height() - 50);
+	$("#tabs").height($(window).height() - $("#bar").height());
 };

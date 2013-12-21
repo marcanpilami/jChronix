@@ -18,7 +18,7 @@ function ChainPanel(divId, cxfApplication)
 	this.state_toolbar = new StateToolbar();
 	this.transition_toolbar = new TransitionToolbar();
 
-	// Create the tab panel with a template that will create a host for a Raphaël object
+	// Create the tab panel with a template that will create a host for a Raphaï¿½l object
 	this.chaintabs = $("#chaintabs").tabs(
 	{
 		activate : this.onShowChain.bind(this)
@@ -281,7 +281,7 @@ function ChainPanel(divId, cxfApplication)
 		this.editChain(this.cxfApplication.getChains().getDTOChain()[0]);
 
 	// Add create chain button
-	var btAddChain = $("<li style='border-radius: 50%; padding: 1px; margin-right: 5px; height: 20px; width: 20px; border: solid 1px white; text-align: center; vertical-align: middle;'>+</li>");
+	var btAddChain = $("<li style='border-radius: 50%; padding: 1px; margin-right: 5px; height: 20px; width: 20px; background-color: #0C24FF; border: solid 1px white; text-align: center; vertical-align: middle; font-size: 1.2em;'>+</li>");
 	$("#chaintabs .ui-tabs-nav").prepend(btAddChain);
 	btAddChain.click((function()
 	{
@@ -346,7 +346,7 @@ ChainPanel.prototype.editChain = function(cxfObject)
 			"<div class='tabPanel' id='chaintab-" + cxfObject._id + "'>" + "<div style='height:100%;width:100%;' id='raphcontainer_" + cxfObject._id
 					+ "'>" + "<div class='raph' style='display: inline-block; overflow: auto; width: calc(100% - 150px); height:100%;'></div>"
 					+ "<div id='chainDetail-" + cxfObject._id
-					+ "' style='width: 150px; border=solid 2px black; display: inline-block; vertical-align: top;'></div></div></div>");
+					+ "' style='width: 148px; border=solid 2px black; display: inline-block; vertical-align: top;'></div></div></div>");
 	$("#chaintabs > ul").append("<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
 
 	// Create edit fields
@@ -362,9 +362,9 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	{
 		this.selectedChain._description = $(event.currentTarget).val();
 	}).bind(this)));
-	editPanel.append($("<button id='btDelChain" + cxfObject._id + "' >Supprimer la chaine</button>").click(this.onDeleteChain.bind(this)));
+	editPanel.append($("<button id='btDelChain" + cxfObject._id + "' >Delete chain</button>").click(this.onDeleteChain.bind(this)));
 
-	// Create new Raphaël paper
+	// Create new Raphaï¿½l paper
 	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
 	var rpaper = new Raphael(r, 3000, 3000);
 	rpaper.states = new Array();
@@ -714,7 +714,8 @@ function shiftArrow(RaphaelArrow)
 	addTextToArrow(RaphaelArrow);
 
 	// IE 10 specific bug - https://connect.microsoft.com/IE/feedback/details/781964/ - http://stackoverflow.com/a/17421050/252642
-	if (navigator.appVersion.indexOf("MSIE 10") != -1)
+	// http://connect.microsoft.com/IE/feedback/details/801938/dynamically-updated-svg-path-with-a-marker-end-does-not-update
+	if (navigator.appVersion.indexOf("MSIE 10") != -1 || navigator.appVersion.indexOf("rv:11") != -1)
 	{
 		node = RaphaelArrow.node;
 		node.parentNode.insertBefore(node, node);

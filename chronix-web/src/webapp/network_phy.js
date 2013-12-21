@@ -20,7 +20,7 @@ function NPPanel(divId, dtoApplication)
 					+ this.baseId
 					+ "' style='height: 100%;'><div id='phy-palette-"
 					+ this.baseId
-					+ "' style='width:150px; display: inline-block; vertical-align: top;'></div><div style='overflow: auto; width: calc(100% - 150px); height: 100%; display: inline-block;'><div id='phy-raph-"
+					+ "' class='floatingUpperLeft'></div><div style='overflow: auto; width: 100%; height: 100%; display: inline-block;'><div id='phy-raph-"
 					+ this.baseId + "'></div></div></div>"));
 
 	this.raphDiv = $("#phy-raph-" + this.baseId);
@@ -167,7 +167,7 @@ NPPanel.prototype.adaptArrow = function(RaphaelArrow)
 	this.textLink(RaphaelArrow);
 
 	// IE 10 specific bug - https://connect.microsoft.com/IE/feedback/details/781964/ - http://stackoverflow.com/a/17421050/252642
-	if (navigator.appVersion.indexOf("MSIE 10") != -1)
+	if (navigator.appVersion.indexOf("MSIE 10") != -1 || navigator.appVersion.indexOf("rv:11") != -1)
 	{
 		node = RaphaelArrow.node;
 		node.parentNode.insertBefore(node, node);
@@ -360,6 +360,7 @@ function ENPanel()
 	this.dtoApplication = null;
 
 	this.mainDiv = $("<div style='display: table; position: fixed; width: auto;' class='floatingToolbar'></div>");
+	this.mainDiv.hide();
 	$("body").append(this.mainDiv);
 
 	var row = $("<div style='display:table-row;'></div>");
@@ -415,8 +416,8 @@ ENPanel.prototype.show = function(dtoExecutionNode, dtoApplication)
 	// Place the panel above
 	this.mainDiv.css(
 	{
-		left : Math.max(dtoExecutionNode._x - 70, 0),
-		top : Math.max(dtoExecutionNode._y - enNodeSize - 30, 0),
+		left : Math.max(dtoExecutionNode._x - 200, 0),
+		top : Math.max(dtoExecutionNode._y - enNodeSize - 80, 0),
 	});
 	this.dtoExecutionNode = dtoExecutionNode;
 	this.mainDiv.show();

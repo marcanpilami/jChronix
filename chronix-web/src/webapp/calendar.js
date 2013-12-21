@@ -5,7 +5,7 @@ function CalendarPanel(mainDivId, dtoApplication)
 	var options = getSlickGridOptionsEditable();
 	this.selectedCalendar = null;
 
-	this.calPane = $("<div class='leftbar' ></div>");
+	this.calPane = $("<div class='leftbar' style='width:33%;'></div>");
 	this.mainDiv.append(this.calPane);
 	this.txtSearchCal = $("<input type='text' style='width: 100px;'>");
 	this.calPane.append(this.txtSearchCal);
@@ -17,7 +17,7 @@ function CalendarPanel(mainDivId, dtoApplication)
 	this.slickContainer = $("<div></div>");
 	this.containerContainer.append(this.slickContainer);
 
-	this.dayPane = $("<div class='rightpanel'></div>");
+	this.dayPane = $("<div class='rightpanel' style='width:65%; margin-left: 35%;'></div>");
 	this.mainDiv.append(this.dayPane);
 	this.daysPanelDiv = $("<div style='width:100%; height:100%'></div>");
 	this.dayPane.append(this.daysPanelDiv);
