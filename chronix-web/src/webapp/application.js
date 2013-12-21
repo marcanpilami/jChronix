@@ -64,10 +64,9 @@ function getApplicationOK(responseObject)
 
 	$("#appName").text(cxfApplication._name);
 	$("#appDescr").text(cxfApplication._description);
-	if (cxfApplication._active)
-		$("#appActivity").text("loaded production version");
-	else
-		$("#appActivity").text("loaded draft version");
+	/*
+	 * if (cxfApplication._active) $("#appActivity").text("loaded production version"); else $("#appActivity").text("loaded draft version");
+	 */
 
 	$("[href='#tab-pn']").trigger("click");
 	handleTabs('tab-pn');

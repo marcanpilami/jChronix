@@ -169,6 +169,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     @Produces("application/json")
     public ResOrder orderLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
     {
+        log.debug("Service orderLaunchOutOfPlan was called");
         EntityManager em = emfHistory.createEntityManager();
         RunLog rl = em.find(RunLog.class, launchId);
         return orderLaunchOutOfPlan(UUID.fromString(rl.getApplicationId()), UUID.fromString(rl.getStateId()),

@@ -151,8 +151,8 @@ public class Scheduler
         ChronixEngine e = null;
         if (startEngine || startRunner)
         {
-            e = new ChronixEngine(repoPath, mainDataInterface + ":" + mainDataPort, transacUnit, historyUnit, startRunner, nbRunner,
-                    repoPath + "/database/hsql_history.db", repoPath + "/database/hsql_transac.db");
+            e = new ChronixEngine(repoPath, mainDataInterface + ":" + mainDataPort, transacUnit, historyUnit, !startEngine && startRunner,
+                    nbRunner, repoPath + "/database/hsql_history.db", repoPath + "/database/hsql_transac.db");
             e.start();
             e.waitForInitEnd();
         }
@@ -164,7 +164,7 @@ public class Scheduler
             server.start();
         }
 
-        SenderHelpers.sendOrderExternalEvent("file1", null, pgLocal.getPlaces().get(0).getNode(), e.getContext());
+        SenderHelpers.sendOrderExternalEvent("External", null, pgLocal.getPlaces().get(0).getNode(), e.getContext());
 
         handler = e;
     }

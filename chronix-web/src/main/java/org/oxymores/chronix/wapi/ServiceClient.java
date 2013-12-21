@@ -88,9 +88,9 @@ public class ServiceClient implements IServiceClient
     @Override
     public void stageApplication(DTOApplication app)
     {
-        // TODO Replace test code with true persistence
         log.debug("stageApplication service was called");
 
+        // Read application
         Application a = Frontier2.getApplication(app);
 
         // Put the working copy in the local cache (no impact on engine, different cache)
