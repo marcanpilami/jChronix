@@ -559,6 +559,11 @@ public class ChronixContext
         return this.localUrl;
     }
 
+    public String getLocalBrokerUrl()
+    {
+        return "vm://" + this.getBrokerName();
+    }
+
     public DateTime getLoadTime()
     {
         return loaded;

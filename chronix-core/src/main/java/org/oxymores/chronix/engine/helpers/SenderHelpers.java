@@ -67,8 +67,13 @@ public class SenderHelpers
 
         JmsSendData(ChronixContext ctx) throws JMSException
         {
+            this(ctx.getLocalBrokerUrl());
+        }
+
+        JmsSendData(String brokerUrl) throws JMSException
+        {
             // Factory
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://" + ctx.getBrokerName());
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
 
             // Connect to it...
             this.connection = factory.createConnection();
@@ -581,12 +586,17 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
+    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, String brokerUrl) throws JMSException
     {
-        JmsSendData d = new JmsSendData(ctx);
+        JmsSendData d = new JmsSendData(brokerUrl);
         sendOrderExternalEvent(externalStateId, data, en, d.jmsSession, d.jmsProducer, false);
         d.jmsSession.commit();
         d.close();
+    }
+
+    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
+    {
+        sendOrderExternalEvent(externalStateId, data, en, ctx.getLocalBrokerUrl());
     }
 
     // restart orders
