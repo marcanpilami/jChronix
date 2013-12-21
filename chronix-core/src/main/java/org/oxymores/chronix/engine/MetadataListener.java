@@ -41,7 +41,7 @@ class MetadataListener extends BaseListener
         this.engine = engine;
 
         // Listen for applications
-        this.qName = String.format("Q.%s.APPLICATION", brokerName);
+        this.qName = String.format(Constants.Q_META, brokerName);
         this.subscribeTo(qName);
     }
 

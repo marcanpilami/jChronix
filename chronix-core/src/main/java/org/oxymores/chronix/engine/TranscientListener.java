@@ -49,11 +49,11 @@ class TranscientListener extends BaseListener
         log.debug(String.format("(%s) Initializing TranscientListener", ctx.getContextRoot()));
 
         // Register current object as a listener on LOG queue
-        qName = String.format("Q.%s.CALENDARPOINTER", brokerName);
+        qName = String.format(Constants.Q_CALENDARPOINTER, brokerName);
         this.subscribeTo(qName);
 
         // Producers
-        String qEventName = String.format("Q.%s.EVENT", brokerName);
+        String qEventName = String.format(Constants.Q_EVENT, brokerName);
         Destination d = this.jmsSession.createQueue(qEventName);
         this.producerEvent = this.jmsSession.createProducer(d);
     }

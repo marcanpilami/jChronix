@@ -104,7 +104,7 @@ public class SenderHelpers
     private static void sendEvent(Event e, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit)
             throws JMSException
     {
-        String qName = String.format("Q.%s.EVENT", target.getBrokerName());
+        String qName = String.format(Constants.Q_EVENT, target.getBrokerName());
         log.info(String.format("An event will be sent over the wire on queue %s", qName));
 
         ObjectMessage m = jmsSession.createObjectMessage(e);
@@ -220,7 +220,7 @@ public class SenderHelpers
     public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit)
             throws JMSException
     {
-        String qName = String.format("Q.%s.APPLICATION", target.getBrokerName());
+        String qName = String.format(Constants.Q_META, target.getBrokerName());
         log.info(String.format("An app will be sent over the wire on queue %s", qName));
 
         Destination destination = jmsSession.createQueue(qName);
@@ -285,10 +285,10 @@ public class SenderHelpers
         rd.setOutOfPlan(true);
         rd.setMethod(Constants.JD_METHOD_SHELL);
 
-        String qName = String.format("Q.%s.RUNNER", target.getBrokerName());
+        String qName = String.format(Constants.Q_RUNNER, target.getBrokerName());
         log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, cmd));
         Destination destination = jmsSession.createQueue(qName);
-        Destination replyTo = jmsSession.createQueue(String.format("Q.%s.ENDOFJOB", ctx.getBrokerName()));
+        Destination replyTo = jmsSession.createQueue(String.format(Constants.Q_ENDOFJOB, ctx.getBrokerName()));
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);
         m.setJMSReplyTo(replyTo);
@@ -323,7 +323,7 @@ public class SenderHelpers
     public static void sendPipelineJobToRunner(PipelineJob pj, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession,
             boolean commit) throws JMSException
     {
-        String qName = String.format("Q.%s.PJ", target.getHost().getBrokerName());
+        String qName = String.format(Constants.Q_PJ, target.getHost().getBrokerName());
         log.info(String.format("A job will be sent to the runner over the wire on queue %s", qName));
         Destination d = jmsSession.createQueue(qName);
         ObjectMessage om = jmsSession.createObjectMessage(pj);
@@ -407,7 +407,7 @@ public class SenderHelpers
         // Send the message to every client execution node
         for (ExecutionNode en : enUsingCalendar)
         {
-            String qName = String.format("Q.%s.CALENDARPOINTER", en.getBrokerName());
+            String qName = String.format(Constants.Q_CALENDARPOINTER, en.getBrokerName());
             log.info(String.format("A calendar pointer will be sent on queue %s", qName));
             Destination destination = jmsSession.createQueue(qName);
             jmsProducer.send(destination, m);

@@ -98,7 +98,7 @@ class Pipeline extends BaseListener implements Runnable
         entering.addAll(sessionEvents);
 
         // Register on incoming queue
-        qName = String.format("Q.%s.PJ", brokerName);
+        qName = String.format(Constants.Q_PJ, brokerName);
         this.subscribeTo(qName);
 
         // Start thread
@@ -373,7 +373,7 @@ class Pipeline extends BaseListener implements Runnable
 
         transacMainLoop.begin();
 
-        String qName = String.format("Q.%s.RUNNERMGR", pj.getPlace(ctx).getNode().getHost().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctx).getNode().getHost().getBrokerName());
         try
         {
             Destination d = jmsSession.createQueue(qName);

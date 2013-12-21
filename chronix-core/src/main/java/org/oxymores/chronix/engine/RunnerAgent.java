@@ -62,7 +62,7 @@ class RunnerAgent extends BaseListener
         this.jmsProducer = this.jmsSession.createProducer(null);
 
         // Queue listener
-        qName = String.format("Q.%s.RUNNER", brokerName);
+        qName = String.format(Constants.Q_RUNNER, brokerName);
         this.subscribeTo(qName);
     }
 

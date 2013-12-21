@@ -48,6 +48,14 @@ public final class Constants
 
     // QUEUES
     public static final String Q_LOG = "Q.%s.LOG";
+    public static final String Q_LOGFILE = "Q.%s.LOGFILE";
+    public static final String Q_ENDOFJOB = "Q.%s.ENDOFJOB";
     public static final String Q_ORDER = "Q.%s.ORDER";
     public static final String Q_TOKEN = "Q.%s.TOKEN";
+    public static final String Q_CALENDARPOINTER = "Q.%s.CALENDARPOINTER";
+    public static final String Q_EVENT = "Q.%s.EVENT";
+    public static final String Q_PJ = "Q.%s.PJ";
+    public static final String Q_RUNNER = "Q.%s.RUNNER";
+    public static final String Q_RUNNERMGR = "Q.%s.RUNNERMGR";
+    public static final String Q_META = "Q.%s.APPLICATION";
 }

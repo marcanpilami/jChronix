@@ -55,7 +55,7 @@ class OrderListener extends BaseListener
         log.debug(String.format("(%s) Initializing OrderListener", ctx.getContextRoot()));
 
         // Register current object as a listener on ORDER queue
-        this.qName = String.format("Q.%s.ORDER", brokerName);
+        this.qName = String.format(Constants.Q_ORDER, brokerName);
         this.jmsProducer = this.jmsSession.createProducer(null);
         this.subscribeTo(qName);
     }
@@ -111,7 +111,7 @@ class OrderListener extends BaseListener
         // Put the pipeline job inside the local pipeline
         try
         {
-            String qName = String.format("Q.%s.PJ", brokerName);
+            String qName = String.format(Constants.Q_PJ, brokerName);
             log.info(String.format("A relaunch PJ will be sent for execution on queue %s", qName));
             Destination destination = this.jmsSession.createQueue(qName);
             ObjectMessage m = jmsSession.createObjectMessage(pj);

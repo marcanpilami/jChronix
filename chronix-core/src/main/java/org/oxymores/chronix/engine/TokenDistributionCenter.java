@@ -66,7 +66,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         this.shouldRenew = new ArrayList<TokenReservation>();
 
         // Register current object as a listener on ORDER queue
-        qName = String.format("Q.%s.TOKEN", brokerName);
+        qName = String.format(Constants.Q_TOKEN, brokerName);
         this.subscribeTo(qName);
         this.jmsProducer = this.jmsSession.createProducer(null);
 
@@ -251,7 +251,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qName = String.format("Q.%s.PJ", a.getLocalNode().getHost().getBrokerName());
+                String qName = String.format(Constants.Q_PJ, a.getLocalNode().getHost().getBrokerName());
                 Destination d = jmsSession.createQueue(qName);
                 log.debug(String.format("A message will be sent to queue %s", qName));
                 jmsProducer.send(d, response);
@@ -431,7 +431,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(answer);
-                Destination d = jmsSession.createQueue(String.format("Q.%s.TOKEN", p.getNode().getHost().getBrokerName()));
+                Destination d = jmsSession.createQueue(String.format(Constants.Q_TOKEN, p.getNode().getHost().getBrokerName()));
                 jmsProducer.send(d, response);
             }
             catch (JMSException e)

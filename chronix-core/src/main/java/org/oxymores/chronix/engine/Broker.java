@@ -45,14 +45,8 @@ import org.oxymores.chronix.core.NodeLink;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 
 /*
- * Queues are named
- * 
- * Q.<READERDNSPORT> .APPLICATION
- *                   .EVENT
- *                   .HISTORY
- *                   .EXCLREQUEST
+ * Queue name: cf constants
  */
-
 class Broker
 {
     private static Logger log = Logger.getLogger(Broker.class);

@@ -50,7 +50,7 @@ class EventListener extends BaseListener
         this.init(broker, true, false);
         log.info(String.format("(%s) Starting an event engine", ctx.getContextRoot()));
 
-        this.qName = String.format("Q.%s.EVENT", brokerName);
+        this.qName = String.format(Constants.Q_EVENT, brokerName);
         this.subscribeTo(qName);
 
         this.producerPJ = this.jmsSession.createProducer(null);

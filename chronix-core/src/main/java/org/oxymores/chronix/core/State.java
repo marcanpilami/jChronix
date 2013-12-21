@@ -622,7 +622,7 @@ public class State extends ConfigurableBase
         }
 
         // Send it (commit is done by main engine later)
-        String qName = String.format("Q.%s.PJ", p.getNode().getBrokerName());
+        String qName = String.format(Constants.Q_PJ, p.getNode().getBrokerName());
         try
         {
             SenderHelpers.sendPipelineJobToRunner(pj, p.getNode().getHost(), pjProducer, session, false);

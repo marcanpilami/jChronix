@@ -71,7 +71,6 @@ public class Runner extends BaseListener
     private List<PipelineJob> resolving;
 
     private MessageProducer producerRunDescription, producerHistory, producerEvents;
-    private static final String RUNNER_QUEUE_NAME = "Q.%s.RUNNER";
 
     public void startListening(Broker broker) throws ChronixInitializationException
     {
@@ -90,7 +89,7 @@ public class Runner extends BaseListener
             resolving = new ArrayList<PipelineJob>();
 
             // Log
-            this.qName = String.format("Q.%s.RUNNERMGR", brokerName);
+            this.qName = String.format(Constants.Q_RUNNERMGR, brokerName);
             log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.getContextRoot(), qName));
 
             // Outgoing producer for running commands
@@ -99,13 +98,13 @@ public class Runner extends BaseListener
             this.producerEvents = this.jmsSession.createProducer(null);
 
             // Register on Log Shipping queue
-            this.subscribeTo(String.format("Q.%s.LOGFILE", brokerName));
+            this.subscribeTo(String.format(Constants.Q_LOGFILE, brokerName));
 
             // Register on Request queue
             this.subscribeTo(qName);
 
             // Register on End of job queue
-            destEndJob = this.subscribeTo(String.format("Q.%s.ENDOFJOB", brokerName));
+            destEndJob = this.subscribeTo(String.format(Constants.Q_ENDOFJOB, brokerName));
         }
         catch (JMSException e)
         {
@@ -468,7 +467,7 @@ public class Runner extends BaseListener
     public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj) throws JMSException
     {
         // Always send to the node, not its hosting node.
-        String qName = String.format(RUNNER_QUEUE_NAME, p.getNode().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
         log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
         Destination destination = jmsSession.createQueue(qName);
 
@@ -488,7 +487,7 @@ public class Runner extends BaseListener
     {
         // Always send to the node, not its hosting node.
         Place p = pj.getPlace(ctx);
-        String qName = String.format(RUNNER_QUEUE_NAME, p.getNode().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
         log.info(String.format("A command for parameter resolution will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
         Destination destination = jmsSession.createQueue(qName);
 

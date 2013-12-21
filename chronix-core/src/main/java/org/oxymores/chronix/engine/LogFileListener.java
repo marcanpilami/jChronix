@@ -38,89 +38,92 @@ import org.apache.log4j.Logger;
 
 public class LogFileListener implements MessageListener
 {
-	private static Logger log = Logger.getLogger(LogFileListener.class);
+    private static Logger log = Logger.getLogger(LogFileListener.class);
 
-	private Session jmsSession;
-	private Destination logQueueDestination;
-	private Connection jmsConnection;
-	private MessageConsumer jmsLogConsumer;
-	private String logDbPath;
+    private Session jmsSession;
+    private Destination logQueueDestination;
+    private Connection jmsConnection;
+    private MessageConsumer jmsLogConsumer;
+    private String logDbPath;
 
-	public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException
-	{
-		log.debug("Initializing Console LogFileListener");
+    public void startListening(Connection cnx, String brokerName, String logDbPath) throws JMSException
+    {
+        log.debug("Initializing Console LogFileListener");
 
-		// Save pointers
-		this.jmsConnection = cnx;
+        // Save pointers
+        this.jmsConnection = cnx;
 
-		// Register current object as a listener on LOG queue
-		String qName = String.format("Q.%s.LOGFILE", brokerName);
-		log.debug(String.format("Broker %s: registering a log listener on queue %s", brokerName, qName));
-		this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
-		this.logQueueDestination = this.jmsSession.createQueue(qName);
-		this.jmsLogConsumer = this.jmsSession.createConsumer(logQueueDestination);
-		this.jmsLogConsumer.setMessageListener(this);
+        // Register current object as a listener on LOG queue
+        String qName = String.format(Constants.Q_LOGFILE, brokerName);
+        log.debug(String.format("Broker %s: registering a log listener on queue %s", brokerName, qName));
+        this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
+        this.logQueueDestination = this.jmsSession.createQueue(qName);
+        this.jmsLogConsumer = this.jmsSession.createConsumer(logQueueDestination);
+        this.jmsLogConsumer.setMessageListener(this);
 
-		// Log repository
-		this.logDbPath = FilenameUtils.normalize(logDbPath);
-		if (!(new File(this.logDbPath)).exists())
-		{
-			(new File(this.logDbPath)).mkdir();
-		}
-	}
+        // Log repository
+        this.logDbPath = FilenameUtils.normalize(logDbPath);
+        if (!(new File(this.logDbPath)).exists())
+        {
+            (new File(this.logDbPath)).mkdir();
+        }
+    }
 
-	public void stopListening() throws JMSException
-	{
-		this.jmsLogConsumer.close();
-		this.jmsSession.close();
-	}
+    public void stopListening() throws JMSException
+    {
+        this.jmsLogConsumer.close();
+        this.jmsSession.close();
+    }
 
-	@Override
-	public void onMessage(Message msg)
-	{
-		if (msg instanceof BytesMessage)
-		{
-			BytesMessage bmsg = (BytesMessage) msg;
-			String fn = "dump.txt";
-			try
-			{
-				fn = bmsg.getStringProperty("FileName");
-			} catch (JMSException e)
-			{
-			}
+    @Override
+    public void onMessage(Message msg)
+    {
+        if (msg instanceof BytesMessage)
+        {
+            BytesMessage bmsg = (BytesMessage) msg;
+            String fn = "dump.txt";
+            try
+            {
+                fn = bmsg.getStringProperty("FileName");
+            }
+            catch (JMSException e)
+            {
+            }
 
-			try
-			{
-				int l = (int) bmsg.getBodyLength();
-				byte[] r = new byte[l];
-				bmsg.readBytes(r);
-				IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
-				commit();
-			} catch (Exception e)
-			{
-				log.error("An error has occured while receiving a log file. It will be lost. Will not impact the scheduler itself.", e);
-				commit();
-			}
-			log.debug("A console log file was received and saved");
-		}
-		else
-		{
-			log.warn("An object was received on the log file queue but was not a log file! Ignored.");
-			commit();
-			return;
-		}
+            try
+            {
+                int l = (int) bmsg.getBodyLength();
+                byte[] r = new byte[l];
+                bmsg.readBytes(r);
+                IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
+                commit();
+            }
+            catch (Exception e)
+            {
+                log.error("An error has occured while receiving a log file. It will be lost. Will not impact the scheduler itself.", e);
+                commit();
+            }
+            log.debug("A console log file was received and saved");
+        }
+        else
+        {
+            log.warn("An object was received on the log file queue but was not a log file! Ignored.");
+            commit();
+            return;
+        }
 
-	}
+    }
 
-	private void commit()
-	{
-		try
-		{
-			jmsSession.commit();
-		} catch (JMSException e)
-		{
-			log.error("failure to acknowledge a message in the JMS queue. Oooooops?", e);
-			return;
-		}
-	}
+    private void commit()
+    {
+        try
+        {
+            jmsSession.commit();
+        }
+        catch (JMSException e)
+        {
+            log.error("failure to acknowledge a message in the JMS queue. Oooooops?", e);
+            return;
+        }
+    }
 }
