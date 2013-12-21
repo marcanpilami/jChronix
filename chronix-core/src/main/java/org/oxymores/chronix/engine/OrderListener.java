@@ -169,26 +169,28 @@ class OrderListener extends BaseListener
 
     private void orderExternal(Order order)
     {
-        // Find the external node
-        State s = null;
-        for (Application a : ctx.getApplications())
+        External e = null;
+        Application a = null;
+        for (Application app : ctx.getApplications())
         {
-            s = a.getState((UUID) order.data);
-            if (s != null)
+            for (External anb : app.getActiveElements(External.class))
             {
-                break;
+                if (anb.getName().equals((String) order.data))
+                {
+                    e = anb;
+                    a = app;
+                }
             }
         }
-        if (s == null || !(s.getRepresents() instanceof External))
+
+        if (e == null)
         {
             // destroy message - it's corrupt
-            log.error(String.format(
-                    "An order of type EXTERNAL was received but its data was invalid %s. Corresponding State found was %s.", order.data, s));
+            log.error(String.format("An order of type EXTERNAL was received but its data was invalid %s.", order.data));
             jmsCommit();
             return;
         }
 
-        External e = (External) s.getRepresents();
         String d = null;
         if (order.data2 != null)
         {
@@ -196,29 +198,38 @@ class OrderListener extends BaseListener
         }
         log.debug(String.format("Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
 
-        Event evt = new Event();
-        evt.setApplication(s.getApplication());
-        if (d != null && s.getCalendar() != null)
-        {
-            evt.setCalendar(s.getCalendar());
-            evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId().toString());
-        }
-        evt.setConditionData1(0);
-        evt.setLevel1IdU(new UUID(0, 1));
-        evt.setLevel0IdU(s.getChain().getId());
-        evt.setState(s);
+        // Create an event for each State using this external event
 
-        for (Place p : s.getRunsOn().getPlaces())
+        for (State s : a.getStates())
         {
-            evt.setPlace(p);
-            try
+            if (!s.getRepresents().equals(e))
             {
-                log.debug("Sending event for external source");
-                SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctx, false);
+                continue;
             }
-            catch (JMSException e1)
+            Event evt = new Event();
+            evt.setApplication(a);
+            if (d != null && s.getCalendar() != null)
             {
-                log.error("Could not create the events triggered by an external event. It will be ignored.", e1);
+                evt.setCalendar(s.getCalendar());
+                evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId().toString());
+            }
+            evt.setConditionData1(0);
+            evt.setLevel1IdU(new UUID(0, 1));
+            evt.setLevel0IdU(s.getChain().getId());
+            evt.setState(s);
+
+            for (Place p : s.getRunsOn().getPlaces())
+            {
+                evt.setPlace(p);
+                try
+                {
+                    log.debug("Sending event for external source");
+                    SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctx, false);
+                }
+                catch (JMSException e1)
+                {
+                    log.error("Could not create the events triggered by an external event. It will be ignored.", e1);
+                }
             }
         }
     }

@@ -391,8 +391,9 @@ public class TestSingleNode
         // The plan containing everything
         Chain p1 = PlanBuilder.buildPlan(a1, "plan 1", "description");
 
-        // Our file object
+        // Our file objects
         External pe1 = PlanBuilder.buildExternal(a1, "file1", "^[a-zA-Z_/]*([0-9/]+).*");
+        External pe2 = PlanBuilder.buildExternal(a1, "file2", "^[a-zA-Z_/]*([0-9/]+).*");
 
         // First test case: non calendar on target
         State sp1 = PlanBuilder.buildState(p1, pg1, pe1);
@@ -401,7 +402,7 @@ public class TestSingleNode
         sp1.setCalendar(ca1);
 
         // Second test case: for tests with calendar
-        State sp3 = PlanBuilder.buildState(p1, pg1, pe1);
+        State sp3 = PlanBuilder.buildState(p1, pg1, pe2);
         State sp4 = PlanBuilder.buildState(p1, pg1, c1);
         sp3.connectTo(sp4, true);
         sp3.setCalendar(ca1);
@@ -433,7 +434,7 @@ public class TestSingleNode
         log.debug("****START OF TEST1********************************************************************");
         try
         {
-            SenderHelpers.sendOrderExternalEvent(sp1.getId(), filepath, this.en1, e1.ctx);
+            SenderHelpers.sendOrderExternalEvent("file1", filepath, this.en1, e1.ctx);
         }
         catch (Exception e3)
         {
@@ -455,7 +456,7 @@ public class TestSingleNode
         log.debug("****START OF TEST2********************************************************************");
         try
         {
-            SenderHelpers.sendOrderExternalEvent(sp3.getId(), filepath, this.en1, e1.ctx);
+            SenderHelpers.sendOrderExternalEvent("file2", filepath, this.en1, e1.ctx);
         }
         catch (Exception e3)
         {

@@ -562,12 +562,12 @@ public class SenderHelpers
         d.close();
     }
 
-    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, Session jmsSession,
+    public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, Session jmsSession,
             MessageProducer jmsProducer, boolean commit) throws JMSException
     {
         Order o = new Order();
         o.type = OrderType.EXTERNAL;
-        o.data = externalStateId;
+        o.data = sourceName;
         o.data2 = data;
 
         // Create message
@@ -586,17 +586,17 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, String brokerUrl) throws JMSException
+    public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, String brokerUrl) throws JMSException
     {
         JmsSendData d = new JmsSendData(brokerUrl);
-        sendOrderExternalEvent(externalStateId, data, en, d.jmsSession, d.jmsProducer, false);
+        sendOrderExternalEvent(sourceName, data, en, d.jmsSession, d.jmsProducer, false);
         d.jmsSession.commit();
         d.close();
     }
 
-    public static void sendOrderExternalEvent(UUID externalStateId, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
+    public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
     {
-        sendOrderExternalEvent(externalStateId, data, en, ctx.getLocalBrokerUrl());
+        sendOrderExternalEvent(sourceName, data, en, ctx.getLocalBrokerUrl());
     }
 
     // restart orders
