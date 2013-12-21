@@ -562,7 +562,7 @@ public class SenderHelpers
         d.close();
     }
 
-    public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, Session jmsSession,
+    public static void sendOrderExternalEvent(String sourceName, String data, String brokerName, Session jmsSession,
             MessageProducer jmsProducer, boolean commit) throws JMSException
     {
         Order o = new Order();
@@ -574,7 +574,7 @@ public class SenderHelpers
         ObjectMessage m = jmsSession.createObjectMessage(o);
 
         // Send the message to every client execution node
-        String qName = String.format(Constants.Q_ORDER, en.getHost().getBrokerName());
+        String qName = String.format(Constants.Q_ORDER, brokerName);
         log.info(String.format("An external event order will be sent on queue %s", qName));
         Destination destination = jmsSession.createQueue(qName);
         jmsProducer.send(destination, m);
@@ -586,17 +586,17 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, String brokerUrl) throws JMSException
+    public static void sendOrderExternalEvent(String sourceName, String data, String brokerName, String brokerUrl) throws JMSException
     {
         JmsSendData d = new JmsSendData(brokerUrl);
-        sendOrderExternalEvent(sourceName, data, en, d.jmsSession, d.jmsProducer, false);
+        sendOrderExternalEvent(sourceName, data, brokerName, d.jmsSession, d.jmsProducer, false);
         d.jmsSession.commit();
         d.close();
     }
 
     public static void sendOrderExternalEvent(String sourceName, String data, ExecutionNode en, ChronixContext ctx) throws JMSException
     {
-        sendOrderExternalEvent(sourceName, data, en, ctx.getLocalBrokerUrl());
+        sendOrderExternalEvent(sourceName, data, en.getBrokerName(), ctx.getLocalBrokerUrl());
     }
 
     // restart orders
