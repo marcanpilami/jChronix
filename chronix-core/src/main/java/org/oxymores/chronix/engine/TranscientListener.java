@@ -76,13 +76,12 @@ class TranscientListener extends BaseListener
             return;
         }
 
-        trTransac.begin();
-
         // ////////////////////////////////////////
         // CalendarPointer
         if (o instanceof CalendarPointer)
         {
             log.debug("A calendar pointer was received");
+            trTransac.begin();
             CalendarPointer cp = (CalendarPointer) o;
             Calendar ca = null;
             State ss = null;
@@ -179,7 +178,12 @@ class TranscientListener extends BaseListener
                 }
             }
 
-            // Some jobs may now be late (or later than before). Signal them.
+            // End: commit both JPA and JMS
+            trTransac.commit();
+            jmsCommit();
+            log.debug("Saved correctly");
+
+            // Some jobs may now be late (or later than before). Signal them (log only).
             try
             {
                 ca.processStragglers(emTransac);
@@ -187,16 +191,10 @@ class TranscientListener extends BaseListener
             catch (NullPointerException e1)
             {
                 // Pointer updates cannot happen on states without calendars... just ignore it.
-                jmsCommit();
                 return;
             }
         }
         // end calendar pointers
         // /////////////////////////////////////////////////
-
-        // End: commit both JPA and JMS
-        trTransac.commit();
-        jmsCommit();
-        log.debug("Saved correctly");
     }
 }
