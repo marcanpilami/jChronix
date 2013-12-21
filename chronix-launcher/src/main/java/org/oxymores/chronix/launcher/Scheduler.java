@@ -164,7 +164,7 @@ public class Scheduler
             server.start();
         }
 
-        SenderHelpers.sendOrderExternalEvent(s1.getId(), null, pgLocal.getPlaces().get(0).getNode(), e.getContext());
+        SenderHelpers.sendOrderExternalEvent("file1", null, pgLocal.getPlaces().get(0).getNode(), e.getContext());
 
         handler = e;
     }
