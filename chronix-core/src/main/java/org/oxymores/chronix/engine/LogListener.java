@@ -30,6 +30,11 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 
+/**
+ * Responsible for storing RunLog in the database (i.e. history elements, including a short text log). Sending a copy to the console if
+ * necessary is handled at the source (cf. <code>SenderHelpers</code>).
+ * 
+ */
 class LogListener extends BaseListener
 {
     private static Logger log = Logger.getLogger(LogListener.class);

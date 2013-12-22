@@ -19,7 +19,7 @@
  */
 
 package org.oxymores.chronix.engine;
-
+/*
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -35,10 +35,10 @@ import javax.jms.Session;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-
-public class LogFileListener implements MessageListener
+*/
+public class LogFileListener //implements MessageListener
 {
-    private static Logger log = Logger.getLogger(LogFileListener.class);
+    /*private static Logger log = Logger.getLogger(LogFileListener.class);
 
     private Session jmsSession;
     private Destination logQueueDestination;
@@ -125,5 +125,5 @@ public class LogFileListener implements MessageListener
             log.error("failure to acknowledge a message in the JMS queue. Oooooops?", e);
             return;
         }
-    }
+    }*/
 }
