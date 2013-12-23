@@ -145,12 +145,12 @@ public class Frontier2
             Transition z = new Transition();
             z.setApplication(a);
             z.setCalendarAware(s.isCalendarAware());
-            z.setCalendarShift(s.getCalendarShift());
+            z.setCalendarShift(s.getCalendarShift() == null ? 0 : s.getCalendarShift());
             z.setChain(r);
             z.setGuard1(s.getGuard1());
             z.setGuard2(s.getGuard2());
             z.setGuard3(s.getGuard3());
-            if (!s.getGuard4().isEmpty())
+            if ((s.getGuard4() != null) && (!s.getGuard4().isEmpty()))
                 z.setGuard4(UUID.fromString(s.getGuard4()));
             z.setId(UUID.fromString(s.getId()));
             z.setStateFrom(r.getState(UUID.fromString(s.getFrom())));

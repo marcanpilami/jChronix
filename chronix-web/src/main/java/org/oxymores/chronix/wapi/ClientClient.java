@@ -114,4 +114,11 @@ public class ClientClient implements IServiceClient
 		return null;
 	}
 
+    @Override
+    public DTOApplication getFirstApplication()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

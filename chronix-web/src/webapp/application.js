@@ -6,7 +6,7 @@ var appLoader = null;
 
 function loadApplication()
 {
-	proxy.getApplication(getApplicationOK, getApplicationKO, "test app");
+	proxy.getFirstApplication(getApplicationOK, getApplicationKO);
 }
 
 function loadApplicationId(id)

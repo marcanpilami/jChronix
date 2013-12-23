@@ -20,6 +20,8 @@
 
 package org.oxymores.chronix.wapi;
 
+import java.io.File;
+
 import org.apache.cxf.aegis.databinding.AegisDatabinding;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
@@ -70,7 +72,7 @@ public class JettyServer implements IServer
     @Override
     public void start()
     {
-        log.info("Web service server is starting");
+        log.info("Web service server is starting at http://" + this.interfaceToListenOn + ":" + this.portToListenOn);
         ServiceClient serviceImpl = new ServiceClient(this.ctx);
         ServerFactoryBean svrFactory = new ServerFactoryBean();
 
@@ -100,10 +102,15 @@ public class JettyServer implements IServer
             // Create static resource handler
             ResourceHandler resourceHandler = new ResourceHandler();
             resourceHandler.setDirectoriesListed(true);
-
             resourceHandler.setWelcomeFiles(new String[] { "index.html" });
-            // resourceHandler.setResourceBase(".");
-            resourceHandler.setResourceBase("..\\chronix-gui\\");
+            if ((new File("./chronix-gui").isDirectory()))
+            {
+                resourceHandler.setResourceBase("./chronix-gui/");
+            }
+            else
+            {
+                resourceHandler.setResourceBase("../chronix-gui/");
+            }
             resourceHandler.setCacheControl("public, max-age=3600");
 
             // Add both handlers to server (static first)

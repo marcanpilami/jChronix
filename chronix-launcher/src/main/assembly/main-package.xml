@@ -30,8 +30,19 @@
 			</includes>
 		</fileSet>
 		<fileSet>
+			<directory>${project.basedir}/src/main/scripts</directory>
+			<outputDirectory>/service</outputDirectory>
+			<includes>
+				<include>*.exe</include>
+			</includes>
+		</fileSet>
+		<fileSet>
 			<directory>${project.parent.basedir}/chronix-doc/target/docs</directory>
 			<outputDirectory>docs</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>${project.parent.basedir}/chronix-gui</directory>
+			<outputDirectory>/chronix-gui</outputDirectory>
 		</fileSet>
 	</fileSets>
 

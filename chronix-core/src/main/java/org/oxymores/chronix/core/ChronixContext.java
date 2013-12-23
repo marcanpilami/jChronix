@@ -355,7 +355,7 @@ public class ChronixContext
         // Remove elements from deleted applications
         for (String appId : em.createQuery("SELECT DISTINCT tb.appID FROM TranscientBase tb", String.class).getResultList())
         {
-            if (this.getApplication(appId) != null)
+            if (appId != null && this.getApplication(appId) != null)
             {
                 continue;
             }
@@ -567,5 +567,15 @@ public class ChronixContext
     public DateTime getLoadTime()
     {
         return loaded;
+    }
+
+    public int getMessagePort()
+    {
+        return this.port;
+    }
+
+    public String getMainInterface()
+    {
+        return this.dns;
     }
 }

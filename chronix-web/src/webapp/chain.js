@@ -217,6 +217,8 @@ function ChainPanel(divId, cxfApplication)
 		v._canReceiveLink = true;
 		v._canEmitLinks = true;
 		v._canBeRemoved = true;
+		alert(dd.selectedChain);
+		v.dtoChain = dd.selectedChain
 
 		if (dd.and)
 		{
@@ -430,6 +432,7 @@ ChainPanel.prototype.drawChain = function(cxfChain, raphaelPaper)
 	var ss = cxfChain.getStates().getDTOState();
 	for ( var i = 0; i < ss.length; i++)
 	{
+		ss[i].dtoChain = cxfChain;
 		this.addState(ss[i], raphaelPaper);
 	}
 
@@ -520,6 +523,7 @@ ChainPanel.prototype.addState = function(DTOState, raphaelPaper)
 			v._to = this.modeldata._id;
 			v._guard1 = 0;
 			this.chain_panel.addTransition(v, this.paper);
+			toolbar.dtoState.dtoChain.getTransitions().getDTOTransition().push(v);
 			toolbar.setMode("select");
 		}
 	});

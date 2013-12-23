@@ -118,10 +118,13 @@ public class ChronixEngine extends Thread
             this.threadInit.release(1);
 
             // Context
-            preContextLoad();
-            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
-                    this.historyDbPath, this.transacDbPath);
-            postContextLoad();
+            if (!runnerMode)
+            {
+                preContextLoad();
+                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
+                        this.historyDbPath, this.transacDbPath);
+                postContextLoad();
+            }
 
             // Broker with all the consumer threads
             if (this.broker == null)

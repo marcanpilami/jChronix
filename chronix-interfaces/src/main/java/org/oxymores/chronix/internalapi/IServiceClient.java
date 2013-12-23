@@ -36,6 +36,8 @@ public interface IServiceClient
 	DTOApplication getApplication(String name);
 
 	DTOApplication getApplicationById(String uuid);
+	
+	DTOApplication getFirstApplication();
 
 	void stageApplication(DTOApplication app);
 

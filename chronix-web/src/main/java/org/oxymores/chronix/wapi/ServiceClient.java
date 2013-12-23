@@ -36,9 +36,14 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.PlaceGroup;
+import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
@@ -47,6 +52,7 @@ import org.oxymores.chronix.dto.Frontier2;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.internalapi.IServiceClient;
+import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class ServiceClient implements IServiceClient
@@ -72,6 +78,20 @@ public class ServiceClient implements IServiceClient
         log.debug(String.format("getApplication service was called for app name %s", name));
         String id = ctx.getApplicationByName(name).getId().toString();
         return getApplicationById(id);
+    };
+
+    @Override
+    public DTOApplication getFirstApplication()
+    {
+        log.debug(String.format("getFirstApplication service was called"));
+        if (ctx.getApplications().size() > 0)
+        {
+            return getApplicationById(ctx.getApplications().iterator().next().getId().toString());
+        }
+        else
+        {
+            return createApplication("first application", "created automatically");
+        }
     };
 
     @Override
@@ -201,5 +221,58 @@ public class ServiceClient implements IServiceClient
         PlanBuilder.buildChain(a, "first chain", "plan", a.getGroupsList().get(0));
 
         return Frontier.getApplication(a);
+    }
+
+    public void createTestApplication()
+    {
+        Application a = DemoApplication.getNewDemoApplication();
+        a.setname("test app");
+        PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, ctx.getMessagePort(), ctx.getMainInterface());
+        Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
+
+        ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 200);
+        External ex = PlanBuilder.buildExternal(a, "External");
+        Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
+        ck1.setDURATION(0);
+        ShellCommand sc1 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        ShellCommand sc2 = PlanBuilder.buildShellCommand("powershell.exe", a, "echooooooo bb", "bb", "should display 'bb'");
+        ShellCommand sc3 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo fin", "FIN", "should display 'fin'");
+
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+
+        PlanBuilder.buildExternal(a, "file 1", "/tmp/meuh.txt");
+        PlanBuilder.buildRRuleMinutes(a, 10);
+        PlanBuilder.buildRRuleMinutes(a, 20);
+        PlanBuilder.buildRRuleMinutes(a, 30);
+
+        State s1 = PlanBuilder.buildState(c, pgLocal, ex);
+        State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
+        State s3 = PlanBuilder.buildState(c, pgLocal, sc2);
+        State s4 = PlanBuilder.buildStateAND(c, pgLocal);
+        State s5 = PlanBuilder.buildState(c, pgLocal, sc3);
+        s1.connectTo(s2);
+        s1.connectTo(s3);
+        s2.connectTo(s4);
+        s3.connectTo(s4, 0);
+        s4.connectTo(s5);
+
+        try
+        {
+            ctx.saveApplication(a);
+            ctx.setWorkingAsCurrent(a);
+        }
+        catch (ChronixPlanStorageException e1)
+        {
+            // DEBUG code, so no need for pretty exc handling
+            e1.printStackTrace();
+            System.exit(1);
+        }
     }
 }
