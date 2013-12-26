@@ -32,8 +32,19 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
+
+		<resources>
+			<resource>
+				<directory>src/site/sphinx</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.rst</include>
+					<include>**/*.py</include>
+				</includes>
+			</resource>
+		</resources>
+
 	</build>
 
 	<dependencies>

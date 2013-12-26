@@ -1,13 +1,16 @@
 jChronix documentation index
 ############################
 
-doc here.
+Chronix full documentation.
 
 .. toctree::
    :maxdepth: 2
 
-   plandev/funcperiod
-   plandev/parallelism 
+   admin/index
    
-   code/style
+   plandev/index 
+   
+   use/index
+   
+   code/index
 

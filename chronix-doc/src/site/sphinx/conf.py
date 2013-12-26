@@ -6,6 +6,6 @@ master_doc = 'index'
 exclude_dirnames = ['.git', '.svn']
 
 project = 'Chronix'
-copyright = '2012, Marc-Antoine Gouillart'
-release = 'alpha'
+copyright = '2012-2013, Marc-Antoine Gouillart'
+release = '0.9'
 hightlight_language = 'java'
