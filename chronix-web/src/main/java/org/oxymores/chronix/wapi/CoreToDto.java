@@ -1,4 +1,4 @@
-package org.oxymores.chronix.dto;
+package org.oxymores.chronix.wapi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,8 +29,24 @@ import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.dto.DTOApplication;
+import org.oxymores.chronix.dto.DTOCalendar;
+import org.oxymores.chronix.dto.DTOCalendarDay;
+import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.DTOClock;
+import org.oxymores.chronix.dto.DTOExecutionNode;
+import org.oxymores.chronix.dto.DTOExternal;
+import org.oxymores.chronix.dto.DTONextOccurrence;
+import org.oxymores.chronix.dto.DTOParameter;
+import org.oxymores.chronix.dto.DTOPlace;
+import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTORunLog;
+import org.oxymores.chronix.dto.DTOShellCommand;
+import org.oxymores.chronix.dto.DTOState;
+import org.oxymores.chronix.dto.DTOTransition;
 
-public class Frontier
+public class CoreToDto
 {
 
     public static DTOApplication getApplication(Application a)
@@ -188,43 +204,43 @@ public class Frontier
         for (State s : c.getStates())
         {
             DTOState t = new DTOState();
-            t.parallel = s.getParallel();
-            t.id = s.getId().toString();
-            t.x = s.getX();
-            t.y = s.getY();
-            t.label = s.getRepresents().getName();
-            t.representsId = s.getRepresents().getId().toString();
+            t.setParallel(s.getParallel());
+            t.setId(s.getId().toString());
+            t.setX(s.getX());
+            t.setY(s.getY());
+            t.setLabel(s.getRepresents().getName());
+            t.setRepresentsId(s.getRepresents().getId().toString());
             if (s.getCalendar() != null)
             {
-                t.calendarId = s.getCalendar().getId().toString();
-                t.calendarShift = s.getCalendarShift();
+                t.setCalendarId(s.getCalendar().getId().toString());
+                t.setCalendarShift(s.getCalendarShift());
             }
             try
             {
-                t.runsOnName = s.getRunsOn().getName();
-                t.runsOnId = s.getRunsOn().getId().toString();
+                t.setRunsOnName(s.getRunsOn().getName());
+                t.setRunsOnId(s.getRunsOn().getId().toString());
             }
             catch (Exception e)
             {
             }
             if (s.getRepresents() instanceof ChainStart)
             {
-                t.canReceiveLink = false;
-                t.isStart = true;
+                t.setCanReceiveLink(false);
+                t.setStart(true);
             }
             if (s.getRepresents() instanceof ChainEnd)
             {
-                t.canEmitLinks = false;
-                t.isEnd = true;
+                t.setCanEmitLinks(false);
+                t.setEnd(true);
             }
             if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
-                t.canBeRemoved = false;
+                t.setCanBeRemoved(false);
             if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or)
-                t.canReceiveMultipleLinks = true;
+                t.setCanReceiveMultipleLinks(true);
             if (s.getRepresents() instanceof And)
-                t.isAnd = true;
+                t.setAnd(true);
             if (s.getRepresents() instanceof Or)
-                t.isOr = true;
+                t.setOr(true);
 
             res.states.add(t);
         }
@@ -599,27 +615,27 @@ public class Frontier
     public static DTORunLog getDTORunLog(RunLog rl)
     {
         DTORunLog res = new DTORunLog();
-        res.id = rl.getId();
-        res.activeNodeName = rl.getActiveNodeName();
-        res.applicationName = rl.getApplicationName();
-        res.beganRunningAt = rl.getBeganRunningAt();
-        res.calendarName = rl.getCalendarName();
-        res.calendarOccurrence = rl.getCalendarOccurrence();
-        res.chainLev1Name = rl.getChainLev1Name();
-        res.chainName = rl.getChainName();
-        res.dataIn = rl.getDataIn();
-        res.dataOut = rl.getDataOut();
-        res.dns = rl.getDns();
-        res.enteredPipeAt = rl.getEnteredPipeAt();
-        res.executionNodeName = rl.getExecutionNodeName();
-        res.lastKnownStatus = rl.getLastKnownStatus();
-        res.markedForUnAt = rl.getMarkedForUnAt();
-        res.osAccount = rl.getOsAccount();
-        res.placeName = rl.getPlaceName();
-        res.resultCode = rl.getResultCode();
-        res.sequence = rl.getSequence();
-        res.stoppedRunningAt = rl.getStoppedRunningAt();
-        res.whatWasRun = rl.getWhatWasRun();
+        res.setId(rl.getId());
+        res.setActiveNodeName(rl.getActiveNodeName());
+        res.setApplicationName(rl.getApplicationName());
+        res.setBeganRunningAt(rl.getBeganRunningAt());
+        res.setCalendarName(rl.getCalendarName());
+        res.setCalendarOccurrence(rl.getCalendarOccurrence());
+        res.setChainLev1Name(rl.getChainLev1Name());
+        res.setChainName(rl.getChainName());
+        res.setDataIn(rl.getDataIn());
+        res.setDataOut(rl.getDataOut());
+        res.setDns(rl.getDns());
+        res.setEnteredPipeAt(rl.getEnteredPipeAt());
+        res.setExecutionNodeName(rl.getExecutionNodeName());
+        res.setLastKnownStatus(rl.getLastKnownStatus());
+        res.setMarkedForUnAt(rl.getMarkedForUnAt());
+        res.setOsAccount(rl.getOsAccount());
+        res.setPlaceName(rl.getPlaceName());
+        res.setResultCode(rl.getResultCode());
+        res.setSequence(rl.getSequence());
+        res.setStoppedRunningAt(rl.getStoppedRunningAt());
+        res.setWhatWasRun(rl.getWhatWasRun());
 
         return res;
     }

@@ -47,8 +47,6 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
-import org.oxymores.chronix.dto.Frontier;
-import org.oxymores.chronix.dto.Frontier2;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.internalapi.IServiceClient;
@@ -100,7 +98,7 @@ public class ServiceClient implements IServiceClient
         log.debug(String.format("getApplication service was called for app id %s", id));
         Application a = ctx.getApplication(id);
 
-        DTOApplication d = Frontier.getApplication(a);
+        DTOApplication d = CoreToDto.getApplication(a);
         log.debug("End of getApplication call. Returning an application.");
         return d;
     }
@@ -111,7 +109,7 @@ public class ServiceClient implements IServiceClient
         log.debug("stageApplication service was called");
 
         // Read application
-        Application a = Frontier2.getApplication(app);
+        Application a = DtoToCore.getApplication(app);
 
         // Put the working copy in the local cache (no impact on engine, different cache)
         this.ctx.addApplicationToCache(a);
@@ -157,7 +155,7 @@ public class ServiceClient implements IServiceClient
     @Override
     public List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound)
     {
-        ClockRRule r = Frontier2.getRRule(rule);
+        ClockRRule r = DtoToCore.getRRule(rule);
         Clock tmp = new Clock();
         tmp.addRRuleADD(r);
         PeriodList pl = null;
@@ -220,7 +218,7 @@ public class ServiceClient implements IServiceClient
         PlanBuilder.buildClock(a, "once a week day", "day clock", r);
         PlanBuilder.buildChain(a, "first chain", "plan", a.getGroupsList().get(0));
 
-        return Frontier.getApplication(a);
+        return CoreToDto.getApplication(a);
     }
 
     public void createTestApplication()

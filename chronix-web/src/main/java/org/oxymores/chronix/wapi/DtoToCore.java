@@ -1,4 +1,4 @@
-package org.oxymores.chronix.dto;
+package org.oxymores.chronix.wapi;
 
 import java.util.UUID;
 
@@ -22,8 +22,22 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.Or;
 import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.dto.DTOApplication;
+import org.oxymores.chronix.dto.DTOCalendar;
+import org.oxymores.chronix.dto.DTOCalendarDay;
+import org.oxymores.chronix.dto.DTOChain;
+import org.oxymores.chronix.dto.DTOClock;
+import org.oxymores.chronix.dto.DTOExecutionNode;
+import org.oxymores.chronix.dto.DTOExternal;
+import org.oxymores.chronix.dto.DTONextOccurrence;
+import org.oxymores.chronix.dto.DTOPlace;
+import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTOShellCommand;
+import org.oxymores.chronix.dto.DTOState;
+import org.oxymores.chronix.dto.DTOTransition;
 
-public class Frontier2
+public class DtoToCore
 {
     public static Application getApplication(DTOApplication d)
     {
@@ -129,13 +143,13 @@ public class Frontier2
             }
             else
             {
-                if (s.isAnd)
+                if (s.isAnd())
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getAndId())));
-                if (s.isOr)
+                if (s.isOr())
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getOrId())));
-                if (s.isStart)
+                if (s.isStart())
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getStartId())));
-                if (s.isEnd)
+                if (s.isEnd())
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getEndId())));
             }
         }

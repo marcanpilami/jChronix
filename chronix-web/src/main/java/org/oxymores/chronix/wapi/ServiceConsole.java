@@ -21,7 +21,6 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
-import org.oxymores.chronix.dto.Frontier;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
@@ -55,7 +54,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
-            res.add(Frontier.getDTORunLog(rl));
+            res.add(CoreToDto.getDTORunLog(rl));
 
         log.debug("End of call to getLog - returning " + res.size() + " logs");
         return res;
@@ -70,7 +69,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
-            res.add(Frontier.getDTORunLog(rl));
+            res.add(CoreToDto.getDTORunLog(rl));
 
         log.debug("End of call to getLog - returning " + res.size());
         return res;
@@ -106,7 +105,7 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
-            res.add(Frontier.getDTORunLog(rl));
+            res.add(CoreToDto.getDTORunLog(rl));
 
         log.debug("End of call to getLogSince - returning " + res.size());
         return res;
