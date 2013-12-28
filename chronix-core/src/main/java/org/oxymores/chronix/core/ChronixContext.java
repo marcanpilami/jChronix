@@ -107,6 +107,11 @@ public class ChronixContext
     {
         log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
+        if (!(new File(appConfDirectory).isDirectory()))
+        {
+            throw new ChronixPlanStorageException("Directory " + appConfDirectory + " does not exist", null);
+        }
+
         ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, brokerInterface, simulation);
         ctx.historyDbPath = historyDBPath;
         ctx.transacDbPath = transacDbPath;
