@@ -35,7 +35,10 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     public ServiceConsole(ChronixContext ctx)
     {
         this.ctx = ctx;
-        this.emfHistory = this.ctx.getHistoryEMF();
+        if (ctx != null)
+        {
+            this.emfHistory = this.ctx.getHistoryEMF();
+        }
     }
 
     @Override
