@@ -126,10 +126,26 @@ public class BaseListener implements MessageListener
         }
         if (emTransac != null)
         {
+            try
+            {
+                emTransac.getTransaction().rollback();
+            }
+            catch (Exception e)
+            {
+                // Nothing to do - we just close the transaction if it's open
+            }
             emTransac.close();
         }
         if (emHistory != null)
         {
+            try
+            {
+                emHistory.getTransaction().rollback();
+            }
+            catch (Exception e)
+            {
+                // Nothing to do - we just close the transaction if it's open
+            }
             emHistory.close();
         }
     }
