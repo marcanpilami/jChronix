@@ -212,8 +212,8 @@ function ChainPanel(divId, cxfApplication)
 	{
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
-		v._x = e.offsetX;
-		v._y = e.offsetY;
+		v._x = Math.round(e.offsetX);
+		v._y = Math.round(e.offsetY);
 		v._canReceiveLink = true;
 		v._canEmitLinks = true;
 		v._canBeRemoved = true;
@@ -671,8 +671,8 @@ function dragStateMove(dx, dy, x, y, event)
 	});
 
 	// Update state model
-	this.modeldata._x = newx;
-	this.modeldata._y = newy;
+	this.modeldata._x = Math.round(newx);
+	this.modeldata._y = Math.round(newy);
 
 	// Drag transition ends
 	for ( var i = 0; i < this.modeldata.trFromHere.length; i++)
