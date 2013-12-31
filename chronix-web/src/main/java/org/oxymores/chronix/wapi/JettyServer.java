@@ -128,14 +128,6 @@ public class JettyServer implements IServer
             e.printStackTrace();
         }
 
-        // SOAP console service
-        ServerFactoryBean svrFactory2 = new ServerFactoryBean();
-        svrFactory2.setServiceClass(IServiceConsoleSoap.class);
-        svrFactory2.setAddress(this.getURL("/console/soap"));
-        svrFactory2.setServiceBean(new ServiceConsole(this.ctx));
-        svrFactory2.getServiceFactory().setDataBinding(new AegisDatabinding());
-        cxfServer2 = svrFactory2.create();
-
         // REST console service
         JAXRSServerFactoryBean svrFactory3 = new JAXRSServerFactoryBean();
         svrFactory3.setServiceBean(new ServiceConsole(this.ctx));

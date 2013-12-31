@@ -24,8 +24,10 @@ import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.oxymores.chronix.internalapi.IServiceConsoleRest;
 
-public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
+@Path("/main")
+public class ServiceConsole implements IServiceConsoleRest
 {
     private static Logger log = Logger.getLogger(ServiceConsole.class);
 
@@ -42,7 +44,9 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     }
 
     @Override
-    public List<DTORunLog> getLog(Date from, Date to, Date since)
+    @GET
+    @Path("/logs/{a}/{b}/{c}")
+    public List<DTORunLog> getLog(@PathParam("a") Date from, @PathParam("b") Date to, @PathParam("c") Date since)
     {
         log.debug(String.format("Service getLog was called between %s and %s (received since %s)", from, (since.after(from) ? new Date()
                 : to), since));
@@ -64,6 +68,9 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     }
 
     @Override
+    @GET
+    @Path("/alllogs")
+    @Produces("application/json")
     public ArrayList<DTORunLog> getLog()
     {
         log.debug("Service getLog was called");
@@ -79,7 +86,10 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     }
 
     @Override
-    public String getShortLog(UUID id)
+    @GET
+    @Path("/shortlog/{id}")
+    @Produces("text/plain")
+    public String getShortLog(@PathParam("id") UUID id)
     {
         log.debug("Service getShortLog was called for ID " + id.toString());
         EntityManager em = emfHistory.createEntityManager();
@@ -98,7 +108,9 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     }
 
     @Override
-    public List<DTORunLog> getLogSince(Date since)
+    @GET
+    @Path("/logssince/{a}")
+    public List<DTORunLog> getLogSince(@PathParam("a") Date since)
     {
         log.debug("Service getLogSince was called");
         EntityManager em = emfHistory.createEntityManager();
@@ -115,7 +127,10 @@ public class ServiceConsole implements IServiceConsoleSoap, IServiceConsoleRest
     }
 
     @Override
-    public ResOrder orderForceOK(String launchId)
+    @GET
+    @Path("/order/forceok/{launchId}")
+    @Produces("application/json")
+    public ResOrder orderForceOK(@PathParam("launchId") String launchId)
     {
         log.debug("Service orderForceOK was called");
         try
