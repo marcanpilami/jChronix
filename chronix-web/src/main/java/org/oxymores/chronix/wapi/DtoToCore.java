@@ -114,8 +114,8 @@ public class DtoToCore
         for (DTOState s : d.getStates())
         {
             State z = new State();
-            z.setApplication(a);
             z.setChain(r);
+            z.setApplication(a);
             // z.setEndOfOccurrence(s.get)
             z.setEventValidityMn(s.getEventValidityMn());
             z.setId(UUID.fromString(s.getId()));
