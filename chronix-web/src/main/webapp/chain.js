@@ -18,7 +18,7 @@ function ChainPanel(divId, cxfApplication)
 	this.state_toolbar = new StateToolbar();
 	this.transition_toolbar = new TransitionToolbar();
 
-	// Create the tab panel with a template that will create a host for a Rapha�l object
+	// Create the tab panel with a template that will create a host for a Raphaël object
 	this.chaintabs = $("#chaintabs").tabs(
 	{
 		activate : this.onShowChain.bind(this)
@@ -346,27 +346,27 @@ ChainPanel.prototype.editChain = function(cxfObject)
 	// Create a new tab
 	$("#chaintabs").append(
 			"<div class='tabPanel' id='chaintab-" + cxfObject._id + "'>" + "<div style='height:100%;width:100%;' id='raphcontainer_" + cxfObject._id
-					+ "'>" + "<div class='raph' style='display: inline-block; overflow: auto; width: calc(100% - 150px); height:100%;'></div>"
+					+ "'>" + "<div class='raph' style='display: inline-block; overflow: auto; width: 100%; height:calc(100% - 20px);'></div>"
 					+ "<div id='chainDetail-" + cxfObject._id
-					+ "' style='width: 148px; border=solid 2px black; display: inline-block; vertical-align: top;'></div></div></div>");
+					+ "' style='width: 100%; height:20px; border=solid 2px black; display: inline-block; vertical-align: top;'></div></div></div>");
 	$("#chaintabs > ul").append("<li><a href='" + "#chaintab-" + cxfObject._id + "'>" + cxfObject._name + "</a></li>");
 
 	// Create edit fields
 	var editPanel = $("#chainDetail-" + cxfObject._id);
-	editPanel.append("<label>Chain name</label>");
-	editPanel.append($("<input></input>").val(cxfObject._name).change((function(event)
+	editPanel.append("<label>Chain name: </label>");
+	editPanel.append($("<input size='25'></input>").val(cxfObject._name).change((function(event)
 	{
 		this.selectedChain._name = $(event.currentTarget).val();
 		$("a[href='#chaintab-" + this.selectedChain._id + "']").text(this.selectedChain._name);
 	}).bind(this)));
-	editPanel.append("<br><label>Chain description</label>");
-	editPanel.append($("<input></input>").val(cxfObject._description).change((function(event)
+	editPanel.append("<label>    Description: </label>");
+	editPanel.append($("<input size='60'></input>").val(cxfObject._description).change((function(event)
 	{
 		this.selectedChain._description = $(event.currentTarget).val();
 	}).bind(this)));
 	editPanel.append($("<button id='btDelChain" + cxfObject._id + "' >Delete chain</button>").click(this.onDeleteChain.bind(this)));
 
-	// Create new Rapha�l paper
+	// Create new Raphaël paper
 	var r = $("#chaintab-" + cxfObject._id + " div.raph")[0];
 	var rpaper = new Raphael(r, 3000, 3000);
 	rpaper.states = new Array();
