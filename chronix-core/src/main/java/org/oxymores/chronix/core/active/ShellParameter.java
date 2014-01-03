@@ -22,6 +22,7 @@ package org.oxymores.chronix.core.active;
 
 import javax.jms.JMSException;
 
+import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -32,6 +33,7 @@ import org.oxymores.chronix.engine.data.RunDescription;
 public class ShellParameter extends Parameter
 {
     private static final long serialVersionUID = 7528888158440570804L;
+    private static Logger log = Logger.getLogger(ShellParameter.class);
 
     @Override
     public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
@@ -47,8 +49,7 @@ public class ShellParameter extends Parameter
         }
         catch (JMSException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Could not ask for parameter resolution due to a communication issue. No retry wil be attempted.", e);
         }
     }
 }

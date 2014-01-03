@@ -24,11 +24,11 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 
 public class And extends ActiveNodeBase
 {
-	private static final long serialVersionUID = 7036035240797211650L;
+    private static final long serialVersionUID = 7036035240797211650L;
 
-	@Override
-	public boolean visibleInHistory()
-	{
-		return false;
-	}
+    @Override
+    public boolean visibleInHistory()
+    {
+        return false;
+    }
 }

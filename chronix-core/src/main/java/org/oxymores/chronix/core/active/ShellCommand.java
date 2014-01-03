@@ -27,52 +27,52 @@ import org.oxymores.chronix.engine.Runner;
 
 public class ShellCommand extends ActiveNodeBase
 {
-	private static final long serialVersionUID = 3340501935290198518L;
+    private static final long serialVersionUID = 3340501935290198518L;
 
-	protected String command;
-	protected String shell = "cmd.exe";
+    protected String command;
+    protected String shell = "cmd.exe";
 
-	public String getCommand()
-	{
-		return command;
-	}
+    public String getCommand()
+    {
+        return command;
+    }
 
-	public void setCommand(String command)
-	{
-		this.command = command;
-	}
+    public void setCommand(String command)
+    {
+        this.command = command;
+    }
 
-	@Override
-	public String getActivityMethod()
-	{
-		return "Shell";
-	}
+    @Override
+    public String getActivityMethod()
+    {
+        return "Shell";
+    }
 
-	@Override
-	public String getSubActivityMethod()
-	{
-		return this.shell;
-	}
+    @Override
+    public String getSubActivityMethod()
+    {
+        return this.shell;
+    }
 
-	@Override
-	public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
-	{
-		return this.command;
-	}
+    @Override
+    public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
+    {
+        return this.command;
+    }
 
-	@Override
-	public boolean hasExternalPayload()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasExternalPayload()
+    {
+        return true;
+    }
 
-	public String getShell()
-	{
-		return shell;
-	}
+    public String getShell()
+    {
+        return shell;
+    }
 
-	public void setShell(String shell)
-	{
-		this.shell = shell;
-	}
+    public void setShell(String shell)
+    {
+        this.shell = shell;
+    }
 }

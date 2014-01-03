@@ -57,13 +57,14 @@ public class Clock extends ActiveNodeBase
 {
     private static final long serialVersionUID = -5203055591135192345L;
     private static Logger log = Logger.getLogger(Clock.class);
+    private static final String LOG_DATE_FORMAT = "dd/MM/YYYY hh:mm:ss";
 
     // Fields
-    org.joda.time.DateTime CREATED;
-    int DURATION = 0; // Minutes
+    org.joda.time.DateTime created;
+    int duration = 0; // Minutes
 
     // Relationships
-    ArrayList<ClockRRule> rulesADD, rulesEXC;
+    List<ClockRRule> rulesADD, rulesEXC;
 
     // Helpers for engine methods
     transient PeriodList occurrenceCache;
@@ -76,9 +77,9 @@ public class Clock extends ActiveNodeBase
     {
         rulesADD = new ArrayList<ClockRRule>();
         rulesEXC = new ArrayList<ClockRRule>();
-        CREATED = org.joda.time.DateTime.now();
-        CREATED = CREATED.minusMillis(CREATED.getMillisOfSecond());
-        CREATED = CREATED.minusSeconds(CREATED.getSecondOfMinute());
+        created = org.joda.time.DateTime.now();
+        created = created.minusMillis(created.getMillisOfSecond());
+        created = created.minusSeconds(created.getSecondOfMinute());
 
         pj = new PipelineJob();
         pj.setApplication(this.application);
@@ -99,10 +100,7 @@ public class Clock extends ActiveNodeBase
     private VEvent getEvent() throws ParseException
     {
         VEvent evt = new VEvent();
-
-        // evt.getProperties().add(new DtStart(new DateTime(this.CREATED.toDate())));
-        // evt.getProperties().add(new DtEnd(new DateTime(this.CREATED.plusYears(1).toDate()))); // DEBUG
-        evt.getProperties().add(new net.fortuna.ical4j.model.property.Duration(new Dur(0, 0, this.DURATION, 0)));
+        evt.getProperties().add(new net.fortuna.ical4j.model.property.Duration(new Dur(0, 0, this.duration, 0)));
 
         for (ClockRRule r : rulesADD)
         {
@@ -124,14 +122,11 @@ public class Clock extends ActiveNodeBase
 
         log.debug(String.format("Computing ocurrences from %s to %s.", from, to));
         VEvent evt = this.getEvent();
-
         evt.getProperties().add(new DtStart(new DateTime(start.minusDays(1).toDate())));
-        // evt.getProperties().add(new DtEnd(new DateTime(end.plusDays(5).toDate())));
 
         log.debug(String.format("Event start time is %s - creation is %s", evt.getStartDate(), evt.getCreated()));
         Period p = new Period(from, to);
-        PeriodList res = evt.calculateRecurrenceSet(p);
-        return res;
+        return evt.calculateRecurrenceSet(p);
     }
 
     //
@@ -141,25 +136,25 @@ public class Clock extends ActiveNodeBase
     // Stupid GET/SET
     public int getDURATION()
     {
-        return DURATION;
+        return duration;
     }
 
     public void setDURATION(int dURATION)
     {
-        DURATION = dURATION;
+        duration = dURATION;
     }
 
     public org.joda.time.DateTime getCREATED()
     {
-        return CREATED;
+        return created;
     }
 
-    public ArrayList<ClockRRule> getRulesADD()
+    public List<ClockRRule> getRulesADD()
     {
         return rulesADD;
     }
 
-    public ArrayList<ClockRRule> getRulesEXC()
+    public List<ClockRRule> getRulesEXC()
     {
         return rulesEXC;
     }
@@ -172,25 +167,33 @@ public class Clock extends ActiveNodeBase
     public void addRRuleADD(ClockRRule rule)
     {
         if (!rulesADD.contains(rule))
+        {
             rulesADD.add(rule);
+        }
     }
 
     public void removeRRuleADD(ClockRRule rule)
     {
         if (rulesADD.contains(rule))
+        {
             rulesADD.remove(rule);
+        }
     }
 
     public void addRRuleEXC(ClockRRule rule)
     {
         if (!rulesEXC.contains(rule))
+        {
             rulesEXC.add(rule);
+        }
     }
 
     public void removeRRuleEXC(ClockRRule rule)
     {
         if (rulesEXC.contains(rule))
+        {
             rulesEXC.remove(rule);
+        }
     }
 
     //
@@ -212,15 +215,20 @@ public class Clock extends ActiveNodeBase
 
     @Override
     public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em,
-            org.joda.time.DateTime present) throws ChronixRunException
+            org.joda.time.DateTime present) throws ChronixRunException // NOSONAR
     {
+        // Check if the engine logical time ("present") is consistent with the world's real time ("now") (for warnings only)
         org.joda.time.DateTime now = org.joda.time.DateTime.now();
         if ((now.compareTo(present) >= 0 && (new Interval(present, now)).toDurationMillis() > 1000)
                 || (now.compareTo(present) < 0 && (new Interval(now, present)).toDurationMillis() > 1000))
+        {
             log.warn("There is more than one second between internal time and clock time - performance issue? (discard if simulation)");
+        }
+
+        // We only work with the logical time
         now = present;
         pj.setVirtualTime(present.toDate());
-        org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.DURATION);
+        org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.duration);
 
         if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear())
         {
@@ -246,10 +254,10 @@ public class Clock extends ActiveNodeBase
             if (from.compareTo(now) <= 0 && to.compareTo(now) >= 0)
             {
                 theory.add(from);
-                log.trace(from.toString("dd/MM/YYYY HH:mm:ss") + " - " + to.toString("dd/MM/YYYY HH:mm:ss"));
+                log.trace(from.toString(LOG_DATE_FORMAT) + " - " + to.toString(LOG_DATE_FORMAT));
             }
         }
-        log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString("dd/MM/YYYY HH:mm:ss")));
+        log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString(LOG_DATE_FORMAT)));
 
         // Select the ones that are active
         TypedQuery<ClockTick> q = em.createQuery("SELECT t FROM ClockTick t WHERE t.tickTime >= ?1 ORDER BY t.tickTime", ClockTick.class);
@@ -273,8 +281,9 @@ public class Clock extends ActiveNodeBase
             for (State s : states)
             {
                 pj.setState(s);
-                pj.setLevel1IdU(new UUID(0, 1)); // convention for plan unique
-                                                 // instance
+                pj.setLevel1IdU(new UUID(0, 1));
+                // UUID 0,1 is a convention for "plan run" instead of "chain run".
+
                 for (Place p : s.getRunsOn().getPlaces())
                 {
                     pj.setPlace(p);
@@ -309,7 +318,9 @@ public class Clock extends ActiveNodeBase
         q.setParameter(1, nowminusgrace.toDate());
         real = q.getResultList();
         for (ClockTick ct : real)
+        {
             em.remove(ct);
+        }
 
         // Get the next time the method should be called and return it
         org.joda.time.DateTime res = now.plusDays(1).minusMillis(now.getMillisOfDay());
@@ -322,7 +333,7 @@ public class Clock extends ActiveNodeBase
                 break;
             }
         }
-        log.debug(String.format("The clock asks to be awoken at %s", res.toString("dd/MM/YYYY hh:mm:ss")));
+        log.debug(String.format("The clock asks to be awoken at %s", res.toString(LOG_DATE_FORMAT)));
         return res;
     }
     //

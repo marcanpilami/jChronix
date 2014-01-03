@@ -34,12 +34,12 @@ public class ClockRRule extends ApplicationObject
     private static final long serialVersionUID = 1092625083715354537L;
     private static Logger log = Logger.getLogger(ClockRRule.class);
 
-    String PERIOD = "DAILY";
-    Integer INTERVAL = 1;
+    String period = "DAILY";
+    Integer interval = 1;
 
-    String Name, Description;
+    String name, description;
 
-    String BYSECOND = "", BYMINUTE = "", BYHOUR = "", BYDAY = "", BYMONTHDAY = "", BYMONTH = "", BYYEAR = "", BYSETPOS = "";
+    String bySecond = "", byMinute = "", byHour = "", byDay = "", byMonthDay = "", byMonth = "", byYear = "", bySetPos = "";
 
     // ///////////////////////////////////////////////////////
     // iCal functions
@@ -48,18 +48,18 @@ public class ClockRRule extends ApplicationObject
         String res = "";
 
         // PERIOD
-        res += "FREQ=" + PERIOD + ";" + "INTERVAL=" + INTERVAL + ";";
+        res += "FREQ=" + period + ";" + "INTERVAL=" + interval + ";";
 
         // BYxxxxxx
-        res += normalizeByElement(BYSECOND, "BYSECOND");
-        res += normalizeByElement(BYMINUTE, "BYMINUTE");
-        res += normalizeByElement(BYHOUR, "BYHOUR");
-        res += normalizeByElement(BYDAY, "BYDAY");
-        res += normalizeByElement(BYMONTHDAY, "BYMONTHDAY");
-        res += normalizeByElement(BYMONTH, "BYMONTH");
-        res += normalizeByElement(BYYEAR, "BYYEAR");
+        res += normalizeByElement(bySecond, "BYSECOND");
+        res += normalizeByElement(byMinute, "BYMINUTE");
+        res += normalizeByElement(byHour, "BYHOUR");
+        res += normalizeByElement(byDay, "BYDAY");
+        res += normalizeByElement(byMonthDay, "BYMONTHDAY");
+        res += normalizeByElement(byMonth, "BYMONTH");
+        res += normalizeByElement(byYear, "BYYEAR");
 
-        res += normalizeByElement(BYSETPOS, "BYSETPOS");
+        res += normalizeByElement(bySetPos, "BYSETPOS");
         // Remove last ';'
         res = res.substring(0, res.length() - 1);
 
@@ -105,17 +105,17 @@ public class ClockRRule extends ApplicationObject
                 Recur.YEARLY);
         if (allowed.contains(period))
         {
-            this.PERIOD = period;
+            this.period = period;
         }
         else
         {
-            this.PERIOD = Recur.DAILY;
+            this.period = Recur.DAILY;
         }
     }
 
     public String getPeriod()
     {
-        return this.PERIOD;
+        return this.period;
     }
 
     // Not so stupid GET/SET
@@ -125,113 +125,113 @@ public class ClockRRule extends ApplicationObject
     // Stupid GET/SET
     public String getName()
     {
-        return Name;
+        return name;
     }
 
     public void setName(String name)
     {
-        Name = name;
+        this.name = name;
     }
 
     public String getDescription()
     {
-        return Description;
+        return description;
     }
 
     public void setDescription(String description)
     {
-        Description = description;
+        this.description = description;
     }
 
     public Integer getINTERVAL()
     {
-        return INTERVAL;
+        return interval;
     }
 
     public void setINTERVAL(Integer iNTERVAL)
     {
-        INTERVAL = iNTERVAL;
+        interval = iNTERVAL;
     }
 
     public String getBYSECOND()
     {
-        return BYSECOND;
+        return bySecond;
     }
 
     public void setBYSECOND(String bYSECOND)
     {
-        BYSECOND = bYSECOND;
+        bySecond = bYSECOND;
     }
 
     public String getBYMINUTE()
     {
-        return BYMINUTE;
+        return byMinute;
     }
 
     public void setBYMINUTE(String bYMINUTE)
     {
-        BYMINUTE = bYMINUTE;
+        byMinute = bYMINUTE;
     }
 
     public String getBYHOUR()
     {
-        return BYHOUR;
+        return byHour;
     }
 
     public void setBYHOUR(String bYHOUR)
     {
         log.debug("DEBUG BYHOUR SET : " + bYHOUR);
-        BYHOUR = bYHOUR;
+        byHour = bYHOUR;
     }
 
     public String getBYDAY()
     {
-        return BYDAY;
+        return byDay;
     }
 
     public void setBYDAY(String bYDAY)
     {
-        BYDAY = bYDAY;
+        byDay = bYDAY;
     }
 
     public String getBYMONTHDAY()
     {
-        return BYMONTHDAY;
+        return byMonthDay;
     }
 
     public void setBYMONTHDAY(String bYMONTHDAY)
     {
-        BYMONTHDAY = bYMONTHDAY;
+        byMonthDay = bYMONTHDAY;
     }
 
     public String getBYMONTH()
     {
-        return BYMONTH;
+        return byMonth;
     }
 
     public void setBYMONTH(String bYMONTH)
     {
-        BYMONTH = bYMONTH;
+        byMonth = bYMONTH;
     }
 
     public String getBYYEAR()
     {
-        return BYYEAR;
+        return byYear;
     }
 
     public void setBYYEAR(String bYYEAR)
     {
-        BYYEAR = bYYEAR;
+        byYear = bYYEAR;
     }
 
     public String getBYSETPOS()
     {
-        return BYSETPOS;
+        return bySetPos;
     }
 
     public void setBYSETPOS(String bYSETPOS)
     {
-        BYSETPOS = bYSETPOS;
+        bySetPos = bYSETPOS;
     }
 
     // Stupid GET/SET

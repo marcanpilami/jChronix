@@ -56,7 +56,7 @@ public class ChainEnd extends ActiveNodeBase
     {
         RunResult rr = new RunResult();
         rr.returnCode = 0;
-        rr.logStart = "Chain end";
+        rr.logStart = this.name;
         rr.id1 = pj.getLevel2Id();
         rr.end = new Date();
 

@@ -169,9 +169,9 @@ public class CoreToDto
                 External e = (External) o;
                 DTOExternal d = new DTOExternal();
                 d.id = e.getId().toString();
-                d.accountRestriction = e.accountRestriction;
-                d.machineRestriction = e.machineRestriction;
-                d.regularExpression = e.regularExpression;
+                d.accountRestriction = e.getAccountRestriction();
+                d.machineRestriction = e.getMachineRestriction();
+                d.regularExpression = e.getRegularExpression();
                 d.name = e.getName();
                 d.description = e.getDescription();
                 res.externals.add(d);
