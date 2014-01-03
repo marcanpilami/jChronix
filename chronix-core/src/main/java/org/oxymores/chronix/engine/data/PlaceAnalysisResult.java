@@ -21,6 +21,7 @@
 package org.oxymores.chronix.engine.data;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.transactional.Event;
@@ -34,21 +35,29 @@ public class PlaceAnalysisResult
 
     public boolean res = false;
     public Place place;
-    public ArrayList<Event> consumedEvents = new ArrayList<Event>();
-    public ArrayList<Event> usedEvents = new ArrayList<Event>();
+    public List<Event> consumedEvents = new ArrayList<Event>();
+    public List<Event> usedEvents = new ArrayList<Event>();
 
     public void add(PlaceAnalysisResult ear)
     {
         res = res && ear.res;
         if (res)
+        {
             consumedEvents.addAll(ear.consumedEvents);
+        }
         else
+        {
             consumedEvents.clear();
+        }
 
         if (res)
+        {
             usedEvents.addAll(ear.usedEvents);
+        }
         else
+        {
             usedEvents.clear();
+        }
     }
 
     public Place getPlace()

@@ -23,27 +23,29 @@ package org.oxymores.chronix.engine.data;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class RunResult implements Serializable
 {
-	private static final long serialVersionUID = 316559310140465996L;
+    private static final long serialVersionUID = 316559310140465996L;
 
-	public String logStart = "";
-	public String fullerLog = "";
-	public String logPath = "";
-	public String logFileName = "";
-	public long logSizeBytes = 0;
-	public int returnCode = -1;
-	public String conditionData2 = null;
-	public String conditionData3 = null;
-	public String conditionData4 = null; // Actually UUID
-	public HashMap<String, String> newEnvVars = new HashMap<String, String>();
-	public Date start, end;
-	public String envtUser, envtServer, envtOther;
+    public String logStart = "";
+    public String fullerLog = "";
+    public String logPath = "";
+    public String logFileName = "";
+    public long logSizeBytes = 0;
+    public int returnCode = -1;
+    public String conditionData2 = null;
+    public String conditionData3 = null;
+    // conditionData4 is actually an UUID
+    public String conditionData4 = null;
+    public Map<String, String> newEnvVars = new HashMap<String, String>();
+    public Date start, end;
+    public String envtUser, envtServer, envtOther;
 
-	// Data below is from and for the engine - not created by the run
-	public String id1 = null;
-	public UUID id2 = null;
-	public Boolean outOfPlan = false;
+    // Data below is from and for the engine - not created by the run
+    public String id1 = null;
+    public UUID id2 = null;
+    public Boolean outOfPlan = false;
 }

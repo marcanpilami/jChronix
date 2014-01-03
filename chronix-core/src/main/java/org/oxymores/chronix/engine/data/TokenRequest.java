@@ -27,20 +27,20 @@ import org.joda.time.DateTime;
 
 public class TokenRequest implements Serializable
 {
-	private static final long serialVersionUID = -7250533108215592799L;
+    private static final long serialVersionUID = -7250533108215592799L;
 
-	public enum TokenRequestType {
-		REQUEST, RELEASE, RENEW, AGREE
-	}
+    public enum TokenRequestType {
+        REQUEST, RELEASE, RENEW, AGREE
+    }
 
-	public TokenRequestType type;
-	public UUID applicationID;
-	public UUID tokenID;
-	public UUID placeID;
-	public UUID stateID;
-	public UUID requestingNodeID;
-	public UUID pipelineJobID;
-	public DateTime requestedAt;
+    public TokenRequestType type;
+    public UUID applicationID;
+    public UUID tokenID;
+    public UUID placeID;
+    public UUID stateID;
+    public UUID requestingNodeID;
+    public UUID pipelineJobID;
+    public DateTime requestedAt;
 
-	public boolean local = true;
+    public boolean local = true;
 }

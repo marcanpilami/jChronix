@@ -245,7 +245,7 @@ public class ActiveNodeBase extends ConfigurableBase
             res.analysis.put(tr.id, tar);
         }
 
-        ArrayList<Place> places = res.getPossiblePlaces();
+        List<Place> places = res.getPossiblePlaces();
         log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places", s.represents.getName(),
                 s.chain.getName(), places.size()));
 
