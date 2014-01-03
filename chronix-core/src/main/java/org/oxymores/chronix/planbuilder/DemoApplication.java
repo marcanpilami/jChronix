@@ -23,387 +23,168 @@ package org.oxymores.chronix.planbuilder;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import net.fortuna.ical4j.model.Recur;
-
-import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.NodeConnectionMethod;
-import org.oxymores.chronix.core.NodeLink;
-import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.ChainEnd;
-import org.oxymores.chronix.core.active.ChainStart;
-import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.active.ShellParameter;
 
-public class DemoApplication
+public final class DemoApplication
 {
-	public static Application getNewDemoApplication()
-	{
-		String hostname;
-		try
-		{
-			hostname = InetAddress.getLocalHost().getCanonicalHostName();
-		} catch (UnknownHostException e)
-		{
-			hostname = "localhost";
-		}
-		return getNewDemoApplication(hostname, 1789);
-	}
+    private DemoApplication()
+    {
 
-	public static Application getNewDemoApplication(String brokerInterface, int brokerPort)
-	{
-		Application a = new Application();
-		a.setname("Demo");
-		a.setDescription("test application auto created");
+    }
 
-		// Physical network
+    public static Application getNewDemoApplication()
+    {
+        String hostname;
+        try
+        {
+            hostname = InetAddress.getLocalHost().getCanonicalHostName();
+        }
+        catch (UnknownHostException e)
+        {
+            hostname = "localhost";
+        }
+        return getNewDemoApplication(hostname, 1789);
+    }
 
-		ExecutionNode n1 = new ExecutionNode();
-		n1.setDns(brokerInterface);
-		n1.setOspassword("");
-		n1.setqPort(brokerPort);
-		n1.setX(100);
-		n1.setY(100);
-		n1.setConsole(true);
-		a.addNode(n1);
+    public static Application getNewDemoApplication(String brokerInterface, int brokerPort)
+    {
+        Application a = PlanBuilder.buildApplication("Demo", "test application auto created");
 
-		ExecutionNode n2 = new ExecutionNode();
-		n2.setDns(brokerInterface);
-		n2.setOspassword("");
-		n2.setqPort(1400);
-		n2.setX(200);
-		n2.setY(200);
-		a.addNode(n2);
+        // Physical network
+        ExecutionNode n1 = PlanBuilder.buildExecutionNode(a, brokerInterface, brokerPort);
+        n1.setX(100);
+        n1.setY(100);
+        n1.setConsole(true);
 
-		NodeLink l1 = new NodeLink();
-		l1.setMethod(NodeConnectionMethod.TCP);
-		l1.setNodeFrom(n1);
-		l1.setNodeTo(n2);
+        ExecutionNode n2 = PlanBuilder.buildExecutionNode(a, brokerInterface, 1400);
+        n2.setX(200);
+        n2.setY(200);
 
-		// Logical network
-		Place p1 = new Place();
-		p1.setDescription("place 1");
-		p1.setName("place 1");
-		p1.setNode(n1);
-		a.addPlace(p1);
+        n1.connectTo(n2, NodeConnectionMethod.TCP);
 
-		Place p2 = new Place();
-		p2.setDescription("place 2");
-		p2.setName("place 2");
-		p2.setNode(n2);
-		a.addPlace(p2);
-		
-		Place p3 = new Place();
-		p3.setDescription("place 3 - on node 1");
-		p3.setName("place 3");
-		p3.setNode(n1);
-		a.addPlace(p3);
+        // Logical network
+        Place p1 = PlanBuilder.buildPlace(a, "place 1", "test place 1", n1);
+        Place p2 = PlanBuilder.buildPlace(a, "place 2", "test place 2", n1);
+        Place p3 = PlanBuilder.buildPlace(a, "place 3", "test place 3", n1);
 
-		PlaceGroup pg1 = new PlaceGroup();
-		pg1.setDescription("group all");
-		pg1.setName("group all");
-		a.addGroup(pg1);
-		pg1.addPlace(p1);
-		pg1.addPlace(p2);
-		pg1.addPlace(p3);
+        PlanBuilder.buildPlaceGroup(a, "group all", "test group all", p1, p2, p3);
+        PlaceGroup pg2 = PlanBuilder.buildPlaceGroup(a, "group 1", "test group 1", p1);
+        PlanBuilder.buildPlaceGroup(a, "group 2", "test group 2", p1);
+        PlanBuilder.buildPlaceGroup(a, "group 3", "test group 3", p1);
 
-		PlaceGroup pg2 = new PlaceGroup();
-		pg2.setDescription("group 1");
-		pg2.setName("group 1");
-		a.addGroup(pg2);
-		p1.addToGroup(pg2);
+        // //////////////////////////////////////////////////////////////
+        // Calendars
+        // //////////////////////////////////////////////////////////////
 
-		PlaceGroup pg3 = new PlaceGroup();
-		pg3.setDescription("group 2");
-		pg3.setName("group 2");
-		a.addGroup(pg3);
-		p2.addToGroup(pg3);
-		
-		PlaceGroup pg4 = new PlaceGroup();
-		pg4.setDescription("group 3");
-		pg4.setName("group 3");
-		a.addGroup(pg4);
-		p3.addToGroup(pg4);
+        Calendar cal1 = CalendarBuilder.buildWorkDayCalendar(a, 2029);
 
-		// //////////////////////////////////////////////////////////////
-		// Calendars
-		// //////////////////////////////////////////////////////////////
+        // //////////////////////////////////////////////////////////////
+        // Sources
+        // //////////////////////////////////////////////////////////////
 
-		Calendar cal1 = new Calendar();
-		cal1.setName("Week days");
-		cal1.setDescription("All days from monday to friday for the whole year");
-		cal1.setManualSequence(false);
-		a.addCalendar(cal1);
+        // ////////////////////
+        // Shell commands
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo", "command 1", "test command 1");
+        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo c2", "command 2", "test command 2");
+        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c3", "command 3", "test command 3");
 
-		DateTime d = new DateTime(2029, 12, 31, 0, 0);
-		for (int i = 0; i <= 365; i++)
-		{
-			d = d.plusDays(1);
-			if (d.getDayOfWeek() > 5)
-				continue;
+        // ////////////////////
+        // Chains
+        Chain c1 = PlanBuilder.buildChain(a, "chain 1", "test chain 1", pg2);
+        Chain c2 = PlanBuilder.buildChain(a, "chain 2", "test chain 2", pg2);
+        Chain c3 = PlanBuilder.buildChain(a, "chain 3", "test chain 3", pg2);
+        Chain c4 = PlanBuilder.buildChain(a, "chain 4", "test chain 4", pg2);
 
-			new CalendarDay(d.toString("dd/MM/yyyy"), cal1);
-		}
+        // ////////////////////
+        // Calendar next
+        NextOccurrence no1 = PlanBuilder.buildNextOccurrence(a, cal1);
 
-		// //////////////////////////////////////////////////////////////
-		// Sources
-		// //////////////////////////////////////////////////////////////
+        // ////////////////////
+        // Clocks
+        ClockRRule rr1 = PlanBuilder.buildRRuleWeekDays(a);
+        PlanBuilder.buildClock(a, "every workday", "test clock", rr1);
 
-		// ////////////////////
-		// Shell commands
-		ShellCommand sc1 = new ShellCommand();
-		sc1.setCommand("echo");
-		sc1.setDescription("command 1");
-		sc1.setName("command 1");
-		a.addActiveElement(sc1);
+        // //////////////////////////////////////////////////////////////
+        // Parameters
+        // //////////////////////////////////////////////////////////////
 
-		ShellCommand sc2 = new ShellCommand();
-		sc2.setCommand("echo c2");
-		sc2.setDescription("command 2");
-		sc2.setName("command 2");
-		a.addActiveElement(sc2);
+        sc1.addParameter("k", "a", "param 1 for command 1");
+        sc2.addParameter("k", "a", "param 1 for command 2");
 
-		ShellCommand sc3 = new ShellCommand();
-		sc3.setCommand("echo c3");
-		sc3.setDescription("command 3");
-		sc3.setName("command 3");
-		a.addActiveElement(sc3);
+        ShellParameter pa4 = new ShellParameter();
+        pa4.setDescription("test shell param");
+        pa4.setKey("");
+        pa4.setValue("echo dynamic");
+        a.addParameter(pa4);
+        sc1.addParameter(pa4);
 
-		// ////////////////////
-		// Chains
-		Chain c1 = new Chain();
-		c1.setDescription("chain 1");
-		c1.setName("chain1");
-		a.addActiveElement(c1);
+        // //////////////////////////////////////////////////////////////
+        // State/Transition
+        // //////////////////////////////////////////////////////////////
 
-		Chain c2 = new Chain();
-		c2.setDescription("chain 2");
-		c2.setName("chain2");
-		a.addActiveElement(c2);
+        // ////////////////////
+        // Chain 1 : simple S -> T1 -> E
 
-		Chain c3 = new Chain();
-		c3.setDescription("chain 3");
-		c3.setName("chain3");
-		a.addActiveElement(c3);
+        // Echo c1
+        State s1 = PlanBuilder.buildState(c1, pg2, sc1);
+        s1.setX(300);
+        s1.setY(400);
 
-		Chain c4 = new Chain();
-		c4.setDescription("chain 4");
-		c4.setName("chain4");
-		a.addActiveElement(c4);
+        // Transitions
+        c1.getStartState().connectTo(s1);
+        s1.connectTo(c1.getEndState());
 
-		// ////////////////////
-		// Calendar next
-		NextOccurrence no1 = new NextOccurrence();
-		no1.setName("End of calendar occurrence");
-		no1.setDescription(no1.getName());
-		no1.setUpdatedCalendar(cal1);
-		a.addActiveElement(no1);
+        // ////////////////////
+        // Chain 2 : simple S -> T2 -> E with calendar
 
-		// ////////////////////
-		// Clocks
-		ClockRRule rr1 = new ClockRRule();
-		rr1.setName("Monday-Friday days");
-		rr1.setDescription("Every day from monday to friday included, every week");
-		rr1.setBYDAY("MO,TU,WE,TH,FR,");
-		rr1.setBYHOUR("10");
-		rr1.setBYMINUTE("00");
-		rr1.setPeriod(Recur.WEEKLY);
-		a.addRRule(rr1);
+        // Echo c1
+        State s21 = PlanBuilder.buildState(c2, pg2, sc2);
+        s21.setX(200);
+        s21.setY(250);
+        s21.setCalendar(cal1);
 
-		Clock ck1 = new Clock();
-		ck1.setDescription("every workday");
-		ck1.setName("workdays");
-		ck1.setDURATION(10);
-		ck1.addRRuleADD(rr1);
-		a.addActiveElement(ck1);
+        // Transitions
+        c2.getStartState().connectTo(s21);
+        s21.connectTo(c2.getEndState());
 
-		// ////////////////////
-		// Auto elements retrieval
-		ChainStart cs = null;
-		for (ConfigurableBase nb : a.getActiveElements().values())
-		{
-			if (nb instanceof ChainStart)
-				cs = (ChainStart) nb;
-		}
-		ChainEnd ce = null;
-		for (ConfigurableBase nb : a.getActiveElements().values())
-		{
-			if (nb instanceof ChainEnd)
-				ce = (ChainEnd) nb;
-		}
+        // ////////////////////
+        // Chain 3 : simple S -> T3 -> E
 
-		// //////////////////////////////////////////////////////////////
-		// Parameters
-		// //////////////////////////////////////////////////////////////
+        // Echo c1
+        State s31 = PlanBuilder.buildState(c3, pg2, sc3);
+        s31.setChain(c3);
+        s31.setRunsOn(pg2);
+        s31.setRepresents(sc3);
+        s31.setX(200);
+        s31.setY(250);
 
-		Parameter pa1 = new Parameter();
-		pa1.setDescription("param 1");
-		pa1.setKey("k");
-		pa1.setValue("a");
-		a.addParameter(pa1);
-		sc1.addParameter(pa1);
+        // Transitions
+        c3.getStartState().connectTo(s31);
+        s31.connectTo(c3.getEndState());
 
-		Parameter pa2 = new Parameter();
-		pa2.setDescription("param 1");
-		pa2.setKey("k");
-		pa2.setValue("a");
-		a.addParameter(pa2);
-		pa2.addElement(sc2);
+        // ////////////////////
+        // Chain 4 : simple S -> END CALENDAR -> E
 
-		Parameter pa3 = new Parameter();
-		pa3.setDescription("param 1");
-		pa3.setKey("k");
-		pa3.setValue("a");
-		a.addParameter(pa3);
+        // End calendar state
+        State s41 = PlanBuilder.buildState(c4, pg2, no1);
+        s41.setX(200);
+        s41.setY(250);
 
-		ShellParameter pa4 = new ShellParameter();
-		pa4.setDescription("test shell param");
-		pa4.setKey("");
-		pa4.setValue("echo dynamic");
-		a.addParameter(pa4);
-		sc1.addParameter(pa4);
+        // Transitions
+        c4.getStartState().connectTo(s41);
+        s41.connectTo(c4.getEndState());
 
-		// //////////////////////////////////////////////////////////////
-		// State/Transition
-		// //////////////////////////////////////////////////////////////
-
-		// ////////////////////
-		// Chain 1 : simple S -> T1 -> E
-
-		// Start
-		State s1 = new State();
-		s1.setChain(c1);
-		s1.setRunsOn(pg2);
-		s1.setRepresents(cs);
-		s1.setX(100);
-		s1.setY(100);
-
-		// End
-		State s2 = new State();
-		s2.setChain(c1);
-		s2.setRunsOn(pg2);
-		s2.setRepresents(ce);
-		s2.setX(300);
-		s2.setY(200);
-		s2.setCalendar(cal1);
-
-		// Echo c1
-		State s3 = new State();
-		s3.setChain(c1);
-		s3.setRunsOn(pg2);
-		s3.setRepresents(sc1);
-		s3.setX(300);
-		s3.setY(400);
-
-		// Transitions
-		s1.connectTo(s3);
-		s3.connectTo(s2);
-
-		// ////////////////////
-		// Chain 2 : simple S -> T2 -> E
-
-		// Start
-		State s21 = new State();
-		s21.setChain(c2);
-		s21.setRunsOn(pg2);
-		s21.setRepresents(cs);
-		s21.setX(60);
-		s21.setY(60);
-
-		// End
-		State s22 = new State();
-		s22.setChain(c2);
-		s22.setRunsOn(pg2);
-		s22.setRepresents(ce);
-		s22.setX(300);
-		s22.setY(400);
-
-		// Echo c1
-		State s23 = new State();
-		s23.setChain(c2);
-		s23.setRunsOn(pg2);
-		s23.setRepresents(sc2);
-		s23.setX(200);
-		s23.setY(250);
-		s23.setCalendar(cal1);
-
-		// Transitions
-		s21.connectTo(s23);
-		s23.connectTo(s22);
-
-		// ////////////////////
-		// Chain 3 : simple S -> T3 -> E
-
-		// Start
-		State s31 = new State();
-		s31.setChain(c3);
-		s31.setRunsOn(pg4);
-		s31.setRepresents(cs);
-		s31.setX(60);
-		s31.setY(60);
-
-		// End
-		State s32 = new State();
-		s32.setChain(c3);
-		s32.setRunsOn(pg4);
-		s32.setRepresents(ce);
-		s32.setX(300);
-		s32.setY(400);
-
-		// Echo c1
-		State s33 = new State();
-		s33.setChain(c3);
-		s33.setRunsOn(pg2);
-		s33.setRepresents(sc3);
-		s33.setX(200);
-		s33.setY(250);
-
-		// Transitions
-		s31.connectTo(s33);
-		s33.connectTo(s32);
-
-		// ////////////////////
-		// Chain 4 : simple S -> END CALENDAR -> E
-
-		// Start
-		State s41 = new State();
-		s41.setChain(c4);
-		s41.setRunsOn(pg2);
-		s41.setRepresents(cs);
-		s41.setX(60);
-		s41.setY(60);
-
-		// End
-		State s42 = new State();
-		s42.setChain(c4);
-		s42.setRunsOn(pg2);
-		s42.setRepresents(ce);
-		s42.setX(300);
-		s42.setY(400);
-
-		// Echo c1
-		State s43 = new State();
-		s43.setChain(c4);
-		s43.setRunsOn(pg2);
-		s43.setRepresents(no1);
-		s43.setX(200);
-		s43.setY(250);
-
-		// Transitions
-		s41.connectTo(s43);
-		s43.connectTo(s42);
-
-		return a;
-	}
+        return a;
+    }
 }

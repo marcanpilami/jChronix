@@ -24,43 +24,54 @@ import java.util.ArrayList;
 
 public class ConfigurableBase extends ApplicationObject
 {
-	private static final long serialVersionUID = 4288408733877784921L;
+    private static final long serialVersionUID = 4288408733877784921L;
 
-	protected ArrayList<Parameter> parameters;
-	protected ArrayList<EnvironmentParameter> envParams;
+    protected ArrayList<Parameter> parameters;
+    protected ArrayList<EnvironmentParameter> envParams;
 
-	public ConfigurableBase()
-	{
-		super();
-		parameters = new ArrayList<Parameter>();
-		envParams = new ArrayList<EnvironmentParameter>();
-	}
+    public ConfigurableBase()
+    {
+        super();
+        parameters = new ArrayList<Parameter>();
+        envParams = new ArrayList<EnvironmentParameter>();
+    }
 
-	public ArrayList<Parameter> getParameters()
-	{
-		return this.parameters;
-	}
+    public ArrayList<Parameter> getParameters()
+    {
+        return this.parameters;
+    }
 
-	public void addParameter(Parameter parameter)
-	{
-		if (!parameters.contains(parameter))
-		{
-			parameters.add(parameter);
-			parameter.addElement(this);
-		}
-	}
+    public void addParameter(Parameter parameter)
+    {
+        if (!parameters.contains(parameter))
+        {
+            parameters.add(parameter);
+            parameter.addElement(this);
+        }
+    }
 
-	public void addEnvVar(String key, String value)
-	{
-		this.envParams.add(new EnvironmentParameter(key, value));
-	}
+    public void addParameter(String key, String value, String description)
+    {
+        Parameter p = new Parameter();
+        p.setDescription(description);
+        p.setKey(key);
+        p.setReusable(false);
+        p.setValue(value);
+        this.application.addParameter(p);
+        addParameter(p);
+    }
 
-	public void removeEnvVar(String key)
-	{
-		for (EnvironmentParameter p : envParams)
-		{
-			if (p.key == key)
-				envParams.remove(p);
-		}
-	}
+    public void addEnvVar(String key, String value)
+    {
+        this.envParams.add(new EnvironmentParameter(key, value));
+    }
+
+    public void removeEnvVar(String key)
+    {
+        for (EnvironmentParameter p : envParams)
+        {
+            if (p.key == key)
+                envParams.remove(p);
+        }
+    }
 }

@@ -92,7 +92,7 @@ public class TestStart
         EntityManager em = e.ctx.getTransacEM();
         TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
 
-        Assert.assertEquals(3, q.getResultList().size());
+        Assert.assertEquals(2, q.getResultList().size());
     }
 
     @Test
