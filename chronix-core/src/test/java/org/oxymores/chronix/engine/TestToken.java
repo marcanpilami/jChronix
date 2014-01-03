@@ -110,7 +110,7 @@ public class TestToken
     public void testAlone() throws Exception
     {
         log.debug("**************************************************************************************");
-        log.debug("****CREATE PLAN***********************************************************************");
+        log.debug("**** testAlone ***********************************************************************");
 
         EntityManager em = e1.ctx.getTransacEM();
 
@@ -145,7 +145,7 @@ public class TestToken
 
         // Start chain
         log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
+        log.debug("**** RUN *****************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
         Thread.sleep(5000); // Time to consume message
 
@@ -165,7 +165,7 @@ public class TestToken
     public void testAloneBlocking() throws Exception
     {
         log.debug("**************************************************************************************");
-        log.debug("****CREATE PLAN***********************************************************************");
+        log.debug("**** testAloneBlocking ****************************************************************");
 
         EntityManager em = e1.ctx.getTransacEM();
 
@@ -200,7 +200,7 @@ public class TestToken
 
         // Start chain
         log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
+        log.debug("**** RUN *****************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
         Thread.sleep(5000); // Time to consume message
 
@@ -213,7 +213,7 @@ public class TestToken
     public void testTwoWithOne() throws Exception
     {
         log.debug("**************************************************************************************");
-        log.debug("****CREATE PLAN***********************************************************************");
+        log.debug("**** testTwoWithOne ******************************************************************");
 
         EntityManager em = e1.ctx.getTransacEM();
 
@@ -248,7 +248,7 @@ public class TestToken
         log.debug("**************************************************************************************");
         log.debug("*** RUN ******************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
-        Thread.sleep(5000); // Time to consume message
+        Thread.sleep(7000); // Time to consume message
 
         // Tests
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
@@ -265,7 +265,7 @@ public class TestToken
     public void testTwoWithOnePerPlace() throws Exception
     {
         log.debug("**************************************************************************************");
-        log.debug("****CREATE PLAN***********************************************************************");
+        log.debug("****testTwoWithOnePerPlace************************************************************");
 
         EntityManager em = e1.ctx.getTransacEM();
 
@@ -300,9 +300,9 @@ public class TestToken
 
         // Start chain
         log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
+        log.debug("**** RUN *****************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
-        Thread.sleep(5000); // Time to consume message
+        Thread.sleep(9000); // Time to consume message
 
         // Tests
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);

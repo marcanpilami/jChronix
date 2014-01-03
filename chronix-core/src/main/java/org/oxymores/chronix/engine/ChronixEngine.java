@@ -344,6 +344,11 @@ public class ChronixEngine extends Thread
     {
         // Clear test db directory
         File[] fileList = new File(this.dbPath).listFiles();
+        if (fileList == null)
+        {
+            // No directory! Nothing to empty...
+            return;
+        }
         for (int i = 0; i < fileList.length; i++)
         {
             if (!FileUtils.deleteQuietly(fileList[i]))
