@@ -155,7 +155,7 @@ function ChainPanel(divId, cxfApplication)
 	var activeDragEnd = function(e, dd)
 	{
 		// e.stopImmediatePropagation();
-		dd.proxy.remove();
+		$(dd.proxy).remove();
 		$(dd.available).css("background", "beige");
 	};
 
@@ -210,14 +210,14 @@ function ChainPanel(divId, cxfApplication)
 
 	$("#chaintabs").on("drop", "svg", (function(e, dd)
 	{
+		evt = e;
 		var v = new dto_chronix_oxymores_org_DTOState();
 		v._id = uuid.v4();
-		v._x = Math.round(e.offsetX);
-		v._y = Math.round(e.offsetY);
+		v._x = Math.round((e.offsetX || e.clientX - $(e.target).offset().left + window.pageXOffset));
+		v._y = Math.round((e.offsetY || e.clientY - $(e.target).offset().top + window.pageYOffset));
 		v._canReceiveLink = true;
 		v._canEmitLinks = true;
 		v._canBeRemoved = true;
-		alert(dd.selectedChain);
 		v.dtoChain = dd.selectedChain
 
 		if (dd.and)
