@@ -742,10 +742,6 @@ function StateToolbar()
 	this.mainDiv.append(this.btLink);
 	this.btLink.click(this.link.bind(this));
 
-	this.btSelect = $("<button type='button'>select</button>");
-	this.mainDiv.append(this.btSelect);
-	this.btSelect.click(this.select.bind(this));
-
 	this.btDelete = $("<button type='button'>delete</button>");
 	this.mainDiv.append(this.btDelete);
 	this.btDelete.click(this.remove.bind(this));
@@ -763,6 +759,10 @@ function StateToolbar()
 
 	this.txtCalShift = $("<input type='number' maxlength='2' max='30' min='-30' style='width:3em;'></input>");
 	this.mainDiv.append(this.txtCalShift);
+
+	this.btHide = $("<button type='button'>close</button>");
+	this.mainDiv.append(this.btHide);
+	this.btHide.click(this.hide.bind(this));
 }
 
 StateToolbar.prototype.hide = function()
