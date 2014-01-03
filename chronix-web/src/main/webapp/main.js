@@ -51,6 +51,8 @@ function handleTabs(tabId)
 	var n = null;
 	if (tabId === 'tab-command')
 		n = new CommandPanel(cxfApplication);
+	if (tabId === 'tab-external')
+		n = new ExternalPanel('tab-external', cxfApplication);
 	if (tabId === 'tab-schedule')
 		n = new SchedulePanel("tab-schedule", cxfApplication);
 	if (tabId === 'tab-chain')

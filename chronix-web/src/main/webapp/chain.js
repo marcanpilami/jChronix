@@ -394,6 +394,8 @@ ChainPanel.prototype.redisplay = function()
 {
 	this.grid.invalidate();
 	this.grid2.invalidate();
+	this.grid3.invalidate();
+	this.grid4.invalidate();
 };
 
 ChainPanel.prototype.onDeleteChain = function(event)
