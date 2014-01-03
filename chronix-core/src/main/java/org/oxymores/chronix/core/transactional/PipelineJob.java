@@ -31,6 +31,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.Transient;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -61,11 +62,15 @@ public class PipelineJob extends TranscientBase
     @Column(length = UUID_LENGTH)
     String level0Id, level1Id, level2Id, level3Id;
 
-    Map<Integer, String> paramValues;
-
     Boolean outOfPlan = false;
 
     Integer resultCode = -1;
+
+    /**
+     * Holder for the resolved values of parameters
+     */
+    @Transient
+    Map<Integer, String> paramValues;
 
     public PipelineJob()
     {
