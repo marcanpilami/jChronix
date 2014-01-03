@@ -22,10 +22,10 @@ package org.oxymores.chronix.exceptions;
 
 public class ChronixPlanStorageException extends ChronixException
 {
-	private static final long serialVersionUID = 7711707622338172749L;
+    private static final long serialVersionUID = 7711707622338172749L;
 
-	public ChronixPlanStorageException(String message, Exception parent)
-	{
-		super(message, parent);
-	}
+    public ChronixPlanStorageException(String message, Exception parent)
+    {
+        super(message, parent);
+    }
 }

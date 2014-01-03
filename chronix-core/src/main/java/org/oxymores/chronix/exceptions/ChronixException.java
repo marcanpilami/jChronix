@@ -26,8 +26,6 @@ public class ChronixException extends Exception
 {
     private static final long serialVersionUID = 6684815812625785453L;
 
-    private Exception innerException;
-
     public ChronixException()
     {
         super();
@@ -41,15 +39,18 @@ public class ChronixException extends Exception
     public ChronixException(String message, Exception innerException)
     {
         super(message, innerException);
-        this.innerException = innerException;
     }
 
     @Override
     public String toString()
     {
-        if (this.innerException != null)
-            return this.getMessage() + "\n" + this.innerException.getMessage() + "\n\n" + Arrays.toString(this.getStackTrace());
+        if (this.getCause() != null)
+        {
+            return this.getMessage() + "\n" + this.getCause().getMessage() + "\n\n" + Arrays.toString(this.getStackTrace());
+        }
         else
+        {
             return this.getMessage() + "\n\n" + Arrays.toString(this.getStackTrace());
+        }
     }
 }
