@@ -248,6 +248,11 @@ function ChainPanel(divId, cxfApplication)
 		{
 			v._representsId = dd.dtoDropped._id;
 			v._label = dd.dtoDropped._name;
+			if (dd.selectedChain._id === dd.dtoDropped._id)
+			{
+				alert("Cannot add a chain inside itself");
+				return;
+			}
 		}
 
 		// Default PlaceGroup
