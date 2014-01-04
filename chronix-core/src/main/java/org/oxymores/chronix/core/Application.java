@@ -37,9 +37,13 @@ import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.Or;
+import org.oxymores.chronix.core.validation.ApplicationCheckConsole;
+import org.oxymores.chronix.core.validation.ApplicationCheckPnUnicity;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
 @XmlRootElement
+@ApplicationCheckConsole
+@ApplicationCheckPnUnicity
 public class Application extends ChronixObject
 {
     private static final long serialVersionUID = 338399439626386055L;
@@ -99,6 +103,12 @@ public class Application extends ChronixObject
         tmp = new ChainStart();
         tmp.setDescription("Marks the beginning of a chain. Can be ignored in global plans");
         this.addActiveElement(tmp);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("%s (%s)", name, description);
     }
 
     public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode

@@ -189,6 +189,7 @@ public final class PlanBuilder
     {
         // Execution node (the local sever)
         ExecutionNode n1 = buildExecutionNode(a, linterface, 1789);
+        n1.setConsole(true);
 
         // Place
         Place p1 = buildPlace(a, linterface, "the local server", n1);
