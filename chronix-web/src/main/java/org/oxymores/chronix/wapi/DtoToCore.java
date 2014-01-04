@@ -49,21 +49,25 @@ public class DtoToCore
         Or or = new Or();
         or.setId(UUID.fromString(d.getOrId()));
         or.setName("OR");
+        or.setDescription("OR logical door - unique for the whole application");
         a.addActiveElement(or);
 
         And and = new And();
         and.setId(UUID.fromString(d.getAndId()));
         and.setName("AND");
+        and.setDescription("AND logical door - unique for the whole application");
         a.addActiveElement(and);
 
         ChainStart start = new ChainStart();
         start.setId(UUID.fromString(d.getStartId()));
         start.setName("START");
+        start.setDescription("Marks the beginning of a chain. Can be ignored in global plans");
         a.addActiveElement(start);
 
         ChainEnd end = new ChainEnd();
         end.setId(UUID.fromString(d.getEndId()));
         end.setName("END");
+        end.setDescription("Marks the end of a chain. Can be ignored in global plans");
         a.addActiveElement(end);
 
         for (DTOExecutionNode e : d.getNodes())

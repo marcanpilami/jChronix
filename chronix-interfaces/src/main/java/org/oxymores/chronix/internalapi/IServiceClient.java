@@ -26,26 +26,29 @@ import java.util.List;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTOValidationError;
 
 public interface IServiceClient
 {
-	String sayHello();
+    String sayHello();
 
-	List<DTOApplicationShort> getAllApplications();
+    List<DTOApplicationShort> getAllApplications();
 
-	DTOApplication getApplication(String name);
+    DTOApplication getApplication(String name);
 
-	DTOApplication getApplicationById(String uuid);
-	
-	DTOApplication getFirstApplication();
+    DTOApplication getApplicationById(String uuid);
 
-	void stageApplication(DTOApplication app);
+    DTOApplication getFirstApplication();
 
-	void storeApplication(String uuid);
+    void stageApplication(DTOApplication app);
 
-	void resetStage();
+    void storeApplication(String uuid);
 
-	List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound);
+    void resetStage();
 
-	DTOApplication createApplication(String name, String description);
+    List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound);
+
+    DTOApplication createApplication(String name, String description);
+
+    List<DTOValidationError> validateApp(DTOApplication a);
 }

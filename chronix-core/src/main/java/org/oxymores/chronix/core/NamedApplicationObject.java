@@ -14,6 +14,12 @@ public class NamedApplicationObject extends ApplicationObject
     @Size(min = 1, max = 255)
     protected String description;
 
+    @Override
+    public String toString()
+    {
+        return String.format("%s (%s)", name, description);
+    }
+
     public String getName()
     {
         return name;

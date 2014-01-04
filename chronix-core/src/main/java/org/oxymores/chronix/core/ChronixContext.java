@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -36,6 +37,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.validation.Configuration;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
@@ -200,6 +202,11 @@ public class ChronixContext
                     new ValueFormatterMessageInterpolator(configuration.getDefaultMessageInterpolator())).buildValidatorFactory();
         }
         return validatorFactory.getValidator();
+    }
+
+    public static Set<ConstraintViolation<Application>> validate(Application a)
+    {
+        return getValidator().validate(a);
     }
 
     public Application loadApplication(UUID id, boolean workincopy, boolean loadNotLocalApps) throws ChronixPlanStorageException

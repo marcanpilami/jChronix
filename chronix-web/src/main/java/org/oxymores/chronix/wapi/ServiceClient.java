@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.jms.JMSException;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path.Node;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -47,6 +49,7 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.internalapi.IServiceClient;
@@ -272,5 +275,32 @@ public class ServiceClient implements IServiceClient
             e1.printStackTrace();
             System.exit(1);
         }
+    }
+
+    @Override
+    public List<DTOValidationError> validateApp(DTOApplication app)
+    {
+        List<DTOValidationError> res = new ArrayList<DTOValidationError>();
+        DTOValidationError tmp = null;
+
+        // Read application
+        Application a = DtoToCore.getApplication(app);
+
+        // Validate & translate results for the GUI
+        for (ConstraintViolation<Application> err : ChronixContext.validate(a))
+        {
+            tmp = new DTOValidationError();
+            tmp.setErroneousValue(err.getInvalidValue() == null ? "" : err.getInvalidValue().toString());
+            tmp.setErrorMessage(err.getMessage());
+            for (Node n : err.getPropertyPath())
+            {
+                tmp.setErrorPath(n.getName());
+            }
+            tmp.setItemIdentification(err.getLeafBean().toString());
+            tmp.setItemType(err.getLeafBean().getClass().getSimpleName());
+            res.add(tmp);
+        }
+
+        return res;
     }
 }

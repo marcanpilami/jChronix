@@ -100,7 +100,7 @@ function sendApplicationKO(response)
 
 function switchApp()
 {
-	proxy.storeApplication(sendApplicationOK, sendApplicationKO, cxfApplication._id);
+	proxy.validateApp(validateAppPreSwitchOk, validateAppKo, cxfApplication);
 }
 
 function deletePlace(dtoApplication, dtoPlace)
@@ -208,3 +208,73 @@ ChangeApp.prototype.show = function()
 	proxy.getAllApplications(this.getAllApplicationsOK.bind(this), this.getAllApplicationsKO.bind(this));
 	this.mainDiv.show(300);
 };
+
+function validateAppPreSwitchOk(responseObject)
+{
+	alerts = responseObject.getReturn().getDTOValidationError();
+	if (alerts.length > 0)
+	{
+		// Display the errors and don't switch
+		validateAppOk(responseObject);
+	}
+	else
+	{
+		// No errors - switch the apps
+		proxy.storeApplication(sendApplicationOK, sendApplicationKO, cxfApplication._id);
+	}
+}
+
+function validateAppOk(responseObject)
+{
+	$("#alert").text("validation result arrived");
+
+	alerts = responseObject.getReturn().getDTOValidationError();
+
+	var str = "<table><tr><th>Item type</th><th>Item name</th><th>Faulty attribute</th><th>Error message</th><th>Faulty value</th></tr>";
+	for ( var i = 0; i < alerts.length; i++)
+	{
+		var issue = alerts[i];
+		str += "<tr>";
+
+		str += "<td>" + issue._itemType + "</td>";
+		str += "<td>" + issue._itemIdentification + "</td>";
+		str += "<td>" + issue._errorPath + "</td>";
+		str += "<td>" + issue._errorMessage + "</td>";
+		str += "<td>" + issue._erroneousValue + "</td>";
+		str += "</tr>";
+	}
+	str = str + "</table>";
+
+	if (alerts.length > 0)
+	{
+		$("#alert").text("issues were detected during validation");
+		$('<div />').html(str).dialog(
+		{
+			modal : true,
+			title : 'invalid plan',
+			width : '70%',
+			maxHeight : 400,
+			buttons :
+			{
+				Close : function()
+				{
+					$(this).dialog("close");
+				}
+			}
+		});
+	}
+	else
+	{
+		$("#alert").text("no issues detected during validation");
+	}
+}
+
+function validateAppKo(responseObject)
+{
+	alert("Could not validate the application on the server: " + responseObject);
+}
+
+function validateApp()
+{
+	proxy.validateApp(validateAppOk, validateAppKo, cxfApplication);
+}

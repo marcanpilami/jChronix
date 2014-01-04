@@ -59,6 +59,12 @@ public class ExecutionNode extends ApplicationObject
         this.remoteExecPort = 1789;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format("%s:%s (%s)", dns, qPort, console ? "console" : "not console");
+    }
+
     public NodeType getType()
     {
         return type;
