@@ -35,10 +35,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.validation.Configuration;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.validator.messageinterpolation.ValueFormatterMessageInterpolator;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.ClockTick;
@@ -50,6 +55,7 @@ import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 public class ChronixContext
 {
     private static Logger log = Logger.getLogger(ChronixContext.class);
+    private static ValidatorFactory validatorFactory;
 
     private DateTime loaded;
     private String configurationDirectoryPath;
@@ -183,6 +189,17 @@ public class ChronixContext
 
         // Done!
         return ctx;
+    }
+
+    public static Validator getValidator()
+    {
+        if (validatorFactory == null)
+        {
+            Configuration<?> configuration = Validation.byDefaultProvider().configure();
+            validatorFactory = configuration.messageInterpolator(
+                    new ValueFormatterMessageInterpolator(configuration.getDefaultMessageInterpolator())).buildValidatorFactory();
+        }
+        return validatorFactory.getValidator();
     }
 
     public Application loadApplication(UUID id, boolean workincopy, boolean loadNotLocalApps) throws ChronixPlanStorageException

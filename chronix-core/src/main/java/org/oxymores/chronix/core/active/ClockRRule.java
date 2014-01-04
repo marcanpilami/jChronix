@@ -24,12 +24,15 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import net.fortuna.ical4j.model.Recur;
 
 import org.apache.log4j.Logger;
-import org.oxymores.chronix.core.ApplicationObject;
+import org.oxymores.chronix.core.NamedApplicationObject;
 
-public class ClockRRule extends ApplicationObject
+public class ClockRRule extends NamedApplicationObject
 {
     private static final long serialVersionUID = 1092625083715354537L;
     private static Logger log = Logger.getLogger(ClockRRule.class);
@@ -37,8 +40,8 @@ public class ClockRRule extends ApplicationObject
     String period = "DAILY";
     Integer interval = 1;
 
-    String name, description;
-
+    @NotNull
+    @Size(min = 0, max = 255)
     String bySecond = "", byMinute = "", byHour = "", byDay = "", byMonthDay = "", byMonth = "", byYear = "", bySetPos = "";
 
     // ///////////////////////////////////////////////////////
@@ -123,25 +126,6 @@ public class ClockRRule extends ApplicationObject
 
     // ///////////////////////////////////////////////////////
     // Stupid GET/SET
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
 
     public Integer getINTERVAL()
     {

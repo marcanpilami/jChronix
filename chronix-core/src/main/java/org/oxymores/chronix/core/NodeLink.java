@@ -20,52 +20,56 @@
 
 package org.oxymores.chronix.core;
 
+import javax.validation.constraints.NotNull;
+
 public class NodeLink extends ApplicationObject
 {
-	private static final long serialVersionUID = 7100333809406249831L;
-	
-	protected NodeConnectionMethod method;
-	protected ExecutionNode nodeFrom, nodeTo;
+    private static final long serialVersionUID = 7100333809406249831L;
 
-	public NodeConnectionMethod getMethod()
-	{
-		return method;
-	}
+    @NotNull
+    protected NodeConnectionMethod method;
+    @NotNull
+    protected ExecutionNode nodeFrom, nodeTo;
 
-	public void setMethod(NodeConnectionMethod method)
-	{
-		this.method = method;
-	}
+    public NodeConnectionMethod getMethod()
+    {
+        return method;
+    }
 
-	public ExecutionNode getNodeFrom()
-	{
-		return nodeFrom;
-	}
+    public void setMethod(NodeConnectionMethod method)
+    {
+        this.method = method;
+    }
 
-	public void setNodeFrom(ExecutionNode nodeFrom)
-	{
-		if (this.nodeFrom == null || this.nodeFrom != nodeFrom)
-		{
-			this.nodeFrom = nodeFrom;
-			nodeFrom.addCanSendTo(this);
-		}
-		else
-			this.nodeFrom = nodeFrom;
-	}
+    public ExecutionNode getNodeFrom()
+    {
+        return nodeFrom;
+    }
 
-	public ExecutionNode getNodeTo()
-	{
-		return nodeTo;
-	}
+    public void setNodeFrom(ExecutionNode nodeFrom)
+    {
+        if (this.nodeFrom == null || this.nodeFrom != nodeFrom)
+        {
+            this.nodeFrom = nodeFrom;
+            nodeFrom.addCanSendTo(this);
+        }
+        else
+            this.nodeFrom = nodeFrom;
+    }
 
-	public void setNodeTo(ExecutionNode nodeTo)
-	{
-		if (this.nodeTo == null || this.nodeTo != nodeTo)
-		{
-			this.nodeTo = nodeTo;
-			nodeTo.addCanReceiveFrom(this);
-		}
-		else
-			this.nodeTo = nodeTo;
-	}
+    public ExecutionNode getNodeTo()
+    {
+        return nodeTo;
+    }
+
+    public void setNodeTo(ExecutionNode nodeTo)
+    {
+        if (this.nodeTo == null || this.nodeTo != nodeTo)
+        {
+            this.nodeTo = nodeTo;
+            nodeTo.addCanReceiveFrom(this);
+        }
+        else
+            this.nodeTo = nodeTo;
+    }
 }

@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
@@ -42,15 +45,28 @@ public class Application extends ChronixObject
     private static final long serialVersionUID = 338399439626386055L;
     private static Logger log = Logger.getLogger(Application.class);
 
-    protected String name, description;
+    @NotNull
+    @Size(min = 1, max = 50)
+    protected String name;
+    @NotNull
+    @Size(min = 1, max = 255)
+    protected String description;
 
+    @Valid
     protected Map<UUID, Place> places;
+    @Valid
     protected Map<UUID, PlaceGroup> groups;
+    @Valid
     protected Map<UUID, ExecutionNode> nodes;
+    @Valid
     protected Map<UUID, ActiveNodeBase> activeElements;
+    @Valid
     protected Map<UUID, Parameter> parameters;
+    @Valid
     protected Map<UUID, Calendar> calendars;
+    @Valid
     protected Map<UUID, Token> tokens;
+    @Valid
     protected Map<UUID, ClockRRule> rrules;
 
     protected transient ExecutionNode localNode;
@@ -72,15 +88,17 @@ public class Application extends ChronixObject
         ActiveNodeBase tmp = new And();
         tmp.setName("AND");
         tmp.setDescription("AND logical door - unique for the whole application");
-        this.activeElements.put(tmp.getId(), tmp);
+        this.addActiveElement(tmp);
         tmp = new Or();
         tmp.setName("OR");
         tmp.setDescription("OR logical door - unique for the whole application");
-        this.activeElements.put(tmp.getId(), tmp);
+        this.addActiveElement(tmp);
         tmp = new ChainEnd();
-        this.activeElements.put(tmp.getId(), tmp);
+        tmp.setDescription("Marks the end of a chain. Can be ignored in global plans");
+        this.addActiveElement(tmp);
         tmp = new ChainStart();
-        this.activeElements.put(tmp.getId(), tmp);
+        tmp.setDescription("Marks the beginning of a chain. Can be ignored in global plans");
+        this.addActiveElement(tmp);
     }
 
     public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode

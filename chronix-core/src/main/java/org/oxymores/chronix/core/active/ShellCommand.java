@@ -20,6 +20,9 @@
 
 package org.oxymores.chronix.core.active;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -29,7 +32,10 @@ public class ShellCommand extends ActiveNodeBase
 {
     private static final long serialVersionUID = 3340501935290198518L;
 
+    @NotNull
+    @Size(min = 1, max = 255)
     protected String command;
+
     protected String shell = "cmd.exe";
 
     public String getCommand()

@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -39,6 +40,7 @@ public class NextOccurrence extends ActiveNodeBase
     private static final long serialVersionUID = -2717237089393749264L;
     private static Logger log = Logger.getLogger(NextOccurrence.class);
 
+    @NotNull
     Calendar updatedCalendar;
 
     public Calendar getUpdatedCalendar()

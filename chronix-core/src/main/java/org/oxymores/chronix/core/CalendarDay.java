@@ -22,32 +22,38 @@ package org.oxymores.chronix.core;
 
 import java.util.UUID;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 public class CalendarDay extends ApplicationObject
 {
-	private static final long serialVersionUID = -8296932253108182976L;
+    private static final long serialVersionUID = -8296932253108182976L;
 
-	protected String seq;
-	protected Calendar calendar;
+    @NotNull
+    @Size(min = 1, max = 255)
+    protected String seq;
+    @NotNull
+    protected Calendar calendar;
 
-	public CalendarDay(String day, Calendar calendar)
-	{
-		super();
-		id = UUID.randomUUID();
-		this.calendar = calendar;
-		calendar.addDay(this);
-		this.seq = day;
-	}
+    public CalendarDay(String day, Calendar calendar)
+    {
+        super();
+        id = UUID.randomUUID();
+        this.calendar = calendar;
+        calendar.addDay(this);
+        this.seq = day;
+    }
 
-	public void setCalendar(Calendar c)
-	{
-		if (this.calendar == null || !this.calendar.getId().equals(c.getId()))
-			c.addDay(this);
-		this.calendar = c;
-		this.application = c.application;
-	}
+    public void setCalendar(Calendar c)
+    {
+        if (this.calendar == null || !this.calendar.getId().equals(c.getId()))
+            c.addDay(this);
+        this.calendar = c;
+        this.application = c.application;
+    }
 
-	public String getValue()
-	{
-		return seq;
-	}
+    public String getValue()
+    {
+        return seq;
+    }
 }

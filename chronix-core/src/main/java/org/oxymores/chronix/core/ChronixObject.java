@@ -23,10 +23,13 @@ package org.oxymores.chronix.core;
 import java.io.Serializable;
 import java.util.UUID;
 
+import javax.validation.constraints.NotNull;
+
 public class ChronixObject implements Serializable
 {
     private static final long serialVersionUID = 1106120751950998543L;
 
+    @NotNull
     protected UUID id;
 
     public ChronixObject()

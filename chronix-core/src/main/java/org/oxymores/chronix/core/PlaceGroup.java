@@ -22,51 +22,34 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
-public class PlaceGroup extends ApplicationObject
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+public class PlaceGroup extends NamedApplicationObject
 {
-	private static final long serialVersionUID = 4569641718657486177L;
+    private static final long serialVersionUID = 4569641718657486177L;
 
-	protected String name, description;
+    @NotNull
+    @Size(min = 0, max = 255)
+    protected ArrayList<Place> places;
 
-	protected ArrayList<Place> places;
+    public PlaceGroup()
+    {
+        super();
+        places = new ArrayList<Place>();
+    }
 
-	public PlaceGroup()
-	{
-		super();
-		places = new ArrayList<Place>();
-	}
+    public ArrayList<Place> getPlaces()
+    {
+        return places;
+    }
 
-	public ArrayList<Place> getPlaces()
-	{
-		return places;
-	}
-
-	public void addPlace(Place p)
-	{
-		if (!places.contains(p))
-		{
-			places.add(p);
-			p.addToGroup(this);
-		}
-	}
-
-	public String getName()
-	{
-		return name;
-	}
-
-	public void setName(String name)
-	{
-		this.name = name;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
+    public void addPlace(Place p)
+    {
+        if (!places.contains(p))
+        {
+            places.add(p);
+            p.addToGroup(this);
+        }
+    }
 }

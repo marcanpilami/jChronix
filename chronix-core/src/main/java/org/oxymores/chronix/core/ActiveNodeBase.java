@@ -29,6 +29,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
@@ -47,8 +49,19 @@ public class ActiveNodeBase extends ConfigurableBase
     private static final long serialVersionUID = 2317281646089939267L;
     private static Logger log = Logger.getLogger(ActiveNodeBase.class);
 
+    @NotNull
+    @Size(min = 1, max = 255)
     protected String description;
+
+    @NotNull
+    @Size(min = 1, max = 50)
     protected String name;
+
+    @Override
+    public String toString()
+    {
+        return String.format("%s (%s)", name, description);
+    }
 
     // ////////////////////////////////////////////////////////////////////////////
     // Stupid get/set

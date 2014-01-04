@@ -26,105 +26,118 @@ import java.util.UUID;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.core.validation.ChainCheckCycle;
+import org.oxymores.chronix.core.validation.ChainCheckEnds;
 
+@ChainCheckEnds
+@ChainCheckCycle
 public class Chain extends ActiveNodeBase
 {
-	private static final long serialVersionUID = -5369294333404575011L;
+    private static final long serialVersionUID = -5369294333404575011L;
 
-	protected ArrayList<State> states;
-	protected ArrayList<Transition> transitions;
+    @NotNull
+    @Size(min = 2, max = 255, message = "a chain must have at least two states")
+    @Valid
+    protected ArrayList<State> states;
 
-	public Chain()
-	{
-		super();
-		states = new ArrayList<State>();
-		transitions = new ArrayList<Transition>();
-	}
+    @NotNull
+    @Valid
+    protected ArrayList<Transition> transitions;
 
-	public void addState(State state)
-	{
-		if (!this.states.contains(state))
-		{
-			this.states.add(state);
-			state.chain = this;
-		}
-	}
+    public Chain()
+    {
+        super();
+        states = new ArrayList<State>();
+        transitions = new ArrayList<Transition>();
+    }
 
-	public ArrayList<State> getStates()
-	{
-		return states;
-	}
+    public void addState(State state)
+    {
+        if (!this.states.contains(state))
+        {
+            this.states.add(state);
+            state.chain = this;
+        }
+    }
 
-	public State getState(UUID id)
-	{
-		for (State s : this.states)
-			if (s.getId().equals(id))
-				return s;
-		return null;
-	}
+    public ArrayList<State> getStates()
+    {
+        return states;
+    }
 
-	public void addTransition(Transition tr)
-	{
-		if (!this.transitions.contains(tr))
-		{
-			this.transitions.add(tr);
-			tr.chain = this;
-		}
-	}
+    public State getState(UUID id)
+    {
+        for (State s : this.states)
+            if (s.getId().equals(id))
+                return s;
+        return null;
+    }
 
-	public ArrayList<Transition> getTransitions()
-	{
-		return transitions;
-	}
+    public void addTransition(Transition tr)
+    {
+        if (!this.transitions.contains(tr))
+        {
+            this.transitions.add(tr);
+            tr.chain = this;
+        }
+    }
 
-	public State getStartState()
-	{
-		for (State s : states)
-		{
-			if (s.represents instanceof ChainStart)
-				return s;
-		}
-		return null;
-	}
+    public ArrayList<Transition> getTransitions()
+    {
+        return transitions;
+    }
 
-	public State getEndState()
-	{
-		for (State s : states)
-		{
-			if (s.represents instanceof ChainEnd)
-				return s;
-		}
-		return null;
-	}
+    public State getStartState()
+    {
+        for (State s : states)
+        {
+            if (s.represents instanceof ChainStart)
+                return s;
+        }
+        return null;
+    }
 
-	// ///////////////////////////////////////////////////////////////////
-	// Run methods
-	@Override
-	public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
-	{
-		// Create a new run for the chain.
-		pj.setBeganRunningAt(new DateTime());
-		State s = this.getStartState();
-		s.runInsidePlan(em, jmsProducer, jmsSession, pj.getIdU(), null);
-	}
+    public State getEndState()
+    {
+        for (State s : states)
+        {
+            if (s.represents instanceof ChainEnd)
+                return s;
+        }
+        return null;
+    }
 
-	@Override
-	public boolean hasInternalPayload()
-	{
-		return true;
-	}
+    // ///////////////////////////////////////////////////////////////////
+    // Run methods
+    @Override
+    public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    {
+        // Create a new run for the chain.
+        pj.setBeganRunningAt(new DateTime());
+        State s = this.getStartState();
+        s.runInsidePlan(em, jmsProducer, jmsSession, pj.getIdU(), null);
+    }
 
-	@Override
-	public boolean visibleInHistory()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasInternalPayload()
+    {
+        return true;
+    }
 
-	// Run methods
-	// ///////////////////////////////////////////////////////////////////
+    @Override
+    public boolean visibleInHistory()
+    {
+        return true;
+    }
+
+    // Run methods
+    // ///////////////////////////////////////////////////////////////////
 }

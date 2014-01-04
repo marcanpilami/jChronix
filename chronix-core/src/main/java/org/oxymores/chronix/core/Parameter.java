@@ -23,87 +23,104 @@ package org.oxymores.chronix.core;
 import java.util.ArrayList;
 
 import javax.jms.JMSException;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Runner;
 
 public class Parameter extends ApplicationObject
 {
-	private static final long serialVersionUID = 8017529181151172909L;
+    private static final long serialVersionUID = 8017529181151172909L;
 
-	protected String key, value, description;
-	protected Boolean reusable = false;
-	protected ArrayList<ConfigurableBase> elements;
+    @NotNull
+    @Size(min = 0, max = 50)
+    protected String key;
 
-	public Parameter()
-	{
-		super();
-		elements = new ArrayList<ConfigurableBase>();
-	}
+    @NotNull
+    @Size(min = 1, max = 255)
+    protected String value;
 
-	public String getKey()
-	{
-		return key;
-	}
+    @NotNull
+    @Size(min = 1, max = 255)
+    protected String description;
 
-	public void setKey(String key)
-	{
-		this.key = key;
-	}
+    @NotNull
+    protected Boolean reusable = false;
 
-	public String getValue()
-	{
-		return value;
-	}
+    @NotNull
+    protected ArrayList<ConfigurableBase> elements;
 
-	public void setValue(String value)
-	{
-		this.value = value;
-	}
+    public Parameter()
+    {
+        super();
+        elements = new ArrayList<ConfigurableBase>();
+    }
 
-	public String getDescription()
-	{
-		return description;
-	}
+    public String getKey()
+    {
+        return key;
+    }
 
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
+    public void setKey(String key)
+    {
+        this.key = key;
+    }
 
-	public Boolean getReusable()
-	{
-		return reusable;
-	}
+    public String getValue()
+    {
+        return value;
+    }
 
-	public void setReusable(Boolean reusable)
-	{
-		this.reusable = reusable;
-	}
+    public void setValue(String value)
+    {
+        this.value = value;
+    }
 
-	public ArrayList<ConfigurableBase> getElements()
-	{
-		return elements;
-	}
+    public String getDescription()
+    {
+        return description;
+    }
 
-	public void addElement(ConfigurableBase element)
-	{
-		if (!elements.contains(element))
-		{
-			elements.add(element);
-			element.addParameter(this);
-		}
-	}
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 
-	public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
-	{
-		try
-		{
-			sender.sendParameterValue(this.getValue(), this.getId(), pj);
-		} catch (JMSException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+    public Boolean getReusable()
+    {
+        return reusable;
+    }
+
+    public void setReusable(Boolean reusable)
+    {
+        this.reusable = reusable;
+    }
+
+    public ArrayList<ConfigurableBase> getElements()
+    {
+        return elements;
+    }
+
+    public void addElement(ConfigurableBase element)
+    {
+        if (!elements.contains(element))
+        {
+            elements.add(element);
+            element.addParameter(this);
+        }
+    }
+
+    public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
+    {
+        try
+        {
+            sender.sendParameterValue(this.getValue(), this.getId(), pj);
+        }
+        catch (JMSException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }

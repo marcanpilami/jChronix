@@ -31,8 +31,12 @@ import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.apache.log4j.Logger;
+import org.hibernate.validator.constraints.Range;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
@@ -49,36 +53,46 @@ public class State extends ConfigurableBase
 
     // /////////////////////////////////////////////////////////////////////////////////
     // Fields
+    @NotNull
     protected Boolean parallel = false;
 
     // GUI data
+    @Range(min = 0, max = 100000)
+    @NotNull
     protected Integer x, y;
 
     // Time limits
+    @Range(min = 0)
     protected Integer warnAfterMn, killAfterMn, maxPipeWaitTime, eventValidityMn;
 
     // The active element represented by this State
+    @NotNull(message = "a state must be represent one event source - it currently has none")
     protected ActiveNodeBase represents;
 
     // The chain it belongs to
+    @NotNull
     protected Chain chain;
 
     // Transitions
+    @NotNull
+    @Size(min = 0)
+    @Valid
     protected List<Transition> trFromHere, trReceivedHere;
 
     // Exclusive states
+    @NotNull
     protected List<State> exclusiveStates;
 
-    // Runs on a group. Groups are defined in a separate graph, so get it by ID
-    // and not by reference.
+    // Runs on a place group
+    @NotNull(message = "a state must run on exactly one place group - it currently has none")
     protected PlaceGroup runsOn;
 
     // Sequences
     protected List<AutoSequence> sequences;
     protected List<Token> tokens;
     protected Calendar calendar;
-    protected Boolean loopMissedOccurrences;
-    protected Boolean endOfOccurrence;
+    protected Boolean loopMissedOccurrences = false;
+    protected Boolean endOfOccurrence = false;
     protected Boolean blockIfPreviousFailed = false;
     protected int calendarShift = 0;
 

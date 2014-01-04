@@ -22,11 +22,15 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 
+import javax.validation.constraints.NotNull;
+
 public class ConfigurableBase extends ApplicationObject
 {
     private static final long serialVersionUID = 4288408733877784921L;
 
+    @NotNull
     protected ArrayList<Parameter> parameters;
+    @NotNull
     protected ArrayList<EnvironmentParameter> envParams;
 
     public ConfigurableBase()

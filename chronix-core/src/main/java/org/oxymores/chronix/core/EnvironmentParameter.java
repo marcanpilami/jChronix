@@ -20,16 +20,21 @@
 
 package org.oxymores.chronix.core;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 public class EnvironmentParameter extends ApplicationObject
 {
-	private static final long serialVersionUID = -3573665084125546426L;
+    private static final long serialVersionUID = -3573665084125546426L;
 
-	String key, value;
+    @NotNull
+    @Size(min = 1, max = 255)
+    String key, value;
 
-	public EnvironmentParameter(String key, String value)
-	{
-		super();
-		this.key = key;
-		this.value = value;
-	}
+    public EnvironmentParameter(String key, String value)
+    {
+        super();
+        this.key = key;
+        this.value = value;
+    }
 }

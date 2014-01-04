@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 
+import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
@@ -34,13 +36,17 @@ public class Transition extends ApplicationObject
 {
     private static final long serialVersionUID = 1968186705525199010L;
 
+    @NotNull
+    @Range(min = -65000, max = 65000)
     protected Integer guard1;
     protected String guard2, guard3;
     protected UUID guard4;
     protected boolean calendarAware = false;
     protected int calendarShift = 0;
 
+    @NotNull
     protected State stateFrom, stateTo;
+    @NotNull
     protected Chain chain;
 
     public Integer getGuard1()

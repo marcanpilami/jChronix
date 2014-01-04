@@ -30,6 +30,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.validation.Valid;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -42,6 +43,7 @@ import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.RRule;
 
 import org.apache.log4j.Logger;
+import org.hibernate.validator.constraints.Range;
 import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
@@ -59,17 +61,20 @@ public class Clock extends ActiveNodeBase
     private static Logger log = Logger.getLogger(Clock.class);
     private static final String LOG_DATE_FORMAT = "dd/MM/YYYY hh:mm:ss";
 
-    // Fields
     org.joda.time.DateTime created;
-    int duration = 0; // Minutes
+
+    // Validity in minutes. Should always be 0 here.
+    @Range(min = 0, max = 0)
+    int duration = 0;
 
     // Relationships
+    @Valid
     List<ClockRRule> rulesADD, rulesEXC;
 
     // Helpers for engine methods
-    transient PeriodList occurrenceCache;
-    transient org.joda.time.DateTime lastComputed;
-    private PipelineJob pj;
+    private transient PeriodList occurrenceCache;
+    private transient org.joda.time.DateTime lastComputed;
+    private transient PipelineJob pj;
 
     // /////////////////////////////////////////////////////////////////////
     // Constructor
@@ -80,16 +85,23 @@ public class Clock extends ActiveNodeBase
         created = org.joda.time.DateTime.now();
         created = created.minusMillis(created.getMillisOfSecond());
         created = created.minusSeconds(created.getSecondOfMinute());
+    }
 
-        pj = new PipelineJob();
-        pj.setApplication(this.application);
-        pj.setBeganRunningAt(org.joda.time.DateTime.now());
-        pj.setEnteredPipeAt(org.joda.time.DateTime.now());
-        pj.setMarkedForRunAt(org.joda.time.DateTime.now());
-        pj.setOutOfPlan(false);
-        pj.setOutsideChain(true);
-        pj.setResultCode(0);
-        pj.setStatus("DONE");
+    private PipelineJob getHelperPj()
+    {
+        if (pj == null)
+        {
+            pj = new PipelineJob();
+            pj.setApplication(this.application);
+            pj.setBeganRunningAt(org.joda.time.DateTime.now());
+            pj.setEnteredPipeAt(org.joda.time.DateTime.now());
+            pj.setMarkedForRunAt(org.joda.time.DateTime.now());
+            pj.setOutOfPlan(false);
+            pj.setOutsideChain(true);
+            pj.setResultCode(0);
+            pj.setStatus("DONE");
+        }
+        return pj;
     }
 
     //
@@ -227,6 +239,7 @@ public class Clock extends ActiveNodeBase
 
         // We only work with the logical time
         now = present;
+        getHelperPj();
         pj.setVirtualTime(present.toDate());
         org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.duration);
 

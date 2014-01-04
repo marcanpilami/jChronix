@@ -28,25 +28,33 @@ import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.apache.log4j.Logger;
+import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 
-public class Calendar extends ApplicationObject
+public class Calendar extends NamedApplicationObject
 {
     private static Logger log = Logger.getLogger(Calendar.class);
     private static final long serialVersionUID = 7332812989443095188L;
 
-    protected boolean manualSequence;
-    protected String name;
-    protected String description;
+    protected boolean manualSequence = false;
+
+    @NotNull
+    @Range(min = 0, max = 300)
     protected Integer alertThreshold = 20;
 
+    @NotNull
     protected ArrayList<State> usedInStates;
+
+    @NotNull
+    @Size(message = "A calendar must have at least one occurrence", min = 1)
     protected ArrayList<CalendarDay> days;
 
-    protected ClockRRule createdFrom = null; // Optional
+    protected ClockRRule createdFrom = null;
     protected boolean autoReset = false;
 
     // Constructor
