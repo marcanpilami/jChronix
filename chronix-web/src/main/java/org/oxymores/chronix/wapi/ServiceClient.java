@@ -195,9 +195,9 @@ public class ServiceClient implements IServiceClient
         for (Application a : this.ctx.getApplications())
         {
             DTOApplicationShort t = new DTOApplicationShort();
-            t.description = a.getDescription();
-            t.id = a.getId().toString();
-            t.name = a.getName();
+            t.setDescription(a.getDescription());
+            t.setId(a.getId().toString());
+            t.setName(a.getName());
             res.add(t);
         }
         return res;

@@ -2,1741 +2,1741 @@ package org.oxymores.chronix.dto;
 
 public class DTORRule
 {
-	public String name;
-	public String description;
-	public String id;
-
-	public String period;
-	public int interval;
-
-	// ByDay (01 = Monday, 07 = Sunday)
-	public boolean bd_01 = false, bd_02 = false, bd_03 = false, bd_04 = false, bd_05 = false, bd_06 = false, bd_07 = false;
-	// ByMonthDay
-	public boolean bmd_01 = false, bmd_02 = false, bmd_03 = false, bmd_04 = false, bmd_05 = false, bmd_06 = false, bmd_07 = false,
-			bmd_08 = false, bmd_09 = false, bmd_10 = false, bmd_11 = false, bmd_12 = false, bmd_13 = false, bmd_14 = false, bmd_15 = false,
-			bmd_16 = false, bmd_17 = false, bmd_18 = false, bmd_19 = false, bmd_20 = false, bmd_21 = false, bmd_22 = false, bmd_23 = false,
-			bmd_24 = false, bmd_25 = false, bmd_26 = false, bmd_27 = false, bmd_28 = false, bmd_29 = false, bmd_30 = false, bmd_31 = false;
-	public boolean bmdn_01 = false, bmdn_02 = false, bmdn_03 = false, bmdn_04 = false, bmdn_05 = false, bmdn_06 = false, bmdn_07 = false,
-			bmdn_08 = false, bmdn_09 = false, bmdn_10 = false, bmdn_11 = false, bmdn_12 = false, bmdn_13 = false, bmdn_14 = false,
-			bmdn_15 = false, bmdn_16 = false, bmdn_17 = false, bmdn_18 = false, bmdn_19 = false, bmdn_20 = false, bmdn_21 = false,
-			bmdn_22 = false, bmdn_23 = false, bmdn_24 = false, bmdn_25 = false, bmdn_26 = false, bmdn_27 = false, bmdn_28 = false,
-			bmdn_29 = false, bmdn_30 = false, bmdn_31 = false;
-	// ByMonth (01 = January)
-	public boolean bm_01 = false, bm_02 = false, bm_03 = false, bm_04 = false, bm_05 = false, bm_06 = false, bm_07 = false, bm_08 = false,
-			bm_09 = false, bm_10 = false, bm_11 = false, bm_12 = false;
-	// ByHour
-	public boolean bh_00 = false, bh_01 = false, bh_02 = false, bh_03 = false, bh_04 = false, bh_05 = false, bh_06 = false, bh_07 = false,
-			bh_08 = false, bh_09 = false, bh_10 = false, bh_11 = false, bh_12 = false, bh_13 = false, bh_14 = false, bh_15 = false,
-			bh_16 = false, bh_17 = false, bh_18 = false, bh_19 = false, bh_20 = false, bh_21 = false, bh_22 = false, bh_23 = false;
-	// ByMinute
-	public boolean bn_00 = false, bn_01 = false, bn_02 = false, bn_03 = false, bn_04 = false, bn_05 = false, bn_06 = false, bn_07 = false,
-			bn_08 = false, bn_09 = false, bn_10 = false, bn_11 = false, bn_12 = false, bn_13 = false, bn_14 = false, bn_15 = false,
-			bn_16 = false, bn_17 = false, bn_18 = false, bn_19 = false, bn_20 = false, bn_21 = false, bn_22 = false, bn_23 = false,
-			bn_24 = false, bn_25 = false, bn_26 = false, bn_27 = false, bn_28 = false, bn_29 = false, bn_30 = false, bn_31 = false,
-			bn_32 = false, bn_33 = false, bn_34 = false, bn_35 = false, bn_36 = false, bn_37 = false, bn_38 = false, bn_39 = false,
-			bn_40 = false, bn_41 = false, bn_42 = false, bn_43 = false, bn_44 = false, bn_45 = false, bn_46 = false, bn_47 = false,
-			bn_48 = false, bn_49 = false, bn_50 = false, bn_51 = false, bn_52 = false, bn_53 = false, bn_54 = false, bn_55 = false,
-			bn_56 = false, bn_57 = false, bn_58 = false, bn_59 = false;
-
-	// Stupid get/set for Javabean convention
-	public String getName()
-	{
-		return name;
-	}
-
-	public void setName(String name)
-	{
-		this.name = name;
-	}
-
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
-
-	public String getId()
-	{
-		return id;
-	}
-
-	public void setId(String id)
-	{
-		this.id = id;
-	}
-
-	public String getPeriod()
-	{
-		return period;
-	}
-
-	public void setPeriod(String period)
-	{
-		this.period = period;
-	}
-
-	public int getInterval()
-	{
-		return interval;
-	}
-
-	public void setInterval(int interval)
-	{
-		this.interval = interval;
-	}
-
-	public boolean isBmd_01()
-	{
-		return bmd_01;
-	}
-
-	public void setBmd_01(boolean bmd_01)
-	{
-		this.bmd_01 = bmd_01;
-	}
-
-	public boolean isBmd_02()
-	{
-		return bmd_02;
-	}
-
-	public void setBmd_02(boolean bmd_02)
-	{
-		this.bmd_02 = bmd_02;
-	}
-
-	public boolean isBmd_03()
-	{
-		return bmd_03;
-	}
-
-	public void setBmd_03(boolean bmd_03)
-	{
-		this.bmd_03 = bmd_03;
-	}
-
-	public boolean isBmd_04()
-	{
-		return bmd_04;
-	}
-
-	public void setBmd_04(boolean bmd_04)
-	{
-		this.bmd_04 = bmd_04;
-	}
-
-	public boolean isBmd_05()
-	{
-		return bmd_05;
-	}
-
-	public void setBmd_05(boolean bmd_05)
-	{
-		this.bmd_05 = bmd_05;
-	}
-
-	public boolean isBmd_06()
-	{
-		return bmd_06;
-	}
-
-	public void setBmd_06(boolean bmd_06)
-	{
-		this.bmd_06 = bmd_06;
-	}
-
-	public boolean isBmd_07()
-	{
-		return bmd_07;
-	}
-
-	public void setBmd_07(boolean bmd_07)
-	{
-		this.bmd_07 = bmd_07;
-	}
-
-	public boolean isBmd_08()
-	{
-		return bmd_08;
-	}
-
-	public void setBmd_08(boolean bmd_08)
-	{
-		this.bmd_08 = bmd_08;
-	}
-
-	public boolean isBmd_09()
-	{
-		return bmd_09;
-	}
-
-	public void setBmd_09(boolean bmd_09)
-	{
-		this.bmd_09 = bmd_09;
-	}
-
-	public boolean isBmd_10()
-	{
-		return bmd_10;
-	}
-
-	public void setBmd_10(boolean bmd_10)
-	{
-		this.bmd_10 = bmd_10;
-	}
-
-	public boolean isBmd_11()
-	{
-		return bmd_11;
-	}
-
-	public void setBmd_11(boolean bmd_11)
-	{
-		this.bmd_11 = bmd_11;
-	}
-
-	public boolean isBmd_12()
-	{
-		return bmd_12;
-	}
-
-	public void setBmd_12(boolean bmd_12)
-	{
-		this.bmd_12 = bmd_12;
-	}
-
-	public boolean isBmd_13()
-	{
-		return bmd_13;
-	}
-
-	public void setBmd_13(boolean bmd_13)
-	{
-		this.bmd_13 = bmd_13;
-	}
-
-	public boolean isBmd_14()
-	{
-		return bmd_14;
-	}
-
-	public void setBmd_14(boolean bmd_14)
-	{
-		this.bmd_14 = bmd_14;
-	}
-
-	public boolean isBmd_15()
-	{
-		return bmd_15;
-	}
-
-	public void setBmd_15(boolean bmd_15)
-	{
-		this.bmd_15 = bmd_15;
-	}
-
-	public boolean isBmd_16()
-	{
-		return bmd_16;
-	}
-
-	public void setBmd_16(boolean bmd_16)
-	{
-		this.bmd_16 = bmd_16;
-	}
-
-	public boolean isBmd_17()
-	{
-		return bmd_17;
-	}
-
-	public void setBmd_17(boolean bmd_17)
-	{
-		this.bmd_17 = bmd_17;
-	}
-
-	public boolean isBmd_18()
-	{
-		return bmd_18;
-	}
-
-	public void setBmd_18(boolean bmd_18)
-	{
-		this.bmd_18 = bmd_18;
-	}
-
-	public boolean isBmd_19()
-	{
-		return bmd_19;
-	}
-
-	public void setBmd_19(boolean bmd_19)
-	{
-		this.bmd_19 = bmd_19;
-	}
-
-	public boolean isBmd_20()
-	{
-		return bmd_20;
-	}
-
-	public void setBmd_20(boolean bmd_20)
-	{
-		this.bmd_20 = bmd_20;
-	}
-
-	public boolean isBmd_21()
-	{
-		return bmd_21;
-	}
-
-	public void setBmd_21(boolean bmd_21)
-	{
-		this.bmd_21 = bmd_21;
-	}
-
-	public boolean isBmd_22()
-	{
-		return bmd_22;
-	}
-
-	public void setBmd_22(boolean bmd_22)
-	{
-		this.bmd_22 = bmd_22;
-	}
-
-	public boolean isBmd_23()
-	{
-		return bmd_23;
-	}
-
-	public void setBmd_23(boolean bmd_23)
-	{
-		this.bmd_23 = bmd_23;
-	}
-
-	public boolean isBmd_24()
-	{
-		return bmd_24;
-	}
-
-	public void setBmd_24(boolean bmd_24)
-	{
-		this.bmd_24 = bmd_24;
-	}
-
-	public boolean isBmd_25()
-	{
-		return bmd_25;
-	}
-
-	public void setBmd_25(boolean bmd_25)
-	{
-		this.bmd_25 = bmd_25;
-	}
-
-	public boolean isBmd_26()
-	{
-		return bmd_26;
-	}
-
-	public void setBmd_26(boolean bmd_26)
-	{
-		this.bmd_26 = bmd_26;
-	}
-
-	public boolean isBmd_27()
-	{
-		return bmd_27;
-	}
-
-	public void setBmd_27(boolean bmd_27)
-	{
-		this.bmd_27 = bmd_27;
-	}
-
-	public boolean isBmd_28()
-	{
-		return bmd_28;
-	}
-
-	public void setBmd_28(boolean bmd_28)
-	{
-		this.bmd_28 = bmd_28;
-	}
-
-	public boolean isBmd_29()
-	{
-		return bmd_29;
-	}
-
-	public void setBmd_29(boolean bmd_29)
-	{
-		this.bmd_29 = bmd_29;
-	}
-
-	public boolean isBmd_30()
-	{
-		return bmd_30;
-	}
-
-	public void setBmd_30(boolean bmd_30)
-	{
-		this.bmd_30 = bmd_30;
-	}
-
-	public boolean isBmd_31()
-	{
-		return bmd_31;
-	}
-
-	public void setBmd_31(boolean bmd_31)
-	{
-		this.bmd_31 = bmd_31;
-	}
-
-	public boolean isBmdn_01()
-	{
-		return bmdn_01;
-	}
-
-	public void setBmdn_01(boolean bmdn_01)
-	{
-		this.bmdn_01 = bmdn_01;
-	}
-
-	public boolean isBmdn_02()
-	{
-		return bmdn_02;
-	}
-
-	public void setBmdn_02(boolean bmdn_02)
-	{
-		this.bmdn_02 = bmdn_02;
-	}
-
-	public boolean isBmdn_03()
-	{
-		return bmdn_03;
-	}
-
-	public void setBmdn_03(boolean bmdn_03)
-	{
-		this.bmdn_03 = bmdn_03;
-	}
-
-	public boolean isBmdn_04()
-	{
-		return bmdn_04;
-	}
-
-	public void setBmdn_04(boolean bmdn_04)
-	{
-		this.bmdn_04 = bmdn_04;
-	}
-
-	public boolean isBmdn_05()
-	{
-		return bmdn_05;
-	}
-
-	public void setBmdn_05(boolean bmdn_05)
-	{
-		this.bmdn_05 = bmdn_05;
-	}
-
-	public boolean isBmdn_06()
-	{
-		return bmdn_06;
-	}
-
-	public void setBmdn_06(boolean bmdn_06)
-	{
-		this.bmdn_06 = bmdn_06;
-	}
-
-	public boolean isBmdn_07()
-	{
-		return bmdn_07;
-	}
-
-	public void setBmdn_07(boolean bmdn_07)
-	{
-		this.bmdn_07 = bmdn_07;
-	}
-
-	public boolean isBmdn_08()
-	{
-		return bmdn_08;
-	}
-
-	public void setBmdn_08(boolean bmdn_08)
-	{
-		this.bmdn_08 = bmdn_08;
-	}
-
-	public boolean isBmdn_09()
-	{
-		return bmdn_09;
-	}
-
-	public void setBmdn_09(boolean bmdn_09)
-	{
-		this.bmdn_09 = bmdn_09;
-	}
-
-	public boolean isBmdn_10()
-	{
-		return bmdn_10;
-	}
-
-	public void setBmdn_10(boolean bmdn_10)
-	{
-		this.bmdn_10 = bmdn_10;
-	}
-
-	public boolean isBmdn_11()
-	{
-		return bmdn_11;
-	}
-
-	public void setBmdn_11(boolean bmdn_11)
-	{
-		this.bmdn_11 = bmdn_11;
-	}
-
-	public boolean isBmdn_12()
-	{
-		return bmdn_12;
-	}
-
-	public void setBmdn_12(boolean bmdn_12)
-	{
-		this.bmdn_12 = bmdn_12;
-	}
-
-	public boolean isBmdn_13()
-	{
-		return bmdn_13;
-	}
-
-	public void setBmdn_13(boolean bmdn_13)
-	{
-		this.bmdn_13 = bmdn_13;
-	}
-
-	public boolean isBmdn_14()
-	{
-		return bmdn_14;
-	}
-
-	public void setBmdn_14(boolean bmdn_14)
-	{
-		this.bmdn_14 = bmdn_14;
-	}
-
-	public boolean isBmdn_15()
-	{
-		return bmdn_15;
-	}
-
-	public void setBmdn_15(boolean bmdn_15)
-	{
-		this.bmdn_15 = bmdn_15;
-	}
-
-	public boolean isBmdn_16()
-	{
-		return bmdn_16;
-	}
-
-	public void setBmdn_16(boolean bmdn_16)
-	{
-		this.bmdn_16 = bmdn_16;
-	}
-
-	public boolean isBmdn_17()
-	{
-		return bmdn_17;
-	}
-
-	public void setBmdn_17(boolean bmdn_17)
-	{
-		this.bmdn_17 = bmdn_17;
-	}
-
-	public boolean isBmdn_18()
-	{
-		return bmdn_18;
-	}
-
-	public void setBmdn_18(boolean bmdn_18)
-	{
-		this.bmdn_18 = bmdn_18;
-	}
-
-	public boolean isBmdn_19()
-	{
-		return bmdn_19;
-	}
-
-	public void setBmdn_19(boolean bmdn_19)
-	{
-		this.bmdn_19 = bmdn_19;
-	}
-
-	public boolean isBmdn_20()
-	{
-		return bmdn_20;
-	}
-
-	public void setBmdn_20(boolean bmdn_20)
-	{
-		this.bmdn_20 = bmdn_20;
-	}
-
-	public boolean isBmdn_21()
-	{
-		return bmdn_21;
-	}
-
-	public void setBmdn_21(boolean bmdn_21)
-	{
-		this.bmdn_21 = bmdn_21;
-	}
-
-	public boolean isBmdn_22()
-	{
-		return bmdn_22;
-	}
-
-	public void setBmdn_22(boolean bmdn_22)
-	{
-		this.bmdn_22 = bmdn_22;
-	}
-
-	public boolean isBmdn_23()
-	{
-		return bmdn_23;
-	}
-
-	public void setBmdn_23(boolean bmdn_23)
-	{
-		this.bmdn_23 = bmdn_23;
-	}
-
-	public boolean isBmdn_24()
-	{
-		return bmdn_24;
-	}
-
-	public void setBmdn_24(boolean bmdn_24)
-	{
-		this.bmdn_24 = bmdn_24;
-	}
-
-	public boolean isBmdn_25()
-	{
-		return bmdn_25;
-	}
-
-	public void setBmdn_25(boolean bmdn_25)
-	{
-		this.bmdn_25 = bmdn_25;
-	}
-
-	public boolean isBmdn_26()
-	{
-		return bmdn_26;
-	}
-
-	public void setBmdn_26(boolean bmdn_26)
-	{
-		this.bmdn_26 = bmdn_26;
-	}
-
-	public boolean isBmdn_27()
-	{
-		return bmdn_27;
-	}
-
-	public void setBmdn_27(boolean bmdn_27)
-	{
-		this.bmdn_27 = bmdn_27;
-	}
-
-	public boolean isBmdn_28()
-	{
-		return bmdn_28;
-	}
-
-	public void setBmdn_28(boolean bmdn_28)
-	{
-		this.bmdn_28 = bmdn_28;
-	}
-
-	public boolean isBmdn_29()
-	{
-		return bmdn_29;
-	}
-
-	public void setBmdn_29(boolean bmdn_29)
-	{
-		this.bmdn_29 = bmdn_29;
-	}
-
-	public boolean isBmdn_30()
-	{
-		return bmdn_30;
-	}
-
-	public void setBmdn_30(boolean bmdn_30)
-	{
-		this.bmdn_30 = bmdn_30;
-	}
-
-	public boolean isBmdn_31()
-	{
-		return bmdn_31;
-	}
-
-	public void setBmdn_31(boolean bmdn_31)
-	{
-		this.bmdn_31 = bmdn_31;
-	}
-
-	public boolean isBh_00()
-	{
-		return bh_00;
-	}
-
-	public void setBh_00(boolean bh_00)
-	{
-		this.bh_00 = bh_00;
-	}
-
-	public boolean isBh_01()
-	{
-		return bh_01;
-	}
-
-	public void setBh_01(boolean bh_01)
-	{
-		this.bh_01 = bh_01;
-	}
-
-	public boolean isBh_02()
-	{
-		return bh_02;
-	}
-
-	public void setBh_02(boolean bh_02)
-	{
-		this.bh_02 = bh_02;
-	}
-
-	public boolean isBh_03()
-	{
-		return bh_03;
-	}
-
-	public void setBh_03(boolean bh_03)
-	{
-		this.bh_03 = bh_03;
-	}
-
-	public boolean isBh_04()
-	{
-		return bh_04;
-	}
-
-	public void setBh_04(boolean bh_04)
-	{
-		this.bh_04 = bh_04;
-	}
-
-	public boolean isBh_05()
-	{
-		return bh_05;
-	}
-
-	public void setBh_05(boolean bh_05)
-	{
-		this.bh_05 = bh_05;
-	}
-
-	public boolean isBh_06()
-	{
-		return bh_06;
-	}
-
-	public void setBh_06(boolean bh_06)
-	{
-		this.bh_06 = bh_06;
-	}
-
-	public boolean isBh_07()
-	{
-		return bh_07;
-	}
-
-	public void setBh_07(boolean bh_07)
-	{
-		this.bh_07 = bh_07;
-	}
-
-	public boolean isBh_08()
-	{
-		return bh_08;
-	}
-
-	public void setBh_08(boolean bh_08)
-	{
-		this.bh_08 = bh_08;
-	}
-
-	public boolean isBh_09()
-	{
-		return bh_09;
-	}
-
-	public void setBh_09(boolean bh_09)
-	{
-		this.bh_09 = bh_09;
-	}
-
-	public boolean isBh_10()
-	{
-		return bh_10;
-	}
-
-	public void setBh_10(boolean bh_10)
-	{
-		this.bh_10 = bh_10;
-	}
-
-	public boolean isBh_11()
-	{
-		return bh_11;
-	}
-
-	public void setBh_11(boolean bh_11)
-	{
-		this.bh_11 = bh_11;
-	}
-
-	public boolean isBh_12()
-	{
-		return bh_12;
-	}
-
-	public void setBh_12(boolean bh_12)
-	{
-		this.bh_12 = bh_12;
-	}
-
-	public boolean isBh_13()
-	{
-		return bh_13;
-	}
-
-	public void setBh_13(boolean bh_13)
-	{
-		this.bh_13 = bh_13;
-	}
-
-	public boolean isBh_14()
-	{
-		return bh_14;
-	}
-
-	public void setBh_14(boolean bh_14)
-	{
-		this.bh_14 = bh_14;
-	}
-
-	public boolean isBh_15()
-	{
-		return bh_15;
-	}
-
-	public void setBh_15(boolean bh_15)
-	{
-		this.bh_15 = bh_15;
-	}
-
-	public boolean isBh_16()
-	{
-		return bh_16;
-	}
-
-	public void setBh_16(boolean bh_16)
-	{
-		this.bh_16 = bh_16;
-	}
-
-	public boolean isBh_17()
-	{
-		return bh_17;
-	}
-
-	public void setBh_17(boolean bh_17)
-	{
-		this.bh_17 = bh_17;
-	}
-
-	public boolean isBh_18()
-	{
-		return bh_18;
-	}
-
-	public void setBh_18(boolean bh_18)
-	{
-		this.bh_18 = bh_18;
-	}
-
-	public boolean isBh_19()
-	{
-		return bh_19;
-	}
-
-	public void setBh_19(boolean bh_19)
-	{
-		this.bh_19 = bh_19;
-	}
-
-	public boolean isBh_20()
-	{
-		return bh_20;
-	}
-
-	public void setBh_20(boolean bh_20)
-	{
-		this.bh_20 = bh_20;
-	}
-
-	public boolean isBh_21()
-	{
-		return bh_21;
-	}
-
-	public void setBh_21(boolean bh_21)
-	{
-		this.bh_21 = bh_21;
-	}
-
-	public boolean isBh_22()
-	{
-		return bh_22;
-	}
-
-	public void setBh_22(boolean bh_22)
-	{
-		this.bh_22 = bh_22;
-	}
-
-	public boolean isBh_23()
-	{
-		return bh_23;
-	}
-
-	public void setBh_23(boolean bh_23)
-	{
-		this.bh_23 = bh_23;
-	}
-
-	public boolean isBd_01()
-	{
-		return bd_01;
-	}
-
-	public void setBd_01(boolean bd_01)
-	{
-		this.bd_01 = bd_01;
-	}
-
-	public boolean isBd_02()
-	{
-		return bd_02;
-	}
-
-	public void setBd_02(boolean bd_02)
-	{
-		this.bd_02 = bd_02;
-	}
-
-	public boolean isBd_03()
-	{
-		return bd_03;
-	}
-
-	public void setBd_03(boolean bd_03)
-	{
-		this.bd_03 = bd_03;
-	}
-
-	public boolean isBd_04()
-	{
-		return bd_04;
-	}
-
-	public void setBd_04(boolean bd_04)
-	{
-		this.bd_04 = bd_04;
-	}
-
-	public boolean isBd_05()
-	{
-		return bd_05;
-	}
-
-	public void setBd_05(boolean bd_05)
-	{
-		this.bd_05 = bd_05;
-	}
-
-	public boolean isBd_06()
-	{
-		return bd_06;
-	}
-
-	public void setBd_06(boolean bd_06)
-	{
-		this.bd_06 = bd_06;
-	}
-
-	public boolean isBd_07()
-	{
-		return bd_07;
-	}
-
-	public void setBd_07(boolean bd_07)
-	{
-		this.bd_07 = bd_07;
-	}
-
-	public boolean isBm_01()
-	{
-		return bm_01;
-	}
-
-	public void setBm_01(boolean bm_01)
-	{
-		this.bm_01 = bm_01;
-	}
-
-	public boolean isBm_02()
-	{
-		return bm_02;
-	}
-
-	public void setBm_02(boolean bm_02)
-	{
-		this.bm_02 = bm_02;
-	}
-
-	public boolean isBm_03()
-	{
-		return bm_03;
-	}
-
-	public void setBm_03(boolean bm_03)
-	{
-		this.bm_03 = bm_03;
-	}
-
-	public boolean isBm_04()
-	{
-		return bm_04;
-	}
-
-	public void setBm_04(boolean bm_04)
-	{
-		this.bm_04 = bm_04;
-	}
-
-	public boolean isBm_05()
-	{
-		return bm_05;
-	}
-
-	public void setBm_05(boolean bm_05)
-	{
-		this.bm_05 = bm_05;
-	}
-
-	public boolean isBm_06()
-	{
-		return bm_06;
-	}
-
-	public void setBm_06(boolean bm_06)
-	{
-		this.bm_06 = bm_06;
-	}
-
-	public boolean isBm_07()
-	{
-		return bm_07;
-	}
-
-	public void setBm_07(boolean bm_07)
-	{
-		this.bm_07 = bm_07;
-	}
-
-	public boolean isBm_08()
-	{
-		return bm_08;
-	}
-
-	public void setBm_08(boolean bm_08)
-	{
-		this.bm_08 = bm_08;
-	}
-
-	public boolean isBm_09()
-	{
-		return bm_09;
-	}
-
-	public void setBm_09(boolean bm_09)
-	{
-		this.bm_09 = bm_09;
-	}
-
-	public boolean isBm_10()
-	{
-		return bm_10;
-	}
-
-	public void setBm_10(boolean bm_10)
-	{
-		this.bm_10 = bm_10;
-	}
-
-	public boolean isBm_11()
-	{
-		return bm_11;
-	}
-
-	public void setBm_11(boolean bm_11)
-	{
-		this.bm_11 = bm_11;
-	}
-
-	public boolean isBm_12()
-	{
-		return bm_12;
-	}
-
-	public void setBm_12(boolean bm_12)
-	{
-		this.bm_12 = bm_12;
-	}
-
-	public boolean isBn_00()
-	{
-		return bn_00;
-	}
-
-	public void setBn_00(boolean bn_00)
-	{
-		this.bn_00 = bn_00;
-	}
-
-	public boolean isBn_01()
-	{
-		return bn_01;
-	}
-
-	public void setBn_01(boolean bn_01)
-	{
-		this.bn_01 = bn_01;
-	}
-
-	public boolean isBn_02()
-	{
-		return bn_02;
-	}
-
-	public void setBn_02(boolean bn_02)
-	{
-		this.bn_02 = bn_02;
-	}
-
-	public boolean isBn_03()
-	{
-		return bn_03;
-	}
-
-	public void setBn_03(boolean bn_03)
-	{
-		this.bn_03 = bn_03;
-	}
-
-	public boolean isBn_04()
-	{
-		return bn_04;
-	}
-
-	public void setBn_04(boolean bn_04)
-	{
-		this.bn_04 = bn_04;
-	}
-
-	public boolean isBn_05()
-	{
-		return bn_05;
-	}
-
-	public void setBn_05(boolean bn_05)
-	{
-		this.bn_05 = bn_05;
-	}
-
-	public boolean isBn_06()
-	{
-		return bn_06;
-	}
-
-	public void setBn_06(boolean bn_06)
-	{
-		this.bn_06 = bn_06;
-	}
-
-	public boolean isBn_07()
-	{
-		return bn_07;
-	}
-
-	public void setBn_07(boolean bn_07)
-	{
-		this.bn_07 = bn_07;
-	}
-
-	public boolean isBn_08()
-	{
-		return bn_08;
-	}
-
-	public void setBn_08(boolean bn_08)
-	{
-		this.bn_08 = bn_08;
-	}
-
-	public boolean isBn_09()
-	{
-		return bn_09;
-	}
-
-	public void setBn_09(boolean bn_09)
-	{
-		this.bn_09 = bn_09;
-	}
-
-	public boolean isBn_10()
-	{
-		return bn_10;
-	}
-
-	public void setBn_10(boolean bn_10)
-	{
-		this.bn_10 = bn_10;
-	}
-
-	public boolean isBn_11()
-	{
-		return bn_11;
-	}
-
-	public void setBn_11(boolean bn_11)
-	{
-		this.bn_11 = bn_11;
-	}
-
-	public boolean isBn_12()
-	{
-		return bn_12;
-	}
-
-	public void setBn_12(boolean bn_12)
-	{
-		this.bn_12 = bn_12;
-	}
-
-	public boolean isBn_13()
-	{
-		return bn_13;
-	}
-
-	public void setBn_13(boolean bn_13)
-	{
-		this.bn_13 = bn_13;
-	}
-
-	public boolean isBn_14()
-	{
-		return bn_14;
-	}
-
-	public void setBn_14(boolean bn_14)
-	{
-		this.bn_14 = bn_14;
-	}
-
-	public boolean isBn_15()
-	{
-		return bn_15;
-	}
-
-	public void setBn_15(boolean bn_15)
-	{
-		this.bn_15 = bn_15;
-	}
-
-	public boolean isBn_16()
-	{
-		return bn_16;
-	}
-
-	public void setBn_16(boolean bn_16)
-	{
-		this.bn_16 = bn_16;
-	}
-
-	public boolean isBn_17()
-	{
-		return bn_17;
-	}
-
-	public void setBn_17(boolean bn_17)
-	{
-		this.bn_17 = bn_17;
-	}
-
-	public boolean isBn_18()
-	{
-		return bn_18;
-	}
-
-	public void setBn_18(boolean bn_18)
-	{
-		this.bn_18 = bn_18;
-	}
-
-	public boolean isBn_19()
-	{
-		return bn_19;
-	}
-
-	public void setBn_19(boolean bn_19)
-	{
-		this.bn_19 = bn_19;
-	}
-
-	public boolean isBn_20()
-	{
-		return bn_20;
-	}
-
-	public void setBn_20(boolean bn_20)
-	{
-		this.bn_20 = bn_20;
-	}
-
-	public boolean isBn_21()
-	{
-		return bn_21;
-	}
-
-	public void setBn_21(boolean bn_21)
-	{
-		this.bn_21 = bn_21;
-	}
-
-	public boolean isBn_22()
-	{
-		return bn_22;
-	}
-
-	public void setBn_22(boolean bn_22)
-	{
-		this.bn_22 = bn_22;
-	}
-
-	public boolean isBn_23()
-	{
-		return bn_23;
-	}
-
-	public void setBn_23(boolean bn_23)
-	{
-		this.bn_23 = bn_23;
-	}
-
-	public boolean isBn_24()
-	{
-		return bn_24;
-	}
-
-	public void setBn_24(boolean bn_24)
-	{
-		this.bn_24 = bn_24;
-	}
-
-	public boolean isBn_25()
-	{
-		return bn_25;
-	}
-
-	public void setBn_25(boolean bn_25)
-	{
-		this.bn_25 = bn_25;
-	}
-
-	public boolean isBn_26()
-	{
-		return bn_26;
-	}
-
-	public void setBn_26(boolean bn_26)
-	{
-		this.bn_26 = bn_26;
-	}
-
-	public boolean isBn_27()
-	{
-		return bn_27;
-	}
-
-	public void setBn_27(boolean bn_27)
-	{
-		this.bn_27 = bn_27;
-	}
-
-	public boolean isBn_28()
-	{
-		return bn_28;
-	}
-
-	public void setBn_28(boolean bn_28)
-	{
-		this.bn_28 = bn_28;
-	}
-
-	public boolean isBn_29()
-	{
-		return bn_29;
-	}
-
-	public void setBn_29(boolean bn_29)
-	{
-		this.bn_29 = bn_29;
-	}
-
-	public boolean isBn_30()
-	{
-		return bn_30;
-	}
-
-	public void setBn_30(boolean bn_30)
-	{
-		this.bn_30 = bn_30;
-	}
-
-	public boolean isBn_31()
-	{
-		return bn_31;
-	}
-
-	public void setBn_31(boolean bn_31)
-	{
-		this.bn_31 = bn_31;
-	}
-
-	public boolean isBn_32()
-	{
-		return bn_32;
-	}
-
-	public void setBn_32(boolean bn_32)
-	{
-		this.bn_32 = bn_32;
-	}
-
-	public boolean isBn_33()
-	{
-		return bn_33;
-	}
-
-	public void setBn_33(boolean bn_33)
-	{
-		this.bn_33 = bn_33;
-	}
-
-	public boolean isBn_34()
-	{
-		return bn_34;
-	}
-
-	public void setBn_34(boolean bn_34)
-	{
-		this.bn_34 = bn_34;
-	}
-
-	public boolean isBn_35()
-	{
-		return bn_35;
-	}
-
-	public void setBn_35(boolean bn_35)
-	{
-		this.bn_35 = bn_35;
-	}
-
-	public boolean isBn_36()
-	{
-		return bn_36;
-	}
-
-	public void setBn_36(boolean bn_36)
-	{
-		this.bn_36 = bn_36;
-	}
-
-	public boolean isBn_37()
-	{
-		return bn_37;
-	}
-
-	public void setBn_37(boolean bn_37)
-	{
-		this.bn_37 = bn_37;
-	}
-
-	public boolean isBn_38()
-	{
-		return bn_38;
-	}
-
-	public void setBn_38(boolean bn_38)
-	{
-		this.bn_38 = bn_38;
-	}
-
-	public boolean isBn_39()
-	{
-		return bn_39;
-	}
-
-	public void setBn_39(boolean bn_39)
-	{
-		this.bn_39 = bn_39;
-	}
-
-	public boolean isBn_40()
-	{
-		return bn_40;
-	}
-
-	public void setBn_40(boolean bn_40)
-	{
-		this.bn_40 = bn_40;
-	}
-
-	public boolean isBn_41()
-	{
-		return bn_41;
-	}
-
-	public void setBn_41(boolean bn_41)
-	{
-		this.bn_41 = bn_41;
-	}
-
-	public boolean isBn_42()
-	{
-		return bn_42;
-	}
-
-	public void setBn_42(boolean bn_42)
-	{
-		this.bn_42 = bn_42;
-	}
-
-	public boolean isBn_43()
-	{
-		return bn_43;
-	}
-
-	public void setBn_43(boolean bn_43)
-	{
-		this.bn_43 = bn_43;
-	}
-
-	public boolean isBn_44()
-	{
-		return bn_44;
-	}
-
-	public void setBn_44(boolean bn_44)
-	{
-		this.bn_44 = bn_44;
-	}
-
-	public boolean isBn_45()
-	{
-		return bn_45;
-	}
-
-	public void setBn_45(boolean bn_45)
-	{
-		this.bn_45 = bn_45;
-	}
-
-	public boolean isBn_46()
-	{
-		return bn_46;
-	}
-
-	public void setBn_46(boolean bn_46)
-	{
-		this.bn_46 = bn_46;
-	}
-
-	public boolean isBn_47()
-	{
-		return bn_47;
-	}
-
-	public void setBn_47(boolean bn_47)
-	{
-		this.bn_47 = bn_47;
-	}
-
-	public boolean isBn_48()
-	{
-		return bn_48;
-	}
-
-	public void setBn_48(boolean bn_48)
-	{
-		this.bn_48 = bn_48;
-	}
-
-	public boolean isBn_49()
-	{
-		return bn_49;
-	}
-
-	public void setBn_49(boolean bn_49)
-	{
-		this.bn_49 = bn_49;
-	}
-
-	public boolean isBn_50()
-	{
-		return bn_50;
-	}
-
-	public void setBn_50(boolean bn_50)
-	{
-		this.bn_50 = bn_50;
-	}
-
-	public boolean isBn_51()
-	{
-		return bn_51;
-	}
-
-	public void setBn_51(boolean bn_51)
-	{
-		this.bn_51 = bn_51;
-	}
-
-	public boolean isBn_52()
-	{
-		return bn_52;
-	}
-
-	public void setBn_52(boolean bn_52)
-	{
-		this.bn_52 = bn_52;
-	}
-
-	public boolean isBn_53()
-	{
-		return bn_53;
-	}
-
-	public void setBn_53(boolean bn_53)
-	{
-		this.bn_53 = bn_53;
-	}
-
-	public boolean isBn_54()
-	{
-		return bn_54;
-	}
-
-	public void setBn_54(boolean bn_54)
-	{
-		this.bn_54 = bn_54;
-	}
-
-	public boolean isBn_55()
-	{
-		return bn_55;
-	}
-
-	public void setBn_55(boolean bn_55)
-	{
-		this.bn_55 = bn_55;
-	}
-
-	public boolean isBn_56()
-	{
-		return bn_56;
-	}
-
-	public void setBn_56(boolean bn_56)
-	{
-		this.bn_56 = bn_56;
-	}
-
-	public boolean isBn_57()
-	{
-		return bn_57;
-	}
-
-	public void setBn_57(boolean bn_57)
-	{
-		this.bn_57 = bn_57;
-	}
-
-	public boolean isBn_58()
-	{
-		return bn_58;
-	}
-
-	public void setBn_58(boolean bn_58)
-	{
-		this.bn_58 = bn_58;
-	}
-
-	public boolean isBn_59()
-	{
-		return bn_59;
-	}
-
-	public void setBn_59(boolean bn_59)
-	{
-		this.bn_59 = bn_59;
-	}
+    private String name;
+    private String description;
+    private String id;
+
+    private String period;
+    private int interval;
+
+    // ByDay (01 = Monday, 07 = Sunday)
+    private boolean bd01 = false, bd02 = false, bd03 = false, bd04 = false, bd05 = false, bd06 = false, bd07 = false;
+    // ByMonthDay
+    private boolean bmd01 = false, bmd02 = false, bmd03 = false, bmd04 = false, bmd05 = false, bmd06 = false, bmd07 = false,
+            bmd08 = false, bmd09 = false, bmd10 = false, bmd11 = false, bmd12 = false, bmd13 = false, bmd14 = false, bmd15 = false,
+            bmd16 = false, bmd17 = false, bmd18 = false, bmd19 = false, bmd20 = false, bmd21 = false, bmd22 = false, bmd23 = false,
+            bmd24 = false, bmd25 = false, bmd26 = false, bmd27 = false, bmd28 = false, bmd29 = false, bmd30 = false, bmd31 = false;
+    private boolean bmdn01 = false, bmdn02 = false, bmdn03 = false, bmdn04 = false, bmdn05 = false, bmdn06 = false, bmdn07 = false,
+            bmdn08 = false, bmdn09 = false, bmdn10 = false, bmdn11 = false, bmdn12 = false, bmdn13 = false, bmdn14 = false,
+            bmdn15 = false, bmdn16 = false, bmdn17 = false, bmdn18 = false, bmdn19 = false, bmdn20 = false, bmdn21 = false,
+            bmdn22 = false, bmdn23 = false, bmdn24 = false, bmdn25 = false, bmdn26 = false, bmdn27 = false, bmdn28 = false,
+            bmdn29 = false, bmdn30 = false, bmdn31 = false;
+    // ByMonth (01 = January)
+    private boolean bm01 = false, bm02 = false, bm03 = false, bm04 = false, bm05 = false, bm06 = false, bm07 = false, bm08 = false,
+            bm09 = false, bm10 = false, bm11 = false, bm12 = false;
+    // ByHour
+    private boolean bh00 = false, bh01 = false, bh02 = false, bh03 = false, bh04 = false, bh05 = false, bh06 = false, bh07 = false,
+            bh08 = false, bh09 = false, bh10 = false, bh11 = false, bh12 = false, bh13 = false, bh14 = false, bh15 = false,
+            bh16 = false, bh17 = false, bh18 = false, bh19 = false, bh20 = false, bh21 = false, bh22 = false, bh23 = false;
+    // ByMinute
+    private boolean bn00 = false, bn01 = false, bn02 = false, bn03 = false, bn04 = false, bn05 = false, bn06 = false, bn07 = false,
+            bn08 = false, bn09 = false, bn10 = false, bn11 = false, bn12 = false, bn13 = false, bn14 = false, bn15 = false,
+            bn16 = false, bn17 = false, bn18 = false, bn19 = false, bn20 = false, bn21 = false, bn22 = false, bn23 = false,
+            bn24 = false, bn25 = false, bn26 = false, bn27 = false, bn28 = false, bn29 = false, bn30 = false, bn31 = false,
+            bn32 = false, bn33 = false, bn34 = false, bn35 = false, bn36 = false, bn37 = false, bn38 = false, bn39 = false,
+            bn40 = false, bn41 = false, bn42 = false, bn43 = false, bn44 = false, bn45 = false, bn46 = false, bn47 = false,
+            bn48 = false, bn49 = false, bn50 = false, bn51 = false, bn52 = false, bn53 = false, bn54 = false, bn55 = false,
+            bn56 = false, bn57 = false, bn58 = false, bn59 = false;
+
+    // Stupid get/set for Javabean convention
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+
+    public String getPeriod()
+    {
+        return period;
+    }
+
+    public void setPeriod(String period)
+    {
+        this.period = period;
+    }
+
+    public int getInterval()
+    {
+        return interval;
+    }
+
+    public void setInterval(int interval)
+    {
+        this.interval = interval;
+    }
+
+    public boolean isBmd01()
+    {
+        return bmd01;
+    }
+
+    public void setBmd01(boolean bmd01)
+    {
+        this.bmd01 = bmd01;
+    }
+
+    public boolean isBmd02()
+    {
+        return bmd02;
+    }
+
+    public void setBmd02(boolean bmd02)
+    {
+        this.bmd02 = bmd02;
+    }
+
+    public boolean isBmd03()
+    {
+        return bmd03;
+    }
+
+    public void setBmd03(boolean bmd03)
+    {
+        this.bmd03 = bmd03;
+    }
+
+    public boolean isBmd04()
+    {
+        return bmd04;
+    }
+
+    public void setBmd04(boolean bmd04)
+    {
+        this.bmd04 = bmd04;
+    }
+
+    public boolean isBmd05()
+    {
+        return bmd05;
+    }
+
+    public void setBmd05(boolean bmd05)
+    {
+        this.bmd05 = bmd05;
+    }
+
+    public boolean isBmd06()
+    {
+        return bmd06;
+    }
+
+    public void setBmd06(boolean bmd06)
+    {
+        this.bmd06 = bmd06;
+    }
+
+    public boolean isBmd07()
+    {
+        return bmd07;
+    }
+
+    public void setBmd07(boolean bmd07)
+    {
+        this.bmd07 = bmd07;
+    }
+
+    public boolean isBmd08()
+    {
+        return bmd08;
+    }
+
+    public void setBmd08(boolean bmd08)
+    {
+        this.bmd08 = bmd08;
+    }
+
+    public boolean isBmd09()
+    {
+        return bmd09;
+    }
+
+    public void setBmd09(boolean bmd09)
+    {
+        this.bmd09 = bmd09;
+    }
+
+    public boolean isBmd10()
+    {
+        return bmd10;
+    }
+
+    public void setBmd10(boolean bmd10)
+    {
+        this.bmd10 = bmd10;
+    }
+
+    public boolean isBmd11()
+    {
+        return bmd11;
+    }
+
+    public void setBmd11(boolean bmd11)
+    {
+        this.bmd11 = bmd11;
+    }
+
+    public boolean isBmd12()
+    {
+        return bmd12;
+    }
+
+    public void setBmd12(boolean bmd12)
+    {
+        this.bmd12 = bmd12;
+    }
+
+    public boolean isBmd13()
+    {
+        return bmd13;
+    }
+
+    public void setBmd13(boolean bmd13)
+    {
+        this.bmd13 = bmd13;
+    }
+
+    public boolean isBmd14()
+    {
+        return bmd14;
+    }
+
+    public void setBmd14(boolean bmd14)
+    {
+        this.bmd14 = bmd14;
+    }
+
+    public boolean isBmd15()
+    {
+        return bmd15;
+    }
+
+    public void setBmd15(boolean bmd15)
+    {
+        this.bmd15 = bmd15;
+    }
+
+    public boolean isBmd16()
+    {
+        return bmd16;
+    }
+
+    public void setBmd16(boolean bmd16)
+    {
+        this.bmd16 = bmd16;
+    }
+
+    public boolean isBmd17()
+    {
+        return bmd17;
+    }
+
+    public void setBmd17(boolean bmd17)
+    {
+        this.bmd17 = bmd17;
+    }
+
+    public boolean isBmd18()
+    {
+        return bmd18;
+    }
+
+    public void setBmd18(boolean bmd18)
+    {
+        this.bmd18 = bmd18;
+    }
+
+    public boolean isBmd19()
+    {
+        return bmd19;
+    }
+
+    public void setBmd19(boolean bmd19)
+    {
+        this.bmd19 = bmd19;
+    }
+
+    public boolean isBmd20()
+    {
+        return bmd20;
+    }
+
+    public void setBmd20(boolean bmd20)
+    {
+        this.bmd20 = bmd20;
+    }
+
+    public boolean isBmd21()
+    {
+        return bmd21;
+    }
+
+    public void setBmd21(boolean bmd21)
+    {
+        this.bmd21 = bmd21;
+    }
+
+    public boolean isBmd22()
+    {
+        return bmd22;
+    }
+
+    public void setBmd22(boolean bmd22)
+    {
+        this.bmd22 = bmd22;
+    }
+
+    public boolean isBmd23()
+    {
+        return bmd23;
+    }
+
+    public void setBmd23(boolean bmd23)
+    {
+        this.bmd23 = bmd23;
+    }
+
+    public boolean isBmd24()
+    {
+        return bmd24;
+    }
+
+    public void setBmd24(boolean bmd24)
+    {
+        this.bmd24 = bmd24;
+    }
+
+    public boolean isBmd25()
+    {
+        return bmd25;
+    }
+
+    public void setBmd25(boolean bmd25)
+    {
+        this.bmd25 = bmd25;
+    }
+
+    public boolean isBmd26()
+    {
+        return bmd26;
+    }
+
+    public void setBmd26(boolean bmd26)
+    {
+        this.bmd26 = bmd26;
+    }
+
+    public boolean isBmd27()
+    {
+        return bmd27;
+    }
+
+    public void setBmd27(boolean bmd27)
+    {
+        this.bmd27 = bmd27;
+    }
+
+    public boolean isBmd28()
+    {
+        return bmd28;
+    }
+
+    public void setBmd28(boolean bmd28)
+    {
+        this.bmd28 = bmd28;
+    }
+
+    public boolean isBmd29()
+    {
+        return bmd29;
+    }
+
+    public void setBmd29(boolean bmd29)
+    {
+        this.bmd29 = bmd29;
+    }
+
+    public boolean isBmd30()
+    {
+        return bmd30;
+    }
+
+    public void setBmd30(boolean bmd30)
+    {
+        this.bmd30 = bmd30;
+    }
+
+    public boolean isBmd31()
+    {
+        return bmd31;
+    }
+
+    public void setBmd31(boolean bmd31)
+    {
+        this.bmd31 = bmd31;
+    }
+
+    public boolean isBmdn01()
+    {
+        return bmdn01;
+    }
+
+    public void setBmdn01(boolean bmdn01)
+    {
+        this.bmdn01 = bmdn01;
+    }
+
+    public boolean isBmdn02()
+    {
+        return bmdn02;
+    }
+
+    public void setBmdn02(boolean bmdn02)
+    {
+        this.bmdn02 = bmdn02;
+    }
+
+    public boolean isBmdn03()
+    {
+        return bmdn03;
+    }
+
+    public void setBmdn03(boolean bmdn03)
+    {
+        this.bmdn03 = bmdn03;
+    }
+
+    public boolean isBmdn04()
+    {
+        return bmdn04;
+    }
+
+    public void setBmdn04(boolean bmdn04)
+    {
+        this.bmdn04 = bmdn04;
+    }
+
+    public boolean isBmdn05()
+    {
+        return bmdn05;
+    }
+
+    public void setBmdn05(boolean bmdn05)
+    {
+        this.bmdn05 = bmdn05;
+    }
+
+    public boolean isBmdn06()
+    {
+        return bmdn06;
+    }
+
+    public void setBmdn06(boolean bmdn06)
+    {
+        this.bmdn06 = bmdn06;
+    }
+
+    public boolean isBmdn07()
+    {
+        return bmdn07;
+    }
+
+    public void setBmdn07(boolean bmdn07)
+    {
+        this.bmdn07 = bmdn07;
+    }
+
+    public boolean isBmdn08()
+    {
+        return bmdn08;
+    }
+
+    public void setBmdn08(boolean bmdn08)
+    {
+        this.bmdn08 = bmdn08;
+    }
+
+    public boolean isBmdn09()
+    {
+        return bmdn09;
+    }
+
+    public void setBmdn09(boolean bmdn09)
+    {
+        this.bmdn09 = bmdn09;
+    }
+
+    public boolean isBmdn10()
+    {
+        return bmdn10;
+    }
+
+    public void setBmdn10(boolean bmdn10)
+    {
+        this.bmdn10 = bmdn10;
+    }
+
+    public boolean isBmdn11()
+    {
+        return bmdn11;
+    }
+
+    public void setBmdn11(boolean bmdn11)
+    {
+        this.bmdn11 = bmdn11;
+    }
+
+    public boolean isBmdn12()
+    {
+        return bmdn12;
+    }
+
+    public void setBmdn12(boolean bmdn12)
+    {
+        this.bmdn12 = bmdn12;
+    }
+
+    public boolean isBmdn13()
+    {
+        return bmdn13;
+    }
+
+    public void setBmdn13(boolean bmdn13)
+    {
+        this.bmdn13 = bmdn13;
+    }
+
+    public boolean isBmdn14()
+    {
+        return bmdn14;
+    }
+
+    public void setBmdn14(boolean bmdn14)
+    {
+        this.bmdn14 = bmdn14;
+    }
+
+    public boolean isBmdn15()
+    {
+        return bmdn15;
+    }
+
+    public void setBmdn15(boolean bmdn15)
+    {
+        this.bmdn15 = bmdn15;
+    }
+
+    public boolean isBmdn16()
+    {
+        return bmdn16;
+    }
+
+    public void setBmdn16(boolean bmdn16)
+    {
+        this.bmdn16 = bmdn16;
+    }
+
+    public boolean isBmdn17()
+    {
+        return bmdn17;
+    }
+
+    public void setBmdn17(boolean bmdn17)
+    {
+        this.bmdn17 = bmdn17;
+    }
+
+    public boolean isBmdn18()
+    {
+        return bmdn18;
+    }
+
+    public void setBmdn18(boolean bmdn18)
+    {
+        this.bmdn18 = bmdn18;
+    }
+
+    public boolean isBmdn19()
+    {
+        return bmdn19;
+    }
+
+    public void setBmdn19(boolean bmdn19)
+    {
+        this.bmdn19 = bmdn19;
+    }
+
+    public boolean isBmdn20()
+    {
+        return bmdn20;
+    }
+
+    public void setBmdn20(boolean bmdn20)
+    {
+        this.bmdn20 = bmdn20;
+    }
+
+    public boolean isBmdn21()
+    {
+        return bmdn21;
+    }
+
+    public void setBmdn21(boolean bmdn21)
+    {
+        this.bmdn21 = bmdn21;
+    }
+
+    public boolean isBmdn22()
+    {
+        return bmdn22;
+    }
+
+    public void setBmdn22(boolean bmdn22)
+    {
+        this.bmdn22 = bmdn22;
+    }
+
+    public boolean isBmdn23()
+    {
+        return bmdn23;
+    }
+
+    public void setBmdn23(boolean bmdn23)
+    {
+        this.bmdn23 = bmdn23;
+    }
+
+    public boolean isBmdn24()
+    {
+        return bmdn24;
+    }
+
+    public void setBmdn24(boolean bmdn24)
+    {
+        this.bmdn24 = bmdn24;
+    }
+
+    public boolean isBmdn25()
+    {
+        return bmdn25;
+    }
+
+    public void setBmdn25(boolean bmdn25)
+    {
+        this.bmdn25 = bmdn25;
+    }
+
+    public boolean isBmdn26()
+    {
+        return bmdn26;
+    }
+
+    public void setBmdn26(boolean bmdn26)
+    {
+        this.bmdn26 = bmdn26;
+    }
+
+    public boolean isBmdn27()
+    {
+        return bmdn27;
+    }
+
+    public void setBmdn27(boolean bmdn27)
+    {
+        this.bmdn27 = bmdn27;
+    }
+
+    public boolean isBmdn28()
+    {
+        return bmdn28;
+    }
+
+    public void setBmdn28(boolean bmdn28)
+    {
+        this.bmdn28 = bmdn28;
+    }
+
+    public boolean isBmdn29()
+    {
+        return bmdn29;
+    }
+
+    public void setBmdn29(boolean bmdn29)
+    {
+        this.bmdn29 = bmdn29;
+    }
+
+    public boolean isBmdn30()
+    {
+        return bmdn30;
+    }
+
+    public void setBmdn30(boolean bmdn30)
+    {
+        this.bmdn30 = bmdn30;
+    }
+
+    public boolean isBmdn31()
+    {
+        return bmdn31;
+    }
+
+    public void setBmdn31(boolean bmdn31)
+    {
+        this.bmdn31 = bmdn31;
+    }
+
+    public boolean isBh00()
+    {
+        return bh00;
+    }
+
+    public void setBh00(boolean bh00)
+    {
+        this.bh00 = bh00;
+    }
+
+    public boolean isBh01()
+    {
+        return bh01;
+    }
+
+    public void setBh01(boolean bh01)
+    {
+        this.bh01 = bh01;
+    }
+
+    public boolean isBh02()
+    {
+        return bh02;
+    }
+
+    public void setBh02(boolean bh02)
+    {
+        this.bh02 = bh02;
+    }
+
+    public boolean isBh03()
+    {
+        return bh03;
+    }
+
+    public void setBh03(boolean bh03)
+    {
+        this.bh03 = bh03;
+    }
+
+    public boolean isBh04()
+    {
+        return bh04;
+    }
+
+    public void setBh04(boolean bh04)
+    {
+        this.bh04 = bh04;
+    }
+
+    public boolean isBh05()
+    {
+        return bh05;
+    }
+
+    public void setBh05(boolean bh05)
+    {
+        this.bh05 = bh05;
+    }
+
+    public boolean isBh06()
+    {
+        return bh06;
+    }
+
+    public void setBh06(boolean bh06)
+    {
+        this.bh06 = bh06;
+    }
+
+    public boolean isBh07()
+    {
+        return bh07;
+    }
+
+    public void setBh07(boolean bh07)
+    {
+        this.bh07 = bh07;
+    }
+
+    public boolean isBh08()
+    {
+        return bh08;
+    }
+
+    public void setBh08(boolean bh08)
+    {
+        this.bh08 = bh08;
+    }
+
+    public boolean isBh09()
+    {
+        return bh09;
+    }
+
+    public void setBh09(boolean bh09)
+    {
+        this.bh09 = bh09;
+    }
+
+    public boolean isBh10()
+    {
+        return bh10;
+    }
+
+    public void setBh10(boolean bh10)
+    {
+        this.bh10 = bh10;
+    }
+
+    public boolean isBh11()
+    {
+        return bh11;
+    }
+
+    public void setBh11(boolean bh11)
+    {
+        this.bh11 = bh11;
+    }
+
+    public boolean isBh12()
+    {
+        return bh12;
+    }
+
+    public void setBh12(boolean bh12)
+    {
+        this.bh12 = bh12;
+    }
+
+    public boolean isBh13()
+    {
+        return bh13;
+    }
+
+    public void setBh13(boolean bh13)
+    {
+        this.bh13 = bh13;
+    }
+
+    public boolean isBh14()
+    {
+        return bh14;
+    }
+
+    public void setBh14(boolean bh14)
+    {
+        this.bh14 = bh14;
+    }
+
+    public boolean isBh15()
+    {
+        return bh15;
+    }
+
+    public void setBh15(boolean bh15)
+    {
+        this.bh15 = bh15;
+    }
+
+    public boolean isBh16()
+    {
+        return bh16;
+    }
+
+    public void setBh16(boolean bh16)
+    {
+        this.bh16 = bh16;
+    }
+
+    public boolean isBh17()
+    {
+        return bh17;
+    }
+
+    public void setBh17(boolean bh17)
+    {
+        this.bh17 = bh17;
+    }
+
+    public boolean isBh18()
+    {
+        return bh18;
+    }
+
+    public void setBh18(boolean bh18)
+    {
+        this.bh18 = bh18;
+    }
+
+    public boolean isBh19()
+    {
+        return bh19;
+    }
+
+    public void setBh19(boolean bh19)
+    {
+        this.bh19 = bh19;
+    }
+
+    public boolean isBh20()
+    {
+        return bh20;
+    }
+
+    public void setBh20(boolean bh20)
+    {
+        this.bh20 = bh20;
+    }
+
+    public boolean isBh21()
+    {
+        return bh21;
+    }
+
+    public void setBh21(boolean bh21)
+    {
+        this.bh21 = bh21;
+    }
+
+    public boolean isBh22()
+    {
+        return bh22;
+    }
+
+    public void setBh22(boolean bh22)
+    {
+        this.bh22 = bh22;
+    }
+
+    public boolean isBh23()
+    {
+        return bh23;
+    }
+
+    public void setBh23(boolean bh23)
+    {
+        this.bh23 = bh23;
+    }
+
+    public boolean isBd01()
+    {
+        return bd01;
+    }
+
+    public void setBd01(boolean bd01)
+    {
+        this.bd01 = bd01;
+    }
+
+    public boolean isBd02()
+    {
+        return bd02;
+    }
+
+    public void setBd02(boolean bd02)
+    {
+        this.bd02 = bd02;
+    }
+
+    public boolean isBd03()
+    {
+        return bd03;
+    }
+
+    public void setBd03(boolean bd03)
+    {
+        this.bd03 = bd03;
+    }
+
+    public boolean isBd04()
+    {
+        return bd04;
+    }
+
+    public void setBd04(boolean bd04)
+    {
+        this.bd04 = bd04;
+    }
+
+    public boolean isBd05()
+    {
+        return bd05;
+    }
+
+    public void setBd05(boolean bd05)
+    {
+        this.bd05 = bd05;
+    }
+
+    public boolean isBd06()
+    {
+        return bd06;
+    }
+
+    public void setBd06(boolean bd06)
+    {
+        this.bd06 = bd06;
+    }
+
+    public boolean isBd07()
+    {
+        return bd07;
+    }
+
+    public void setBd07(boolean bd07)
+    {
+        this.bd07 = bd07;
+    }
+
+    public boolean isBm01()
+    {
+        return bm01;
+    }
+
+    public void setBm01(boolean bm01)
+    {
+        this.bm01 = bm01;
+    }
+
+    public boolean isBm02()
+    {
+        return bm02;
+    }
+
+    public void setBm02(boolean bm02)
+    {
+        this.bm02 = bm02;
+    }
+
+    public boolean isBm03()
+    {
+        return bm03;
+    }
+
+    public void setBm03(boolean bm03)
+    {
+        this.bm03 = bm03;
+    }
+
+    public boolean isBm04()
+    {
+        return bm04;
+    }
+
+    public void setBm04(boolean bm04)
+    {
+        this.bm04 = bm04;
+    }
+
+    public boolean isBm05()
+    {
+        return bm05;
+    }
+
+    public void setBm05(boolean bm05)
+    {
+        this.bm05 = bm05;
+    }
+
+    public boolean isBm06()
+    {
+        return bm06;
+    }
+
+    public void setBm06(boolean bm06)
+    {
+        this.bm06 = bm06;
+    }
+
+    public boolean isBm07()
+    {
+        return bm07;
+    }
+
+    public void setBm07(boolean bm07)
+    {
+        this.bm07 = bm07;
+    }
+
+    public boolean isBm08()
+    {
+        return bm08;
+    }
+
+    public void setBm08(boolean bm08)
+    {
+        this.bm08 = bm08;
+    }
+
+    public boolean isBm09()
+    {
+        return bm09;
+    }
+
+    public void setBm09(boolean bm09)
+    {
+        this.bm09 = bm09;
+    }
+
+    public boolean isBm10()
+    {
+        return bm10;
+    }
+
+    public void setBm10(boolean bm10)
+    {
+        this.bm10 = bm10;
+    }
+
+    public boolean isBm11()
+    {
+        return bm11;
+    }
+
+    public void setBm11(boolean bm11)
+    {
+        this.bm11 = bm11;
+    }
+
+    public boolean isBm12()
+    {
+        return bm12;
+    }
+
+    public void setBm12(boolean bm12)
+    {
+        this.bm12 = bm12;
+    }
+
+    public boolean isBn00()
+    {
+        return bn00;
+    }
+
+    public void setBn00(boolean bn00)
+    {
+        this.bn00 = bn00;
+    }
+
+    public boolean isBn01()
+    {
+        return bn01;
+    }
+
+    public void setBn01(boolean bn01)
+    {
+        this.bn01 = bn01;
+    }
+
+    public boolean isBn02()
+    {
+        return bn02;
+    }
+
+    public void setBn02(boolean bn02)
+    {
+        this.bn02 = bn02;
+    }
+
+    public boolean isBn03()
+    {
+        return bn03;
+    }
+
+    public void setBn03(boolean bn03)
+    {
+        this.bn03 = bn03;
+    }
+
+    public boolean isBn04()
+    {
+        return bn04;
+    }
+
+    public void setBn04(boolean bn04)
+    {
+        this.bn04 = bn04;
+    }
+
+    public boolean isBn05()
+    {
+        return bn05;
+    }
+
+    public void setBn05(boolean bn05)
+    {
+        this.bn05 = bn05;
+    }
+
+    public boolean isBn06()
+    {
+        return bn06;
+    }
+
+    public void setBn06(boolean bn06)
+    {
+        this.bn06 = bn06;
+    }
+
+    public boolean isBn07()
+    {
+        return bn07;
+    }
+
+    public void setBn07(boolean bn07)
+    {
+        this.bn07 = bn07;
+    }
+
+    public boolean isBn08()
+    {
+        return bn08;
+    }
+
+    public void setBn08(boolean bn08)
+    {
+        this.bn08 = bn08;
+    }
+
+    public boolean isBn09()
+    {
+        return bn09;
+    }
+
+    public void setBn09(boolean bn09)
+    {
+        this.bn09 = bn09;
+    }
+
+    public boolean isBn10()
+    {
+        return bn10;
+    }
+
+    public void setBn10(boolean bn10)
+    {
+        this.bn10 = bn10;
+    }
+
+    public boolean isBn11()
+    {
+        return bn11;
+    }
+
+    public void setBn11(boolean bn11)
+    {
+        this.bn11 = bn11;
+    }
+
+    public boolean isBn12()
+    {
+        return bn12;
+    }
+
+    public void setBn12(boolean bn12)
+    {
+        this.bn12 = bn12;
+    }
+
+    public boolean isBn13()
+    {
+        return bn13;
+    }
+
+    public void setBn13(boolean bn13)
+    {
+        this.bn13 = bn13;
+    }
+
+    public boolean isBn14()
+    {
+        return bn14;
+    }
+
+    public void setBn14(boolean bn14)
+    {
+        this.bn14 = bn14;
+    }
+
+    public boolean isBn15()
+    {
+        return bn15;
+    }
+
+    public void setBn15(boolean bn15)
+    {
+        this.bn15 = bn15;
+    }
+
+    public boolean isBn16()
+    {
+        return bn16;
+    }
+
+    public void setBn16(boolean bn16)
+    {
+        this.bn16 = bn16;
+    }
+
+    public boolean isBn17()
+    {
+        return bn17;
+    }
+
+    public void setBn17(boolean bn17)
+    {
+        this.bn17 = bn17;
+    }
+
+    public boolean isBn18()
+    {
+        return bn18;
+    }
+
+    public void setBn18(boolean bn18)
+    {
+        this.bn18 = bn18;
+    }
+
+    public boolean isBn19()
+    {
+        return bn19;
+    }
+
+    public void setBn19(boolean bn19)
+    {
+        this.bn19 = bn19;
+    }
+
+    public boolean isBn20()
+    {
+        return bn20;
+    }
+
+    public void setBn20(boolean bn20)
+    {
+        this.bn20 = bn20;
+    }
+
+    public boolean isBn21()
+    {
+        return bn21;
+    }
+
+    public void setBn21(boolean bn21)
+    {
+        this.bn21 = bn21;
+    }
+
+    public boolean isBn22()
+    {
+        return bn22;
+    }
+
+    public void setBn22(boolean bn22)
+    {
+        this.bn22 = bn22;
+    }
+
+    public boolean isBn23()
+    {
+        return bn23;
+    }
+
+    public void setBn23(boolean bn23)
+    {
+        this.bn23 = bn23;
+    }
+
+    public boolean isBn24()
+    {
+        return bn24;
+    }
+
+    public void setBn24(boolean bn24)
+    {
+        this.bn24 = bn24;
+    }
+
+    public boolean isBn25()
+    {
+        return bn25;
+    }
+
+    public void setBn25(boolean bn25)
+    {
+        this.bn25 = bn25;
+    }
+
+    public boolean isBn26()
+    {
+        return bn26;
+    }
+
+    public void setBn26(boolean bn26)
+    {
+        this.bn26 = bn26;
+    }
+
+    public boolean isBn27()
+    {
+        return bn27;
+    }
+
+    public void setBn27(boolean bn27)
+    {
+        this.bn27 = bn27;
+    }
+
+    public boolean isBn28()
+    {
+        return bn28;
+    }
+
+    public void setBn28(boolean bn28)
+    {
+        this.bn28 = bn28;
+    }
+
+    public boolean isBn29()
+    {
+        return bn29;
+    }
+
+    public void setBn29(boolean bn29)
+    {
+        this.bn29 = bn29;
+    }
+
+    public boolean isBn30()
+    {
+        return bn30;
+    }
+
+    public void setBn30(boolean bn30)
+    {
+        this.bn30 = bn30;
+    }
+
+    public boolean isBn31()
+    {
+        return bn31;
+    }
+
+    public void setBn31(boolean bn31)
+    {
+        this.bn31 = bn31;
+    }
+
+    public boolean isBn32()
+    {
+        return bn32;
+    }
+
+    public void setBn32(boolean bn32)
+    {
+        this.bn32 = bn32;
+    }
+
+    public boolean isBn33()
+    {
+        return bn33;
+    }
+
+    public void setBn33(boolean bn33)
+    {
+        this.bn33 = bn33;
+    }
+
+    public boolean isBn34()
+    {
+        return bn34;
+    }
+
+    public void setBn34(boolean bn34)
+    {
+        this.bn34 = bn34;
+    }
+
+    public boolean isBn35()
+    {
+        return bn35;
+    }
+
+    public void setBn35(boolean bn35)
+    {
+        this.bn35 = bn35;
+    }
+
+    public boolean isBn36()
+    {
+        return bn36;
+    }
+
+    public void setBn36(boolean bn36)
+    {
+        this.bn36 = bn36;
+    }
+
+    public boolean isBn37()
+    {
+        return bn37;
+    }
+
+    public void setBn37(boolean bn37)
+    {
+        this.bn37 = bn37;
+    }
+
+    public boolean isBn38()
+    {
+        return bn38;
+    }
+
+    public void setBn38(boolean bn38)
+    {
+        this.bn38 = bn38;
+    }
+
+    public boolean isBn39()
+    {
+        return bn39;
+    }
+
+    public void setBn39(boolean bn39)
+    {
+        this.bn39 = bn39;
+    }
+
+    public boolean isBn40()
+    {
+        return bn40;
+    }
+
+    public void setBn40(boolean bn40)
+    {
+        this.bn40 = bn40;
+    }
+
+    public boolean isBn41()
+    {
+        return bn41;
+    }
+
+    public void setBn41(boolean bn41)
+    {
+        this.bn41 = bn41;
+    }
+
+    public boolean isBn42()
+    {
+        return bn42;
+    }
+
+    public void setBn42(boolean bn42)
+    {
+        this.bn42 = bn42;
+    }
+
+    public boolean isBn43()
+    {
+        return bn43;
+    }
+
+    public void setBn43(boolean bn43)
+    {
+        this.bn43 = bn43;
+    }
+
+    public boolean isBn44()
+    {
+        return bn44;
+    }
+
+    public void setBn44(boolean bn44)
+    {
+        this.bn44 = bn44;
+    }
+
+    public boolean isBn45()
+    {
+        return bn45;
+    }
+
+    public void setBn45(boolean bn45)
+    {
+        this.bn45 = bn45;
+    }
+
+    public boolean isBn46()
+    {
+        return bn46;
+    }
+
+    public void setBn46(boolean bn46)
+    {
+        this.bn46 = bn46;
+    }
+
+    public boolean isBn47()
+    {
+        return bn47;
+    }
+
+    public void setBn47(boolean bn47)
+    {
+        this.bn47 = bn47;
+    }
+
+    public boolean isBn48()
+    {
+        return bn48;
+    }
+
+    public void setBn48(boolean bn48)
+    {
+        this.bn48 = bn48;
+    }
+
+    public boolean isBn49()
+    {
+        return bn49;
+    }
+
+    public void setBn49(boolean bn49)
+    {
+        this.bn49 = bn49;
+    }
+
+    public boolean isBn50()
+    {
+        return bn50;
+    }
+
+    public void setBn50(boolean bn50)
+    {
+        this.bn50 = bn50;
+    }
+
+    public boolean isBn51()
+    {
+        return bn51;
+    }
+
+    public void setBn51(boolean bn51)
+    {
+        this.bn51 = bn51;
+    }
+
+    public boolean isBn52()
+    {
+        return bn52;
+    }
+
+    public void setBn52(boolean bn52)
+    {
+        this.bn52 = bn52;
+    }
+
+    public boolean isBn53()
+    {
+        return bn53;
+    }
+
+    public void setBn53(boolean bn53)
+    {
+        this.bn53 = bn53;
+    }
+
+    public boolean isBn54()
+    {
+        return bn54;
+    }
+
+    public void setBn54(boolean bn54)
+    {
+        this.bn54 = bn54;
+    }
+
+    public boolean isBn55()
+    {
+        return bn55;
+    }
+
+    public void setBn55(boolean bn55)
+    {
+        this.bn55 = bn55;
+    }
+
+    public boolean isBn56()
+    {
+        return bn56;
+    }
+
+    public void setBn56(boolean bn56)
+    {
+        this.bn56 = bn56;
+    }
+
+    public boolean isBn57()
+    {
+        return bn57;
+    }
+
+    public void setBn57(boolean bn57)
+    {
+        this.bn57 = bn57;
+    }
+
+    public boolean isBn58()
+    {
+        return bn58;
+    }
+
+    public void setBn58(boolean bn58)
+    {
+        this.bn58 = bn58;
+    }
+
+    public boolean isBn59()
+    {
+        return bn59;
+    }
+
+    public void setBn59(boolean bn59)
+    {
+        this.bn59 = bn59;
+    }
 
 }

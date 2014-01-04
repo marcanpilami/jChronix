@@ -3,7 +3,6 @@ package org.oxymores.chronix.wapi;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -53,20 +52,20 @@ public class CoreToDto
     {
         DTOApplication res = new DTOApplication();
 
-        res.id = a.getId().toString();
-        res.name = a.getName();
-        res.description = a.getDescription();
+        res.setId(a.getId().toString());
+        res.setName(a.getName());
+        res.setDescription(a.getDescription());
 
-        res.chains = new ArrayList<DTOChain>();
-        res.shells = new ArrayList<DTOShellCommand>();
-        res.places = new ArrayList<DTOPlace>();
-        res.groups = new ArrayList<DTOPlaceGroup>();
-        res.parameters = new ArrayList<DTOParameter>();
-        res.rrules = new ArrayList<DTORRule>();
-        res.clocks = new ArrayList<DTOClock>();
-        res.externals = new ArrayList<DTOExternal>();
-        res.calendars = new ArrayList<DTOCalendar>();
-        res.calnexts = new ArrayList<DTONextOccurrence>();
+        res.setChains(new ArrayList<DTOChain>());
+        res.setShells(new ArrayList<DTOShellCommand>());
+        res.setPlaces(new ArrayList<DTOPlace>());
+        res.setGroups(new ArrayList<DTOPlaceGroup>());
+        res.setParameters(new ArrayList<DTOParameter>());
+        res.setRrules(new ArrayList<DTORRule>());
+        res.setClocks(new ArrayList<DTOClock>());
+        res.setExternals(new ArrayList<DTOExternal>());
+        res.setCalendars(new ArrayList<DTOCalendar>());
+        res.setCalnexts(new ArrayList<DTONextOccurrence>());
 
         // Unique elements
         for (ConfigurableBase nb : a.getActiveElements().values())
@@ -103,10 +102,10 @@ public class CoreToDto
         }
 
         // Network
-        res.nodes = getNetwork(a);
+        res.setNodes(getNetwork(a));
 
         for (Place p : a.getPlacesList())
-            res.places.add(getPlace(p));
+            res.getPlaces().add(getPlace(p));
 
         Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
         {
@@ -118,15 +117,15 @@ public class CoreToDto
         List<PlaceGroup> pgs = a.getGroupsList();
         Collections.sort(pgs, comparator_pg);
         for (PlaceGroup pg : pgs)
-            res.groups.add(getPlaceGroup(pg));
+            res.getGroups().add(getPlaceGroup(pg));
 
         // Calendars
         for (Calendar c : a.getCalendars())
-            res.calendars.add(getCalendar(c));
+            res.getCalendars().add(getCalendar(c));
 
         // Clocks
         for (ClockRRule r : a.getRRulesList())
-            res.rrules.add(getRRule(r));
+            res.getRrules().add(getRRule(r));
 
         Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>()
         {
@@ -144,48 +143,48 @@ public class CoreToDto
             if (o instanceof Chain)
             {
                 Chain c = (Chain) o;
-                res.chains.add(getChain(c));
+                res.getChains().add(getChain(c));
             }
 
             if (o instanceof Clock)
             {
                 Clock c = (Clock) o;
-                res.clocks.add(getClock(c));
+                res.getClocks().add(getClock(c));
             }
 
             if (o instanceof ShellCommand)
             {
                 ShellCommand s = (ShellCommand) o;
                 DTOShellCommand d = new DTOShellCommand();
-                d.id = s.getId().toString();
-                d.command = s.getCommand();
-                d.name = s.getName();
-                d.description = s.getDescription();
-                res.shells.add(d);
+                d.setId(s.getId().toString());
+                d.setCommand(s.getCommand());
+                d.setName(s.getName());
+                d.setDescription(s.getDescription());
+                res.getShells().add(d);
             }
 
             if (o instanceof External)
             {
                 External e = (External) o;
                 DTOExternal d = new DTOExternal();
-                d.id = e.getId().toString();
-                d.accountRestriction = e.getAccountRestriction();
-                d.machineRestriction = e.getMachineRestriction();
-                d.regularExpression = e.getRegularExpression();
-                d.name = e.getName();
-                d.description = e.getDescription();
-                res.externals.add(d);
+                d.setId(e.getId().toString());
+                d.setAccountRestriction(e.getAccountRestriction());
+                d.setMachineRestriction(e.getMachineRestriction());
+                d.setRegularExpression(e.getRegularExpression());
+                d.setName(e.getName());
+                d.setDescription(e.getDescription());
+                res.getExternals().add(d);
             }
 
             if (o instanceof NextOccurrence)
             {
                 NextOccurrence e = (NextOccurrence) o;
                 DTONextOccurrence d = new DTONextOccurrence();
-                d.id = e.getId().toString();
-                d.name = e.getName();
-                d.description = e.getDescription();
-                d.calendarId = e.getUpdatedCalendar().getId().toString();
-                res.calnexts.add(d);
+                d.setId(e.getId().toString());
+                d.setName(e.getName());
+                d.setDescription(e.getDescription());
+                d.setCalendarId(e.getUpdatedCalendar().getId().toString());
+                res.getCalnexts().add(d);
             }
         }
 
@@ -195,11 +194,9 @@ public class CoreToDto
     public static DTOChain getChain(Chain c)
     {
         DTOChain res = new DTOChain();
-        res.id = c.getId().toString();
-        res.name = c.getName();
-        res.description = c.getDescription();
-        res.states = new ArrayList<DTOState>();
-        res.transitions = new ArrayList<DTOTransition>();
+        res.setId(c.getId().toString());
+        res.setName(c.getName());
+        res.setDescription(c.getDescription());
 
         for (State s : c.getStates())
         {
@@ -242,23 +239,23 @@ public class CoreToDto
             if (s.getRepresents() instanceof Or)
                 t.setOr(true);
 
-            res.states.add(t);
+            res.addState(t);
         }
 
         for (Transition o : c.getTransitions())
         {
             DTOTransition d = new DTOTransition();
-            d.id = o.getId().toString();
-            d.from = o.getStateFrom().getId().toString();
-            d.to = o.getStateTo().getId().toString();
-            d.guard1 = o.getGuard1();
-            d.guard2 = o.getGuard2();
-            d.guard3 = o.getGuard3();
-            d.guard4 = (o.getGuard4() == null ? "" : o.getGuard4().toString());
-            d.calendarAware = o.isCalendarAware();
-            d.calendarShift = o.getCalendarShift();
+            d.setId(o.getId().toString());
+            d.setFrom(o.getStateFrom().getId().toString());
+            d.setTo(o.getStateTo().getId().toString());
+            d.setGuard1(o.getGuard1());
+            d.setGuard2(o.getGuard2());
+            d.setGuard3(o.getGuard3());
+            d.setGuard4((o.getGuard4() == null ? "" : o.getGuard4().toString()));
+            d.setCalendarAware(o.isCalendarAware());
+            d.setCalendarShift(o.getCalendarShift());
 
-            res.transitions.add(d);
+            res.addTransition(d);
         }
 
         return res;
@@ -276,38 +273,32 @@ public class CoreToDto
     public static DTOExecutionNode getExecutionNode(ExecutionNode en)
     {
         DTOExecutionNode res = new DTOExecutionNode();
-        res.id = en.getId().toString();
-        res.certFilePath = en.getSshKeyFilePath();
-        res.dns = en.getDns();
-        res.isConsole = en.isConsole();
-        res.jmxPort = en.getJmxPort();
-        res.ospassword = en.getOspassword();
-        res.osusername = en.getOsusername();
-        res.qPort = en.getqPort();
-        res.remoteExecPort = en.getRemoteExecPort();
-        res.wsPort = en.getWsPort();
-        res.x = en.getX();
-        res.y = en.getY();
-
-        res.fromRCTRL = new ArrayList<String>();
-        res.fromTCP = new ArrayList<String>();
-        res.toRCTRL = new ArrayList<String>();
-        res.toTCP = new ArrayList<String>();
-        res.places = new ArrayList<String>();
+        res.setId(en.getId().toString());
+        res.setCertFilePath(en.getSshKeyFilePath());
+        res.setDns(en.getDns());
+        res.setConsole(en.isConsole());
+        res.setJmxPort(en.getJmxPort());
+        res.setOspassword(en.getOspassword());
+        res.setOsusername(en.getOsusername());
+        res.setqPort(en.getqPort());
+        res.setRemoteExecPort(en.getRemoteExecPort());
+        res.setWsPort(en.getWsPort());
+        res.setX(en.getX());
+        res.setY(en.getY());
 
         for (NodeLink nl : en.getCanSendTo())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
-                res.toTCP.add(nl.getNodeTo().getId().toString());
+                res.addToTcp(nl.getNodeTo().getId());
         }
         for (NodeLink nl : en.getCanReceiveFrom())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
-                res.fromTCP.add(nl.getNodeFrom().getId().toString());
+                res.addFromTcp(nl.getNodeFrom().getId());
         }
         for (Place p : en.getPlacesHosted())
         {
-            res.places.add(p.getId().toString());
+            res.addPlace(p.getId());
         }
 
         res.setSimpleRunner(en.isHosted());
@@ -318,19 +309,18 @@ public class CoreToDto
     public static DTOPlace getPlace(Place p)
     {
         DTOPlace res = new DTOPlace();
-        res.description = p.getDescription();
-        res.id = p.getId().toString();
-        res.name = p.getName();
-        res.nodeid = p.getNode().getId().toString();
-        res.prop1 = p.getProperty1();
-        res.prop2 = p.getProperty2();
-        res.prop3 = p.getProperty3();
-        res.prop4 = p.getProperty4();
+        res.setDescription(p.getDescription());
+        res.setId(p.getId().toString());
+        res.setName(p.getName());
+        res.setNodeid(p.getNode().getId().toString());
+        res.setProp1(p.getProperty1());
+        res.setProp2(p.getProperty2());
+        res.setProp3(p.getProperty3());
+        res.setProp4(p.getProperty4());
 
-        res.memberOf = new ArrayList<String>();
         for (PlaceGroup pg : p.getMemberOfGroups())
         {
-            res.memberOf.add(pg.getId().toString());
+            res.addMemberOfGroup(pg.getId());
         }
 
         return res;
@@ -339,14 +329,13 @@ public class CoreToDto
     public static DTOPlaceGroup getPlaceGroup(PlaceGroup g)
     {
         DTOPlaceGroup res = new DTOPlaceGroup();
-        res.description = g.getDescription();
-        res.id = g.getId().toString();
-        res.name = g.getName();
+        res.setDescription(g.getDescription());
+        res.setId(g.getId().toString());
+        res.setName(g.getName());
 
-        res.places = new ArrayList<String>();
         for (Place p : g.getPlaces())
         {
-            res.places.add(p.getId().toString());
+            res.addPlace(p.getId());
         }
 
         return res;
@@ -355,17 +344,18 @@ public class CoreToDto
     public static DTOClock getClock(Clock c)
     {
         DTOClock res = new DTOClock();
-        res.description = c.getDescription();
-        res.id = c.getId().toString();
-        res.name = c.getName();
-        res.nextOccurrences = new ArrayList<Date>();
-        res.rulesADD = new ArrayList<String>();
-        res.rulesEXC = new ArrayList<String>();
+        res.setDescription(c.getDescription());
+        res.setId(c.getId().toString());
+        res.setName(c.getName());
 
         for (ClockRRule r : c.getRulesADD())
-            res.rulesADD.add(r.getId().toString());
+        {
+            res.addRuleAdd(r.getId());
+        }
         for (ClockRRule r : c.getRulesEXC())
-            res.rulesEXC.add(r.getId().toString());
+        {
+            res.addRuleExc(r.getId());
+        }
 
         return res;
     }
@@ -375,239 +365,239 @@ public class CoreToDto
         DTORRule res = new DTORRule();
 
         // Identification
-        res.id = r.getId().toString();
-        res.name = r.getName();
-        res.description = r.getDescription();
+        res.setId(r.getId().toString());
+        res.setName(r.getName());
+        res.setDescription(r.getDescription());
 
         // Period
-        res.period = r.getPeriod();
-        res.interval = r.getINTERVAL();
+        res.setPeriod(r.getPeriod());
+        res.setInterval(r.getINTERVAL());
 
         // ByDay
         for (String d : r.getBYDAY().split(","))
         {
             if (d.equals("MO"))
-                res.bd_01 = true;
+                res.setBd01(true);
             else if (d.equals("TU"))
-                res.bd_02 = true;
+                res.setBd02(true);
             else if (d.equals("WE"))
-                res.bd_03 = true;
+                res.setBd03(true);
             else if (d.equals("TH"))
-                res.bd_04 = true;
+                res.setBd04(true);
             else if (d.equals("FR"))
-                res.bd_05 = true;
+                res.setBd05(true);
             else if (d.equals("SA"))
-                res.bd_06 = true;
+                res.setBd06(true);
             else if (d.equals("SU"))
-                res.bd_07 = true;
+                res.setBd07(true);
         }
         // ByMonthDay
         for (String d : r.getBYMONTHDAY().split(","))
         {
             if (d.equals("01"))
-                res.bmd_01 = true;
+                res.setBmd01(true);
             else if (d.equals("-01"))
-                res.bmdn_01 = true;
+                res.setBmdn01(true);
             else if (d.equals("02"))
-                res.bmd_02 = true;
+                res.setBmd02(true);
             else if (d.equals("-02"))
-                res.bmdn_02 = true;
+                res.setBmdn02(true);
             else if (d.equals("03"))
-                res.bmd_03 = true;
+                res.setBmd03(true);
             else if (d.equals("-03"))
-                res.bmdn_03 = true;
+                res.setBmdn03(true);
             else if (d.equals("04"))
-                res.bmd_04 = true;
+                res.setBmd04(true);
             else if (d.equals("-04"))
-                res.bmdn_04 = true;
+                res.setBmdn04(true);
             else if (d.equals("05"))
-                res.bmd_05 = true;
+                res.setBmd05(true);
             else if (d.equals("-05"))
-                res.bmdn_05 = true;
+                res.setBmdn05(true);
             else if (d.equals("06"))
-                res.bmd_06 = true;
+                res.setBmd06(true);
             else if (d.equals("-06"))
-                res.bmdn_06 = true;
+                res.setBmdn06(true);
             else if (d.equals("07"))
-                res.bmd_07 = true;
+                res.setBmd07(true);
             else if (d.equals("-07"))
-                res.bmdn_07 = true;
+                res.setBmdn07(true);
             else if (d.equals("08"))
-                res.bmd_08 = true;
+                res.setBmd08(true);
             else if (d.equals("-08"))
-                res.bmdn_08 = true;
+                res.setBmdn08(true);
             else if (d.equals("09"))
-                res.bmd_09 = true;
+                res.setBmd09(true);
             else if (d.equals("-09"))
-                res.bmdn_09 = true;
+                res.setBmdn09(true);
             else if (d.equals("10"))
-                res.bmd_10 = true;
+                res.setBmd10(true);
             else if (d.equals("-10"))
-                res.bmdn_10 = true;
+                res.setBmdn10(true);
             else if (d.equals("11"))
-                res.bmd_11 = true;
+                res.setBmd11(true);
             else if (d.equals("-11"))
-                res.bmdn_11 = true;
+                res.setBmdn11(true);
             else if (d.equals("12"))
-                res.bmd_12 = true;
+                res.setBmd12(true);
             else if (d.equals("-12"))
-                res.bmdn_12 = true;
+                res.setBmdn12(true);
             else if (d.equals("13"))
-                res.bmd_13 = true;
+                res.setBmd13(true);
             else if (d.equals("-13"))
-                res.bmdn_13 = true;
+                res.setBmdn13(true);
             else if (d.equals("14"))
-                res.bmd_14 = true;
+                res.setBmd14(true);
             else if (d.equals("-14"))
-                res.bmdn_14 = true;
+                res.setBmdn14(true);
             else if (d.equals("15"))
-                res.bmd_15 = true;
+                res.setBmd15(true);
             else if (d.equals("-15"))
-                res.bmdn_15 = true;
+                res.setBmdn15(true);
             else if (d.equals("16"))
-                res.bmd_16 = true;
+                res.setBmd16(true);
             else if (d.equals("-16"))
-                res.bmdn_16 = true;
+                res.setBmdn16(true);
             else if (d.equals("17"))
-                res.bmd_17 = true;
+                res.setBmd17(true);
             else if (d.equals("-17"))
-                res.bmdn_17 = true;
+                res.setBmdn17(true);
             else if (d.equals("18"))
-                res.bmd_18 = true;
+                res.setBmd18(true);
             else if (d.equals("-18"))
-                res.bmdn_18 = true;
+                res.setBmdn18(true);
             else if (d.equals("19"))
-                res.bmd_19 = true;
+                res.setBmd19(true);
             else if (d.equals("-19"))
-                res.bmdn_19 = true;
+                res.setBmdn19(true);
             else if (d.equals("20"))
-                res.bmd_20 = true;
+                res.setBmd20(true);
             else if (d.equals("-20"))
-                res.bmdn_20 = true;
+                res.setBmdn20(true);
             else if (d.equals("21"))
-                res.bmd_21 = true;
+                res.setBmd21(true);
             else if (d.equals("-21"))
-                res.bmdn_21 = true;
+                res.setBmdn21(true);
             else if (d.equals("22"))
-                res.bmd_22 = true;
+                res.setBmd22(true);
             else if (d.equals("-22"))
-                res.bmdn_22 = true;
+                res.setBmdn22(true);
             else if (d.equals("23"))
-                res.bmd_23 = true;
+                res.setBmd23(true);
             else if (d.equals("-23"))
-                res.bmdn_23 = true;
+                res.setBmdn23(true);
             else if (d.equals("24"))
-                res.bmd_24 = true;
+                res.setBmd24(true);
             else if (d.equals("-24"))
-                res.bmdn_24 = true;
+                res.setBmdn24(true);
             else if (d.equals("25"))
-                res.bmd_25 = true;
+                res.setBmd25(true);
             else if (d.equals("-25"))
-                res.bmdn_25 = true;
+                res.setBmdn25(true);
             else if (d.equals("26"))
-                res.bmd_26 = true;
+                res.setBmd26(true);
             else if (d.equals("-26"))
-                res.bmdn_26 = true;
+                res.setBmdn26(true);
             else if (d.equals("27"))
-                res.bmd_27 = true;
+                res.setBmd27(true);
             else if (d.equals("-27"))
-                res.bmdn_27 = true;
+                res.setBmdn27(true);
             else if (d.equals("28"))
-                res.bmd_28 = true;
+                res.setBmd28(true);
             else if (d.equals("-28"))
-                res.bmdn_29 = true;
+                res.setBmdn29(true);
             else if (d.equals("29"))
-                res.bmd_29 = true;
+                res.setBmd29(true);
             else if (d.equals("-29"))
-                res.bmdn_29 = true;
+                res.setBmdn29(true);
             else if (d.equals("30"))
-                res.bmd_30 = true;
+                res.setBmd30(true);
             else if (d.equals("-30"))
-                res.bmdn_30 = true;
+                res.setBmdn30(true);
             else if (d.equals("31"))
-                res.bmd_31 = true;
+                res.setBmd31(true);
             else if (d.equals("-31"))
-                res.bmdn_31 = true;
+                res.setBmdn31(true);
         }
         // ByMonth
         for (String d : r.getBYMONTH().split(","))
         {
             if (d.equals("01"))
-                res.bm_01 = true;
+                res.setBm01(true);
             else if (d.equals("02"))
-                res.bm_02 = true;
+                res.setBm02(true);
             else if (d.equals("03"))
-                res.bm_03 = true;
+                res.setBm03(true);
             else if (d.equals("04"))
-                res.bm_04 = true;
+                res.setBm04(true);
             else if (d.equals("05"))
-                res.bm_05 = true;
+                res.setBm05(true);
             else if (d.equals("06"))
-                res.bm_06 = true;
+                res.setBm06(true);
             else if (d.equals("07"))
-                res.bm_07 = true;
+                res.setBm07(true);
             else if (d.equals("08"))
-                res.bm_08 = true;
+                res.setBm08(true);
             else if (d.equals("09"))
-                res.bm_09 = true;
+                res.setBm09(true);
             else if (d.equals("10"))
-                res.bm_10 = true;
+                res.setBm10(true);
             else if (d.equals("11"))
-                res.bm_11 = true;
+                res.setBm11(true);
             else if (d.equals("12"))
-                res.bm_12 = true;
+                res.setBm12(true);
         }
         // ByHour
         for (String d : r.getBYHOUR().split(","))
         {
             if (d.equals("00"))
-                res.bh_00 = true;
+                res.setBh00(true);
             else if (d.equals("01"))
-                res.bh_01 = true;
+                res.setBh01(true);
             else if (d.equals("02"))
-                res.bh_02 = true;
+                res.setBh02(true);
             else if (d.equals("03"))
-                res.bh_03 = true;
+                res.setBh03(true);
             else if (d.equals("04"))
-                res.bh_04 = true;
+                res.setBh04(true);
             else if (d.equals("05"))
-                res.bh_05 = true;
+                res.setBh05(true);
             else if (d.equals("06"))
-                res.bh_06 = true;
+                res.setBh06(true);
             else if (d.equals("07"))
-                res.bh_07 = true;
+                res.setBh07(true);
             else if (d.equals("08"))
-                res.bh_08 = true;
+                res.setBh08(true);
             else if (d.equals("09"))
-                res.bh_09 = true;
+                res.setBh09(true);
             else if (d.equals("10"))
-                res.bh_10 = true;
+                res.setBh10(true);
             else if (d.equals("11"))
-                res.bh_11 = true;
+                res.setBh11(true);
             else if (d.equals("12"))
-                res.bh_12 = true;
+                res.setBh12(true);
             else if (d.equals("13"))
-                res.bh_13 = true;
+                res.setBh13(true);
             else if (d.equals("14"))
-                res.bh_14 = true;
+                res.setBh14(true);
             else if (d.equals("15"))
-                res.bh_15 = true;
+                res.setBh15(true);
             else if (d.equals("16"))
-                res.bh_16 = true;
+                res.setBh16(true);
             else if (d.equals("17"))
-                res.bh_17 = true;
+                res.setBh17(true);
             else if (d.equals("18"))
-                res.bh_18 = true;
+                res.setBh18(true);
             else if (d.equals("19"))
-                res.bh_19 = true;
+                res.setBh19(true);
             else if (d.equals("20"))
-                res.bh_20 = true;
+                res.setBh20(true);
             else if (d.equals("21"))
-                res.bh_21 = true;
+                res.setBh21(true);
             else if (d.equals("22"))
-                res.bh_22 = true;
+                res.setBh22(true);
             else if (d.equals("23"))
-                res.bh_23 = true;
+                res.setBh23(true);
         }
         return res;
     }

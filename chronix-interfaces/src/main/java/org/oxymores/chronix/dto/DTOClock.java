@@ -2,73 +2,90 @@ package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 public class DTOClock
 {
-	public String name;
-	public String description;
-	public String id;
+    private String name;
+    private String description;
+    private String id;
 
-	public ArrayList<Date> nextOccurrences;
-	public ArrayList<String> rulesADD, rulesEXC;
+    private List<Date> nextOccurrences = new ArrayList<Date>();
+    private List<String> rulesADD = new ArrayList<String>(), rulesEXC = new ArrayList<String>();
 
-	public String getName()
-	{
-		return name;
-	}
+    public void addNo(Date d)
+    {
+        this.nextOccurrences.add(d);
+    }
 
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    public void addRuleAdd(UUID id)
+    {
+        this.rulesADD.add(id.toString());
+    }
 
-	public String getDescription()
-	{
-		return description;
-	}
+    public void addRuleExc(UUID id)
+    {
+        this.rulesADD.add(id.toString());
+    }
 
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
+    public String getName()
+    {
+        return name;
+    }
 
-	public String getId()
-	{
-		return id;
-	}
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 
-	public void setId(String id)
-	{
-		this.id = id;
-	}
+    public String getDescription()
+    {
+        return description;
+    }
 
-	public ArrayList<Date> getNextOccurrences()
-	{
-		return nextOccurrences;
-	}
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 
-	public void setNextOccurrences(ArrayList<Date> nextOccurrences)
-	{
-		this.nextOccurrences = nextOccurrences;
-	}
+    public String getId()
+    {
+        return id;
+    }
 
-	public ArrayList<String> getRulesADD()
-	{
-		return rulesADD;
-	}
+    public void setId(String id)
+    {
+        this.id = id;
+    }
 
-	public void setRulesADD(ArrayList<String> rulesADD)
-	{
-		this.rulesADD = rulesADD;
-	}
+    public List<Date> getNextOccurrences()
+    {
+        return nextOccurrences;
+    }
 
-	public ArrayList<String> getRulesEXC()
-	{
-		return rulesEXC;
-	}
+    void setNextOccurrences(List<Date> nextOccurrences)
+    {
+        this.nextOccurrences = nextOccurrences;
+    }
 
-	public void setRulesEXC(ArrayList<String> rulesEXC)
-	{
-		this.rulesEXC = rulesEXC;
-	}
+    public List<String> getRulesADD()
+    {
+        return rulesADD;
+    }
+
+    void setRulesADD(List<String> rulesADD)
+    {
+        this.rulesADD = rulesADD;
+    }
+
+    public List<String> getRulesEXC()
+    {
+        return rulesEXC;
+    }
+
+    void setRulesEXC(List<String> rulesEXC)
+    {
+        this.rulesEXC = rulesEXC;
+    }
 }

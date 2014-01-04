@@ -1,5 +1,6 @@
 package org.oxymores.chronix.dto;
 
-public class DTOParameter {
+public class DTOParameter
+{
 
 }

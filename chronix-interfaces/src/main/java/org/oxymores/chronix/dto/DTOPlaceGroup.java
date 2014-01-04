@@ -1,41 +1,56 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-public class DTOPlaceGroup {
-	public String id, name, description;
-	public ArrayList<String> places;
+public class DTOPlaceGroup
+{
+    private String id, name, description;
+    private List<String> places = new ArrayList<String>();
 
-	public String getId() {
-		return id;
-	}
+    public void addPlace(UUID id)
+    {
+        this.places.add(id.toString());
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public String getId()
+    {
+        return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(String id)
+    {
+        this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName()
+    {
+        return name;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public String getDescription()
+    {
+        return description;
+    }
 
-	public ArrayList<String> getPlaces() {
-		return places;
-	}
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 
-	public void setPlaces(ArrayList<String> places) {
-		this.places = places;
-	}
+    public List<String> getPlaces()
+    {
+        return places;
+    }
 
+    void setPlaces(List<String> places)
+    {
+        this.places = places;
+    }
 }

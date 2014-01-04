@@ -2,13 +2,13 @@ package org.oxymores.chronix.dto;
 
 public class DTOState
 {
-    protected String id, representsId, runsOnId, calendarId;
-    protected Integer x, y;
-    protected String label, runsOnName;
-    protected Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
-    protected Integer calendarShift = 0;
-    protected boolean parallel;
-    protected boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
+    private String id, representsId, runsOnId, calendarId;
+    private Integer x, y;
+    private String label, runsOnName;
+    private Integer WarnAfterMn, KillAfterMn, MaxPipeWaitTime, EventValidityMn;
+    private Integer calendarShift = 0;
+    private boolean parallel;
+    private boolean canReceiveLink = true, canEmitLinks = true, canBeRemoved = true, canReceiveMultipleLinks = false, isStart = false,
             isEnd = false, isAnd = false, isOr = false;
 
     public String getRunsOnName()

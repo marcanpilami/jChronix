@@ -236,7 +236,7 @@ public class DtoToCore
     public static ExecutionNode getExecutionNode(DTOExecutionNode d, Application a)
     {
         ExecutionNode r = new ExecutionNode();
-        r.setConsole(d.isConsole);
+        r.setConsole(d.isConsole());
         r.setDns(d.getDns());
         r.setId(UUID.fromString(d.getId()));
         r.setJmxPort(d.getJmxPort());
@@ -261,10 +261,14 @@ public class DtoToCore
         for (String s : d.getFromTCP())
         {
             ExecutionNode remote = a.getNode(UUID.fromString(s));
-            if (!d.isSimpleRunner)
+            if (!d.isSimpleRunner())
+            {
                 remote.connectTo(r, NodeConnectionMethod.TCP);
+            }
             else
+            {
                 remote.connectTo(r, NodeConnectionMethod.RCTRL);
+            }
         }
 
     }
@@ -312,361 +316,361 @@ public class DtoToCore
     public static ClockRRule getRRule(DTORRule r)
     {
         ClockRRule res = new ClockRRule();
-        res.setId(UUID.fromString(r.id));
-        res.setName(r.name);
-        res.setDescription(r.description);
+        res.setId(UUID.fromString(r.getId()));
+        res.setName(r.getName());
+        res.setDescription(r.getDescription());
 
-        res.setPeriod(r.period);
-        res.setINTERVAL(r.interval);
+        res.setPeriod(r.getPeriod());
+        res.setINTERVAL(r.getInterval());
 
         // ByDay
         String BD = "";
-        if (r.bd_01)
+        if (r.isBd01())
             BD += "MO,";
-        if (r.bd_02)
+        if (r.isBd02())
             BD += "TU,";
-        if (r.bd_03)
+        if (r.isBd03())
             BD += "WE,";
-        if (r.bd_04)
+        if (r.isBd04())
             BD += "TH,";
-        if (r.bd_05)
+        if (r.isBd05())
             BD += "FR,";
-        if (r.bd_06)
+        if (r.isBd06())
             BD += "SA,";
-        if (r.bd_07)
+        if (r.isBd07())
             BD += "SU,";
         res.setBYDAY(BD);
 
         // ByMonthDay
         String BMD = "";
-        if (r.bmd_01)
+        if (r.isBmd01())
             BMD += "01,";
-        if (r.bmdn_01)
+        if (r.isBmdn01())
             BMD += "-01,";
-        if (r.bmd_02)
+        if (r.isBmd02())
             BMD += "02,";
-        if (r.bmdn_02)
+        if (r.isBmdn02())
             BMD += "-02,";
-        if (r.bmd_03)
+        if (r.isBmd03())
             BMD += "03,";
-        if (r.bmdn_03)
+        if (r.isBmdn03())
             BMD += "-03,";
-        if (r.bmd_04)
+        if (r.isBmd04())
             BMD += "04,";
-        if (r.bmdn_04)
+        if (r.isBmdn04())
             BMD += "-04,";
-        if (r.bmd_05)
+        if (r.isBmd05())
             BMD += "05,";
-        if (r.bmdn_05)
+        if (r.isBmdn05())
             BMD += "-05,";
-        if (r.bmd_06)
+        if (r.isBmd06())
             BMD += "06,";
-        if (r.bmdn_06)
+        if (r.isBmdn06())
             BMD += "-06,";
-        if (r.bmd_07)
+        if (r.isBmd07())
             BMD += "07,";
-        if (r.bmdn_07)
+        if (r.isBmdn07())
             BMD += "-07,";
-        if (r.bmd_08)
+        if (r.isBmd08())
             BMD += "08,";
-        if (r.bmdn_08)
+        if (r.isBmdn08())
             BMD += "-08,";
-        if (r.bmd_09)
+        if (r.isBmd09())
             BMD += "09,";
-        if (r.bmdn_09)
+        if (r.isBmdn09())
             BMD += "-09,";
-        if (r.bmd_10)
+        if (r.isBmd10())
             BMD += "10,";
-        if (r.bmdn_10)
+        if (r.isBmdn10())
             BMD += "-10,";
-        if (r.bmd_11)
+        if (r.isBmd11())
             BMD += "11,";
-        if (r.bmdn_11)
+        if (r.isBmdn11())
             BMD += "-11,";
-        if (r.bmd_12)
+        if (r.isBmd12())
             BMD += "12,";
-        if (r.bmdn_12)
+        if (r.isBmdn12())
             BMD += "-12,";
-        if (r.bmd_13)
+        if (r.isBmd13())
             BMD += "13,";
-        if (r.bmdn_13)
+        if (r.isBmdn13())
             BMD += "-13,";
-        if (r.bmd_14)
+        if (r.isBmd14())
             BMD += "14,";
-        if (r.bmdn_14)
+        if (r.isBmdn14())
             BMD += "-14,";
-        if (r.bmd_15)
+        if (r.isBmd15())
             BMD += "15,";
-        if (r.bmdn_15)
+        if (r.isBmdn15())
             BMD += "-15,";
-        if (r.bmd_16)
+        if (r.isBmd16())
             BMD += "16,";
-        if (r.bmdn_16)
+        if (r.isBmdn16())
             BMD += "-16,";
-        if (r.bmd_17)
+        if (r.isBmd17())
             BMD += "17,";
-        if (r.bmdn_17)
+        if (r.isBmdn17())
             BMD += "-17,";
-        if (r.bmd_18)
+        if (r.isBmd18())
             BMD += "18,";
-        if (r.bmdn_18)
+        if (r.isBmdn18())
             BMD += "-18,";
-        if (r.bmd_19)
+        if (r.isBmd19())
             BMD += "19,";
-        if (r.bmdn_19)
+        if (r.isBmdn19())
             BMD += "-19,";
-        if (r.bmd_20)
+        if (r.isBmd20())
             BMD += "20,";
-        if (r.bmdn_20)
+        if (r.isBmdn20())
             BMD += "-20,";
-        if (r.bmd_21)
+        if (r.isBmd21())
             BMD += "21,";
-        if (r.bmdn_21)
+        if (r.isBmdn21())
             BMD += "-21,";
-        if (r.bmd_22)
+        if (r.isBmd22())
             BMD += "22,";
-        if (r.bmdn_22)
+        if (r.isBmdn22())
             BMD += "-22,";
-        if (r.bmd_23)
+        if (r.isBmd23())
             BMD += "23,";
-        if (r.bmdn_23)
+        if (r.isBmdn23())
             BMD += "-23,";
-        if (r.bmd_24)
+        if (r.isBmd24())
             BMD += "24,";
-        if (r.bmdn_24)
+        if (r.isBmdn24())
             BMD += "-24,";
-        if (r.bmd_25)
+        if (r.isBmd25())
             BMD += "25,";
-        if (r.bmdn_25)
+        if (r.isBmdn25())
             BMD += "-25,";
-        if (r.bmd_26)
+        if (r.isBmd26())
             BMD += "26,";
-        if (r.bmdn_26)
+        if (r.isBmdn26())
             BMD += "-26,";
-        if (r.bmd_27)
+        if (r.isBmd27())
             BMD += "27,";
-        if (r.bmdn_27)
+        if (r.isBmdn27())
             BMD += "-27,";
-        if (r.bmd_28)
+        if (r.isBmd28())
             BMD += "28,";
-        if (r.bmdn_28)
+        if (r.isBmdn28())
             BMD += "-28,";
-        if (r.bmd_29)
+        if (r.isBmd29())
             BMD += "29,";
-        if (r.bmdn_29)
+        if (r.isBmdn29())
             BMD += "-29,";
-        if (r.bmd_30)
+        if (r.isBmd30())
             BMD += "30,";
-        if (r.bmdn_30)
+        if (r.isBmdn30())
             BMD += "-30,";
-        if (r.bmd_31)
+        if (r.isBmd31())
             BMD += "31,";
-        if (r.bmdn_31)
+        if (r.isBmdn31())
             BMD += "-31,";
         res.setBYMONTHDAY(BMD);
 
         // ByMonth
         String BM = "";
-        if (r.bm_01)
+        if (r.isBm01())
             BM += "01,";
-        if (r.bm_02)
+        if (r.isBm02())
             BM += "02,";
-        if (r.bm_03)
+        if (r.isBm03())
             BM += "03,";
-        if (r.bm_04)
+        if (r.isBm04())
             BM += "04,";
-        if (r.bm_05)
+        if (r.isBm05())
             BM += "05,";
-        if (r.bm_06)
+        if (r.isBm06())
             BM += "06,";
-        if (r.bm_07)
+        if (r.isBm07())
             BM += "07,";
-        if (r.bm_08)
+        if (r.isBm08())
             BM += "08,";
-        if (r.bm_09)
+        if (r.isBm09())
             BM += "09,";
-        if (r.bm_10)
+        if (r.isBm10())
             BM += "10,";
-        if (r.bm_11)
+        if (r.isBm11())
             BM += "11,";
-        if (r.bm_12)
+        if (r.isBm12())
             BM += "12,";
         res.setBYMONTH(BM);
 
         // ByHour
         String BH = "";
-        if (r.bh_00)
+        if (r.isBh00())
             BH += "00,";
-        if (r.bh_01)
+        if (r.isBh01())
             BH += "01,";
-        if (r.bh_02)
+        if (r.isBh02())
             BH += "02,";
-        if (r.bh_03)
+        if (r.isBh03())
             BH += "03,";
-        if (r.bh_04)
+        if (r.isBh04())
             BH += "04,";
-        if (r.bh_05)
+        if (r.isBh05())
             BH += "05,";
-        if (r.bh_06)
+        if (r.isBh06())
             BH += "06,";
-        if (r.bh_07)
+        if (r.isBh07())
             BH += "07,";
-        if (r.bh_08)
+        if (r.isBh08())
             BH += "08,";
-        if (r.bh_09)
+        if (r.isBh09())
             BH += "09,";
-        if (r.bh_10)
+        if (r.isBh10())
             BH += "10,";
-        if (r.bh_11)
+        if (r.isBh11())
             BH += "11,";
-        if (r.bh_12)
+        if (r.isBh12())
             BH += "12,";
-        if (r.bh_13)
+        if (r.isBh13())
             BH += "13,";
-        if (r.bh_14)
+        if (r.isBh14())
             BH += "14,";
-        if (r.bh_15)
+        if (r.isBh15())
             BH += "15,";
-        if (r.bh_16)
+        if (r.isBh16())
             BH += "16,";
-        if (r.bh_17)
+        if (r.isBh17())
             BH += "17,";
-        if (r.bh_18)
+        if (r.isBh18())
             BH += "18,";
-        if (r.bh_19)
+        if (r.isBh19())
             BH += "19,";
-        if (r.bh_20)
+        if (r.isBh20())
             BH += "20,";
-        if (r.bh_21)
+        if (r.isBh21())
             BH += "21,";
-        if (r.bh_22)
+        if (r.isBh22())
             BH += "22,";
-        if (r.bh_23)
+        if (r.isBh23())
             BH += "23,";
 
         res.setBYHOUR(BH);
 
         // ByMinute
         String BN = "";
-        if (r.bn_00)
+        if (r.isBn00())
             BN += "00,";
-        if (r.bn_01)
+        if (r.isBn01())
             BN += "01,";
-        if (r.bn_02)
+        if (r.isBn02())
             BN += "02,";
-        if (r.bn_03)
+        if (r.isBn03())
             BN += "03,";
-        if (r.bn_04)
+        if (r.isBn04())
             BN += "04,";
-        if (r.bn_05)
+        if (r.isBn05())
             BN += "05,";
-        if (r.bn_06)
+        if (r.isBn06())
             BN += "06,";
-        if (r.bn_07)
+        if (r.isBn07())
             BN += "07,";
-        if (r.bn_08)
+        if (r.isBn08())
             BN += "08,";
-        if (r.bn_09)
+        if (r.isBn09())
             BN += "09,";
-        if (r.bn_10)
+        if (r.isBn10())
             BN += "10,";
-        if (r.bn_11)
+        if (r.isBn11())
             BN += "11,";
-        if (r.bn_12)
+        if (r.isBn12())
             BN += "12,";
-        if (r.bn_13)
+        if (r.isBn13())
             BN += "13,";
-        if (r.bn_14)
+        if (r.isBn14())
             BN += "14,";
-        if (r.bn_15)
+        if (r.isBn15())
             BN += "15,";
-        if (r.bn_16)
+        if (r.isBn16())
             BN += "16,";
-        if (r.bn_17)
+        if (r.isBn17())
             BN += "17,";
-        if (r.bn_18)
+        if (r.isBn18())
             BN += "18,";
-        if (r.bn_19)
+        if (r.isBn19())
             BN += "19,";
-        if (r.bn_20)
+        if (r.isBn20())
             BN += "20,";
-        if (r.bn_21)
+        if (r.isBn21())
             BN += "21,";
-        if (r.bn_22)
+        if (r.isBn22())
             BN += "22,";
-        if (r.bn_23)
+        if (r.isBn23())
             BN += "23,";
-        if (r.bn_24)
+        if (r.isBn24())
             BN += "24,";
-        if (r.bn_25)
+        if (r.isBn25())
             BN += "25,";
-        if (r.bn_26)
+        if (r.isBn26())
             BN += "26,";
-        if (r.bn_27)
+        if (r.isBn27())
             BN += "27,";
-        if (r.bn_28)
+        if (r.isBn28())
             BN += "28,";
-        if (r.bn_29)
+        if (r.isBn29())
             BN += "29,";
-        if (r.bn_30)
+        if (r.isBn30())
             BN += "30,";
-        if (r.bn_31)
+        if (r.isBn31())
             BN += "31,";
-        if (r.bn_32)
+        if (r.isBn32())
             BN += "32,";
-        if (r.bn_33)
+        if (r.isBn33())
             BN += "33,";
-        if (r.bn_34)
+        if (r.isBn34())
             BN += "34,";
-        if (r.bn_35)
+        if (r.isBn35())
             BN += "35,";
-        if (r.bn_36)
+        if (r.isBn36())
             BN += "36,";
-        if (r.bn_37)
+        if (r.isBn37())
             BN += "37,";
-        if (r.bn_38)
+        if (r.isBn38())
             BN += "38,";
-        if (r.bn_39)
+        if (r.isBn39())
             BN += "39,";
-        if (r.bn_40)
+        if (r.isBn40())
             BN += "40,";
-        if (r.bn_41)
+        if (r.isBn41())
             BN += "41,";
-        if (r.bn_42)
+        if (r.isBn42())
             BN += "42,";
-        if (r.bn_43)
+        if (r.isBn43())
             BN += "43,";
-        if (r.bn_44)
+        if (r.isBn44())
             BN += "44,";
-        if (r.bn_45)
+        if (r.isBn45())
             BN += "45,";
-        if (r.bn_46)
+        if (r.isBn46())
             BN += "46,";
-        if (r.bn_47)
+        if (r.isBn47())
             BN += "47,";
-        if (r.bn_48)
+        if (r.isBn48())
             BN += "48,";
-        if (r.bn_49)
+        if (r.isBn49())
             BN += "49,";
-        if (r.bn_50)
+        if (r.isBn50())
             BN += "50,";
-        if (r.bn_51)
+        if (r.isBn51())
             BN += "51,";
-        if (r.bn_52)
+        if (r.isBn52())
             BN += "52,";
-        if (r.bn_53)
+        if (r.isBn53())
             BN += "53,";
-        if (r.bn_54)
+        if (r.isBn54())
             BN += "54,";
-        if (r.bn_55)
+        if (r.isBn55())
             BN += "55,";
-        if (r.bn_56)
+        if (r.isBn56())
             BN += "56,";
-        if (r.bn_57)
+        if (r.isBn57())
             BN += "57,";
-        if (r.bn_58)
+        if (r.isBn58())
             BN += "58,";
-        if (r.bn_59)
+        if (r.isBn59())
             BN += "59,";
         res.setBYMINUTE(BN);
 

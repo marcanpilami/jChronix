@@ -1,64 +1,78 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DTOChain
 {
-	public String name;
-	public String description;
-	public String id;
+    private String name;
+    private String description;
+    private String id;
 
-	public ArrayList<DTOState> states;
-	public ArrayList<DTOTransition> transitions;
+    private List<DTOState> states = new ArrayList<DTOState>();
+    private List<DTOTransition> transitions = new ArrayList<DTOTransition>();
 
-	public String getName()
-	{
-		return name;
-	}
+    public void addTransition(DTOTransition tr)
+    {
+        this.transitions.add(tr);
+    }
 
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    public void addState(DTOState s)
+    {
+        this.states.add(s);
+    }
+    
+    // Stupid GET/SET
+    public String getName()
+    {
+        return name;
+    }
 
-	public String getDescription()
-	{
-		return description;
-	}
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
+    public String getDescription()
+    {
+        return description;
+    }
 
-	public String getId()
-	{
-		return id;
-	}
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 
-	public void setId(String id)
-	{
-		this.id = id;
-	}
+    public String getId()
+    {
+        return id;
+    }
 
-	public ArrayList<DTOState> getStates()
-	{
-		return states;
-	}
+    public void setId(String id)
+    {
+        this.id = id;
+    }
 
-	public void setStates(ArrayList<DTOState> states)
-	{
-		this.states = states;
-	}
+    public List<DTOState> getStates()
+    {
+        return states;
+    }
 
-	public ArrayList<DTOTransition> getTransitions()
-	{
-		return transitions;
-	}
+    void setStates(List<DTOState> states)
+    {
+        this.states = states;
+    }
 
-	public void setTransitions(ArrayList<DTOTransition> transitions)
-	{
-		this.transitions = transitions;
-	}
+    public List<DTOTransition> getTransitions()
+    {
+        return transitions;
+    }
+
+    void setTransitions(List<DTOTransition> transitions)
+    {
+        this.transitions = transitions;
+    }
+
+    
 
 }

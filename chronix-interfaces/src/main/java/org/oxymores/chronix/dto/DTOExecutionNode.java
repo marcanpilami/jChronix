@@ -1,193 +1,223 @@
 package org.oxymores.chronix.dto;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class DTOExecutionNode
 {
-	public String id, dns, osusername, ospassword, certFilePath;
-	public boolean isConsole, isSimpleRunner;
-	public int qPort, wsPort, remoteExecPort, jmxPort, x, y;
-	public ArrayList<String> toTCP, toRCTRL, fromTCP, fromRCTRL;
-	public ArrayList<String> places;
+    private String id, dns, osusername, ospassword, certFilePath;
+    private boolean isConsole, isSimpleRunner;
+    private int qPort, wsPort, remoteExecPort, jmxPort, x, y;
+    private List<String> toTCP = new ArrayList<String>(), toRCTRL = new ArrayList<String>(), fromTCP = new ArrayList<String>(),
+            fromRCTRL = new ArrayList<String>();
+    private List<String> places = new ArrayList<String>();
 
-	public String getId()
-	{
-		return id;
-	}
+    // Add to list
+    public void addToTcp(UUID id)
+    {
+        this.toTCP.add(id.toString());
+    }
 
-	public void setId(String id)
-	{
-		this.id = id;
-	}
+    public void addFromTcp(UUID id)
+    {
+        this.fromTCP.add(id.toString());
+    }
 
-	public String getDns()
-	{
-		return dns;
-	}
+    public void addToRctrl(UUID id)
+    {
+        this.toRCTRL.add(id.toString());
+    }
 
-	public void setDns(String dns)
-	{
-		this.dns = dns;
-	}
+    public void addFromRctrl(UUID id)
+    {
+        this.fromRCTRL.add(id.toString());
+    }
 
-	public String getOsusername()
-	{
-		return osusername;
-	}
+    public void addPlace(UUID id)
+    {
+        this.places.add(id.toString());
+    }
 
-	public void setOsusername(String osusername)
-	{
-		this.osusername = osusername;
-	}
+    // Stupid GET/SET
+    public String getId()
+    {
+        return id;
+    }
 
-	public String getOspassword()
-	{
-		return ospassword;
-	}
+    public void setId(String id)
+    {
+        this.id = id;
+    }
 
-	public void setOspassword(String ospassword)
-	{
-		this.ospassword = ospassword;
-	}
+    public String getDns()
+    {
+        return dns;
+    }
 
-	public String getCertFilePath()
-	{
-		return certFilePath;
-	}
+    public void setDns(String dns)
+    {
+        this.dns = dns;
+    }
 
-	public void setCertFilePath(String certFilePath)
-	{
-		this.certFilePath = certFilePath;
-	}
+    public String getOsusername()
+    {
+        return osusername;
+    }
 
-	public boolean isConsole()
-	{
-		return isConsole;
-	}
+    public void setOsusername(String osusername)
+    {
+        this.osusername = osusername;
+    }
 
-	public void setConsole(boolean isConsole)
-	{
-		this.isConsole = isConsole;
-	}
+    public String getOspassword()
+    {
+        return ospassword;
+    }
 
-	public int getqPort()
-	{
-		return qPort;
-	}
+    public void setOspassword(String ospassword)
+    {
+        this.ospassword = ospassword;
+    }
 
-	public void setqPort(int qPort)
-	{
-		this.qPort = qPort;
-	}
+    public String getCertFilePath()
+    {
+        return certFilePath;
+    }
 
-	public int getWsPort()
-	{
-		return wsPort;
-	}
+    public void setCertFilePath(String certFilePath)
+    {
+        this.certFilePath = certFilePath;
+    }
 
-	public void setWsPort(int wsPort)
-	{
-		this.wsPort = wsPort;
-	}
+    public boolean isConsole()
+    {
+        return isConsole;
+    }
 
-	public int getRemoteExecPort()
-	{
-		return remoteExecPort;
-	}
+    public void setConsole(boolean isConsole)
+    {
+        this.isConsole = isConsole;
+    }
 
-	public void setRemoteExecPort(int remoteExecPort)
-	{
-		this.remoteExecPort = remoteExecPort;
-	}
+    public int getqPort()
+    {
+        return qPort;
+    }
 
-	public int getJmxPort()
-	{
-		return jmxPort;
-	}
+    public void setqPort(int qPort)
+    {
+        this.qPort = qPort;
+    }
 
-	public void setJmxPort(int jmxPort)
-	{
-		this.jmxPort = jmxPort;
-	}
+    public int getWsPort()
+    {
+        return wsPort;
+    }
 
-	public int getX()
-	{
-		return x;
-	}
+    public void setWsPort(int wsPort)
+    {
+        this.wsPort = wsPort;
+    }
 
-	public void setX(int x)
-	{
-		this.x = x;
-	}
+    public int getRemoteExecPort()
+    {
+        return remoteExecPort;
+    }
 
-	public int getY()
-	{
-		return y;
-	}
+    public void setRemoteExecPort(int remoteExecPort)
+    {
+        this.remoteExecPort = remoteExecPort;
+    }
 
-	public void setY(int y)
-	{
-		this.y = y;
-	}
+    public int getJmxPort()
+    {
+        return jmxPort;
+    }
 
-	public ArrayList<String> getToTCP()
-	{
-		return toTCP;
-	}
+    public void setJmxPort(int jmxPort)
+    {
+        this.jmxPort = jmxPort;
+    }
 
-	public void setToTCP(ArrayList<String> toTCP)
-	{
-		this.toTCP = toTCP;
-	}
+    public int getX()
+    {
+        return x;
+    }
 
-	public ArrayList<String> getToRCTRL()
-	{
-		return toRCTRL;
-	}
+    public void setX(int x)
+    {
+        this.x = x;
+    }
 
-	public void setToRCTRL(ArrayList<String> toRCTRL)
-	{
-		this.toRCTRL = toRCTRL;
-	}
+    public int getY()
+    {
+        return y;
+    }
 
-	public ArrayList<String> getFromTCP()
-	{
-		return fromTCP;
-	}
+    public void setY(int y)
+    {
+        this.y = y;
+    }
 
-	public void setFromTCP(ArrayList<String> fromTCP)
-	{
-		this.fromTCP = fromTCP;
-	}
+    public List<String> getToTCP()
+    {
+        return toTCP;
+    }
 
-	public ArrayList<String> getFromRCTRL()
-	{
-		return fromRCTRL;
-	}
+    void setToTCP(List<String> toTCP)
+    {
+        this.toTCP = toTCP;
+    }
 
-	public void setFromRCTRL(ArrayList<String> fromRCTRL)
-	{
-		this.fromRCTRL = fromRCTRL;
-	}
+    public List<String> getToRCTRL()
+    {
+        return toRCTRL;
+    }
 
-	public ArrayList<String> getPlaces()
-	{
-		return places;
-	}
+    void setToRCTRL(List<String> toRCTRL)
+    {
+        this.toRCTRL = toRCTRL;
+    }
 
-	public void setPlaces(ArrayList<String> places)
-	{
-		this.places = places;
-	}
+    public List<String> getFromTCP()
+    {
+        return fromTCP;
+    }
 
-	public boolean isSimpleRunner()
-	{
-		return isSimpleRunner;
-	}
+    void setFromTCP(List<String> fromTCP)
+    {
+        this.fromTCP = fromTCP;
+    }
 
-	public void setSimpleRunner(boolean isSimpleRunner)
-	{
-		this.isSimpleRunner = isSimpleRunner;
-	}
+    public List<String> getFromRCTRL()
+    {
+        return fromRCTRL;
+    }
+
+    void setFromRCTRL(List<String> fromRCTRL)
+    {
+        this.fromRCTRL = fromRCTRL;
+    }
+
+    public List<String> getPlaces()
+    {
+        return places;
+    }
+
+    void setPlaces(List<String> places)
+    {
+        this.places = places;
+    }
+
+    public boolean isSimpleRunner()
+    {
+        return isSimpleRunner;
+    }
+
+    public void setSimpleRunner(boolean isSimpleRunner)
+    {
+        this.isSimpleRunner = isSimpleRunner;
+    }
 
 }
