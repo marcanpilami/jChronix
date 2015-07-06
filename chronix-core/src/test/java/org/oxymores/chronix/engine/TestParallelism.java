@@ -233,7 +233,7 @@ public class TestParallelism
         try
         {
             SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-            Thread.sleep(2000);
+            Thread.sleep(4000);
         }
         catch (Exception e3)
         {

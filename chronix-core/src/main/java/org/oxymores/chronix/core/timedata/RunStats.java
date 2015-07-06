@@ -122,6 +122,7 @@ public class RunStats implements Serializable
         q2.setParameter(2, rlog.getStateId());
 
         Object[] o = (Object[]) q2.getSingleResult();
+        
         rs.meanDuration = (Long) o[0];
         rs.maxDuration = (Long) o[1];
         rs.minDuration = (Long) o[2];

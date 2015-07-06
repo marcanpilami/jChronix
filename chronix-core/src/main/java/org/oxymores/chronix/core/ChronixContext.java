@@ -36,7 +36,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
-import javax.validation.Configuration;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -45,7 +44,6 @@ import javax.validation.ValidatorFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.validator.messageinterpolation.ValueFormatterMessageInterpolator;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.ClockTick;
@@ -197,9 +195,8 @@ public class ChronixContext
     {
         if (validatorFactory == null)
         {
-            Configuration<?> configuration = Validation.byDefaultProvider().configure();
-            validatorFactory = configuration.messageInterpolator(
-                    new ValueFormatterMessageInterpolator(configuration.getDefaultMessageInterpolator())).buildValidatorFactory();
+            //Configuration<?> configuration = Validation.byDefaultProvider().configure();
+            validatorFactory = Validation.buildDefaultValidatorFactory();
         }
         return validatorFactory.getValidator();
     }

@@ -85,7 +85,7 @@ class LogListener extends BaseListener
         trTransac.commit();
         jmsCommit();
 
-        if (!ctx.isSimulator())
+        if (!ctx.isSimulator() && rlog.getStoppedRunningAt() != null)
         {
             trTransac.begin();
             RunStats.updateStats(rlog, emTransac);
