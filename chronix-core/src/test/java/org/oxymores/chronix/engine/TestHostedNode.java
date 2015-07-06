@@ -5,10 +5,7 @@ import java.util.List;
 import javax.jms.JMSException;
 import javax.persistence.EntityManager;
 
-import junit.framework.Assert;
-
-import org.apache.log4j.Logger;
-import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
@@ -23,240 +20,153 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
-public class TestHostedNode
+public class TestHostedNode extends TestBase
 {
-	private static Logger log = Logger.getLogger(TestHostedNode.class);
+    ChronixEngine e1;
 
-	private String db1, db2;
-	Application a1;
-	ChronixEngine e1, e2;
-	ExecutionNode en1, en2;
-	Place p1, p2;
-	PlaceGroup pg1, pg2, pg3;
+    @Before
+    public void before() throws Exception
+    {
+        String db1 = "C:\\TEMP\\db1";
+        String db2 = "C:\\TEMP\\db2";
 
-	@After
-	public void cleanup()
-	{
-		log.debug("**************************************************************************************");
-		log.debug("****END OF TEST***********************************************************************");
-		if (e1 != null && e1.shouldRun())
-		{
-			e1.stopEngine();
-			e1.waitForStopEnd();
-		}
-		if (e2 != null && e2.shouldRun())
-		{
-			e2.stopEngine();
-			e2.waitForStopEnd();
-		}
-	}
+        Application a = createTestApplication(db1, "test application");
+        e1 = addEngine(db1, a, "localhost:1789");
 
-	@Before
-	public void prepare() throws Exception
-	{
-		db1 = "C:\\TEMP\\db1";
-		db2 = "C:\\TEMP\\db3";
+        // Physical network
+        ExecutionNode en1 = a.getNodesList().get(0);
+        ExecutionNode en2 = PlanBuilder.buildExecutionNode(a, "localhost", 1804);
+        en1.connectTo(en2, NodeConnectionMethod.RCTRL);
 
-		/************************************************
-		 * Create a test configuration db
-		 ***********************************************/
+        // Logical network
+        Place p1 = PlanBuilder.buildPlace(a, "master node", "master node", en1);
+        Place p2 = PlanBuilder.buildPlace(a, "hosted node", "hosted node", en2);
 
-		e1 = new ChronixEngine(db1, "localhost:1789");
-		e1.emptyDb();
-		LogHelpers.clearAllTranscientElements(e1.ctx);
+        PlaceGroup pg1 = PlanBuilder.buildPlaceGroup(a, "master node", "master node", p1);
+        PlaceGroup pg2 = PlanBuilder.buildPlaceGroup(a, "hosted node", "hosted node", p2);
+        PlaceGroup pg3 = PlanBuilder.buildPlaceGroup(a, "all nodes", "all nodes", p1, p2);
 
-		// Create a test application and save it inside context
-		a1 = PlanBuilder.buildApplication("Hosted node test", "test");
+        // Chains and other stuff are created by the tests themselves
+        // Now save app in node 1
+        try
+        {
+            e1.ctx.saveApplication(a);
+            e1.ctx.setWorkingAsCurrent(a);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
 
-		// Physical network
-		en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
-		en1.setConsole(true);
-		en2 = PlanBuilder.buildExecutionNode(a1, "localhost", 1804);
-		en1.connectTo(en2, NodeConnectionMethod.RCTRL);
+        //Create an empty test configuration db for second node
+        ChronixEngine e2 = addRunner(db2, "localhost:1804");
+        e2.emptyDb();
 
-		// Logical network
-		p1 = PlanBuilder.buildPlace(a1, "master node", "master node", en1);
-		p2 = PlanBuilder.buildPlace(a1, "hosted node", "hosted node", en2);
+        startEngines();
+    }
 
-		pg1 = PlanBuilder.buildPlaceGroup(a1, "master node", "master node", p1);
-		pg2 = PlanBuilder.buildPlaceGroup(a1, "hosted node", "hosted node", p2);
-		pg3 = PlanBuilder.buildPlaceGroup(a1, "all nodes", "all nodes", p1, p2);
+    @Test
+    public void testSimpleChain()
+    {
+        Application a = this.applications.get(0);
+        EntityManager em = e1.ctx.getTransacEM();
 
-		// Chains and other stuff depend are created by the tests themselves
+        // Build a very simple chain
+        Chain c1 = PlanBuilder.buildChain(a, "chain fully on hosted node", "simple chain", a.getGroup("hosted node"));
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo oo", "echo oo", "oo");
+        State s1 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc1);
+        c1.getStartState().connectTo(s1);
+        s1.connectTo(c1.getEndState());
+        saveAndReloadApp(a, e1);
 
-		// Save app in node 1
-		try
-		{
-			e1.ctx.saveApplication(a1);
-			e1.ctx.setWorkingAsCurrent(a1);
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
+        // Run the chain
+        try
+        {
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        }
+        catch (JMSException e3)
+        {
+            Assert.fail(e3.getMessage());
+        }
 
-		/************************************************
-		 * Create an empty test configuration db for second node
-		 ***********************************************/
-		e2 = new ChronixEngine(db2, "localhost:1804", "TransacUnitXXX", "HistoryUnitXXX", true);
-		e2.emptyDb();
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 3);
+        Assert.assertEquals(3, res.size());
+    }
 
-		/************************************************
-		 * Start the engines
-		 ***********************************************/
+    @Test
+    public void testMasterAndSlaveChain()
+    {
+        Application a = this.applications.get(0);
+        EntityManager em = e1.ctx.getTransacEM();
 
-		e1.start();
-		e2.start();
-		log.debug("Started - begin waiting");
-		e1.waitForInitEnd();
-		e2.waitForInitEnd();
-		log.debug("Engines inits done");
-	}
+        // Build the test chain
+        Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("hosted node"));
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
 
-	@Test
-	public void testSimpleChain()
-	{
-		EntityManager em = e1.ctx.getTransacEM();
+        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        State s2 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc2);
 
-		// Build a very simple chain
-		Chain c1 = PlanBuilder.buildChain(a1, "chain fully on hosted node", "simple chain", pg2);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
-		State s1 = PlanBuilder.buildState(c1, pg2, sc1);
-		c1.getStartState().connectTo(s1);
-		s1.connectTo(c1.getEndState());
+        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c", "echoc", "c");
+        State s3 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc3);
 
-		try
-		{
-			e1.ctx.saveApplication(a1);
-			e1.ctx.setWorkingAsCurrent(a1);
-			e1.queueReloadConfiguration();
-			e1.waitForInitEnd();
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
+        c1.getStartState().connectTo(s1);
+        s1.connectTo(s2);
+        s2.connectTo(s3);
+        s3.connectTo(c1.getEndState());
 
-		// Run the chain
-		try
-		{
-			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3)
-		{
-			Assert.fail(e3.getMessage());
-		}
+        saveAndReloadApp(a, e1);
 
-		try
-		{
-			Thread.sleep(3000);
-		} catch (InterruptedException e3)
-		{
-		}
-		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
-		Assert.assertEquals(3, res.size());
-	}
+        // Run the chain
+        try
+        {
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        }
+        catch (JMSException e3)
+        {
+            Assert.fail(e3.getMessage());
+        }
 
-	@Test
-	public void testMasterAndSlaveChain()
-	{
-		EntityManager em = e1.ctx.getTransacEM();
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 5);
+        Assert.assertEquals(5, res.size());
+    }
 
-		// Build the test chain
-		Chain c1 = PlanBuilder.buildChain(a1, "chain on both nodes", "simple chain", pg2);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echoa", "a");
-		State s1 = PlanBuilder.buildState(c1, pg1, sc1);
+    @Test
+    public void testMixedConditionChain()
+    {
+        Application a = this.applications.get(0);
+        EntityManager em = e1.ctx.getTransacEM();
 
-		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo b", "echob", "b");
-		State s2 = PlanBuilder.buildState(c1, pg2, sc2);
+        // Build the test chain
+        Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("hosted node"));
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
 
-		ShellCommand sc3 = PlanBuilder.buildShellCommand(a1, "echo c", "echoc", "c");
-		State s3 = PlanBuilder.buildState(c1, pg1, sc3);
+        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        State s2 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc2);
+        State s3 = PlanBuilder.buildStateAND(c1, a.getGroup("master node"));
 
-		c1.getStartState().connectTo(s1);
-		s1.connectTo(s2);
-		s2.connectTo(s3);
-		s3.connectTo(c1.getEndState());
+        c1.getStartState().connectTo(s1);
+        c1.getStartState().connectTo(s2);
+        s1.connectTo(s3);
+        s2.connectTo(s3);
+        s3.connectTo(c1.getEndState());
 
-		try
-		{
-			e1.ctx.saveApplication(a1);
-			e1.ctx.setWorkingAsCurrent(a1);
-			e1.queueReloadConfiguration();
-			e1.waitForInitEnd();
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
+        saveAndReloadApp(a, e1);
 
-		// Run the chain
-		try
-		{
-			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3)
-		{
-			Assert.fail(e3.getMessage());
-		}
+        // Run the chain
+        try
+        {
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        }
+        catch (JMSException e3)
+        {
+            Assert.fail(e3.getMessage());
+        }
 
-		try
-		{
-			Thread.sleep(3000);
-		} catch (InterruptedException e3)
-		{
-		}
-		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
-		Assert.assertEquals(5, res.size());
-	}
-
-	@Test
-	public void testMixedConditionChain()
-	{
-		EntityManager em = e1.ctx.getTransacEM();
-
-		// Build the test chain
-		Chain c1 = PlanBuilder.buildChain(a1, "chain on both nodes", "simple chain", pg2);
-		ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echoa", "a");
-		State s1 = PlanBuilder.buildState(c1, pg1, sc1);
-
-		ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo b", "echob", "b");
-		State s2 = PlanBuilder.buildState(c1, pg2, sc2);
-		State s3 = PlanBuilder.buildStateAND(c1, pg1);
-
-		c1.getStartState().connectTo(s1);
-		c1.getStartState().connectTo(s2);
-		s1.connectTo(s3);
-		s2.connectTo(s3);
-		s3.connectTo(c1.getEndState());
-
-		try
-		{
-			e1.ctx.saveApplication(a1);
-			e1.ctx.setWorkingAsCurrent(a1);
-			e1.queueReloadConfiguration();
-			e1.waitForInitEnd();
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
-
-		// Run the chain
-		try
-		{
-			SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
-		} catch (JMSException e3)
-		{
-			Assert.fail(e3.getMessage());
-		}
-
-		try
-		{
-			Thread.sleep(3000);
-		} catch (InterruptedException e3)
-		{
-		}
-		List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
-		Assert.assertEquals(5, res.size());
-	}
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 5);
+        Assert.assertEquals(5, res.size());
+    }
 
 }

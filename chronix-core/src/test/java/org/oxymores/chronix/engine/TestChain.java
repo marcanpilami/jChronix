@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
@@ -18,6 +19,15 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestChain extends TestBase
 {
+    @Before
+    public void before() throws Exception
+    {
+        String db1 = "C:\\TEMP\\db1";
+        Application a = createTestApplication(db1, "test application");
+        addEngine(db1, a, "localhost:1789");
+        startEngines();
+    }
+
     @Test
     public void testChainLaunch() throws Exception
     {

@@ -1,23 +1,14 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
- * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
- * a copy of the License at
+ *
+ * See the NOTICE file distributed with this work for information regarding copyright ownership. This file is licensed to you under the Apache License, Version
+ * 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-
 package org.oxymores.chronix.core.timedata;
 
 import java.io.Serializable;
@@ -49,7 +40,6 @@ public class RunLog implements Serializable
 
     // /////////////////////////////
     // Plan elements definition
-
     @Column(length = UUID_LENGTH)
     private String applicationId;
 
@@ -76,7 +66,6 @@ public class RunLog implements Serializable
 
     // /////////////////////////////
     // Plan element names (helpers for end user + enables to be totally independent from plan definition)
-
     @Column(length = DESCR_LENGTH)
     private String chainName;
 
@@ -103,7 +92,6 @@ public class RunLog implements Serializable
 
     // ///////////////////////////////
     // Status / result
-
     @Column(length = PATH_LENGTH)
     private String whatWasRun;
 
@@ -120,12 +108,10 @@ public class RunLog implements Serializable
 
     // /////////////////////////////
     // Data/ capa planning
-
     private long dataIn, dataOut;
 
     // /////////////////////////////
     // Calendar & seq
-
     @Column(length = DESCR_LENGTH)
     private String calendarName;
 
@@ -136,7 +122,6 @@ public class RunLog implements Serializable
 
     // /////////////////////////////
     // Dates
-
     private Date enteredPipeAt;
 
     private Date markedForUnAt;
@@ -167,9 +152,9 @@ public class RunLog implements Serializable
         res = String
                 .format("%36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %-14s | %-14s | %-14s | %-14s | %-15s | %-15s | %-10s | %-5s | %36s",
                         this.id, this.placeName.substring(0, Math.min(19, placeName.length())), this.executionNodeName, chainName
-                                .substring(0, Math.min(19, chainName.length())), applicationName.substring(0,
+                        .substring(0, Math.min(19, chainName.length())), applicationName.substring(0,
                                 Math.min(19, applicationName.length())),
-                        activeNodeName.substring(0, Math.min(19, activeNodeName.length())), osAccount,
+                        activeNodeName.substring(0, Math.min(19, activeNodeName.length())), osAccount == null ? "" : osAccount.substring(0, Math.min(10, osAccount.length())),
                         whatWasRun == null ? "" : whatWasRun.substring(0, Math.min(29, whatWasRun.length())), resultCode,
                         enteredPipeAt == null ? null : DateFormatUtils.format(enteredPipeAt, DATE_FORMAT), beganRunningAt == null ? null
                                 : DateFormatUtils.format(beganRunningAt, DATE_FORMAT),
