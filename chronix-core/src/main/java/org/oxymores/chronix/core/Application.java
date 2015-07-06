@@ -268,6 +268,19 @@ public class Application extends ChronixObject
         return res;
     }
 
+    public PlaceGroup getGroup(String name)
+    {
+        PlaceGroup res = null;
+        for (PlaceGroup pg : this.groups.values())
+        {
+            if (pg.getName().equals(name))
+            {
+                return pg;
+            }
+        }
+        return res;
+    }
+
     public PlaceGroup getGroup(UUID id)
     {
         return this.groups.get(id);

@@ -4,17 +4,11 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import junit.framework.Assert;
-
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -22,95 +16,15 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
-public class TestChain
+public class TestChain extends TestBase
 {
-    private static Logger log = Logger.getLogger(TestChain.class);
-
-    private String db1;
-    Application a1;
-    ChronixEngine e1;
-    ExecutionNode en1;
-    Place p1;
-    PlaceGroup pg1, pg2;
-
-    @Before
-    public void prepare() throws Exception
-    {
-        db1 = "C:\\TEMP\\db1";
-
-        /************************************************
-         * Create a test configuration db
-         ***********************************************/
-
-        e1 = new ChronixEngine(db1, "localhost:1789");
-        e1.emptyDb();
-        LogHelpers.clearAllTranscientElements(e1.ctx);
-
-        // Create a test application and save it inside context
-        a1 = PlanBuilder.buildApplication("Single node test", "test");
-
-        // Physical network
-        en1 = PlanBuilder.buildExecutionNode(a1, "localhost", 1789);
-        en1.setConsole(true);
-
-        // Logical network
-        p1 = PlanBuilder.buildPlace(a1, "master node", "master node", en1);
-
-        pg1 = PlanBuilder.buildPlaceGroup(a1, "master node", "master node", p1);
-        pg2 = PlanBuilder.buildPlaceGroup(a1, "all nodes", "all nodes", p1);
-
-        // Chains and other stuff depends on the test
-
-        // Save app in node 1
-        try
-        {
-            e1.ctx.saveApplication(a1);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-
-        try
-        {
-            e1.ctx.setWorkingAsCurrent(a1);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-
-        /************************************************
-         * Start the engine
-         ***********************************************/
-
-        e1.start();
-        log.debug("Started - begin waiting");
-        e1.waitForInitEnd();
-        log.debug("Engines inits done");
-    }
-
-    @After
-    public void cleanup()
-    {
-        log.debug("**************************************************************************************");
-        log.debug("****END OF TEST***********************************************************************");
-        if (e1 != null && e1.shouldRun())
-        {
-            e1.stopEngine();
-            e1.waitForStopEnd();
-        }
-    }
-
     @Test
     public void testChainLaunch() throws Exception
     {
-        log.debug("**************************************************************************************");
         log.debug("****CREATE PLAN***********************************************************************");
-
-        EntityManager em = e1.ctx.getTransacEM();
+        EntityManager em = firstEngine().ctx.getTransacEM();
+        Application a1 = this.applications.get(0);
+        PlaceGroup pg1 = a1.getGroup("master node");
 
         // First stupid chain
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
@@ -127,10 +41,10 @@ public class TestChain
         // Save plan
         try
         {
-            e1.ctx.saveApplication(a1);
-            e1.ctx.setWorkingAsCurrent(a1);
-            e1.queueReloadConfiguration();
-            e1.waitForInitEnd();
+            firstEngine().ctx.saveApplication(a1);
+            firstEngine().ctx.setWorkingAsCurrent(a1);
+            firstEngine().queueReloadConfiguration();
+            firstEngine().waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -139,13 +53,10 @@ public class TestChain
         }
 
         // Start chain
-        log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
-        Thread.sleep(5000); // Time to consume message
+        log.debug("****PASSING RUN***************************************************************");
+        SenderHelpers.runStateInsidePlan(sp, firstEngine().ctx, em);
 
-        // Tests
-        List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(firstEngine().ctx, 4);
         Assert.assertEquals(4, res.size());
         RunLog rl0 = res.get(0);
         RunLog rl3 = res.get(3);
@@ -159,10 +70,11 @@ public class TestChain
     @Test
     public void testCompletePlan() throws Exception
     {
-        log.debug("**************************************************************************************");
         log.debug("****CREATE PLAN***********************************************************************");
-
+        ChronixEngine e1 = firstEngine();
         EntityManager em = e1.ctx.getTransacEM();
+        Application a1 = applications.get(0);
+        PlaceGroup pg1 = a1.getGroup("master node");
 
         // First stupid chains
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain 1", "chain1", pg1);
@@ -215,13 +127,10 @@ public class TestChain
         }
 
         // Start chain
-        log.debug("**************************************************************************************");
-        log.debug("****FIRST (PASSING) RUN***************************************************************");
+        log.debug("****PASSING RUN***************************************************************");
         SenderHelpers.runStateInsidePlan(sp1, e1.ctx, em);
-        Thread.sleep(8000); // Time to consume message
 
-        // Tests
-        List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 17);
         Assert.assertEquals(17, res.size());
         RunLog rl0 = res.get(0);
 

@@ -27,6 +27,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
 
@@ -46,6 +47,42 @@ class LogHelpers
             log.info(l.getLine());
         }
 
+        em.close();
+        return res;
+    }
+
+    public static List<RunLog> getAllHistory(ChronixContext ctx)
+    {
+        EntityManager em = ctx.getHistoryEM();
+        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.beganRunningAt", RunLog.class);
+        List<RunLog> res = q.getResultList();
+        em.close();
+        return res;
+    }
+
+    public static List<RunLog> waitForHistoryCount(ChronixContext ctx, int expected)
+    {
+        return waitForHistoryCount(ctx, expected, 60000);
+    }
+
+    public static List<RunLog> waitForHistoryCount(ChronixContext ctx, int expected, int timeoutSec)
+    {
+        List<RunLog> res = null;
+        long s = (new DateTime()).getMillis();
+        int nb = 0;
+        while (nb != expected && (new DateTime()).getMillis() - s < timeoutSec * 1000)
+        {
+            try
+            {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            res = getAllHistory(ctx);
+            nb = res.size();
+        }
         return res;
     }
 
