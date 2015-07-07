@@ -34,7 +34,6 @@ public class TestBase
     @After
     public void cleanup()
     {
-        log.debug("****END OF TEST " + testName.getMethodName() + "***********************************************************************");
         for (ChronixEngine e : engines.values())
         {
             if (e.shouldRun())
@@ -44,11 +43,9 @@ public class TestBase
         }
         for (ChronixEngine e : engines.values())
         {
-            if (e.shouldRun())
-            {
-                e.waitForStopEnd();
-            }
+            e.waitForStopEnd();
         }
+        log.debug("****END OF TEST " + testName.getMethodName() + "***********************************************************************");
     }
 
     protected ChronixEngine addRunner(String database_path, String intname)
