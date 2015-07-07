@@ -2,8 +2,6 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,14 +99,11 @@ public class TestParallelism extends TestBase
         Chain c1 = PlanBuilder.buildChain(a, "empty chain", "empty chain", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "set", "Display envt", "Will display all env vars");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:CHR_JOBNAME\"", "Display jobname",
-                "Will display one env vars");
+        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:CHR_JOBNAME\"", "Display jobname", "Will display one env vars");
         State s2 = PlanBuilder.buildState(c1, pg1, sc2);
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo set MARSU=12 54 pohfgh)'", "Set a var",
-                "Will set a new env vars that should be propagated");
+        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo set MARSU=12 54 pohfgh)'", "Set a var", "Will set a new env vars that should be propagated");
         State s3 = PlanBuilder.buildState(c1, pg1, sc3);
-        ShellCommand sc4 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:MARSU\"", "Display MARSU",
-                "Will display the MARSU env var");
+        ShellCommand sc4 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:MARSU\"", "Display MARSU", "Will display the MARSU env var");
         State s4 = PlanBuilder.buildState(c1, pg1, sc4);
         State s5 = PlanBuilder.buildState(c1, pg3, sc4);
         c1.getStartState().connectTo(s1);
@@ -167,8 +162,7 @@ public class TestParallelism extends TestBase
     {
         // Build a very simple chain
         Chain c1 = PlanBuilder.buildChain(a, "empty chain", "empty chain", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
-                "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P21, be OK on other places");
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
         c1.getStartState().connectTo(s1);
@@ -250,8 +244,7 @@ public class TestParallelism extends TestBase
     public void testCaseP1()
     {
         // Build a very simple chain
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
-                "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
         ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
 
@@ -314,21 +307,11 @@ public class TestParallelism extends TestBase
         Assert.assertEquals(14, res.size());
     }
 
-    //TODO: finish refactoring of this file (below this comment)
     @Test
     public void testCaseP2()
     {
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**** TEST 4 - case P2 ****************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-
         // Build the test chain
-        log.debug("**************************************************************************************");
-        log.debug("****CREATE CHAIN**********************************************************************");
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
-                "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
         ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
 
@@ -344,21 +327,9 @@ public class TestParallelism extends TestBase
         s4.connectTo(s2);
         s2.connectTo(c1.getEndState());
 
-        try
-        {
-            e1.ctx.saveApplication(a);
-            e1.ctx.setWorkingAsCurrent(a);
-            e1.queueReloadConfiguration();
-            e1.waitForRebootEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        saveAndReloadApp(a, e1);
 
         // Send the chain to node 2
-        log.debug("**************************************************************************************");
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
         try
         {
@@ -372,13 +343,10 @@ public class TestParallelism extends TestBase
         }
 
         // Launch chain
-        log.debug("**************************************************************************************");
         log.debug("****START CHAIN***********************************************************************");
-
         try
         {
             SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-            Thread.sleep(5000);
         }
         catch (Exception e3)
         {
@@ -386,7 +354,7 @@ public class TestParallelism extends TestBase
         }
 
         // Test finished nominally
-        List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 9);
         Assert.assertEquals(9, res.size());
         RunLog failedLog = null;
         for (RunLog rl : res)
@@ -396,39 +364,27 @@ public class TestParallelism extends TestBase
                 failedLog = rl;
             }
         }
+        Assert.assertNotNull(failedLog);
 
         // Ask the failed job to free the rest of the chain
-        log.debug("**************************************************************************************");
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
             SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
-            Thread.sleep(2000);
         }
         catch (Exception e)
         {
             Assert.fail(e.getMessage());
         }
-        res = LogHelpers.displayAllHistory(e1.ctx);
+        res = LogHelpers.waitForHistoryCount(e1.ctx, 22);
         Assert.assertEquals(22, res.size());
     }
 
     @Test
     public void testCaseP5()
     {
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**** TEST 5 - case P5 ****************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-
-        // Build the test chain
-        log.debug("**************************************************************************************");
-        log.debug("****CREATE CHAIN**********************************************************************");
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a,
-                "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
-
         Chain c1 = PlanBuilder.buildChain(a, "chain P1", "chain P1", pg1);
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
         State s2 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
@@ -439,21 +395,9 @@ public class TestParallelism extends TestBase
         s2.connectTo(s3);
         s3.connectTo(c1.getEndState());
 
-        try
-        {
-            e1.ctx.saveApplication(a);
-            e1.ctx.setWorkingAsCurrent(a);
-            e1.queueReloadConfiguration();
-            e1.waitForRebootEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        saveAndReloadApp(a, e1);
 
         // Send the chain to node 2
-        log.debug("**************************************************************************************");
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
         try
         {
@@ -467,13 +411,10 @@ public class TestParallelism extends TestBase
         }
 
         // Launch chain
-        log.debug("**************************************************************************************");
         log.debug("****START CHAIN***********************************************************************");
-
         try
         {
             SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-            Thread.sleep(5000);
         }
         catch (Exception e3)
         {
@@ -481,7 +422,7 @@ public class TestParallelism extends TestBase
         }
 
         // Test finished nominally
-        List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 7);
         Assert.assertEquals(7, res.size());
         RunLog failedLog = null;
         for (RunLog rl : res)
@@ -492,21 +433,20 @@ public class TestParallelism extends TestBase
                 failedLog = rl;
             }
         }
+        Assert.assertNotNull(failedLog);
 
         // Ask the failed job to free the rest of the chain
-        log.debug("**************************************************************************************");
         log.debug("****ORDER FAILED JOB TO ABANDON*******************************************************");
         try
         {
             SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
-            Thread.sleep(2000);
         }
         catch (Exception e)
         {
             log.error("oups", e);
             Assert.fail(e.getMessage());
         }
-        res = LogHelpers.displayAllHistory(e1.ctx);
+        res = LogHelpers.waitForHistoryCount(e1.ctx, 13);
         Assert.assertEquals(13, res.size());
         failedLog = null;
         for (RunLog rl : res)
@@ -516,20 +456,19 @@ public class TestParallelism extends TestBase
                 failedLog = rl;
             }
         }
+        Assert.assertNotNull(failedLog);
 
         // Ask the failed job to free the rest of the chain
-        log.debug("**************************************************************************************");
         log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 2*********************************************");
         try
         {
             SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
-            Thread.sleep(2000);
         }
         catch (Exception e)
         {
             Assert.fail(e.getMessage());
         }
-        res = LogHelpers.displayAllHistory(e1.ctx);
+        res = LogHelpers.waitForHistoryCount(e1.ctx, 19);
         Assert.assertEquals(19, res.size());
         failedLog = null;
         for (RunLog rl : res)
@@ -539,35 +478,25 @@ public class TestParallelism extends TestBase
                 failedLog = rl;
             }
         }
+        Assert.assertNotNull(failedLog);
 
         // Ask the failed job to free the rest of the chain
-        log.debug("**************************************************************************************");
         log.debug("****ORDER FAILED JOB TO ABANDON EPISODE 3*********************************************");
         try
         {
             SenderHelpers.sendOrderForceOk(failedLog.getId(), en2, e1.ctx);
-            Thread.sleep(2000);
         }
         catch (Exception e)
         {
             Assert.fail(e.getMessage());
         }
-        res = LogHelpers.displayAllHistory(e1.ctx);
+        res = LogHelpers.waitForHistoryCount(e1.ctx, 20);
         Assert.assertEquals(20, res.size());
     }
 
     @Test
     public void testCaseP1Prime()
     {
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**** TEST 6 - case P1' ***************************************************************");
-        log.debug("**************************************************************************************");
-        log.debug("**************************************************************************************");
-
-        // Build the test chain
-        log.debug("**************************************************************************************");
-        log.debug("****CREATE CHAIN**********************************************************************");
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "A - Always OK", "Always OK");
         ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "B - Always OK", "Always OK");
 
@@ -585,21 +514,9 @@ public class TestParallelism extends TestBase
         s4.connectTo(s5);
         s5.connectTo(c1.getEndState());
 
-        try
-        {
-            e1.ctx.saveApplication(a);
-            e1.ctx.setWorkingAsCurrent(a);
-            e1.queueReloadConfiguration();
-            e1.waitForRebootEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        saveAndReloadApp(a, e1);
 
         // Send the chain to node 2
-        log.debug("**************************************************************************************");
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
         try
         {
@@ -613,13 +530,10 @@ public class TestParallelism extends TestBase
         }
 
         // Launch chain
-        log.debug("**************************************************************************************");
         log.debug("****START CHAIN***********************************************************************");
-
         try
         {
             SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
-            Thread.sleep(7000);
         }
         catch (Exception e3)
         {
@@ -627,7 +541,7 @@ public class TestParallelism extends TestBase
         }
 
         // Test finished nominally
-        List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 32);
         Assert.assertEquals(32, res.size());
     }
 }
