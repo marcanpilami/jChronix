@@ -20,7 +20,6 @@ import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.active.And;
@@ -32,7 +31,6 @@ import org.oxymores.chronix.core.validation.ApplicationCheckConsole;
 import org.oxymores.chronix.core.validation.ApplicationCheckPnUnicity;
 import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
-@XmlRootElement
 @ApplicationCheckConsole
 @ApplicationCheckPnUnicity
 public class Application extends ChronixObject
@@ -48,21 +46,21 @@ public class Application extends ChronixObject
     protected String description;
 
     @Valid
+    protected Map<UUID, ExecutionNode> nodes;
+    @Valid
     protected Map<UUID, Place> places;
     @Valid
     protected Map<UUID, PlaceGroup> groups;
     @Valid
-    protected Map<UUID, ExecutionNode> nodes;
-    @Valid
-    protected Map<UUID, ActiveNodeBase> activeElements;
-    @Valid
     protected Map<UUID, Parameter> parameters;
+    @Valid
+    protected Map<UUID, ClockRRule> rrules;
     @Valid
     protected Map<UUID, Calendar> calendars;
     @Valid
     protected Map<UUID, Token> tokens;
     @Valid
-    protected Map<UUID, ClockRRule> rrules;
+    protected Map<UUID, ActiveNodeBase> activeElements;
 
     protected transient ExecutionNode localNode;
     protected transient ExecutionNode consoleNode;
