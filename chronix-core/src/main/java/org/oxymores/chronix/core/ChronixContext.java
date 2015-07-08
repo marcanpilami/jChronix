@@ -213,11 +213,11 @@ public class ChronixContext
     {
         if (workingCopy)
         {
-            return loadApplication(new File(getWorkingPath(id)), loadNotLocalApps);
+            return loadApplication(new File(getWorkingPath(id, this.configurationDirectory)), loadNotLocalApps);
         }
         else
         {
-            return loadApplication(new File(getActivePath(id)), loadNotLocalApps);
+            return loadApplication(new File(getActivePath(id, this.configurationDirectory)), loadNotLocalApps);
         }
     }
 
@@ -266,8 +266,13 @@ public class ChronixContext
 
     public void saveApplication(Application a) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
-        try (FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id)))
+        saveApplication(a, this.configurationDirectory);
+    }
+
+    public static void saveApplication(Application a, File dir) throws ChronixPlanStorageException
+    {
+        log.info(String.format("(%s) Saving application %s to temp file", dir, a.getName()));
+        try (FileOutputStream fos = new FileOutputStream(getWorkingPath(a.getId(), dir)))
         {
             xmlUtility.toXML(a, fos);
         }
@@ -277,14 +282,20 @@ public class ChronixContext
         }
     }
 
-    protected String getWorkingPath(UUID appId)
+    public static void saveApplicationAndMakeCurrent(Application a, File dir) throws ChronixPlanStorageException
     {
-        return configurationDirectory.getAbsolutePath() + "/app_data_" + appId + "_WORKING_.crn";
+        saveApplication(a, dir);
+        setWorkingAsCurrent(a, dir);
     }
 
-    protected String getActivePath(UUID appId)
+    protected static String getWorkingPath(UUID appId, File dir)
     {
-        return configurationDirectory.getAbsolutePath() + "/app_data_" + appId + "_CURRENT_.crn";
+        return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_WORKING_.crn");
+    }
+
+    protected static String getActivePath(UUID appId, File dir)
+    {
+        return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_CURRENT_.crn");
     }
 
     protected void preSaveWorkingApp(Application a)
@@ -295,9 +306,14 @@ public class ChronixContext
     // Does NOT refresh caches. Restart the engine for that !
     public void setWorkingAsCurrent(Application a) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Promoting temp file for application %s as the active file", this.configurationDirectory, a.getName()));
-        String workingDataFilePath = getWorkingPath(a.id);
-        String currentDataFilePath = getActivePath(a.id);
+        setWorkingAsCurrent(a, this.configurationDirectory);
+    }
+
+    public static void setWorkingAsCurrent(Application a, File dir) throws ChronixPlanStorageException
+    {
+        log.info(String.format("(%s) Promoting temp file for application %s as the active file", dir, a.getName()));
+        String workingDataFilePath = getWorkingPath(a.id, dir);
+        String currentDataFilePath = getActivePath(a.id, dir);
 
         File workingData = new File(workingDataFilePath);
         if (!workingData.exists())
@@ -307,7 +323,7 @@ public class ChronixContext
         File currentData = new File(currentDataFilePath);
 
         // Get latest version
-        File[] fileList = configurationDirectory.listFiles();
+        File[] fileList = dir.listFiles();
         int v = 0;
         for (File f : fileList)
         {
@@ -331,10 +347,9 @@ public class ChronixContext
             }
         }
         v++;
-        log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s",
-                this.configurationDirectory, a.getName(), v));
+        log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s", dir, a.getName(), v));
 
-        String nextArchiveDataFilePath = configurationDirectory.getAbsolutePath() + "/app_data_" + a.getId() + "_" + v + "_.crn";
+        String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + v + "_.crn";
         File nextArchiveDataFile = new File(nextArchiveDataFilePath);
 
         // Move CURRENT to the new archive version
@@ -344,7 +359,7 @@ public class ChronixContext
         }
 
         // Move WORKING as the new CURRENT
-        log.debug(String.format("(%s) New path will be %s", this.configurationDirectory, currentDataFilePath));
+        log.debug(String.format("(%s) New path will be %s", dir, currentDataFilePath));
         if (!workingData.renameTo(new File(currentDataFilePath)))
         {
             throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
@@ -354,7 +369,7 @@ public class ChronixContext
     public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Deleting active file for application %s", this.configurationDirectory, a.getName()));
-        String currentDataFilePath = getActivePath(a.id);
+        String currentDataFilePath = getActivePath(a.id, this.configurationDirectory);
 
         File f = new File(currentDataFilePath);
         f.delete();
