@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,12 +17,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Collection;
@@ -54,23 +54,30 @@ import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
 public class ChronixContext
 {
-    private static Logger log = Logger.getLogger(ChronixContext.class);
+    private static final Logger log = Logger.getLogger(ChronixContext.class);
     private static ValidatorFactory validatorFactory;
+    private static EntityManagerFactory historyEmf, transacEmf;
 
+    // Data needed to load the applications
     private DateTime loaded;
-    private String configurationDirectoryPath;
     private File configurationDirectory;
+    private String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+
+    // Loaded applications
     private Map<UUID, Application> applicationsById;
     private Map<String, Application> applicationsByName;
+
+    // Local node identification
     private String localUrl = "";
     private String dns;
     private int port;
-    private String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+
+    // Simulation data
     private boolean simulateExternalPayloads = false;
 
     /**
      * Creates a minimal Context with no applications loaded.
-     * 
+     *
      * @param appConfDirectory
      * @param transacUnitName
      * @param historyUnitName
@@ -78,15 +85,13 @@ public class ChronixContext
      * @param simulation
      * @return
      */
-    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName,
-            String brokerInterface, boolean simulation)
+    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName, String brokerInterface, boolean simulation)
     {
         ChronixContext ctx = new ChronixContext();
-        ctx.loaded = org.joda.time.DateTime.now();
-        ctx.configurationDirectoryPath = FilenameUtils.normalize(appConfDirectory);
-        ctx.configurationDirectory = new File(ctx.configurationDirectoryPath);
-        ctx.applicationsById = new HashMap<UUID, Application>();
-        ctx.applicationsByName = new HashMap<String, Application>();
+        ctx.loaded = DateTime.now();
+        ctx.configurationDirectory = new File(FilenameUtils.normalize(appConfDirectory));
+        ctx.applicationsById = new HashMap<>();
+        ctx.applicationsByName = new HashMap<>();
         ctx.historyUnitName = historyUnitName;
         ctx.transacUnitName = transacUnitName;
         ctx.localUrl = brokerInterface;
@@ -99,12 +104,14 @@ public class ChronixContext
 
     /**
      * Creates a new Context. This calls initContext, so no need to call it beforehand.
-     * 
+     *
      * @param appConfDirectory
      * @param transacUnitName
      * @param historyUnitName
      * @param brokerInterface
      * @param simulation
+     * @param historyDBPath
+     * @param transacDbPath
      * @return
      * @throws ChronixPlanStorageException
      */
@@ -124,13 +131,10 @@ public class ChronixContext
 
         // List files in directory - and therefore applications
         File[] fileList = ctx.configurationDirectory.listFiles();
-        HashMap<String, File[]> toLoad = new HashMap<String, File[]>();
+        HashMap<String, File[]> toLoad = new HashMap<>();
 
-        for (int i = 0; i < fileList.length; i++)
+        for (File f : fileList)
         {
-            // Convention is app_(data|network)_UUID_version_.crn. Current
-            // version is CURRENT, edited is WORKING, other versions are 1..n
-            File f = fileList[i];
             String fileName = f.getName();
 
             if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains("CURRENT") && fileName.contains("data"))
@@ -148,7 +152,6 @@ public class ChronixContext
         // ///////////////////
         // Load apps
         // ///////////////////
-
         for (File[] ss : toLoad.values())
         {
             ctx.loadApplication(ss[0], simulation);
@@ -157,7 +160,6 @@ public class ChronixContext
         // ///////////////////
         // Post load checkup & inits
         // ///////////////////
-
         if (ctx.applicationsById.values().size() > 0)
         {
             EntityManager em = ctx.getTransacEM();
@@ -182,11 +184,8 @@ public class ChronixContext
             tr.commit();
         }
 
-        // TODO: cleanup event data (elements they reference may have been
-        // removed)
-
+        // TODO: cleanup event data (elements they reference may have been removed)
         // TODO: validate apps
-
         // Done!
         return ctx;
     }
@@ -206,9 +205,9 @@ public class ChronixContext
         return getValidator().validate(a);
     }
 
-    public Application loadApplication(UUID id, boolean workincopy, boolean loadNotLocalApps) throws ChronixPlanStorageException
+    public Application loadApplication(UUID id, boolean workingCopy, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
-        if (workincopy)
+        if (workingCopy)
         {
             return loadApplication(new File(getWorkingPath(id)), loadNotLocalApps);
         }
@@ -223,15 +222,14 @@ public class ChronixContext
         log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
         Application res = null;
 
-        try
+        try (FileInputStream fis = new FileInputStream(dataFile))
         {
-            FileInputStream fis = new FileInputStream(dataFile);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-
-            res = (Application) ois.readObject();
-            ois.close();
+            try (ObjectInputStream ois = new ObjectInputStream(fis))
+            {
+                res = (Application) ois.readObject();
+            }
         }
-        catch (Exception e)
+        catch (IOException | ClassNotFoundException e)
         {
             throw new ChronixPlanStorageException("Could not load file " + dataFile, e);
         }
@@ -245,8 +243,7 @@ public class ChronixContext
             // no local node means this application should not run here
             if (!loadNotLocalApps)
             {
-                log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded",
-                        res.name));
+                log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
                 return null;
             }
         }
@@ -302,7 +299,7 @@ public class ChronixContext
         // TODO: check the app is valid
     }
 
-    // Does NOT refresh caches. Restart engine for that !
+    // Does NOT refresh caches. Restart the engine for that !
     public void setWorkingAsCurrent(Application a) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Promoting temp file for application %s as the active file", this.configurationDirectory, a.getName()));
@@ -319,9 +316,8 @@ public class ChronixContext
         // Get latest version
         File[] fileList = configurationDirectory.listFiles();
         int v = 0;
-        for (int i = 0; i < fileList.length; i++)
+        for (File f : fileList)
         {
-            File f = fileList[i];
             String fileName = f.getName();
             if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains(a.getId().toString())
                     && !fileName.contains("CURRENT") && !fileName.contains("WORKING") && fileName.contains("data"))
@@ -415,7 +411,6 @@ public class ChronixContext
                     {
                         em.remove(tb);
                     }
-                    continue;
                 }
                 else
                 {
@@ -472,7 +467,7 @@ public class ChronixContext
 
     public Map<UUID, ExecutionNode> getNetwork()
     {
-        Map<UUID, ExecutionNode> res = new HashMap<UUID, ExecutionNode>();
+        Map<UUID, ExecutionNode> res = new HashMap<>();
         for (Application a : applicationsById.values())
         {
             res.putAll(a.nodes);
@@ -487,6 +482,10 @@ public class ChronixContext
 
     public EntityManagerFactory getTransacEMF()
     {
+        if (transacEmf != null)
+        {
+            return transacEmf;
+        }
         Properties p = new Properties();
         if (this.transacDbPath != null)
         {
@@ -497,12 +496,16 @@ public class ChronixContext
 
     public EntityManagerFactory getHistoryEMF()
     {
+        if (historyEmf != null)
+        {
+            return historyEmf;
+        }
         Properties p = new Properties();
         if (this.historyDbPath != null)
         {
             p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.historyDbPath);
         }
-        return Persistence.createEntityManagerFactory(this.historyUnitName);
+        return Persistence.createEntityManagerFactory(this.historyUnitName, p);
     }
 
     public EntityManager getTransacEM()
@@ -571,7 +574,7 @@ public class ChronixContext
 
     public String getContextRoot()
     {
-        return this.configurationDirectoryPath;
+        return this.configurationDirectory.getAbsolutePath();
     }
 
     public void addApplicationToCache(Application a)
