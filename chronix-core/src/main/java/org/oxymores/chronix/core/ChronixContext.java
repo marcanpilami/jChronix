@@ -19,12 +19,11 @@
  */
 package org.oxymores.chronix.core;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.XStreamException;
+import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,6 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
@@ -57,6 +55,7 @@ public class ChronixContext
     private static final Logger log = Logger.getLogger(ChronixContext.class);
     private static ValidatorFactory validatorFactory;
     private static EntityManagerFactory historyEmf, transacEmf;
+    private static final XStream xmlUtility = new XStream(new StaxDriver());
 
     // Data needed to load the applications
     private DateTime loaded;
@@ -74,6 +73,11 @@ public class ChronixContext
 
     // Simulation data
     private boolean simulateExternalPayloads = false;
+
+    static
+    {
+        xmlUtility.setMode(XStream.XPATH_ABSOLUTE_REFERENCES);
+    }
 
     /**
      * Creates a minimal Context with no applications loaded.
@@ -222,14 +226,11 @@ public class ChronixContext
         log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
         Application res = null;
 
-        try (FileInputStream fis = new FileInputStream(dataFile))
+        try
         {
-            try (ObjectInputStream ois = new ObjectInputStream(fis))
-            {
-                res = (Application) ois.readObject();
-            }
+            res = (Application) xmlUtility.fromXML(dataFile);
         }
-        catch (IOException | ClassNotFoundException e)
+        catch (XStreamException e)
         {
             throw new ChronixPlanStorageException("Could not load file " + dataFile, e);
         }
@@ -266,20 +267,12 @@ public class ChronixContext
     public void saveApplication(Application a) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Saving application %s to temp file", this.configurationDirectory, a.getName()));
-        FileOutputStream fos = null;
-        ObjectOutputStream oos = null;
-        try
+        try (FileOutputStream fos = new FileOutputStream(getWorkingPath(a.id)))
         {
-            fos = new FileOutputStream(getWorkingPath(a.id));
-            oos = new ObjectOutputStream(fos);
-            oos.writeObject(a);
-            IOUtils.closeQuietly(fos);
-            IOUtils.closeQuietly(oos);
+            xmlUtility.toXML(a, fos);
         }
         catch (Exception e)
         {
-            IOUtils.closeQuietly(fos);
-            IOUtils.closeQuietly(oos);
             throw new ChronixPlanStorageException("Could not save application to temp file", e);
         }
     }
