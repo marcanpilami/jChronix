@@ -44,6 +44,7 @@ public class Application extends ChronixObject
     @NotNull
     @Size(min = 1, max = 255)
     protected String description;
+    protected int version = 0;
 
     @Valid
     protected Map<UUID, ExecutionNode> nodes;
@@ -64,6 +65,7 @@ public class Application extends ChronixObject
 
     protected transient ExecutionNode localNode;
     protected transient ExecutionNode consoleNode;
+    protected transient boolean fromCurrentFile = true;
 
     public Application()
     {
@@ -435,5 +437,25 @@ public class Application extends ChronixObject
     public List<Calendar> getCalendars()
     {
         return new ArrayList<Calendar>(this.calendars.values());
+    }
+
+    public int getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(int version)
+    {
+        this.version = version;
+    }
+
+    public boolean isFromCurrentFile()
+    {
+        return this.fromCurrentFile;
+    }
+
+    public void isFromCurrentFile(boolean b)
+    {
+        this.fromCurrentFile = b;
     }
 }

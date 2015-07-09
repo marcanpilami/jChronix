@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.io.File;
@@ -34,7 +33,7 @@ import org.oxymores.chronix.planbuilder.OperationsApplication;
 
 /**
  * A Chronix Node. Can be either engine + runner or simply runner.
- * 
+ *
  */
 public class ChronixEngine extends Thread
 {
@@ -108,7 +107,6 @@ public class ChronixEngine extends Thread
 
     //
     // ///////////////////////////////////////////////////////////////
-
     protected void startEngine(boolean blocking, boolean purgeQueues)
     {
         log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
@@ -221,6 +219,7 @@ public class ChronixEngine extends Thread
         this.broker.stopRunnerAgents();
         this.broker.stopBroker();
         this.stopped.release();
+        this.ctx.close();
         log.info("The scheduler has stopped");
     }
 

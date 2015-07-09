@@ -171,6 +171,7 @@ public class ChronixContext
             tr.begin();
             for (Application a : ctx.applicationsById.values())
             {
+                a.isFromCurrentFile(true);
                 for (Calendar c : a.calendars.values())
                 {
                     c.createPointers(em);
@@ -186,6 +187,7 @@ public class ChronixContext
                 }
             }
             tr.commit();
+            em.close();
         }
 
         // TODO: cleanup event data (elements they reference may have been removed)
@@ -213,15 +215,19 @@ public class ChronixContext
     {
         if (workingCopy)
         {
-            return loadApplication(new File(getWorkingPath(id, this.configurationDirectory)), loadNotLocalApps);
+            Application a = loadApplication(new File(getWorkingPath(id, this.configurationDirectory)), loadNotLocalApps);
+            a.isFromCurrentFile(false);
+            return a;
         }
         else
         {
-            return loadApplication(new File(getActivePath(id, this.configurationDirectory)), loadNotLocalApps);
+            Application a = loadApplication(new File(getActivePath(id, this.configurationDirectory)), loadNotLocalApps);
+            a.isFromCurrentFile(true);
+            return a;
         }
     }
 
-    public Application loadApplication(File dataFile, boolean loadNotLocalApps) throws ChronixPlanStorageException
+    private Application loadApplication(File dataFile, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
         Application res = null;
@@ -272,6 +278,11 @@ public class ChronixContext
     public static void saveApplication(Application a, File dir) throws ChronixPlanStorageException
     {
         log.info(String.format("(%s) Saving application %s to temp file", dir, a.getName()));
+        if (a.isFromCurrentFile())
+        {
+            a.setVersion(a.getVersion() + 1);
+            a.isFromCurrentFile(false);
+        }
         try (FileOutputStream fos = new FileOutputStream(getWorkingPath(a.getId(), dir)))
         {
             xmlUtility.toXML(a, fos);
@@ -322,38 +333,17 @@ public class ChronixContext
         }
         File currentData = new File(currentDataFilePath);
 
-        // Get latest version
-        File[] fileList = dir.listFiles();
-        int v = 0;
-        for (File f : fileList)
-        {
-            String fileName = f.getName();
-            if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains(a.getId().toString())
-                    && !fileName.contains("CURRENT") && !fileName.contains("WORKING") && fileName.contains("data"))
-            {
-                Integer tmp;
-                try
-                {
-                    tmp = Integer.parseInt(fileName.split("_")[3]);
-                }
-                catch (NumberFormatException e)
-                {
-                    tmp = 0;
-                }
-                if (tmp > v)
-                {
-                    v = tmp;
-                }
-            }
-        }
-        v++;
-        log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s", dir, a.getName(), v));
-
-        String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + v + "_.crn";
+        log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s", dir, a.getName(), a.getVersion()));
+        String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + a.getVersion() + "_.crn";
         File nextArchiveDataFile = new File(nextArchiveDataFilePath);
 
         // Move CURRENT to the new archive version
-        if (currentData.exists() && !currentData.renameTo(nextArchiveDataFile))
+        if (nextArchiveDataFile.exists())
+        {
+            log.warn("The version being activated has already been archived once.");
+            currentData.delete();
+        }
+        else if (currentData.exists() && !currentData.renameTo(nextArchiveDataFile))
         {
             throw new ChronixPlanStorageException("Could not archive current WORKING file", null);
         }
@@ -364,6 +354,7 @@ public class ChronixContext
         {
             throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
         }
+        a.isFromCurrentFile(true);
     }
 
     public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
@@ -614,5 +605,13 @@ public class ChronixContext
     public String getMainInterface()
     {
         return this.dns;
+    }
+
+    public void close()
+    {
+        getHistoryEMF().close();
+        getTransacEMF().close();
+        historyEmf = null;
+        transacEmf = null;
     }
 }
