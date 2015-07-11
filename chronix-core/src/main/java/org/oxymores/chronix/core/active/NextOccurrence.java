@@ -81,7 +81,7 @@ public class NextOccurrence extends ActiveNodeBase
 
         try
         {
-            SenderHelpers.sendCalendarPointer(cp, cp.getCalendar(ctx), jmsSession, jmsProducer, true);
+            SenderHelpers.sendCalendarPointer(cp, cp.getCalendar(ctx), jmsSession, jmsProducer, true, ctx);
         }
         catch (JMSException e)
         {

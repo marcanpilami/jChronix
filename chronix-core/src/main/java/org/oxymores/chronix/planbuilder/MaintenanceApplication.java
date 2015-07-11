@@ -22,6 +22,8 @@ package org.oxymores.chronix.planbuilder;
 
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 
@@ -32,20 +34,16 @@ public final class MaintenanceApplication
 
     }
 
-    public static Application getNewApplication(String brokerInterface, int port)
+    public static Application getNewApplication(ChronixContext ctx)
     {
-        Application a = PlanBuilder.buildApplication("Chronix Maintenance",
-                "All the jobs needed to keep the local scheduler node running properly");
+        Application a = PlanBuilder.buildApplication("Chronix Maintenance", "All the jobs needed to keep the local scheduler node running properly");
 
-        PlaceGroup pg = PlanBuilder.buildDefaultLocalNetwork(a, port, brokerInterface);
+        PlaceGroup pg = PlanBuilder.buildPlaceGroup(a, "local node", "local node", ctx.getLocalNode().getPlacesHosted().toArray(new Place[0]));
         Chain c1 = PlanBuilder.buildChain(a, "Maintenance plan", "all the default maintenance jobs", pg);
 
-        State s1 = PlanBuilder.buildState(c1, pg,
-                PlanBuilder.buildShellCommand(a, "echo history_purge", "History purge", "Will purge the history table", "-d", "10"));
-        State s2 = PlanBuilder.buildState(c1, pg,
-                PlanBuilder.buildShellCommand(a, "echo trace_purge", "Trace purge", "Will purge the performance trace table", "-d", "2"));
-        State s3 = PlanBuilder.buildState(c1, pg,
-                PlanBuilder.buildShellCommand(a, "echo compile_purge", "Compile purge", "Will aggregate the performance trace table data"));
+        State s1 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo history_purge", "History purge", "Will purge the history table", "-d", "10"));
+        State s2 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo trace_purge", "Trace purge", "Will purge the performance trace table", "-d", "2"));
+        State s3 = PlanBuilder.buildState(c1, pg, PlanBuilder.buildShellCommand(a, "echo compile_purge", "Compile purge", "Will aggregate the performance trace table data"));
 
         c1.getStartState().connectTo(s1);
         s1.connectTo(s2);

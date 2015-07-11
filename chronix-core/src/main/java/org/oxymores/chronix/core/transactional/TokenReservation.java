@@ -230,14 +230,14 @@ public class TokenReservation implements Serializable
 
     public Place getPlace(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getPlace(UUID.fromString(this.placeId));
+        return ctx.getNetwork().getPlace(UUID.fromString(this.placeId));
     }
 
     public State getState(ChronixContext ctx)
     {
         return this.getApplication(ctx).getState(UUID.fromString(this.stateId));
     }
-    
+
     public Token getToken(ChronixContext ctx)
     {
         return this.getApplication(ctx).getToken(UUID.fromString(this.stateId));

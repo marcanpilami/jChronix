@@ -21,22 +21,16 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.active.And;
 import org.oxymores.chronix.core.active.ChainEnd;
 import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.Or;
-import org.oxymores.chronix.core.validation.ApplicationCheckConsole;
-import org.oxymores.chronix.core.validation.ApplicationCheckPnUnicity;
-import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 
-@ApplicationCheckConsole
-@ApplicationCheckPnUnicity
 public class Application extends ChronixObject
 {
     private static final long serialVersionUID = 338399439626386055L;
-    private static Logger log = Logger.getLogger(Application.class);
+    // private static Logger log = Logger.getLogger(Application.class);
 
     @NotNull
     @Size(min = 1, max = 50)
@@ -47,11 +41,7 @@ public class Application extends ChronixObject
     protected int version = 0;
 
     @Valid
-    protected Map<UUID, ExecutionNode> nodes;
-    @Valid
-    protected Map<UUID, Place> places;
-    @Valid
-    protected Map<UUID, PlaceGroup> groups;
+    protected Map<UUID, PlaceGroup> groups = new HashMap<>();
     @Valid
     protected Map<UUID, Parameter> parameters;
     @Valid
@@ -63,16 +53,12 @@ public class Application extends ChronixObject
     @Valid
     protected Map<UUID, ActiveNodeBase> activeElements;
 
-    protected transient ExecutionNode localNode;
-    protected transient ExecutionNode consoleNode;
     protected transient boolean fromCurrentFile = true;
+    protected transient ChronixContext ctx;
 
     public Application()
     {
         super();
-        this.places = new HashMap<UUID, Place>();
-        this.groups = new HashMap<UUID, PlaceGroup>();
-        this.nodes = new HashMap<UUID, ExecutionNode>();
         this.activeElements = new HashMap<UUID, ActiveNodeBase>();
         this.parameters = new HashMap<UUID, Parameter>();
         this.calendars = new HashMap<UUID, Calendar>();
@@ -102,35 +88,34 @@ public class Application extends ChronixObject
         return String.format("%s (%s)", name, description);
     }
 
-    public void setLocalNode(String dns, Integer port) throws ChronixNoLocalNode
+    /**
+     * Will create one PlaceGroup per Place present in the Network. Only adds. Name used is the name of the place.
+     */
+    public void createStarterGroups(Network n)
     {
-        for (ExecutionNode n : this.nodes.values())
+        PlaceGroup pg = null;
+        for (Place p : n.getPlacesList())
         {
-            if (n.dns.equalsIgnoreCase(dns) && n.qPort.equals(port))
+            pg = this.getGroup(p.getName());
+            if (pg == null)
             {
-                this.localNode = n;
-                log.info(String.format("Application %s now considers that it is running on node %s (%s - %s)", this.name, n.id, dns, port));
-                return;
+                pg = new PlaceGroup();
+                pg.setApplication(this);
+                pg.setDescription(p.getDescription());
+                pg.setName(p.getName());
+                this.addGroup(pg);
             }
         }
-        throw new ChronixNoLocalNode(dns + ":" + port);
-    }
-
-    public ExecutionNode getConsoleNode()
-    {
-        for (ExecutionNode n : this.nodes.values())
-        {
-            if (n.isConsole())
-            {
-                return n;
-            }
-        }
-        return null;
     }
 
     public void setname(String name)
     {
         this.name = name;
+    }
+
+    public void setContext(ChronixContext c)
+    {
+        this.ctx = c;
     }
 
     public void addRRule(ClockRRule r)
@@ -172,51 +157,6 @@ public class Application extends ChronixObject
         t.setApplication(null);
     }
 
-    public void addPlace(Place place)
-    {
-        if (!this.places.containsValue(place))
-        {
-            this.places.put(place.id, place);
-            place.setApplication(this);
-        }
-    }
-
-    public void removePlace(Place place)
-    {
-        this.places.remove(place.id);
-        place.setApplication(null);
-    }
-
-    public void addGroup(PlaceGroup o)
-    {
-        if (!this.groups.containsValue(o))
-        {
-            this.groups.put(o.id, o);
-            o.setApplication(this);
-        }
-    }
-
-    public void removeGroup(PlaceGroup o)
-    {
-        this.groups.remove(o.id);
-        o.setApplication(null);
-    }
-
-    public void addNode(ExecutionNode o)
-    {
-        if (!this.nodes.containsValue(o))
-        {
-            this.nodes.put(o.id, o);
-            o.setApplication(this);
-        }
-    }
-
-    public void removeNode(ExecutionNode o)
-    {
-        this.nodes.remove(o.id);
-        o.setApplication(null);
-    }
-
     public void addActiveElement(ActiveNodeBase o)
     {
         if (!this.activeElements.containsValue(o))
@@ -250,45 +190,6 @@ public class Application extends ChronixObject
     public String getName()
     {
         return name;
-    }
-
-    public Map<UUID, Place> getPlaces()
-    {
-        HashMap<UUID, Place> res = new HashMap<UUID, Place>();
-        res.putAll(this.places);
-        return res;
-    }
-
-    public PlaceGroup getGroup(String name)
-    {
-        PlaceGroup res = null;
-        for (PlaceGroup pg : this.groups.values())
-        {
-            if (pg.getName().equals(name))
-            {
-                return pg;
-            }
-        }
-        return res;
-    }
-
-    public PlaceGroup getGroup(UUID id)
-    {
-        return this.groups.get(id);
-    }
-
-    public Map<UUID, PlaceGroup> getGroups()
-    {
-        HashMap<UUID, PlaceGroup> res = new HashMap<UUID, PlaceGroup>();
-        res.putAll(this.groups);
-        return res;
-    }
-
-    public Map<UUID, ExecutionNode> getNodes()
-    {
-        HashMap<UUID, ExecutionNode> res = new HashMap<UUID, ExecutionNode>();
-        res.putAll(this.nodes);
-        return res;
     }
 
     public Map<UUID, ActiveNodeBase> getActiveElements()
@@ -357,33 +258,6 @@ public class Application extends ChronixObject
         return res;
     }
 
-    public Place getPlace(UUID id)
-    {
-        return this.places.get(id);
-    }
-
-    public PlaceGroup getPlaceGroup(UUID id)
-    {
-        return this.groups.get(id);
-    }
-
-    public ExecutionNode getNode(UUID id)
-    {
-        return this.nodes.get(id);
-    }
-
-    public ExecutionNode getNode(String name)
-    {
-        for (ExecutionNode n : this.nodes.values())
-        {
-            if (n.getBrokerName().equals(name))
-            {
-                return n;
-            }
-        }
-        return null;
-    }
-
     public Token getToken(UUID id)
     {
         return this.tokens.get(id);
@@ -404,16 +278,6 @@ public class Application extends ChronixObject
         return this.parameters.get(id);
     }
 
-    public List<ExecutionNode> getNodesList()
-    {
-        return new ArrayList<ExecutionNode>(this.nodes.values());
-    }
-
-    public List<Place> getPlacesList()
-    {
-        return new ArrayList<Place>(this.places.values());
-    }
-
     public ClockRRule getRRule(UUID id)
     {
         return this.rrules.get(id);
@@ -424,20 +288,97 @@ public class Application extends ChronixObject
         return new ArrayList<ClockRRule>(this.rrules.values());
     }
 
-    public List<PlaceGroup> getGroupsList()
-    {
-        return new ArrayList<PlaceGroup>(this.groups.values());
-    }
-
     public ExecutionNode getLocalNode()
     {
-        return localNode;
+        return ctx.getLocalNode();
     }
 
     public List<Calendar> getCalendars()
     {
         return new ArrayList<Calendar>(this.calendars.values());
     }
+
+    /////////////////////////////
+    // Groups
+    public void addGroup(PlaceGroup o)
+    {
+        if (!this.groups.containsValue(o))
+        {
+            this.groups.put(o.id, o);
+            o.setApplication(this);
+        }
+    }
+
+    public void removeGroup(PlaceGroup o)
+    {
+        this.groups.remove(o.id);
+        o.setApplication(null);
+    }
+
+    public Map<UUID, PlaceGroup> getGroups()
+    {
+        HashMap<UUID, PlaceGroup> res = new HashMap<UUID, PlaceGroup>();
+        res.putAll(this.groups);
+        return res;
+    }
+
+    public List<PlaceGroup> getGroupsList()
+    {
+        return new ArrayList<PlaceGroup>(this.groups.values());
+    }
+
+    public PlaceGroup getGroup(String name)
+    {
+        PlaceGroup res = null;
+        for (PlaceGroup pg : this.groups.values())
+        {
+            if (pg.getName().equals(name))
+            {
+                return pg;
+            }
+        }
+        return res;
+    }
+
+    public PlaceGroup getGroup(UUID id)
+    {
+        return this.groups.get(id);
+    }
+
+    public List<UUID> getAllPlacesId()
+    {
+        List<UUID> res = new ArrayList<>();
+        for (PlaceGroup g : this.groups.values())
+        {
+            for (UUID i : g.getPlacesId())
+            {
+                if (!res.contains(i))
+                {
+                    res.add(i);
+                }
+            }
+        }
+        return res;
+    }
+
+    public List<Place> getAllPlaces()
+    {
+        List<Place> res = new ArrayList<>();
+        for (PlaceGroup g : this.groups.values())
+        {
+            for (Place i : g.getPlaces())
+            {
+                if (!res.contains(i))
+                {
+                    res.add(i);
+                }
+            }
+        }
+        return res;
+    }
+
+    /////////////////////////////
+    // Versioning
 
     public int getVersion()
     {

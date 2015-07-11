@@ -21,21 +21,20 @@
 package org.oxymores.chronix.planbuilder;
 
 import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 
 public final class OperationsApplication
 {
     private OperationsApplication()
+    {}
+
+    public static Application getNewApplication(ChronixContext ctx)
     {
+        Application a = PlanBuilder.buildApplication("Operations", "This application exists to group all the little 'on demand' jobs that operators often get");
 
-    }
-
-    public static Application getNewApplication(String brokerInterface, int port)
-    {
-        Application a = PlanBuilder.buildApplication("Operations",
-                "This application exists to group all the little 'on demand' jobs that operators often get");
-
-        PlaceGroup pg = PlanBuilder.buildDefaultLocalNetwork(a, port, brokerInterface);
+        PlaceGroup pg = PlanBuilder.buildPlaceGroup(a, "local node", "local node", ctx.getLocalNode().getPlacesHosted().toArray(new Place[0]));
         PlanBuilder.buildChain(a, "All ops", "create as many jobs as you want here", pg);
 
         return a;

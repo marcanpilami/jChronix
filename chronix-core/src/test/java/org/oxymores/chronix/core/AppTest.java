@@ -5,9 +5,8 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import junit.framework.Assert;
-
 import org.apache.log4j.Logger;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -47,7 +46,8 @@ public class AppTest
     {
         Application a = new Application();
         a.setname("test");
-        PlaceGroup pg1 = PlanBuilder.buildDefaultLocalNetwork(a);
+        PlanBuilder.buildLocalhostNetwork();
+        PlaceGroup pg1 = PlanBuilder.buildPlaceGroup(a, "rr", "rr");
 
         log.debug("** Validating an incorrect chain");
         Chain c = new Chain();
@@ -76,7 +76,8 @@ public class AppTest
     public void testChainCycleValidation()
     {
         Application a = PlanBuilder.buildApplication("test app", "description");
-        PlaceGroup pg1 = PlanBuilder.buildDefaultLocalNetwork(a);
+        PlanBuilder.buildLocalhostNetwork();
+        PlaceGroup pg1 = PlanBuilder.buildPlaceGroup(a, "rr", "rr");
 
         log.debug("** Validating a cyclic chain");
         Chain c = PlanBuilder.buildChain(a, "test", "description", pg1);
@@ -112,7 +113,8 @@ public class AppTest
     {
         log.debug("** Validating an app with a cyclic chain");
         Application a = PlanBuilder.buildApplication("test app", "description");
-        PlaceGroup pg1 = PlanBuilder.buildDefaultLocalNetwork(a);
+        PlanBuilder.buildLocalhostNetwork();
+        PlaceGroup pg1 = PlanBuilder.buildPlaceGroup(a, "rr", "rr");
 
         Chain c = PlanBuilder.buildChain(a, "test", "description", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo ee", "cmd1", "test cmd");

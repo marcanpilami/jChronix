@@ -29,30 +29,17 @@ public class TestSingleNode extends TestBase
     ChronixEngine e1;
 
     @Before
-    public void prepare() throws Exception
+    public void before() throws Exception
     {
-        String db1 = "C:\\TEMP\\db1";
-        a = createTestApplication(db1, "test application");
-        e1 = addEngine(db1, a, "localhost:1789");
+        e1 = addEngine(db1, "local");
 
-        try
-        {
-            e1.ctx.saveApplication(a);
-            e1.ctx.setWorkingAsCurrent(a);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-
-        startEngines();
+        a = PlanBuilder.buildApplication("test", "test");
+        PlanBuilder.buildPlaceGroup(a, "master node", "master node", n.getPlace("local"));
     }
 
     @Test
     public void mainScenario() throws Exception
     {
-        EntityManager em = e1.ctx.getTransacEM();
         Calendar ca1 = CalendarBuilder.buildWeekDayCalendar(a, 2500);
 
         Chain c1 = PlanBuilder.buildChain(a, "simple chain using calendar", "chain2", a.getGroup("master node"));
@@ -70,7 +57,9 @@ public class TestSingleNode extends TestBase
         State s3 = PlanBuilder.buildState(c2, a.getGroup("master node"), sc2);
         s3.setCalendar(ca1);
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
+        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("****FIRST (PASSING) RUN***************************************************************");
@@ -132,8 +121,6 @@ public class TestSingleNode extends TestBase
     @Test
     public void testAND()
     {
-        EntityManager em = e1.ctx.getTransacEM();
-
         // Build the test chain
         Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("master node"));
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
@@ -148,7 +135,9 @@ public class TestSingleNode extends TestBase
         s2.connectTo(s3);
         s3.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
+        EntityManager em = e1.ctx.getTransacEM();
 
         // Run the chain
         log.debug("****START OF CHAIN1*******************************************************************");
@@ -168,8 +157,6 @@ public class TestSingleNode extends TestBase
     @Test
     public void testANDWithBarrier()
     {
-        EntityManager em = e1.ctx.getTransacEM();
-
         // Build the test chains
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a, 2500);
 
@@ -197,7 +184,9 @@ public class TestSingleNode extends TestBase
         c2.getStartState().connectTo(s9);
         s9.connectTo(c2.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
+        EntityManager em = e1.ctx.getTransacEM();
 
         // Shift the state by 1 so that it cannot start (well, shouldn't)
         log.debug("****SHIFT CALENDAR********************************************************************");
@@ -283,7 +272,8 @@ public class TestSingleNode extends TestBase
 
         String filepath = "/meuh/pouet/aaaa_12/06/2500";
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // TEST 1: should block (no calendar on target state)
         log.debug("****START OF TEST1********************************************************************");
@@ -301,8 +291,7 @@ public class TestSingleNode extends TestBase
             Thread.sleep(2000);
         }
         catch (InterruptedException e3)
-        {
-        }
+        {}
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
         Assert.assertEquals(0, res.size());
 

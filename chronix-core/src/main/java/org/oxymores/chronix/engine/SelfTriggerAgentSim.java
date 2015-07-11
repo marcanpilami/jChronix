@@ -54,8 +54,8 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
         Enumeration enu = null;
         try
         {
-            String eventQueueName = String.format(Constants.Q_EVENT, this.ctx.getBrokerName());
-            String pjQueueName = String.format(Constants.Q_PJ, this.ctx.getBrokerName());
+            String eventQueueName = String.format(Constants.Q_EVENT, this.ctx.getLocalNode().getBrokerName());
+            String pjQueueName = String.format(Constants.Q_PJ, this.ctx.getLocalNode().getBrokerName());
             devents = this.jmsSession.createQueue(eventQueueName);
             dpjs = this.jmsSession.createQueue(pjQueueName);
             events = this.jmsSession.createBrowser(devents);
@@ -81,6 +81,7 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
             log.error("An error occured during simulation", e1);
         }
         log.debug(String.format("There are %s elements unack in the db + mq", running));
+
         return running;
     }
 

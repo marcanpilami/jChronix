@@ -27,6 +27,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -57,26 +58,22 @@ public final class DemoApplication
         return getNewDemoApplication(hostname, 1789);
     }
 
+    // TODO: cut appli and network
     public static Application getNewDemoApplication(String brokerInterface, int brokerPort)
     {
         Application a = PlanBuilder.buildApplication("Demo", "test application auto created");
 
         // Physical network
-        ExecutionNode n1 = PlanBuilder.buildExecutionNode(a, brokerInterface, brokerPort);
-        n1.setX(100);
-        n1.setY(100);
+        Network n = new Network();
+        ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "first", brokerInterface, brokerPort, 100, 100);
         n1.setConsole(true);
-
-        ExecutionNode n2 = PlanBuilder.buildExecutionNode(a, brokerInterface, 1400);
-        n2.setX(200);
-        n2.setY(200);
-
+        ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "second", brokerInterface, 1400, 200, 200);
         n1.connectTo(n2, NodeConnectionMethod.TCP);
 
         // Logical network
-        Place p1 = PlanBuilder.buildPlace(a, "place 1", "test place 1", n1);
-        Place p2 = PlanBuilder.buildPlace(a, "place 2", "test place 2", n1);
-        Place p3 = PlanBuilder.buildPlace(a, "place 3", "test place 3", n1);
+        Place p1 = PlanBuilder.buildPlace(n, "place 1", "test place 1", n1);
+        Place p2 = PlanBuilder.buildPlace(n, "place 2", "test place 2", n1);
+        Place p3 = PlanBuilder.buildPlace(n, "place 3", "test place 3", n1);
 
         PlanBuilder.buildPlaceGroup(a, "group all", "test group all", p1, p2, p3);
         PlaceGroup pg2 = PlanBuilder.buildPlaceGroup(a, "group 1", "test group 1", p1);

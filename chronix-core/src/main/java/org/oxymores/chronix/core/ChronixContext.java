@@ -19,9 +19,6 @@
  */
 package org.oxymores.chronix.core;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.XStreamException;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
@@ -40,6 +37,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -47,14 +45,17 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.ClockTick;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.core.transactional.TranscientBase;
-import org.oxymores.chronix.exceptions.ChronixNoLocalNode;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.XStreamException;
+import com.thoughtworks.xstream.io.xml.StaxDriver;
 
 public class ChronixContext
 {
     private static final Logger log = Logger.getLogger(ChronixContext.class);
     private static ValidatorFactory validatorFactory;
-    private static EntityManagerFactory historyEmf, transacEmf;
+    private EntityManagerFactory historyEmf, transacEmf;
     private static final XStream xmlUtility = new XStream(new StaxDriver());
 
     // Data needed to load the applications
@@ -62,14 +63,16 @@ public class ChronixContext
     private File configurationDirectory;
     private String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
 
+    // Network
+    private Network network;
+
     // Loaded applications
     private Map<UUID, Application> applicationsById;
     private Map<String, Application> applicationsByName;
 
     // Local node identification
-    private String localUrl = "";
-    private String dns;
-    private int port;
+    private String localNodeName;
+    private transient ExecutionNode localNode;
 
     // Simulation data
     private boolean simulateExternalPayloads = false;
@@ -89,7 +92,7 @@ public class ChronixContext
      * @param simulation
      * @return
      */
-    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName, String brokerInterface, boolean simulation)
+    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName, boolean simulation)
     {
         ChronixContext ctx = new ChronixContext();
         ctx.loaded = DateTime.now();
@@ -98,9 +101,6 @@ public class ChronixContext
         ctx.applicationsByName = new HashMap<>();
         ctx.historyUnitName = historyUnitName;
         ctx.transacUnitName = transacUnitName;
-        ctx.localUrl = brokerInterface;
-        ctx.dns = ctx.localUrl.split(":")[0];
-        ctx.port = Integer.parseInt(ctx.localUrl.split(":")[1]);
         ctx.setSimulation(simulation);
 
         return ctx;
@@ -119,8 +119,8 @@ public class ChronixContext
      * @return
      * @throws ChronixPlanStorageException
      */
-    public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName,
-            String brokerInterface, boolean simulation, String historyDBPath, String transacDbPath) throws ChronixPlanStorageException
+    public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName, String localNodeName, boolean simulation,
+            String historyDBPath, String transacDbPath) throws ChronixPlanStorageException
     {
         log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
 
@@ -129,9 +129,10 @@ public class ChronixContext
             throw new ChronixPlanStorageException("Directory " + appConfDirectory + " does not exist", null);
         }
 
-        ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, brokerInterface, simulation);
+        ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, simulation);
         ctx.historyDbPath = historyDBPath;
         ctx.transacDbPath = transacDbPath;
+        ctx.localNodeName = localNodeName;
 
         // List files in directory - and therefore applications
         File[] fileList = ctx.configurationDirectory.listFiles();
@@ -152,6 +153,11 @@ public class ChronixContext
                 toLoad.get(id)[0] = f;
             }
         }
+
+        // ///////////////////
+        // Load network
+        // ///////////////////
+        ctx.network = ctx.loadNetwork();
 
         // ///////////////////
         // Load apps
@@ -175,6 +181,10 @@ public class ChronixContext
                 for (Calendar c : a.calendars.values())
                 {
                     c.createPointers(em);
+                }
+                for (PlaceGroup g : a.getGroupsList())
+                {
+                    g.map_places(ctx.network);
                 }
             }
             tr.commit();
@@ -200,7 +210,7 @@ public class ChronixContext
     {
         if (validatorFactory == null)
         {
-            //Configuration<?> configuration = Validation.byDefaultProvider().configure();
+            // Configuration<?> configuration = Validation.byDefaultProvider().configure();
             validatorFactory = Validation.buildDefaultValidatorFactory();
         }
         return validatorFactory.getValidator();
@@ -232,6 +242,7 @@ public class ChronixContext
         log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
         Application res = null;
 
+        // Read the XML
         try
         {
             res = (Application) xmlUtility.fromXML(dataFile);
@@ -241,21 +252,42 @@ public class ChronixContext
             throw new ChronixPlanStorageException("Could not load file " + dataFile, e);
         }
 
-        try
+        // TODO: Don't load applications that are not active on the local node
+        if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).size() == 0)
         {
-            res.setLocalNode(this.dns, this.port);
+            // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
+            // return null;
         }
-        catch (ChronixNoLocalNode e)
-        {
-            // no local node means this application should not run here
-            if (!loadNotLocalApps)
-            {
-                log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
-                return null;
-            }
-        }
+
+        // Set the context so as to enable network access through the application
+        res.setContext(this);
+
+        // TODO: Should NOT be here
         applicationsById.put(res.getId(), res);
         applicationsByName.put(res.getName(), res);
+
+        return res;
+    }
+
+    public Network loadNetwork() throws ChronixPlanStorageException
+    {
+        File f = new File(getNetworkPath(this.configurationDirectory));
+        log.info(String.format("(%s) Loading network from file %s", this.configurationDirectory, f.getAbsolutePath()));
+        Network res = null;
+
+        if (!f.isFile())
+        {
+            throw new ChronixPlanStorageException("Network file " + f.getAbsolutePath() + " does not exist", null);
+        }
+
+        try
+        {
+            res = (Network) xmlUtility.fromXML(f);
+        }
+        catch (XStreamException e)
+        {
+            throw new ChronixPlanStorageException("Could not load network file " + f, e);
+        }
 
         return res;
     }
@@ -299,6 +331,24 @@ public class ChronixContext
         setWorkingAsCurrent(a, dir);
     }
 
+    public void saveNetwork(Network n) throws ChronixPlanStorageException
+    {
+        saveNetwork(n, this.configurationDirectory);
+    }
+
+    public static void saveNetwork(Network n, File dir) throws ChronixPlanStorageException
+    {
+        log.info(String.format("(%s) Saving network to file", dir));
+        try (FileOutputStream fos = new FileOutputStream(getNetworkPath(dir)))
+        {
+            xmlUtility.toXML(n, fos);
+        }
+        catch (Exception e)
+        {
+            throw new ChronixPlanStorageException("Could not save network to file", e);
+        }
+    }
+
     protected static String getWorkingPath(UUID appId, File dir)
     {
         return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_WORKING_.crn");
@@ -307,6 +357,11 @@ public class ChronixContext
     protected static String getActivePath(UUID appId, File dir)
     {
         return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_CURRENT_.crn");
+    }
+
+    protected static String getNetworkPath(File dir)
+    {
+        return FilenameUtils.concat(dir.getAbsolutePath(), "network_data_CURRENT_.crn");
     }
 
     protected void preSaveWorkingApp(Application a)
@@ -389,8 +444,8 @@ public class ChronixContext
         for (Application a : this.applicationsByName.values())
         {
             // TB must have a State, a Place, a Source. Purging TB implies purging EV.
-            for (TranscientBase tb : em.createQuery("SELECT tb FROM TranscientBase tb WHERE tb.appID=:a", TranscientBase.class)
-                    .setParameter("a", a.getId().toString()).getResultList())
+            for (TranscientBase tb : em.createQuery("SELECT tb FROM TranscientBase tb WHERE tb.appID=:a", TranscientBase.class).setParameter("a", a.getId().toString())
+                    .getResultList())
             {
                 if (tb instanceof CalendarPointer)
                 {
@@ -429,8 +484,7 @@ public class ChronixContext
             }
 
             // CT must have a clock
-            for (ClockTick ct : em.createQuery("SELECT ct FROM ClockTick ct WHERE ct.appId=:a", ClockTick.class)
-                    .setParameter("a", a.getId().toString()).getResultList())
+            for (ClockTick ct : em.createQuery("SELECT ct FROM ClockTick ct WHERE ct.appId=:a", ClockTick.class).setParameter("a", a.getId().toString()).getResultList())
             {
                 try
                 {
@@ -443,8 +497,7 @@ public class ChronixContext
             }
 
             // TR must have Place, State, Token
-            for (TokenReservation tr : em
-                    .createQuery("SELECT tr FROM TokenReservation tr WHERE tr.applicationId=:a", TokenReservation.class)
+            for (TokenReservation tr : em.createQuery("SELECT tr FROM TokenReservation tr WHERE tr.applicationId=:a", TokenReservation.class)
                     .setParameter("a", a.getId().toString()).getResultList())
             {
                 try
@@ -464,19 +517,9 @@ public class ChronixContext
         em.close();
     }
 
-    public Map<UUID, ExecutionNode> getNetwork()
+    public Network getNetwork()
     {
-        Map<UUID, ExecutionNode> res = new HashMap<>();
-        for (Application a : applicationsById.values())
-        {
-            res.putAll(a.nodes);
-        }
-        return res;
-    }
-
-    public String getBrokerName()
-    {
-        return this.localUrl.replace(":", "").toUpperCase();
+        return network;
     }
 
     public EntityManagerFactory getTransacEMF()
@@ -526,14 +569,22 @@ public class ChronixContext
 
     public boolean hasLocalConsole()
     {
-        for (Application a : this.applicationsById.values())
+        ExecutionNode console = this.network.getConsoleNode();
+        return localNodeName.equals(console.getName());
+    }
+
+    public ExecutionNode getLocalNode()
+    {
+        if (localNode == null)
         {
-            if (a.getConsoleNode() != null && a.getLocalNode() == a.getConsoleNode())
-            {
-                return true;
-            }
+            this.localNode = this.network.getNode(this.localNodeName);
         }
-        return false;
+        return this.localNode;
+    }
+
+    public void setLocalNode(ExecutionNode node)
+    {
+        this.localNode = node;
     }
 
     private void setSimulation(boolean simulation)
@@ -582,36 +633,27 @@ public class ChronixContext
         this.applicationsByName.put(a.getName(), a);
     }
 
-    public String getBrokerUrl()
-    {
-        return this.localUrl;
-    }
-
-    public String getLocalBrokerUrl()
-    {
-        return "vm://" + this.getBrokerName();
-    }
-
     public DateTime getLoadTime()
     {
         return loaded;
     }
 
-    public int getMessagePort()
-    {
-        return this.port;
-    }
-
-    public String getMainInterface()
-    {
-        return this.dns;
-    }
-
     public void close()
     {
-        getHistoryEMF().close();
-        getTransacEMF().close();
+        if (this.historyEmf != null)
+        {
+            getHistoryEMF().close();
+        }
+        if (this.transacEmf != null)
+        {
+            getTransacEMF().close();
+        }
         historyEmf = null;
         transacEmf = null;
+    }
+
+    public void setLocalNodeName(String name)
+    {
+        this.localNodeName = name;
     }
 }

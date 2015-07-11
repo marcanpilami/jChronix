@@ -28,7 +28,7 @@ import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
 
 @ExecutionNodeIsolation
-public class ExecutionNode extends ApplicationObject
+public class ExecutionNode extends NetworkObject
 {
     private static final long serialVersionUID = 2115315700815310189L;
 
@@ -229,7 +229,7 @@ public class ExecutionNode extends ApplicationObject
 
     public String getBrokerName()
     {
-        return (this.dns + this.qPort).toUpperCase();
+        return this.name.toUpperCase();
     }
 
     public String getBrokerUrl()
@@ -273,5 +273,15 @@ public class ExecutionNode extends ApplicationObject
     public void setConsole(boolean console)
     {
         this.console = console;
+    }
+
+    public String getName()
+    {
+        return this.name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
     }
 }

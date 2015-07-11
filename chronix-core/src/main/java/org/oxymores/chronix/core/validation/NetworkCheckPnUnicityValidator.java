@@ -6,17 +6,17 @@ import java.util.List;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 
-public class ApplicationCheckPnUnicityValidator implements ConstraintValidator<ApplicationCheckPnUnicity, Application>
+public class NetworkCheckPnUnicityValidator implements ConstraintValidator<NetworkCheckPnUnicity, Network>
 {
     @Override
-    public void initialize(ApplicationCheckPnUnicity constraintAnnotation)
+    public void initialize(NetworkCheckPnUnicity constraintAnnotation)
     {}
 
     @Override
-    public boolean isValid(Application value, ConstraintValidatorContext context)
+    public boolean isValid(Network value, ConstraintValidatorContext context)
     {
         List<String> existing = new ArrayList<String>();
 

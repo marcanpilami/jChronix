@@ -127,12 +127,12 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         Token tk = a.getToken(request.tokenID);
-        Place p = a.getPlace(request.placeID);
+        Place p = ctx.getNetwork().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
-        ExecutionNode en = a.getNode(request.requestingNodeID);
+        ExecutionNode en = ctx.getNetwork().getNode(request.requestingNodeID);
 
-        log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
-                request.type, tk.getName(), p.getName(), s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
+        log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s", request.type, tk.getName(), p.getName(),
+                s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
 
         // Case 1: TDC proxy: local request.
         if (request.local && request.type == TokenRequestType.REQUEST)
@@ -217,8 +217,8 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             // Data
 
             // Log
-            log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresents().getName()));
+            log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(), p.getName(), a.getName(),
+                    en.getBrokerName(), s.getRepresents().getName()));
 
             // Find the element
             TokenReservation tr = getTR(request);
@@ -232,8 +232,8 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (!request.local && request.type == TokenRequestType.RENEW)
         {
             // Log
-            log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresents().getName()));
+            log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(), p.getName(), a.getName(),
+                    en.getBrokerName(), s.getRepresents().getName()));
 
             // Find the element
             TokenReservation tr = getTR(request);
@@ -268,18 +268,17 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (!request.local)
         {
             trTransac.begin();
-            TypedQuery<TokenReservation> q = emTransac.createQuery(
-                    "SELECT q from TokenReservation q where q.renewedOn < ?1 AND q.pending = FALSE", TokenReservation.class);
+            TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.renewedOn < ?1 AND q.pending = FALSE", TokenReservation.class);
             q.setParameter(1, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
             for (TokenReservation tr : q.getResultList())
             {
                 Application aa = ctx.getApplication(tr.getApplicationId());
                 org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.getStateId()));
-                Place pp = aa.getPlace(UUID.fromString(tr.getPlaceId()));
-                ExecutionNode enn = aa.getNode(UUID.fromString(tr.getRequestedBy()));
-                log.info(String
-                        .format("A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
-                                pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
+                Place pp = ctx.getNetwork().getPlace(UUID.fromString(tr.getPlaceId()));
+                ExecutionNode enn = ctx.getNetwork().getNode(UUID.fromString(tr.getRequestedBy()));
+                log.info(String.format(
+                        "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
+                        pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
 
                 // Remove from database
                 emTransac.remove(tr);
@@ -289,8 +288,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // TDC: Step 2: Now that the purge is done, analyse pending requests again - tokens may have freed
         if (!request.local)
         {
-            TypedQuery<TokenReservation> q = emTransac.createQuery(
-                    "SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE", TokenReservation.class);
+            TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE", TokenReservation.class);
             for (TokenReservation tr : q.getResultList())
             {
                 log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
@@ -306,8 +304,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
 
     private TokenReservation getTR(TokenRequest request)
     {
-        TypedQuery<TokenReservation> q = emTransac.createQuery(
-                "SELECT q from TokenReservation q where q.pipelineJobId = ?1 AND q.localRenew = FALSE", TokenReservation.class);
+        TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.pipelineJobId = ?1 AND q.localRenew = FALSE", TokenReservation.class);
         q.setParameter(1, request.pipelineJobID.toString());
         return q.getSingleResult();
     }
@@ -317,7 +314,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Get data
         Application a = ctx.getApplication(request.applicationID);
         Token tk = a.getToken(request.tokenID);
-        Place p = a.getPlace(request.placeID);
+        Place p = ctx.getNetwork().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
 
         // Process
@@ -329,34 +326,31 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Get data
         Application a = ctx.getApplication(tr.getApplicationId());
         Token tk = a.getToken(UUID.fromString(tr.getTokenId()));
-        Place p = a.getPlace(UUID.fromString(tr.getPlaceId()));
+        Place p = ctx.getNetwork().getPlace(UUID.fromString(tr.getPlaceId()));
         org.oxymores.chronix.core.State s = a.getState(UUID.fromString(tr.getStateId()));
 
         // Process
         processRequest(a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
     }
 
-    private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
-            TokenReservation existing, String pipelineJobId, String requestingNodeId)
+    private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s, TokenReservation existing, String pipelineJobId,
+            String requestingNodeId)
     {
         // Locate all the currently allocated tokens on this Token/Place
         TypedQuery<TokenReservation> q = null;
         if (tk.isByPlace())
         {
-            q = emTransac
-                    .createQuery(
-                            "SELECT q from TokenReservation q where q.tokenId = :tokenId AND q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = FALSE AND q.localRenew = FALSE",
-                            TokenReservation.class);
+            q = emTransac.createQuery(
+                    "SELECT q from TokenReservation q where q.tokenId = :tokenId AND q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = FALSE AND q.localRenew = FALSE",
+                    TokenReservation.class);
             q.setParameter("tokenId", tk.getId().toString());
             q.setParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
             q.setParameter("placeId", p.getId().toString());
         }
         else
         {
-            q = emTransac
-                    .createQuery(
-                            "SELECT q from TokenReservation q where q.tokenId = ?1 AND q.renewedOn > ?2 AND q.pending = FALSE AND q.localRenew = FALSE",
-                            TokenReservation.class);
+            q = emTransac.createQuery("SELECT q from TokenReservation q where q.tokenId = ?1 AND q.renewedOn > ?2 AND q.pending = FALSE AND q.localRenew = FALSE",
+                    TokenReservation.class);
             q.setParameter(1, tk.getId().toString());
             q.setParameter(2, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
         }
@@ -365,8 +359,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (res.size() >= tk.getCount())
         {
             // No available token
-            log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(),
-                    res.size()));
+            log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(), res.size()));
 
             // Store the request if not done already
             if (existing == null)

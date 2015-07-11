@@ -480,7 +480,7 @@ public class Runner extends BaseListener
 
     public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException
     {
-        SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true);
+        SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true, this.ctx);
     }
 
     public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException

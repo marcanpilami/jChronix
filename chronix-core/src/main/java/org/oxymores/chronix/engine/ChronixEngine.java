@@ -26,10 +26,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
 import org.oxymores.chronix.planbuilder.OperationsApplication;
+import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 /**
  * A Chronix Node. Can be either engine + runner or simply runner.
@@ -40,12 +43,13 @@ public class ChronixEngine extends Thread
     private static Logger log = Logger.getLogger(ChronixEngine.class);
 
     private boolean runnerMode;
+    private int runnerPort;
+    private String runnerHost;
 
     protected ChronixContext ctx;
     protected String dbPath;
-    protected String brokerInterface, transacUnitName, historyUnitName, historyDbPath, transacDbPath;
-    protected int brokerPort;
-    protected String brokerInterfaceNoPort;
+    protected String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+    protected String localNodeName;
 
     protected Broker broker;
     protected SelfTriggerAgent stAgent;
@@ -56,43 +60,40 @@ public class ChronixEngine extends Thread
 
     // ///////////////////////////////////////////////////////////////
     // Construction
-    public ChronixEngine(String dbPath, String mainInterface)
+    public ChronixEngine(String dbPath, String nodeName)
     {
-        this(dbPath, mainInterface, "TransacUnit", "HistoryUnit");
+        this(dbPath, nodeName, "TransacUnit", "HistoryUnit");
     }
 
-    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName)
+    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName)
     {
-        this(dbPath, mainInterface, transacUnitName, historyUnitName, false, 1);
+        this(dbPath, nodeName, transacUnitName, historyUnitName, false, 1);
     }
 
-    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode)
+    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode)
     {
-        this(dbPath, mainInterface, transacUnitName, historyUnitName, runnerMode, 1);
+        this(dbPath, nodeName, transacUnitName, historyUnitName, runnerMode, 1);
     }
 
-    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode,
-            int nbRunner)
+    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode, int nbRunner)
     {
-        this(dbPath, mainInterface, transacUnitName, historyUnitName, runnerMode, nbRunner, null, null);
+        this(dbPath, nodeName, transacUnitName, historyUnitName, runnerMode, nbRunner, null, null);
     }
 
-    public ChronixEngine(String dbPath, String mainInterface, String transacUnitName, String historyUnitName, boolean runnerMode,
-            int nbRunner, String historyDBPath, String transacDbPath)
+    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode, int nbRunner, String historyDBPath,
+            String transacDbPath)
     {
         this.dbPath = dbPath;
         this.runnerMode = runnerMode;
         this.transacUnitName = transacUnitName;
         this.historyUnitName = historyUnitName;
-        this.brokerInterface = mainInterface;
-        this.brokerInterfaceNoPort = this.brokerInterface.split(":")[0];
-        this.brokerPort = Integer.parseInt(this.brokerInterface.split(":")[1]);
+        this.localNodeName = nodeName;
         this.nbRunner = nbRunner;
         this.historyDbPath = historyDBPath;
         this.transacDbPath = transacDbPath;
 
         // To allow some basic configuration before starting nodes, we init the minimal fields inside the context
-        this.ctx = ChronixContext.initContext(dbPath, transacUnitName, historyUnitName, mainInterface, false);
+        this.ctx = ChronixContext.initContext(dbPath, transacUnitName, historyUnitName, false);
 
         // Startup phase is synchronized with this
         this.startCritical = new Semaphore(1);
@@ -119,9 +120,19 @@ public class ChronixEngine extends Thread
             if (!runnerMode)
             {
                 preContextLoad();
-                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
-                        this.historyDbPath, this.transacDbPath);
+                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.localNodeName, false, this.historyDbPath, this.transacDbPath);
                 postContextLoad();
+            }
+
+            // Mock-up for hosted nodes
+            if (runnerMode)
+            {
+                ExecutionNode e = new ExecutionNode();
+                e.setConsole(false);
+                e.setDns(this.runnerHost);
+                e.setqPort(this.runnerPort);
+                e.setName(this.localNodeName);
+                this.ctx.setLocalNode(e);
             }
 
             // Broker with all the consumer threads
@@ -312,19 +323,22 @@ public class ChronixEngine extends Thread
         {
             try
             {
+                // Create network
+                Network n = PlanBuilder.buildLocalDnsNetwork();
+                this.ctx.saveNetwork(n);
+
                 // Create OPERATIONS application
-                Application a = OperationsApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
+                Application a = OperationsApplication.getNewApplication(this.ctx);
                 this.ctx.saveApplication(a);
                 this.ctx.setWorkingAsCurrent(a);
 
                 // Create CHRONIX_MAINTENANCE application
-                a = MaintenanceApplication.getNewApplication(this.brokerInterfaceNoPort, this.brokerPort);
+                a = MaintenanceApplication.getNewApplication(this.ctx);
                 this.ctx.saveApplication(a);
                 this.ctx.setWorkingAsCurrent(a);
 
                 // Reload context to load new applications
-                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, false,
-                        this.historyDbPath, this.transacDbPath);
+                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.localNodeName, false, this.historyDbPath, this.transacDbPath);
             }
             catch (ChronixPlanStorageException e)
             {
@@ -341,8 +355,13 @@ public class ChronixEngine extends Thread
 
     public void emptyDb()
     {
+        emptyDb(this.dbPath);
+    }
+
+    public static void emptyDb(String dbPath)
+    {
         // Clear test db directory
-        File[] fileList = new File(this.dbPath).listFiles();
+        File[] fileList = new File(dbPath).listFiles();
         if (fileList == null)
         {
             // No directory! Nothing to empty...
@@ -365,5 +384,15 @@ public class ChronixEngine extends Thread
     public ChronixContext getContext()
     {
         return this.ctx;
+    }
+
+    public void setRunnerPort(int port)
+    {
+        this.runnerPort = port;
+    }
+
+    public void setRunnerHost(String host)
+    {
+        this.runnerHost = host;
     }
 }

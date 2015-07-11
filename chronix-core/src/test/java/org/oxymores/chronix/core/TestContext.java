@@ -4,23 +4,31 @@ import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
 public class TestContext
 {
-    @Test
-    public void saveAndLoadApp() throws ChronixPlanStorageException
+    File ctx;
+
+    @Before
+    public void before() throws ChronixPlanStorageException
     {
-        File ctx = new File("C:\\TEMP\\db1");
+        ctx = new File("C:\\TEMP\\db1");
         try
         {
             FileUtils.cleanDirectory(ctx);
         }
         catch (IOException e)
-        {
-        }
+        {}
+        Network n = new Network();
+        ChronixContext.saveNetwork(n, ctx);
+    }
 
+    @Test
+    public void saveAndLoadApp() throws ChronixPlanStorageException
+    {
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
         ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
 
@@ -34,15 +42,6 @@ public class TestContext
     @Test
     public void versioning() throws Exception
     {
-        File ctx = new File("C:\\TEMP\\db1");
-        try
-        {
-            FileUtils.cleanDirectory(ctx);
-        }
-        catch (IOException e)
-        {
-        }
-
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
         ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
 

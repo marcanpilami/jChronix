@@ -31,6 +31,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -58,7 +59,7 @@ public final class PlanBuilder
     {
         Application a = new Application();
         a.setname(name);
-        a.setDescription("test application auto created");
+        a.setDescription(description);
 
         return a;
     }
@@ -116,7 +117,7 @@ public final class PlanBuilder
         return c1;
     }
 
-    public static ExecutionNode buildExecutionNode(Application a, int port)
+    public static ExecutionNode buildExecutionNode(Network a, String name, int port)
     {
         String hostname;
         try
@@ -127,23 +128,29 @@ public final class PlanBuilder
         {
             hostname = HOSTNAME_FALLBACK;
         }
-        return buildExecutionNode(a, hostname, port);
+        return buildExecutionNode(a, name, hostname, port);
     }
 
-    public static ExecutionNode buildExecutionNode(Application a, String dns, int port)
+    public static ExecutionNode buildExecutionNode(Network a, String name, String dns, int port)
+    {
+        return buildExecutionNode(a, name, dns, port, 100, 100);
+    }
+
+    public static ExecutionNode buildExecutionNode(Network a, String name, String dns, int port, int x, int y)
     {
         ExecutionNode n1 = new ExecutionNode();
+        n1.setName(name);
         n1.setDns(dns);
         n1.setOspassword("");
         n1.setqPort(port);
-        n1.setX(100);
-        n1.setY(100);
+        n1.setX(x);
+        n1.setY(y);
         a.addNode(n1);
 
         return n1;
     }
 
-    public static Place buildPlace(Application a, String name, String description, ExecutionNode en)
+    public static Place buildPlace(Network a, String name, String description, ExecutionNode en)
     {
         Place p1 = new Place();
         p1.setDescription(description);
@@ -169,7 +176,12 @@ public final class PlanBuilder
         return pg1;
     }
 
-    public static PlaceGroup buildDefaultLocalNetwork(Application a)
+    public static Network buildLocalDnsNetwork()
+    {
+        return buildLocalDnsNetwork(1789);
+    }
+
+    public static Network buildLocalDnsNetwork(int port)
     {
         // Execution node (the local sever)
         String hostname;
@@ -182,22 +194,27 @@ public final class PlanBuilder
             hostname = HOSTNAME_FALLBACK;
         }
 
-        return buildDefaultLocalNetwork(a, 1789, hostname);
+        return buildLocalNetwork(1789, hostname);
     }
 
-    public static PlaceGroup buildDefaultLocalNetwork(Application a, int port, String linterface)
+    public static Network buildLocalhostNetwork()
     {
+        return buildLocalNetwork(1789, "localhost");
+    }
+
+    public static Network buildLocalNetwork(int port, String linterface)
+    {
+        // A single node with a corresponding Place
+        Network n = new Network();
+
         // Execution node (the local sever)
-        ExecutionNode n1 = buildExecutionNode(a, linterface, 1789);
+        ExecutionNode n1 = buildExecutionNode(n, "local", linterface, port);
         n1.setConsole(true);
 
         // Place
-        Place p1 = buildPlace(a, linterface, "the local server", n1);
+        buildPlace(n, "local", "the local server", n1);
 
-        // Group with only this place
-        PlaceGroup pg1 = buildPlaceGroup(a, linterface, p1.getDescription(), p1);
-
-        return pg1;
+        return n;
     }
 
     public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
@@ -205,8 +222,7 @@ public final class PlanBuilder
         return buildShellCommand("cmd.exe", a, command, name, description, prmsandvalues);
     }
 
-    public static ShellCommand buildShellCommand(String shell, Application a, String command, String name, String description,
-            String... prmsandvalues)
+    public static ShellCommand buildShellCommand(String shell, Application a, String command, String name, String description, String... prmsandvalues)
     {
         ShellCommand sc1 = new ShellCommand();
         sc1.setCommand(command);

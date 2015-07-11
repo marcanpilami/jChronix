@@ -20,11 +20,9 @@
 
 package org.oxymores.chronix.core;
 
-import java.util.ArrayList;
-
 import javax.validation.constraints.NotNull;
 
-public class Place extends NamedApplicationObject
+public class Place extends NetworkObject
 {
     private static final long serialVersionUID = 4736385443687921653L;
 
@@ -33,12 +31,9 @@ public class Place extends NamedApplicationObject
     @NotNull
     protected ExecutionNode node;
 
-    protected ArrayList<PlaceGroup> memberOfGroups;
-
     public Place()
     {
         super();
-        memberOfGroups = new ArrayList<PlaceGroup>();
     }
 
     public String getProperty1()
@@ -92,20 +87,6 @@ public class Place extends NamedApplicationObject
         {
             this.node = node;
             node.addHostedPlace(this);
-        }
-    }
-
-    public ArrayList<PlaceGroup> getMemberOfGroups()
-    {
-        return memberOfGroups;
-    }
-
-    public void addToGroup(PlaceGroup group)
-    {
-        if (!this.memberOfGroups.contains(group))
-        {
-            this.memberOfGroups.add(group);
-            group.addPlace(this);
         }
     }
 }

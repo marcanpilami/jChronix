@@ -232,7 +232,6 @@ public class TranscientBase implements Serializable
         if (place != null)
         {
             this.placeID = place.getId().toString();
-            this.appID = place.getApplication().getId().toString();
         }
         else
         {
@@ -242,7 +241,7 @@ public class TranscientBase implements Serializable
 
     public Place getPlace(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getPlace(UUID.fromString(this.placeID));
+        return ctx.getNetwork().getPlace(UUID.fromString(this.placeID));
     }
 
     //
@@ -255,7 +254,7 @@ public class TranscientBase implements Serializable
         return appID;
     }
 
-    protected void setAppID(String appID)
+    public void setAppID(String appID)
     {
         this.appID = appID;
     }

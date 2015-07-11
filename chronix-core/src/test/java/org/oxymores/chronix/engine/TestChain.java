@@ -19,21 +19,20 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestChain extends TestBase
 {
+    ChronixEngine e1;
+    Application a1;
+
     @Before
     public void before() throws Exception
     {
-        String db1 = "C:\\TEMP\\db1";
-        Application a = createTestApplication(db1, "test application");
-        addEngine(db1, a, "localhost:1789");
-        startEngines();
+        a1 = addTestApplicationToDb(db1, "test1");
+        e1 = addEngine(db1, "local");
     }
 
     @Test
     public void testChainLaunch() throws Exception
     {
         log.debug("****CREATE PLAN***********************************************************************");
-        EntityManager em = firstEngine().ctx.getTransacEM();
-        Application a1 = this.applications.get(0);
         PlaceGroup pg1 = a1.getGroup("master node");
 
         // First stupid chain
@@ -48,21 +47,11 @@ public class TestChain extends TestBase
         Chain p1 = PlanBuilder.buildPlan(a1, "main plan", "nothing important");
         State sp = PlanBuilder.buildState(p1, pg1, c1);
 
-        // Save plan
-        try
-        {
-            firstEngine().ctx.saveApplication(a1);
-            firstEngine().ctx.setWorkingAsCurrent(a1);
-            firstEngine().queueReloadConfiguration();
-            firstEngine().waitForInitEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        // GO
+        addApplicationToDb(db1, a1);
+        startEngines();
+        EntityManager em = e1.ctx.getTransacEM();
 
-        // Start chain
         log.debug("****PASSING RUN***************************************************************");
         SenderHelpers.runStateInsidePlan(sp, firstEngine().ctx, em);
 
@@ -81,9 +70,6 @@ public class TestChain extends TestBase
     public void testCompletePlan() throws Exception
     {
         log.debug("****CREATE PLAN***********************************************************************");
-        ChronixEngine e1 = firstEngine();
-        EntityManager em = e1.ctx.getTransacEM();
-        Application a1 = applications.get(0);
         PlaceGroup pg1 = a1.getGroup("master node");
 
         // First stupid chains
@@ -122,19 +108,10 @@ public class TestChain extends TestBase
         sp3.connectTo(spA);
         spA.connectTo(sp4);
 
-        // Save plan
-        try
-        {
-            e1.ctx.saveApplication(a1);
-            e1.ctx.setWorkingAsCurrent(a1);
-            e1.queueReloadConfiguration();
-            e1.waitForInitEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        // GO
+        addApplicationToDb(db1, a1);
+        startEngines();
+        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("****PASSING RUN***************************************************************");

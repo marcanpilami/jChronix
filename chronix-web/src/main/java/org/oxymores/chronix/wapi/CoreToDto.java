@@ -318,10 +318,11 @@ public class CoreToDto
         res.setProp3(p.getProperty3());
         res.setProp4(p.getProperty4());
 
-        for (PlaceGroup pg : p.getMemberOfGroups())
+        // TODO: re-add groups
+        /*for (PlaceGroup pg : p.getMemberOfGroups())
         {
             res.addMemberOfGroup(pg.getId());
-        }
+        }*/
 
         return res;
     }

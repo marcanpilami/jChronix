@@ -186,9 +186,8 @@ class OrderListener extends BaseListener
         if (e == null)
         {
             // destroy message - it's corrupt
-            log.error(String
-                    .format("An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).",
-                            order.data, order.data2));
+            log.error(String.format("An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).", order.data,
+                    order.data2));
             jmsCommit();
             return;
         }
@@ -201,7 +200,6 @@ class OrderListener extends BaseListener
         log.debug(String.format("Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
 
         // Create an event for each State using this external event
-
         for (State s : a.getStates())
         {
             if (!s.getRepresents().equals(e))

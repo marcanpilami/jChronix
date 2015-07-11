@@ -3,18 +3,18 @@ package org.oxymores.chronix.core.validation;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 
-public class ApplicationCheckConsoleValidator implements ConstraintValidator<ApplicationCheckConsole, Application>
+public class NetworkCheckConsoleValidator implements ConstraintValidator<NetworkCheckConsole, Network>
 {
 
     @Override
-    public void initialize(ApplicationCheckConsole constraintAnnotation)
+    public void initialize(NetworkCheckConsole constraintAnnotation)
     {}
 
     @Override
-    public boolean isValid(Application a, ConstraintValidatorContext context)
+    public boolean isValid(Network a, ConstraintValidatorContext context)
     {
         if (a == null)
         {

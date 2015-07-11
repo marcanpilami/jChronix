@@ -40,20 +40,17 @@ public class ChronixEngineSim extends ChronixEngine
     @Override
     protected void startEngine(boolean blocking, boolean purgeQueues)
     {
-        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.getContextRoot(),
-                this.start, this.end));
+        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.getContextRoot(), this.start, this.end));
         try
         {
             this.startCritical.acquire();
             this.threadInit.release(1);
 
             // Context
-            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.brokerInterface, true,
-                    null, null);
+            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, "simu", true, null, null);
             this.ctx.setSimulator();
 
             // This is a simulation: we are only interested in a single application
-            Application a = this.ctx.getApplication(this.appToSimulateId);
             for (Application ap : this.ctx.getApplications())
             {
                 if (!ap.getId().equals(appToSimulateId))
@@ -65,15 +62,16 @@ public class ChronixEngineSim extends ChronixEngine
             simulationNode.setDns("raccoon");
             simulationNode.setqPort(9999);
             simulationNode.setConsole(true);
-            a.addNode(simulationNode);
-            a.setLocalNode(simulationNode.getDns(), simulationNode.getqPort());
+            simulationNode.setName("simu");
+            this.ctx.getNetwork().addNode(simulationNode);
+            ctx.setLocalNodeName(simulationNode.getName());
 
-            for (Place p : a.getPlaces().values())
+            for (Place p : this.ctx.getNetwork().getPlaces().values())
             {
                 p.setNode(simulationNode);
             }
 
-            // Broker with some of the consumer threads. Not started: meta, runner agent, order. In memory borker, no networking, with EM.
+            // Broker with some of the consumer threads. Not started: meta, runner agent, order. In memory broker, no networking, with EM.
             this.broker = new Broker(this.ctx, false, true, false);
             this.broker.setNbRunners(this.nbRunner);
             this.broker.registerListeners(this, false, false, true, true, true, true, true, false, true);
@@ -108,8 +106,7 @@ public class ChronixEngineSim extends ChronixEngine
             this.stAgent.join();
         }
         catch (InterruptedException e)
-        {
-        }
+        {}
         log.info("Simulation has ended. Returning results");
 
         EntityManager em = this.ctx.getHistoryEM();

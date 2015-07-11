@@ -4,31 +4,19 @@ import javax.jms.JMSException;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
-import org.apache.log4j.Logger;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
-public class TestStart
+public class TestStart extends TestBase
 {
-    private static Logger log = Logger.getLogger(TestStart.class);
-
-    public static String db1;
-
-    @Before
-    public void init() throws Exception
-    {
-        db1 = "C:\\TEMP\\db1";
-    }
-
     @Test
     public void testNoDb() throws Exception
     {
@@ -36,7 +24,7 @@ public class TestStart
         ChronixEngine e = null;
         try
         {
-            e = new ChronixEngine("C:\\WONTEXISTEVER", "localhost:1789");
+            e = new ChronixEngine("C:\\WONTEXISTEVER", "local");
             e.start();
             e.waitForInitEnd();
         }
@@ -44,8 +32,7 @@ public class TestStart
         {
             return;
         }
-        Assert.assertEquals(false, e.shouldRun()); // engine should not have been able
-        // to start
+        Assert.assertEquals(false, e.shouldRun()); // engine should not have been able to start
     }
 
     @Test
@@ -53,14 +40,8 @@ public class TestStart
     {
         log.info("***** Test: with an empty db, the scheduler creates two auto applications");
 
-        ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
-        e.emptyDb();
-        LogHelpers.clearAllTranscientElements(e.ctx);
-
-        e.start();
-        e.waitForInitEnd();
-        e.stopEngine();
-        e.waitForStopEnd();
+        ChronixEngine e = addEngine(db1, "local");
+        startEngines();
 
         Assert.assertEquals(2, e.ctx.getApplications().size());
 
@@ -70,64 +51,47 @@ public class TestStart
         Assert.assertEquals(1, a1.getChains().size());
         Assert.assertEquals(1, a2.getChains().size());
         Assert.assertEquals(5, a2.getChains().get(0).getStates().size());
-
     }
 
     @Test
     public void testCalendarPointerCreationAtStartup() throws Exception
     {
-        ChronixEngine e = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
-        e.emptyDb();
-        LogHelpers.clearAllTranscientElements(e.ctx);
+        ChronixEngine e = addEngine(db1, "local");
 
         Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
-        ChronixContext ctx = ChronixContext.initContext("C:\\TEMP\\db1", "", "", "localhost:1789", false);
-        ctx.saveApplication(a);
-        ctx.setWorkingAsCurrent(a);
-        e.start();
-        e.waitForInitEnd();
-        e.stopEngine();
-        e.waitForStopEnd();
+        addApplicationToDb(db1, a);
+        startEngines();
 
         EntityManager em = e.ctx.getTransacEM();
         TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
-
-        Assert.assertEquals(2, q.getResultList().size());
+        Assert.assertEquals(1, q.getResultList().size());
     }
 
     @Test
     public void testRestart() throws JMSException
     {
-        ChronixEngine e1 = new ChronixEngine("C:\\TEMP\\db1", "localhost:1789");
-        e1.emptyDb();
-        LogHelpers.clearAllTranscientElements(e1.ctx);
-        e1.start();
-        e1.waitForInitEnd();
-
-        ChronixEngine e2 = new ChronixEngine("C:\\TEMP\\db2", "localhost:1400");
-        e2.emptyDb();
-        LogHelpers.clearAllTranscientElements(e2.ctx);
-        e2.start();
-        e2.waitForInitEnd();
+        ChronixEngine e1 = addEngine(db1, "local");
+        ChronixEngine e2 = addEngine(db2, "remote", "TransacUnit2", "HistoryUnit2");
 
         Application a = PlanBuilder.buildApplication("test", "description");
-        PlanBuilder.buildDefaultLocalNetwork(a, 1789, "localhost");
-        ExecutionNode n1 = a.getNodesList().get(0);
-        ExecutionNode n2 = PlanBuilder.buildExecutionNode(a, "localhost", 1400);
+        Network n = new Network();
+        ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "local", 1789);
+        ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "remote", 1400);
         n1.connectTo(n2, NodeConnectionMethod.TCP);
 
-        SenderHelpers.sendApplication(a, n1, e1.ctx); // Send through 2 - it won't reboot
+        storeNetwork(db1, n);
+        storeNetwork(db2, n);
+        addApplicationToDb(db1, a);
+        addApplicationToDb(db2, a);
+        startEngines();
+
+        SenderHelpers.sendApplication(a, n2, e1.ctx); // Send through 2 - it won't reboot
+        e2.waitForRebootEnd();
+
+        SenderHelpers.sendApplication(a, n1, e2.ctx);
         e1.waitForRebootEnd();
 
-        SenderHelpers.sendApplication(a, n1, e1.ctx);
+        SenderHelpers.sendApplication(a, n1, e2.ctx);
         e1.waitForRebootEnd();
-
-        SenderHelpers.sendApplication(a, n1, e1.ctx);
-        e1.waitForRebootEnd();
-
-        e1.stopEngine();
-        e1.waitForStopEnd();
-        e2.stopEngine();
-        e2.waitForStopEnd();
     }
 }

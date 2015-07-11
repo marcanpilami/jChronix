@@ -52,7 +52,7 @@ class Broker
     private static Logger log = Logger.getLogger(Broker.class);
 
     // JMS
-    private String brokerName;
+    private String brokerName, url;
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private Connection connection;
@@ -91,10 +91,11 @@ class Broker
 
     Broker(ChronixContext ctx, boolean purge, boolean persistent, boolean tcp) throws ChronixInitializationException
     {
-        log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", ctx.getBrokerUrl(),
-                ctx.getContextRoot()));
         this.ctx = ctx;
-        brokerName = this.ctx.getBrokerName();
+        this.brokerName = ctx.getLocalNode().getBrokerName();
+        this.url = "vm://" + this.brokerName;
+
+        log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", url, ctx.getContextRoot()));
         if (persistent)
         {
             this.emf = ctx.getTransacEMF();
@@ -137,7 +138,7 @@ class Broker
         {
             try
             {
-                TransportConnector tc = broker.addConnector("tcp://" + this.ctx.getBrokerUrl());
+                TransportConnector tc = broker.addConnector("tcp://" + this.ctx.getLocalNode().getBrokerUrl());
                 tc.setDiscoveryUri(null);
             }
             catch (Exception e1)
@@ -145,16 +146,16 @@ class Broker
                 throw new ChronixInitializationException("Could not create a JMS listener connector", e1);
             }
         }
-        else
+
+        // Always add VM connector.
+        try
         {
-            try
-            {
-                broker.addConnector("vm://localhost");
-            }
-            catch (Exception e1)
-            {
-                throw new ChronixInitializationException("Could not create a JMS listener connector", e1);
-            }
+            TransportConnector tc = broker.addConnector("vm://" + this.ctx.getLocalNode().getId());
+            tc.setDiscoveryUri(null);
+        }
+        catch (Exception e1)
+        {
+            throw new ChronixInitializationException("Could not create a JMS listener connector", e1);
         }
 
         // Add channels to other nodes
@@ -200,9 +201,8 @@ class Broker
         registerListeners(engine, true, true, true, true, true, true, true, true, true);
     }
 
-    void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
-            boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener,
-            boolean startTokenDistributionCenter) throws JMSException, IOException, ChronixInitializationException
+    void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner, boolean startLog, boolean startTranscient,
+            boolean startEventListener, boolean startOrderListener, boolean startTokenDistributionCenter) throws JMSException, IOException, ChronixInitializationException
     {
         this.engine = engine;
 
@@ -377,8 +377,7 @@ class Broker
             {
                 // Only if TCP or RCTRL
                 // Only if not already opened
-                if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL))
-                        || opened.contains(nl.getNodeTo().getBrokerUrl()))
+                if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL)) || opened.contains(nl.getNodeTo().getBrokerUrl()))
                 {
                     break;
                 }
@@ -409,8 +408,8 @@ class Broker
             {
                 if (nl.getMethod().equals(NodeConnectionMethod.TCP))
                 {
-                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s", ctx.getContextRoot(), nl
-                            .getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
+                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s", ctx.getContextRoot(), nl.getNodeFrom().getDns(),
+                            nl.getNodeFrom().getqPort()));
                 }
             }
         }
@@ -440,9 +439,7 @@ class Broker
         }
         catch (IOException e1)
         {
-            log.warn(
-                    "An error occurend while purging queues. Not a real problem - the engine will still run perfectly. Still, please report this bug.",
-                    e1);
+            log.warn("An error occurend while purging queues. Not a real problem - the engine will still run perfectly. Still, please report this bug.", e1);
         }
     }
 

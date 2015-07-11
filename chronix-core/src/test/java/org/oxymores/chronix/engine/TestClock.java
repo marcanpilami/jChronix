@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
@@ -22,10 +23,8 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
-public class TestClock
+public class TestClock extends TestBase
 {
-    private static Logger log = Logger.getLogger(TestClock.class);
-
     private void displayLogPeriods(PeriodList pl)
     {
         for (Object p : pl)
@@ -39,8 +38,6 @@ public class TestClock
     @Test
     public void testSimpleRec() throws ParseException
     {
-        log.info("********** Testing basic reccurrences with clocks");
-
         Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
         Clock ck1 = a.getActiveElements(Clock.class).get(0);
         ClockRRule rr1 = ck1.getRulesADD().get(0);
@@ -83,14 +80,11 @@ public class TestClock
     @Test
     public void testClockTrigger() throws Exception
     {
-        String dbPath = "C:\\TEMP\\db1";
-        ChronixEngine e = new ChronixEngine(dbPath, "localhost:1789");
-        e.emptyDb();
-        LogHelpers.clearAllTranscientElements(e.ctx);
+        ChronixEngine e = addEngine(db1, "local");
 
         // Create test application
         Application a = PlanBuilder.buildApplication("testing clocks", "no description for tests");
-        PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, 1789, "localhost");
+        PlaceGroup pgLocal = PlanBuilder.buildPlaceGroup(a, "pp", "pp", this.n.getPlace("local"));
         Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
         ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
@@ -102,9 +96,7 @@ public class TestClock
         State s2 = PlanBuilder.buildState(c, pgLocal, sc1);
         s1.connectTo(s2);
 
-        ChronixContext ctx = ChronixContext.initContext(dbPath, "", "", "localhost:1789", false);
-        ctx.saveApplication(a);
-        ctx.setWorkingAsCurrent(a);
+        addApplicationToDb(db1, a);
 
         // Wait until the next x1 second.
         DateTime now = DateTime.now();
@@ -112,10 +104,8 @@ public class TestClock
         Thread.sleep(toAdd * 1000);
 
         // Start engine
-        e.start();
+        startEngines();
         Thread.sleep(3 * 1000); // run & analysis time
-        e.stopEngine();
-        e.waitForStopEnd();
 
         // Get results
         List<RunLog> res = LogHelpers.displayAllHistory(e.ctx);

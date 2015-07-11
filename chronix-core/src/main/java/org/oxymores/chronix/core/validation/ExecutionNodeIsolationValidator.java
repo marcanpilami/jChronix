@@ -19,7 +19,7 @@ public class ExecutionNodeIsolationValidator implements ConstraintValidator<Exec
             return true;
         }
 
-        if (en.getApplication().getNodesList().size() <= 1)
+        if (en.getNetwork().getNodesList().size() <= 1)
         {
             // It is normal to be isolated inside a single node network
             return true;

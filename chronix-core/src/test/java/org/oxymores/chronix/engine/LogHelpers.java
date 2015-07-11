@@ -24,7 +24,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 
 class LogHelpers
 {
-    private static Logger log = Logger.getLogger(LogHelpers.class);
+    private static Logger log  = Logger.getLogger(LogHelpers.class);
 
     public static List<RunLog> displayAllHistory(ChronixContext ctx)
     {

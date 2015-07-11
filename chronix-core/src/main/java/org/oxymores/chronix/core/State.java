@@ -469,6 +469,7 @@ public class State extends ConfigurableBase
                 ec.setEvent(e);
                 ec.setPlace(p);
                 ec.setState(this);
+                ec.setAppID(e.getAppID());
 
                 em.persist(ec);
 
@@ -510,8 +511,7 @@ public class State extends ConfigurableBase
         runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), null, null);
     }
 
-    public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id,
-            UUID level3Id)
+    public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id)
     {
         // Calendar update
         String calendarOccurrenceID = null;
@@ -524,8 +524,7 @@ public class State extends ConfigurableBase
 
         }
 
-        run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate,
-                null);
+        run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate, null);
     }
 
     public void runFromEngine(Place p, EntityManager em, MessageProducer pjProducer, Session session, Event e)
@@ -541,13 +540,12 @@ public class State extends ConfigurableBase
 
         }
 
-        run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(),
-                e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate, e.getVirtualTime(), e.getEnvParams().toArray(new EnvironmentValue[0]));
+        run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(), e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate,
+                e.getVirtualTime(), e.getEnvParams().toArray(new EnvironmentValue[0]));
     }
 
-    public void run(Place p, MessageProducer pjProducer, Session session, String calendarOccurrenceID, boolean updateCalendarPointer,
-            boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id,
-            CalendarPointer cpToUpdate, Date virtualTime, EnvironmentValue... params)
+    public void run(Place p, MessageProducer pjProducer, Session session, String calendarOccurrenceID, boolean updateCalendarPointer, boolean outOfPlan, boolean outOfChainLaunch,
+            UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id, CalendarPointer cpToUpdate, Date virtualTime, EnvironmentValue... params)
     {
         DateTime now = DateTime.now();
 
@@ -560,6 +558,7 @@ public class State extends ConfigurableBase
         pj.setLevel3IdU(level3Id);
         pj.setMarkedForRunAt(now.toDate());
         pj.setPlace(p);
+        pj.setAppID(this.getApplication().getId().toString());
         pj.setState(this);
         pj.setStatus("ENTERING_QUEUE");
         pj.setApplication(this.application);
@@ -589,8 +588,7 @@ public class State extends ConfigurableBase
             pj.addValue(ep.key, ep.value);
         }
 
-        // Environment variables passed from other jobs through the event (or
-        // manually set)
+        // Environment variables passed from other jobs through the event (or manually set)
         for (EnvironmentValue ep : params)
         {
             if (ep.getKey().startsWith("CHR_"))
@@ -636,7 +634,6 @@ public class State extends ConfigurableBase
         }
 
         // Send it (commit is done by main engine later)
-        String qName = String.format(Constants.Q_PJ, p.getNode().getBrokerName());
         try
         {
             SenderHelpers.sendPipelineJobToRunner(pj, p.getNode().getHost(), pjProducer, session, false);
@@ -647,8 +644,7 @@ public class State extends ConfigurableBase
         }
 
         // Done
-        log.debug(String.format("State (%s - chain %s) was enqueued for launch on place %s (queue %s)", this.represents.getName(),
-                this.chain.getName(), p.name, qName));
+        log.debug(String.format("State (%s - chain %s) was enqueued for launch on place %s", this.represents.getName(), this.chain.getName(), p.name));
     }
 
     // Create and post PJ for run
@@ -700,6 +696,7 @@ public class State extends ConfigurableBase
                 tmp.setLastStartedOccurrenceCd(cdLast);
                 tmp.setNextRunOccurrenceCd(cdNext);
                 tmp.setPlace(p);
+                tmp.setAppID(this.calendar.getApplication().getId().toString());
                 tmp.setState(this);
                 i++;
 
@@ -709,8 +706,7 @@ public class State extends ConfigurableBase
 
         if (i != 0)
         {
-            log.debug(String.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id, this.represents.name,
-                    this.chain.name, i));
+            log.debug(String.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id, this.represents.name, this.chain.name, i));
         }
         // Commit is done by the calling method
     }
@@ -724,8 +720,7 @@ public class State extends ConfigurableBase
             return true;
         }
 
-        log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id, this.represents.name,
-                this.chain.name));
+        log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id, this.represents.name, this.chain.name));
 
         // Get the pointer
         Query q = em.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2");
@@ -736,8 +731,7 @@ public class State extends ConfigurableBase
 
         if (cp == null)
         {
-            log.error(String.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.", this.id,
-                    this.represents.name, this.chain.name));
+            log.error(String.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.", this.id, this.represents.name, this.chain.name));
             return false;
         }
 
@@ -762,23 +756,21 @@ public class State extends ConfigurableBase
 
         // No further than the calendar itself
         CalendarDay baseLimit = this.calendar.getCurrentOccurrence(em);
-        log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s", baseLimit.seq,
-                this.calendarShift, nextRunOccurrence.seq));
+        log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s", baseLimit.seq, this.calendarShift,
+                nextRunOccurrence.seq));
         CalendarDay shiftedLimit = this.calendar.getOccurrenceShiftedBy(baseLimit, this.calendarShift);
 
         // Shift: -1 means that the State will run at D-1 when the reference is
         // D. Therefore it should stop one occurrence before the others.
         if (!this.calendar.isBeforeOrSame(nextRunOccurrence, shiftedLimit))
         {
-            log.debug(String
-                    .format("This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
-                            baseLimit.seq, shiftedLimit.seq, nextRunOccurrence.seq));
+            log.debug(String.format("This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
+                    baseLimit.seq, shiftedLimit.seq, nextRunOccurrence.seq));
             return false;
         }
 
         // If here, alles gut.
-        log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id, this.represents.name,
-                this.chain.name));
+        log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id, this.represents.name, this.chain.name));
         return true;
     }
 

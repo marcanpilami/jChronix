@@ -10,12 +10,12 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 
 @Documented
-@Constraint(validatedBy = ApplicationCheckConsoleValidator.class)
+@Constraint(validatedBy = NetworkCheckPnUnicityValidator.class)
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ApplicationCheckConsole
+public @interface NetworkCheckPnUnicity
 {
-    String message() default "an application must have one and only one console in its physical network";
+    String message() default "the network contains multiple engines with the same dns and port";
 
     Class<?>[] groups() default {};
 

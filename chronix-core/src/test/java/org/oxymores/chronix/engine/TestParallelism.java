@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -19,7 +20,6 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestParallelism extends TestBase
 {
-    private String db1, db2, db3;
     Application a;
     ChronixEngine e1, e2, e3;
     ExecutionNode en1, en2, en3;
@@ -31,37 +31,35 @@ public class TestParallelism extends TestBase
     @Before
     public void before() throws Exception
     {
-        a = createTestApplication(db1, "test application");
-        db1 = "C:\\TEMP\\db1";
-        db2 = "C:\\TEMP\\db2";
-        db3 = "C:\\TEMP\\db3";
+        a = PlanBuilder.buildApplication("// test", "test");
 
-        e1 = addEngine(db1, a, "localhost:1789");
-        e2 = addEngine(db2, a, "localhost:1400", "TransacUnit2", "HistoryUnit2");
-        e3 = addRunner(db3, "localhost:1804");
+        e1 = addEngine(db1, "e1");
+        e2 = addEngine(db1, "e2", "TransacUnit2", "HistoryUnit2");
+        e3 = addRunner(db3, "e3", "localhost", 1804);
 
         // Create a test application and save it inside context
         a = PlanBuilder.buildApplication("Multinode test", "test");
 
         // Physical network
-        en1 = PlanBuilder.buildExecutionNode(a, "localhost", 1789);
+        n = new Network();
+        en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
+        en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
+        en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
         en1.setConsole(true);
-        en2 = PlanBuilder.buildExecutionNode(a, "localhost", 1400);
-        en3 = PlanBuilder.buildExecutionNode(a, "localhost", 1804);
         en1.connectTo(en2, NodeConnectionMethod.TCP);
         en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
         // Logical network
-        p1 = PlanBuilder.buildPlace(a, "master node", "master node reference place", en1);
-        p2 = PlanBuilder.buildPlace(a, "second node", "second node reference place", en2);
-        p3 = PlanBuilder.buildPlace(a, "hosted node by second node reference place", "third node", en3);
+        p1 = PlanBuilder.buildPlace(n, "master node", "master node reference place", en1);
+        p2 = PlanBuilder.buildPlace(n, "second node", "second node reference place", en2);
+        p3 = PlanBuilder.buildPlace(n, "hosted node by second node reference place", "third node", en3);
 
-        h11 = PlanBuilder.buildPlace(a, "P11", "master node 1", en1);
-        h12 = PlanBuilder.buildPlace(a, "P12", "master node 2", en1);
-        h21 = PlanBuilder.buildPlace(a, "P21", "second node 1", en2);
-        h22 = PlanBuilder.buildPlace(a, "P22", "second node 2", en2);
-        h31 = PlanBuilder.buildPlace(a, "P31", "hosted node by second node 1", en3);
-        h32 = PlanBuilder.buildPlace(a, "P32", "hosted node by second node 2", en3);
+        h11 = PlanBuilder.buildPlace(n, "P11", "master node 1", en1);
+        h12 = PlanBuilder.buildPlace(n, "P12", "master node 2", en1);
+        h21 = PlanBuilder.buildPlace(n, "P21", "second node 1", en2);
+        h22 = PlanBuilder.buildPlace(n, "P22", "second node 2", en2);
+        h31 = PlanBuilder.buildPlace(n, "P31", "hosted node by second node 1", en3);
+        h32 = PlanBuilder.buildPlace(n, "P32", "hosted node by second node 2", en3);
 
         pg1 = PlanBuilder.buildPlaceGroup(a, "master node reference group", "master node", p1);
         pg2 = PlanBuilder.buildPlaceGroup(a, "second node reference group", "second node", p2);
@@ -74,19 +72,7 @@ public class TestParallelism extends TestBase
         groupnode2 = PlanBuilder.buildPlaceGroup(a, "all node 2 places", "", h21, h22);
         groupnode3 = PlanBuilder.buildPlaceGroup(a, "all node 3 places", "", h31, h32);
 
-        // Save app in node 1
-        try
-        {
-            e1.ctx.saveApplication(a);
-            e1.ctx.setWorkingAsCurrent(a);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-
-        startEngines();
+        storeNetwork(db1, n);
     }
 
     @Test
@@ -113,7 +99,8 @@ public class TestParallelism extends TestBase
         s4.connectTo(s5);
         s5.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
@@ -168,7 +155,8 @@ public class TestParallelism extends TestBase
         c1.getStartState().connectTo(s1);
         s1.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
@@ -255,7 +243,8 @@ public class TestParallelism extends TestBase
         s1.connectTo(s2);
         s2.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
@@ -327,7 +316,8 @@ public class TestParallelism extends TestBase
         s4.connectTo(s2);
         s2.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
@@ -395,7 +385,8 @@ public class TestParallelism extends TestBase
         s2.connectTo(s3);
         s3.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");
@@ -514,7 +505,8 @@ public class TestParallelism extends TestBase
         s4.connectTo(s5);
         s5.connectTo(c1.getEndState());
 
-        saveAndReloadApp(a, e1);
+        addApplicationToDb(db1, a);
+        startEngines();
 
         // Send the chain to node 2
         log.debug("****SEND CHAIN TO REMOTE NODE*********************************************************");

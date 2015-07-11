@@ -21,6 +21,8 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -31,15 +33,21 @@ public class PlaceGroup extends NamedApplicationObject
 
     @NotNull
     @Size(min = 0, max = 255)
-    protected ArrayList<Place> places;
+    protected List<UUID> places_id = new ArrayList<>();
+
+    transient protected List<Place> places = new ArrayList<>();
 
     public PlaceGroup()
     {
         super();
-        places = new ArrayList<Place>();
     }
 
-    public ArrayList<Place> getPlaces()
+    public List<UUID> getPlacesId()
+    {
+        return this.places_id;
+    }
+
+    public List<Place> getPlaces()
     {
         return places;
     }
@@ -49,7 +57,28 @@ public class PlaceGroup extends NamedApplicationObject
         if (!places.contains(p))
         {
             places.add(p);
-            p.addToGroup(this);
+            places_id.add(p.getId());
+        }
+    }
+
+    void map_places(Network n)
+    {
+        if (this.places == null)
+        {
+            // Happens on deserialization
+            this.places = new ArrayList<>();
+        }
+
+        for (Place e : n.getPlaces().values())
+        {
+            for (UUID i : this.places_id)
+            {
+                if (i.equals(e.getId()))
+                {
+                    this.places.add(e);
+                    break;
+                }
+            }
         }
     }
 }
