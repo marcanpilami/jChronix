@@ -269,13 +269,19 @@ public class ChronixContext
         return res;
     }
 
+    public boolean hasNetworkFile()
+    {
+        File f = new File(getNetworkPath(this.configurationDirectory));
+        return f.isFile();
+    }
+
     public Network loadNetwork() throws ChronixPlanStorageException
     {
         File f = new File(getNetworkPath(this.configurationDirectory));
         log.info(String.format("(%s) Loading network from file %s", this.configurationDirectory, f.getAbsolutePath()));
         Network res = null;
 
-        if (!f.isFile())
+        if (!hasNetworkFile())
         {
             throw new ChronixPlanStorageException("Network file " + f.getAbsolutePath() + " does not exist", null);
         }
