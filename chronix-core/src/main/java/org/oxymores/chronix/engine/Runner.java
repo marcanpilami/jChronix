@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,11 +17,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -59,7 +60,7 @@ import org.oxymores.chronix.exceptions.ChronixInitializationException;
 
 /**
  * <strong>Note: </strong> this class cannot be multi instanciated - there must be only one Runner. Due to parameter resolution cache.
- * 
+ *
  */
 public class Runner extends BaseListener
 {
@@ -80,9 +81,17 @@ public class Runner extends BaseListener
 
             // Log repository
             this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.getContextRoot(), "GLOBALJOBLOG"));
-            if (!(new File(this.logDbPath)).exists() && !(new File(this.logDbPath)).mkdir())
+            File logDb = new File(this.logDbPath);
+            if (!logDb.exists())
             {
-                throw new ChronixInitializationException("Could not create directory " + this.logDbPath);
+                try
+                {
+                    Files.createDirectory(logDb.toPath());
+                }
+                catch (IOException ex)
+                {
+                    throw new ChronixInitializationException("Could not create directory " + this.logDbPath, ex);
+                }
             }
 
             // Internal queue
@@ -440,8 +449,8 @@ public class Runner extends BaseListener
         log.debug(String
                 .format("At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
                         s.getRepresents().getName(), s.getChain().getName(), cp.getLastEndedOccurrenceCd(ctx).getValue(), cp
-                                .getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
-                                .getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
+                        .getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
+                        .getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
         trTransac.commit();
     }
 
