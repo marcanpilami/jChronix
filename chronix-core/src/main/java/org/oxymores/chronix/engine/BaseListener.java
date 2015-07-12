@@ -33,8 +33,8 @@ public class BaseListener implements MessageListener
     protected Connection jmsConnection;
 
     protected String qName;
-    private List<Destination> qDestinations = new ArrayList<Destination>();
-    private List<MessageConsumer> qConsumers = new ArrayList<MessageConsumer>();
+    private List<Destination> qDestinations = new ArrayList<>();
+    private List<MessageConsumer> qConsumers = new ArrayList<>();
 
     protected void init(Broker b, boolean initTransacContext, boolean initHistoryContext) throws JMSException
     {
