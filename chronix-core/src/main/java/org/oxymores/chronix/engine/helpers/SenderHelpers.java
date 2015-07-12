@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine.helpers;
 
 import java.util.ArrayList;
@@ -167,10 +166,8 @@ public class SenderHelpers
 
     // Event
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // History
-
     public static void sendHistory(RunLog rl, ChronixContext ctx, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
     {
         // Always send both to ourselves and to the supervisor
@@ -201,10 +198,8 @@ public class SenderHelpers
 
     // History
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // Application
-
     // Should only be used by tests (poor performances)
     public static void sendApplication(Application a, ExecutionNode target, ChronixContext ctx) throws JMSException
     {
@@ -259,10 +254,8 @@ public class SenderHelpers
 
     // Application
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // Send command to a runner agent directly (total shun of the engine)
-
     // Should only be used by tests (poor performances)
     public static void sendShellCommand(String cmd, ExecutionNode target, ChronixContext ctx) throws JMSException
     {
@@ -287,7 +280,7 @@ public class SenderHelpers
         String qName = String.format(Constants.Q_RUNNER, target.getBrokerName());
         log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, cmd));
         Destination destination = jmsSession.createQueue(qName);
-        Destination replyTo = jmsSession.createQueue(String.format(Constants.Q_ENDOFJOB, ctx.getLocalNode().getId()));
+        Destination replyTo = jmsSession.createQueue(String.format(Constants.Q_ENDOFJOB, ctx.getLocalNode().getBrokerName()));
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);
         m.setJMSReplyTo(replyTo);
@@ -302,10 +295,8 @@ public class SenderHelpers
 
     // Send command to a runner agent directly (total shun of the engine)
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // PipelineJob
-
     // Should only be used by tests (poor performances)
     public static void sendPipelineJobToRunner(PipelineJob pj, ExecutionNode target, ChronixContext ctx) throws JMSException
     {
@@ -367,7 +358,6 @@ public class SenderHelpers
 
     // PipelineJob
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // State calendar pointers
     public static void sendCalendarPointer(CalendarPointer cp, Calendar ca, Session jmsSession, MessageProducer jmsProducer, boolean commit, ChronixContext ctx) throws JMSException
@@ -594,7 +584,6 @@ public class SenderHelpers
 
     // restart orders
     // /////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////
     // Tokens
     public static void sendTokenRequest(TokenRequest tr, ChronixContext ctx, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
