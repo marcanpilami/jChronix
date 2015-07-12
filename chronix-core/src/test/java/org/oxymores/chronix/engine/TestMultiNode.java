@@ -38,7 +38,7 @@ public class TestMultiNode extends TestBase
     public void before() throws Exception
     {
         e1 = addEngine(db1, "e1");
-        e2 = addEngine(db1, "e2", "TransacUnit2", "HistoryUnit2");
+        e2 = addEngine(db2, "e2", "TransacUnit2", "HistoryUnit2");
         e3 = addRunner(db3, "e3", "localhost", 1804);
 
         // Create a test application and save it inside context
@@ -52,6 +52,7 @@ public class TestMultiNode extends TestBase
         en1.setConsole(true);
         en1.connectTo(en2, NodeConnectionMethod.TCP);
         en2.connectTo(en3, NodeConnectionMethod.RCTRL);
+        e2.setFeeder(en1);
 
         // Logical network
         p1 = PlanBuilder.buildPlace(n, "master node", "master node", en1);
@@ -71,6 +72,7 @@ public class TestMultiNode extends TestBase
     @Test
     public void testSend()
     {
+        storeNetwork(db2, n); // Avoid some restarts
         addApplicationToDb(db1, a1);
         startEngines();
         try
@@ -126,7 +128,9 @@ public class TestMultiNode extends TestBase
         // Test reception is OK
         Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
+        {
             Assert.fail("No application in remote context after reception");
+        }
 
         Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
         Assert.assertEquals(1, a2.getChains().size());
@@ -148,9 +152,8 @@ public class TestMultiNode extends TestBase
     @Test
     public void testCalendarTransmission()
     {
-        log.debug("****CREATE CHAIN**********************************************************************");
+        storeNetwork(db2, n); // Avoid some restarts
 
-        // Build the test chains //////////////////////
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain using calendar", "chain2", pg2);
@@ -166,7 +169,6 @@ public class TestMultiNode extends TestBase
         State s2 = PlanBuilder.buildState(c2, pg1, no);
         c2.getStartState().connectTo(s2);
         s2.connectTo(c2.getEndState());
-        // //////////////////////////////////////////////
 
         log.debug("****SAVE CHAIN************************************************************************");
         addApplicationToDb(db1, a1);
@@ -188,7 +190,9 @@ public class TestMultiNode extends TestBase
         // Test reception is OK
         Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
+        {
             Assert.fail("No application in remote context after reception");
+        }
         Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
 
         TypedQuery<CalendarPointer> q2 = e1.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
@@ -199,7 +203,7 @@ public class TestMultiNode extends TestBase
         try
         {
             SenderHelpers.sendCalendarPointerShift(1, s1, e1.ctx);
-            Thread.sleep(500);
+            Thread.sleep(1000);
         }
         catch (Exception e4)
         {
@@ -221,12 +225,7 @@ public class TestMultiNode extends TestBase
             Assert.fail(e3.getMessage());
         }
 
-        try
-        {
-            Thread.sleep(2000);
-        }
-        catch (InterruptedException e3)
-        {}
+        sleep(2);
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
         Assert.assertEquals(1, res.size());
 
@@ -256,6 +255,7 @@ public class TestMultiNode extends TestBase
     @Test
     public void testRemoteHostedAgent()
     {
+        storeNetwork(db2, n); // Avoid some restarts
         log.debug("****CREATE CHAIN**********************************************************************");
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
@@ -289,7 +289,6 @@ public class TestMultiNode extends TestBase
         State s9 = PlanBuilder.buildState(c2, pg1, no);
         c2.getStartState().connectTo(s9);
         s9.connectTo(c2.getEndState());
-        // //////////////////////////////////////////////
 
         log.debug("****SAVE CHAIN************************************************************************");
         addApplicationToDb(db1, a1);
@@ -310,7 +309,9 @@ public class TestMultiNode extends TestBase
         // Test reception is OK
         Application a2 = e2.ctx.getApplicationByName("Multinode test");
         if (a2 == null)
+        {
             Assert.fail("No application in remote context after reception");
+        }
         Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
 
         TypedQuery<CalendarPointer> q2 = e1.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);

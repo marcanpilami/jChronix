@@ -58,4 +58,5 @@ public final class Constants
     public static final String Q_RUNNER = "Q.%s.RUNNER";
     public static final String Q_RUNNERMGR = "Q.%s.RUNNERMGR";
     public static final String Q_META = "Q.%s.APPLICATION";
+    public static final String Q_BOOTSTRAP = "Q.CONSOLE.BOOTSTRAP";
 }

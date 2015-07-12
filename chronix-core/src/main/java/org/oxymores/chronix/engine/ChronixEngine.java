@@ -43,8 +43,8 @@ public class ChronixEngine extends Thread
     private static Logger log = Logger.getLogger(ChronixEngine.class);
 
     private boolean runnerMode;
-    private int runnerPort;
-    private String runnerHost;
+    private int runnerPort, feederPort;
+    private String runnerHost, feederHost;
 
     protected ChronixContext ctx;
     protected String dbPath;
@@ -108,73 +108,74 @@ public class ChronixEngine extends Thread
 
     //
     // ///////////////////////////////////////////////////////////////
-    protected void startEngine(boolean blocking, boolean purgeQueues)
+    protected void startEngine(boolean blocking, boolean purgeQueues) throws Exception
     {
         log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
-        try
+        this.startCritical.acquire();
+        this.threadInit.release(1);
+
+        // Remote nodes must fetch the network on startup if not already present
+        if (!runnerMode && feederHost != null && !ctx.hasNetworkFile())
         {
-            this.startCritical.acquire();
-            this.threadInit.release(1);
-
-            // Context
-            if (!runnerMode)
+            BootstrapListener bl = new BootstrapListener(ctx, localNodeName, feederHost, feederPort);
+            if (!bl.fetchNetwork())
             {
-                preContextLoad();
-                this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.localNodeName, false, this.historyDbPath, this.transacDbPath);
-                postContextLoad();
+                throw new ChronixInitializationException("could not fetch network from remote node. Will not be able to start. See errors above for details.");
             }
-
-            // Mock-up for hosted nodes
-            if (runnerMode)
-            {
-                ExecutionNode e = new ExecutionNode();
-                e.setConsole(false);
-                e.setDns(this.runnerHost);
-                e.setqPort(this.runnerPort);
-                e.setName(this.localNodeName);
-                this.ctx.setLocalNode(e);
-            }
-
-            // Broker with all the consumer threads
-            if (this.broker == null)
-            {
-                this.broker = new Broker(this.ctx, purgeQueues, !this.runnerMode, true);
-            }
-            else
-            {
-                this.broker.resetContext(ctx);
-            }
-            this.broker.setNbRunners(this.nbRunner);
-            if (!runnerMode)
-            {
-                this.broker.registerListeners(this);
-            }
-            else
-            {
-                this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
-            }
-
-            // Active sources agent
-            if (!this.runnerMode && broker.getEmf() != null)
-            {
-                this.stAgent = new SelfTriggerAgent();
-                this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
-            }
-
-            // Done
-            this.startCritical.release();
-            log.info("Engine for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
-
-            if (blocking)
-            {
-                stop.acquire();
-            }
-
         }
-        catch (Exception e)
+
+        // Context
+        if (!runnerMode)
         {
-            log.fatal("The engine has failed to start", e);
-            this.run = false;
+            preContextLoad();
+            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, this.localNodeName, false, this.historyDbPath, this.transacDbPath);
+            postContextLoad();
+        }
+
+        // Mock-up for hosted nodes
+        if (runnerMode)
+        {
+            ExecutionNode e = new ExecutionNode();
+            e.setConsole(false);
+            e.setDns(this.runnerHost);
+            e.setqPort(this.runnerPort);
+            e.setName(this.localNodeName);
+            this.ctx.setLocalNode(e);
+        }
+
+        // Broker with all the consumer threads
+        if (this.broker == null)
+        {
+            this.broker = new Broker(this.ctx, purgeQueues, !this.runnerMode, true);
+        }
+        else
+        {
+            this.broker.resetContext(ctx);
+        }
+        this.broker.setNbRunners(this.nbRunner);
+        if (!runnerMode)
+        {
+            this.broker.registerListeners(this);
+        }
+        else
+        {
+            this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
+        }
+
+        // Active sources agent
+        if (!this.runnerMode && broker.getEmf() != null)
+        {
+            this.stAgent = new SelfTriggerAgent();
+            this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection());
+        }
+
+        // Done
+        this.startCritical.release();
+        log.info("Engine for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
+
+        if (blocking)
+        {
+            stop.acquire();
         }
     }
 
@@ -185,9 +186,14 @@ public class ChronixEngine extends Thread
         while (this.run)
         {
             // First : start!
-            startEngine(false, false);
-            if (!run)
+            try
             {
+                startEngine(false, false);
+            }
+            catch (Exception e)
+            {
+                log.fatal("The engine has failed to start", e);
+                this.run = false;
                 this.startCritical.release();
                 this.stop.release();
                 this.threadInit.release();
@@ -204,6 +210,7 @@ public class ChronixEngine extends Thread
             {
                 log.error("big problem here", e);
             }
+            log.debug(this.localNodeName + " has actually begun to stop");
 
             // Properly stop the engine
             if (this.stAgent != null)
@@ -301,7 +308,9 @@ public class ChronixEngine extends Thread
         try
         {
             this.startCritical.acquire();
+            threadInit.acquire();
             this.run = false;
+            log.debug(this.localNodeName + " stop sequence starts now");
             this.stop.release();
         }
         catch (InterruptedException e)
@@ -323,10 +332,6 @@ public class ChronixEngine extends Thread
         {
             try
             {
-                // Create network
-                Network n = PlanBuilder.buildLocalDnsNetwork();
-                this.ctx.saveNetwork(n);
-
                 // Create OPERATIONS application
                 Application a = OperationsApplication.getNewApplication(this.ctx);
                 this.ctx.saveApplication(a);
@@ -394,5 +399,16 @@ public class ChronixEngine extends Thread
     public void setRunnerHost(String host)
     {
         this.runnerHost = host;
+    }
+
+    public void setFeeder(String host, int port)
+    {
+        this.feederHost = host;
+        this.feederPort = port;
+    }
+
+    public void setFeeder(ExecutionNode en)
+    {
+        this.setFeeder(en.getHost().getDns(), en.getqPort());
     }
 }
