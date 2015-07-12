@@ -24,7 +24,7 @@ import org.oxymores.chronix.core.timedata.RunLog;
 
 class LogHelpers
 {
-    private static Logger log  = Logger.getLogger(LogHelpers.class);
+    private static Logger log = Logger.getLogger(LogHelpers.class);
 
     public static List<RunLog> displayAllHistory(ChronixContext ctx)
     {
@@ -53,7 +53,7 @@ class LogHelpers
 
     public static List<RunLog> waitForHistoryCount(ChronixContext ctx, int expected)
     {
-        return waitForHistoryCount(ctx, expected, 60000);
+        return waitForHistoryCount(ctx, expected, 60);
     }
 
     public static List<RunLog> waitForHistoryCount(ChronixContext ctx, int expected, int timeoutSec)
@@ -61,7 +61,7 @@ class LogHelpers
         List<RunLog> res = null;
         long s = (new DateTime()).getMillis();
         int nb = 0;
-        while (nb != expected && (new DateTime()).getMillis() - s < timeoutSec * 1000)
+        while (nb < expected && (new DateTime()).getMillis() - s < timeoutSec * 1000)
         {
             try
             {
