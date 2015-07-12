@@ -109,11 +109,11 @@ public class Runner extends BaseListener
             // Register on Log Shipping queue
             this.subscribeTo(String.format(Constants.Q_LOGFILE, brokerName));
 
-            // Register on Request queue
-            this.subscribeTo(qName);
-
             // Register on End of job queue
             destEndJob = this.subscribeTo(String.format(Constants.Q_ENDOFJOB, brokerName));
+
+            // Register on Request queue
+            this.subscribeTo(qName);
         }
         catch (JMSException e)
         {
