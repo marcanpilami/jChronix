@@ -21,7 +21,6 @@ package org.oxymores.chronix.engine;
 
 import java.util.Date;
 import java.util.UUID;
-import java.util.logging.Level;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -55,7 +54,7 @@ class OrderListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, true);
-        log.debug(String.format("(%s) Initializing OrderListener", ctx.getContextRoot()));
+        log.debug(String.format("Initializing OrderListener"));
 
         // Register current object as a listener on ORDER queue
         this.qName = String.format(Constants.Q_ORDER, brokerName);

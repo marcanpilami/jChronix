@@ -24,6 +24,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -110,7 +111,7 @@ public class ChronixEngine extends Thread
     // ///////////////////////////////////////////////////////////////
     protected void startEngine(boolean blocking, boolean purgeQueues) throws Exception
     {
-        log.info(String.format("(%s) engine starting (%s)", this.dbPath, this));
+        log.info(String.format("Engine %s starting on database %s", this.localNodeName, this.dbPath));
         this.startCritical.acquire();
         this.threadInit.release(1);
 
@@ -120,7 +121,7 @@ public class ChronixEngine extends Thread
             BootstrapListener bl = new BootstrapListener(ctx, localNodeName, feederHost, feederPort);
             if (!bl.fetchNetwork())
             {
-                throw new ChronixInitializationException("could not fetch network from remote node. Will not be able to start. See errors above for details.");
+                throw new ChronixInitializationException("Could not fetch network from remote node. Will not be able to start. See errors above for details.");
             }
         }
 
@@ -171,7 +172,7 @@ public class ChronixEngine extends Thread
 
         // Done
         this.startCritical.release();
-        log.info("Engine for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
+        log.info("Engine has finished its boot sequence");
 
         if (blocking)
         {
@@ -182,6 +183,8 @@ public class ChronixEngine extends Thread
     @Override
     public void run()
     {
+        MDC.put("node", this.localNodeName);
+
         // Only does one thing: reload configuration and stop on trigger
         while (this.run)
         {
@@ -304,7 +307,7 @@ public class ChronixEngine extends Thread
 
     public void stopEngine()
     {
-        log.info("The main engine has received a stop request");
+        log.info(this.localNodeName + " main engine has received a stop request");
         try
         {
             this.startCritical.acquire();

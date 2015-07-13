@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ class TranscientListener extends BaseListener
     void startListening(Broker broker) throws JMSException
     {
         this.init(broker, true, false);
-        log.debug(String.format("(%s) Initializing TranscientListener", ctx.getContextRoot()));
+        log.debug(String.format("Initializing TranscientListener"));
 
         // Register current object as a listener on LOG queue
         qName = String.format(Constants.Q_CALENDARPOINTER, brokerName);
@@ -139,8 +138,8 @@ class TranscientListener extends BaseListener
             }
             log.debug(String.format(
                     "The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]", cp
-                            .getNextRunOccurrenceCd(ctx).getValue(), cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp
-                            .getLastEndedOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), represents));
+                    .getNextRunOccurrenceCd(ctx).getValue(), cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp
+                    .getLastEndedOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), represents));
 
             // Re analyse events that may benefit from this calendar change
             // All events still there are supposed to be waiting for a new analysis.

@@ -34,7 +34,7 @@ class LogListener extends BaseListener
     {
         // Base initialization
         this.init(b, true, true);
-        log.debug(String.format("(%s) Initializing LogListener", ctx.getContextRoot()));
+        log.debug(String.format("Initializing LogListener"));
 
         // Register current object as a listener on LOG queue
         qName = String.format(Constants.Q_LOG, brokerName);

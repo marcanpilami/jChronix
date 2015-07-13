@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
@@ -85,7 +84,7 @@ class SelfTriggerAgent extends Thread
 
     void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
     {
-        log.debug(String.format("(%s) Agent responsible for clocks will start", ctx.getContextRoot()));
+        log.debug(String.format("Agent responsible for clocks will start"));
 
         // Save pointers
         this.loop = new Semaphore(0);
@@ -110,7 +109,7 @@ class SelfTriggerAgent extends Thread
             }
             // TODO: select only clocks with local consequences
         }
-        log.debug(String.format("(%s) Agent responsible for clocks will handle %s clock nodes", ctx.getContextRoot(), this.nodes.size()));
+        log.debug(String.format("Agent responsible for clocks will handle %s clock nodes", this.nodes.size()));
         for (int i = 0; i < this.nodes.size(); i++)
         {
             log.debug(String.format("\t\t" + this.nodes.get(i).getName()));
@@ -214,7 +213,9 @@ class SelfTriggerAgent extends Thread
             return i.toDurationMillis();
         }
         else
+        {
             return 0;
+        }
     }
 
     protected void preLoopHook()

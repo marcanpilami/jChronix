@@ -99,7 +99,7 @@ public class Runner extends BaseListener
 
             // Log
             this.qName = String.format(Constants.Q_RUNNERMGR, brokerName);
-            log.debug(String.format("(%s) Registering a jobrunner listener on queue %s", ctx.getContextRoot(), qName));
+            log.debug(String.format("Registering a jobrunner listener on queue %s", qName));
 
             // Outgoing producer for running commands
             this.producerRunDescription = this.jmsSession.createProducer(null);

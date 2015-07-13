@@ -88,7 +88,6 @@ public class ChronixContext
      * @param appConfDirectory
      * @param transacUnitName
      * @param historyUnitName
-     * @param brokerInterface
      * @param simulation
      * @return
      */
@@ -112,7 +111,7 @@ public class ChronixContext
      * @param appConfDirectory
      * @param transacUnitName
      * @param historyUnitName
-     * @param brokerInterface
+     * @param localNodeName
      * @param simulation
      * @param historyDBPath
      * @param transacDbPath
@@ -210,7 +209,6 @@ public class ChronixContext
     {
         if (validatorFactory == null)
         {
-            // Configuration<?> configuration = Validation.byDefaultProvider().configure();
             validatorFactory = Validation.buildDefaultValidatorFactory();
         }
         return validatorFactory.getValidator();
@@ -239,7 +237,7 @@ public class ChronixContext
 
     private Application loadApplication(File dataFile, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Loading an application from file %s", this.configurationDirectory, dataFile.getAbsolutePath()));
+        log.info(String.format("Loading an application from file %s", dataFile.getAbsolutePath()));
         Application res = null;
 
         // Read the XML
@@ -253,7 +251,7 @@ public class ChronixContext
         }
 
         // TODO: Don't load applications that are not active on the local node
-        if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).size() == 0)
+        if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
         {
             // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
             // return null;
@@ -278,7 +276,7 @@ public class ChronixContext
     public Network loadNetwork() throws ChronixPlanStorageException
     {
         File f = new File(getNetworkPath(this.configurationDirectory));
-        log.info(String.format("(%s) Loading network from file %s", this.configurationDirectory, f.getAbsolutePath()));
+        log.info(String.format("Loading network from file %s", f.getAbsolutePath()));
         Network res = null;
 
         if (!hasNetworkFile())
@@ -315,7 +313,7 @@ public class ChronixContext
 
     public static void saveApplication(Application a, File dir) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Saving application %s to temp file", dir, a.getName()));
+        log.info(String.format("Saving application %s to temp file inside database %s", a.getName(), dir));
         if (a.isFromCurrentFile())
         {
             a.setVersion(a.getVersion() + 1);
@@ -344,7 +342,7 @@ public class ChronixContext
 
     public static void saveNetwork(Network n, File dir) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Saving network to file", dir));
+        log.info(String.format("Saving network to file inside database %s", dir));
         try (FileOutputStream fos = new FileOutputStream(getNetworkPath(dir)))
         {
             xmlUtility.toXML(n, fos);
@@ -383,18 +381,18 @@ public class ChronixContext
 
     public static void setWorkingAsCurrent(Application a, File dir) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Promoting temp file for application %s as the active file", dir, a.getName()));
+        log.info(String.format("Promoting temp file for application %s as the active file inside database %s", a.getName(), dir));
         String workingDataFilePath = getWorkingPath(a.id, dir);
         String currentDataFilePath = getActivePath(a.id, dir);
 
         File workingData = new File(workingDataFilePath);
         if (!workingData.exists())
         {
-            throw new ChronixPlanStorageException("work file does not exist. You sure 'bout that? You seem to have made no changes!", null);
+            throw new ChronixPlanStorageException("Work file does not exist. You sure 'bout that? You seem to have made no changes!", null);
         }
         File currentData = new File(currentDataFilePath);
 
-        log.info(String.format("(%s) Current state of application %s will be saved before switching as version %s", dir, a.getName(), a.getVersion()));
+        log.info(String.format("Current state of application %s will be saved before switching as version %s", a.getName(), a.getVersion()));
         String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + a.getVersion() + "_.crn";
         File nextArchiveDataFile = new File(nextArchiveDataFilePath);
 
@@ -410,7 +408,7 @@ public class ChronixContext
         }
 
         // Move WORKING as the new CURRENT
-        log.debug(String.format("(%s) New path will be %s", dir, currentDataFilePath));
+        log.debug(String.format("New path will be %s", currentDataFilePath));
         if (!workingData.renameTo(new File(currentDataFilePath)))
         {
             throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
@@ -420,7 +418,7 @@ public class ChronixContext
 
     public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
     {
-        log.info(String.format("(%s) Deleting active file for application %s", this.configurationDirectory, a.getName()));
+        log.info(String.format("Deleting inside database %s the active file for application %s", this.configurationDirectory, a.getName()));
         String currentDataFilePath = getActivePath(a.id, this.configurationDirectory);
 
         File f = new File(currentDataFilePath);

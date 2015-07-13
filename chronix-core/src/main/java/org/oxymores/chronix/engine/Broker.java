@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.io.File;
@@ -162,7 +161,7 @@ class Broker
         resetLinks();
 
         // Start
-        log.info(String.format("(%s) The message broker will now start", ctx.getContextRoot()));
+        log.info(String.format("The message broker will now start"));
         try
         {
             broker.start();
@@ -325,7 +324,7 @@ class Broker
 
     void stopBroker()
     {
-        log.info(String.format("(%s) The message broker will now stop", this.ctx.getContextRoot()));
+        log.info(String.format("The message broker will now stop"));
         try
         {
             stopAllOutgoingLinks();
@@ -334,11 +333,11 @@ class Broker
             this.broker.waitUntilStopped();
             this.factory = null;
             this.engine = null;
-            log.debug("Broker has ended its stop sequence " + this.ctx.getContextRoot());
+            log.debug("Broker has ended its stop sequence");
         }
         catch (Exception e)
         {
-            log.warn("an error occured while trying to stop the broker", e);
+            log.warn("An error occured while trying to stop the broker", e);
         }
     }
 
@@ -351,7 +350,10 @@ class Broker
 
     private void stopAllOutgoingLinks() throws ChronixInitializationException
     {
-        log.debug("Stopping all outgoing network connectors " + ctx.getContextRoot());
+        if (this.broker.isStarted())
+        {
+            log.debug("Stopping all outgoing network connectors " + ctx.getContextRoot());
+        }
         try
         {
             for (NetworkConnector nc : this.broker.getNetworkConnectors())
@@ -384,7 +386,7 @@ class Broker
                 opened.add(nl.getNodeTo().getBrokerUrl());
 
                 String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
-                log.info(String.format("(%s) This broker will open a channel towards %s", ctx.getContextRoot(), url));
+                log.info(String.format("The broker will open a channel towards %s", url));
                 NetworkConnector tc;
                 try
                 {
@@ -408,8 +410,7 @@ class Broker
             {
                 if (nl.getMethod().equals(NodeConnectionMethod.TCP))
                 {
-                    log.info(String.format("(%s) This broker should receive channels incoming from %s:%s", ctx.getContextRoot(), nl.getNodeFrom().getDns(),
-                            nl.getNodeFrom().getqPort()));
+                    log.info(String.format("The broker should receive channels incoming from %s:%s", nl.getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
                 }
             }
         }

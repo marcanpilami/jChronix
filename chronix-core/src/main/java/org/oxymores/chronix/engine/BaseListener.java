@@ -62,7 +62,7 @@ public class BaseListener implements MessageListener
 
     protected Queue subscribeTo(String qName) throws JMSException
     {
-        log.debug(String.format("Broker %s: registering a message listener on queue %s", brokerName, qName));
+        log.debug(String.format("Registering a message listener on queue %s", qName));
         Queue qDestination = this.jmsSession.createQueue(qName);
         MessageConsumer qConsumer = this.jmsSession.createConsumer(qDestination);
         qConsumer.setMessageListener(this);
