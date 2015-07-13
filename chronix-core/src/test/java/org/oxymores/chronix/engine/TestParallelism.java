@@ -34,7 +34,7 @@ public class TestParallelism extends TestBase
         a = PlanBuilder.buildApplication("// test", "test");
 
         e1 = addEngine(db1, "e1");
-        e2 = addEngine(db1, "e2", "TransacUnit2", "HistoryUnit2");
+        e2 = addEngine(db2, "e2", "TransacUnit2", "HistoryUnit2");
         e3 = addRunner(db3, "e3", "localhost", 1804);
 
         // Create a test application and save it inside context
@@ -73,6 +73,7 @@ public class TestParallelism extends TestBase
         groupnode3 = PlanBuilder.buildPlaceGroup(a, "all node 3 places", "", h31, h32);
 
         storeNetwork(db1, n);
+        storeNetwork(db2, n);
     }
 
     @Test
