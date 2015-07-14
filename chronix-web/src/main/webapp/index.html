@@ -1,107 +1,36 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<meta charset="utf-8"    />
-	<title>Chronix administration console</title>
-	<link rel="stylesheet" type="text/css" media="screen" href="test.css" />
-	<link type="text/css"
-		href="lib/ui-lightness/jquery-ui-1.10.3.custom.css" rel="Stylesheet" />
-	<link type="text/css" href="lib/slick.grid.css" rel="Stylesheet" />
-	<script type="text/javascript" src="lib/jquery-1.10.2.js"></script>
-	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.min.js"></script>
-	<script type="text/javascript" src="lib/jquery.debounce-1.0.5.js"></script>
-	<script type="text/javascript" src="lib/raphael.js"></script>
-	<script type="text/javascript" src="lib/jquery.event.drag-2.2.js"></script>
-	<script type="text/javascript" src="lib/jquery.event.drop-2.2.js"></script>
-	<script type="text/javascript" src="lib/slick.core.js"></script>
-	<script type="text/javascript" src="lib/slick.editors.js"></script>
-	<script type="text/javascript" src="lib/slick.grid.js"></script>
-	<script type="text/javascript" src="lib/slick.dataview.js"></script>
-	<script type="text/javascript" src="lib/slick.rowselectionmodel.js"></script>
-	<script type="text/javascript" src="lib/uuid.js"></script>
-	<script type="text/javascript" src="lib/arbor.js"></script>
-	<script type="text/javascript" src="lib/date.js"></script>
-	<script type="text/javascript" src="Hello?js"></script>
-	<script type="text/javascript" src="common.js"></script>
-	<script type="text/javascript" src="application.js"></script>
-	<script type="text/javascript" src="chain.js"></script>
-	<script type="text/javascript" src="commands.js"></script>
-	<script type="text/javascript" src="external.js"></script>
-	<script type="text/javascript" src="network_logical.js"></script>
-	<script type="text/javascript" src="network_phy.js"></script>
-	<script type="text/javascript" src="rec.js"></script>
-	<script type="text/javascript" src="calendar.js"></script>
-	<script type="text/javascript" src="main.js"></script>
-</head>
-<body>
-	<div id="raphBug" style="height: 0px;"></div>
 
-	<div id="tabs" style="width: 100%;">
-		<ul>
-			<li><a href="#tab-pn">Physical Network</a></li>
-			<li><a href="#tab-ln">Logical Network</a></li>
-			<li><a href="#tab-schedule">Schedules</a></li>
-		 	<li><a href="#tab-cal">Functional Calendars</a></li>
-		 	<li><a href="#tab-command">Commands</a></li>
-		 	<li><a href="#tab-external">Externals</a></li>
-		 	<li><a href="#tab-chain">Chains</a></li>
-		</ul>
-
-		
-		<div id="tab-command" class='tabPanel'>
-			<div style="display: table; height: 100%; width:100%; table-layout: fixed;">
-				<div style="display: table-row;"><label>Search:</label> <input type="text" id="txtSearchCmd" style="width: 200px;"></div>
-				<div id="gridCommandsContainer" style="display: table-row; height: 100%;">
-					<div id="gridCommands" style="height: 100%;"></div>
-				</div>
-			</div>
-		</div>
-
-		<div id="tab-chain"  class='tabPanel'>
-			<div id="container1" style='height: 100%;' class='panelcontainer'>
-				<div id="leftbar" class="leftbar">
-					<div id="dgChainPaletteMisc" style="height: 50px;">
-						<label>Drag and drop to the right</label>
-						<label id='chainPaletteAnd' class='paletteDrag'>AND</label>
-						<label id='chainPaletteOr' class='paletteDrag'>OR</label>
-					</div>
-					<div id="dgChainPaletteChains" style="height: 15%;"></div>
-					<div id="dgChainPaletteCommands" style="height: calc(55% - 50px);"></div>
-					<div id="dgChainPaletteClocks" style="height: 15%;"></div>
-					<div id="dgChainPaletteExternals" style="height: 15%;"></div>
-				</div>
-				<div id="chaintabs" class="rightpanel" style='height: 100%;'>
-					<ul></ul>
-				</div>
-			</div>
-		</div>
-
-		<div id="tab-schedule" class='tabPanel'>
-		</div>
-		
-		<div id="tab-pn" class='tabPanel'>
-		</div>
-		
-		<div id="tab-ln"  class='tabPanel'>
-		</div>
-		
-		<div id="tab-cal"  class='tabPanel'>
-		</div>
-		
-		<div id="tab-external"  class='tabPanel'>
-		</div>
-		
-	</div> 
-
-	<div id="bar">
-		Editing application <span id="appName"></span> (<span id="appDescr" class='descrtxt'></span>) - <span id="appActivity"></span>
-		<button onclick="send();">Save working copy on server</button>
-		<button onclick="switchApp();">Activate latest working copy</button>
-		<button onclick="createOrLoadApp();">Load/Create application (cancel unsaved work)</button>
-		<button onclick="validateApp();">Validate</button>
-		<span id="alert"></span>
-		<span id="greetings"></span>
-	</div>
-	
-</body>
+<html style='height: 100%;'>
+    <head>
+        <title>Chronix console</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <script src="lib/jquery-2.1.4.min.js"></script>
+        <script src="lib/jqui/jquery-ui.min.js"></script>
+        <script src="lib/jsplumb/v1.7.5/js/dom.jsPlumb-1.7.5-min.js"></script>
+        <script src="js/main.js"></script>
+        
+        <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.min.css">
+        <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.structure.min.css">
+        <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.theme.min.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body style='height: 100%;'>
+        <div id='tabs'>
+            <ul>
+                <li><a href="#phynodes">Actual network</a></li>
+                <li><a href="#groups">Application deployment</a></li>
+            </ul>
+            
+            <div id='phynodes'>
+                <div class="drawingPanel" id='node-c' style="height: 100%; width: 100%;">
+                    <div id='t1' class="execnode execnode-console">DDDD</div>
+                    <div id='t2' class="execnode">EEEEE</div>
+                </div>
+            </div>
+            
+            <div id='groups'></div>
+        </div>
+    </body>
 </html>

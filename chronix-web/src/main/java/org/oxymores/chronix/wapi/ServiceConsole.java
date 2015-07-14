@@ -61,7 +61,9 @@ public class ServiceConsole implements IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
+        {
             res.add(CoreToDto.getDTORunLog(rl));
+        }
 
         log.debug("End of call to getLog - returning " + res.size() + " logs");
         return res;
@@ -79,7 +81,9 @@ public class ServiceConsole implements IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
+        {
             res.add(CoreToDto.getDTORunLog(rl));
+        }
 
         log.debug("End of call to getLog - returning " + res.size());
         return res;
@@ -120,7 +124,9 @@ public class ServiceConsole implements IServiceConsoleRest
         ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
 
         for (RunLog rl : q.getResultList())
+        {
             res.add(CoreToDto.getDTORunLog(rl));
+        }
 
         log.debug("End of call to getLogSince - returning " + res.size());
         return res;
@@ -170,7 +176,7 @@ public class ServiceConsole implements IServiceConsoleRest
         try
         {
             Application a = ctx.getApplication(appId);
-            Place p = a.getPlace(placeId);
+            Place p = this.ctx.getNetwork().getPlace(placeId);
             State s = a.getState(stateId);
             SenderHelpers.runStateAlone(s, p, ctx);
         }

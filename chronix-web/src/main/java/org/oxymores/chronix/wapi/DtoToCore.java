@@ -70,38 +70,54 @@ public class DtoToCore
         end.setDescription("Marks the end of a chain. Can be ignored in global plans");
         a.addActiveElement(end);
 
+        //for (DTOExecutionNode e : d.getNodes())
+        //    a.addNode(getExecutionNode(e, a));
         for (DTOExecutionNode e : d.getNodes())
-            a.addNode(getExecutionNode(e, a));
-
-        for (DTOExecutionNode e : d.getNodes())
+        {
             setExecutionNodeNetwork(e, a);
+        }
 
-        for (DTOPlace e : d.getPlaces())
-            a.addPlace(getPlace(e, a));
-
+        //for (DTOPlace e : d.getPlaces())
+        //    a.addPlace(getPlace(e, a));
         for (DTOPlaceGroup e : d.getGroups())
+        {
             a.addGroup(getPlaceGroup(e, a));
+        }
 
         for (DTORRule e : d.getRrules())
+        {
             a.addRRule(getRRule(e));
+        }
 
         for (DTOCalendar e : d.getCalendars())
+        {
             a.addCalendar(getCalendar(e, a));
+        }
 
         for (DTOShellCommand e : d.getShells())
+        {
             a.addActiveElement(getShellCommand(e));
+        }
 
         for (DTOClock e : d.getClocks())
+        {
             a.addActiveElement(getClock(e, a));
+        }
 
         for (DTOExternal e : d.getExternals())
+        {
             a.addActiveElement(getExternal(e));
+        }
 
         for (DTONextOccurrence e : d.getCalnexts())
+        {
             a.addActiveElement(getNextOccurrence(e, a));
+        }
 
         for (DTOChain e : d.getChains())
+        {
             a.addActiveElement(getChain(e, a, d));
+        }
 
         return a;
     }
@@ -148,13 +164,21 @@ public class DtoToCore
             else
             {
                 if (s.isAnd())
+                {
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getAndId())));
+                }
                 if (s.isOr())
+                {
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getOrId())));
+                }
                 if (s.isStart())
+                {
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getStartId())));
+                }
                 if (s.isEnd())
+                {
                     z.setRepresents(a.getActiveNode(UUID.fromString(da.getEndId())));
+                }
             }
         }
 
@@ -169,7 +193,9 @@ public class DtoToCore
             z.setGuard2(s.getGuard2());
             z.setGuard3(s.getGuard3());
             if ((s.getGuard4() != null) && (!s.getGuard4().isEmpty()))
+            {
                 z.setGuard4(UUID.fromString(s.getGuard4()));
+            }
             z.setId(UUID.fromString(s.getId()));
             z.setStateFrom(r.getState(UUID.fromString(s.getFrom())));
             z.setStateTo(r.getState(UUID.fromString(s.getTo())));
@@ -225,10 +251,14 @@ public class DtoToCore
         r.setName(d.getName());
 
         for (String s : d.getRulesADD())
+        {
             r.addRRuleADD(a.getRRule(UUID.fromString(s)));
+        }
 
         for (String s : d.getRulesEXC())
+        {
             r.addRRuleEXC(a.getRRule(UUID.fromString(s)));
+        }
 
         return r;
     }
@@ -256,48 +286,48 @@ public class DtoToCore
 
     public static void setExecutionNodeNetwork(DTOExecutionNode d, Application a)
     {
-        ExecutionNode r = a.getNode(UUID.fromString(d.getId()));
+        /*ExecutionNode r = a.getNode(UUID.fromString(d.getId()));
 
-        for (String s : d.getFromTCP())
-        {
-            ExecutionNode remote = a.getNode(UUID.fromString(s));
-            if (!d.isSimpleRunner())
-            {
-                remote.connectTo(r, NodeConnectionMethod.TCP);
-            }
-            else
-            {
-                remote.connectTo(r, NodeConnectionMethod.RCTRL);
-            }
-        }
+         for (String s : d.getFromTCP())
+         {
+         ExecutionNode remote = a.getNode(UUID.fromString(s));
+         if (!d.isSimpleRunner())
+         {
+         remote.connectTo(r, NodeConnectionMethod.TCP);
+         }
+         else
+         {
+         remote.connectTo(r, NodeConnectionMethod.RCTRL);
+         }
+         }*/
 
     }
 
     public static Place getPlace(DTOPlace d, Application a)
     {
         Place r = new Place();
-        r.setDescription(d.getDescription());
-        r.setId(UUID.fromString(d.getId()));
-        r.setName(d.getName());
-        r.setNode(a.getNode(UUID.fromString(d.getNodeid())));
-        r.setProperty1(d.getProp1());
-        r.setProperty2(d.getProp2());
-        r.setProperty3(d.getProp3());
-        r.setProperty4(d.getProp4());
+        /* r.setDescription(d.getDescription());
+         r.setId(UUID.fromString(d.getId()));
+         r.setName(d.getName());
+         r.setNode(a.getNode(UUID.fromString(d.getNodeid())));
+         r.setProperty1(d.getProp1());
+         r.setProperty2(d.getProp2());
+         r.setProperty3(d.getProp3());
+         r.setProperty4(d.getProp4()); */
         return r;
     }
 
     public static PlaceGroup getPlaceGroup(DTOPlaceGroup d, Application a)
     {
         PlaceGroup r = new PlaceGroup();
-        r.setDescription(d.getDescription());
-        r.setId(UUID.fromString(d.getId()));
-        r.setName(d.getName());
+        /* r.setDescription(d.getDescription());
+         r.setId(UUID.fromString(d.getId()));
+         r.setName(d.getName());
 
-        for (String s : d.getPlaces())
-        {
-            r.addPlace(a.getPlace(UUID.fromString(s)));
-        }
+         for (String s : d.getPlaces())
+         {
+         r.addPlace(a.getPlace(UUID.fromString(s)));
+         } */
 
         return r;
     }
@@ -326,352 +356,682 @@ public class DtoToCore
         // ByDay
         String BD = "";
         if (r.isBd01())
+        {
             BD += "MO,";
+        }
         if (r.isBd02())
+        {
             BD += "TU,";
+        }
         if (r.isBd03())
+        {
             BD += "WE,";
+        }
         if (r.isBd04())
+        {
             BD += "TH,";
+        }
         if (r.isBd05())
+        {
             BD += "FR,";
+        }
         if (r.isBd06())
+        {
             BD += "SA,";
+        }
         if (r.isBd07())
+        {
             BD += "SU,";
+        }
         res.setBYDAY(BD);
 
         // ByMonthDay
         String BMD = "";
         if (r.isBmd01())
+        {
             BMD += "01,";
+        }
         if (r.isBmdn01())
+        {
             BMD += "-01,";
+        }
         if (r.isBmd02())
+        {
             BMD += "02,";
+        }
         if (r.isBmdn02())
+        {
             BMD += "-02,";
+        }
         if (r.isBmd03())
+        {
             BMD += "03,";
+        }
         if (r.isBmdn03())
+        {
             BMD += "-03,";
+        }
         if (r.isBmd04())
+        {
             BMD += "04,";
+        }
         if (r.isBmdn04())
+        {
             BMD += "-04,";
+        }
         if (r.isBmd05())
+        {
             BMD += "05,";
+        }
         if (r.isBmdn05())
+        {
             BMD += "-05,";
+        }
         if (r.isBmd06())
+        {
             BMD += "06,";
+        }
         if (r.isBmdn06())
+        {
             BMD += "-06,";
+        }
         if (r.isBmd07())
+        {
             BMD += "07,";
+        }
         if (r.isBmdn07())
+        {
             BMD += "-07,";
+        }
         if (r.isBmd08())
+        {
             BMD += "08,";
+        }
         if (r.isBmdn08())
+        {
             BMD += "-08,";
+        }
         if (r.isBmd09())
+        {
             BMD += "09,";
+        }
         if (r.isBmdn09())
+        {
             BMD += "-09,";
+        }
         if (r.isBmd10())
+        {
             BMD += "10,";
+        }
         if (r.isBmdn10())
+        {
             BMD += "-10,";
+        }
         if (r.isBmd11())
+        {
             BMD += "11,";
+        }
         if (r.isBmdn11())
+        {
             BMD += "-11,";
+        }
         if (r.isBmd12())
+        {
             BMD += "12,";
+        }
         if (r.isBmdn12())
+        {
             BMD += "-12,";
+        }
         if (r.isBmd13())
+        {
             BMD += "13,";
+        }
         if (r.isBmdn13())
+        {
             BMD += "-13,";
+        }
         if (r.isBmd14())
+        {
             BMD += "14,";
+        }
         if (r.isBmdn14())
+        {
             BMD += "-14,";
+        }
         if (r.isBmd15())
+        {
             BMD += "15,";
+        }
         if (r.isBmdn15())
+        {
             BMD += "-15,";
+        }
         if (r.isBmd16())
+        {
             BMD += "16,";
+        }
         if (r.isBmdn16())
+        {
             BMD += "-16,";
+        }
         if (r.isBmd17())
+        {
             BMD += "17,";
+        }
         if (r.isBmdn17())
+        {
             BMD += "-17,";
+        }
         if (r.isBmd18())
+        {
             BMD += "18,";
+        }
         if (r.isBmdn18())
+        {
             BMD += "-18,";
+        }
         if (r.isBmd19())
+        {
             BMD += "19,";
+        }
         if (r.isBmdn19())
+        {
             BMD += "-19,";
+        }
         if (r.isBmd20())
+        {
             BMD += "20,";
+        }
         if (r.isBmdn20())
+        {
             BMD += "-20,";
+        }
         if (r.isBmd21())
+        {
             BMD += "21,";
+        }
         if (r.isBmdn21())
+        {
             BMD += "-21,";
+        }
         if (r.isBmd22())
+        {
             BMD += "22,";
+        }
         if (r.isBmdn22())
+        {
             BMD += "-22,";
+        }
         if (r.isBmd23())
+        {
             BMD += "23,";
+        }
         if (r.isBmdn23())
+        {
             BMD += "-23,";
+        }
         if (r.isBmd24())
+        {
             BMD += "24,";
+        }
         if (r.isBmdn24())
+        {
             BMD += "-24,";
+        }
         if (r.isBmd25())
+        {
             BMD += "25,";
+        }
         if (r.isBmdn25())
+        {
             BMD += "-25,";
+        }
         if (r.isBmd26())
+        {
             BMD += "26,";
+        }
         if (r.isBmdn26())
+        {
             BMD += "-26,";
+        }
         if (r.isBmd27())
+        {
             BMD += "27,";
+        }
         if (r.isBmdn27())
+        {
             BMD += "-27,";
+        }
         if (r.isBmd28())
+        {
             BMD += "28,";
+        }
         if (r.isBmdn28())
+        {
             BMD += "-28,";
+        }
         if (r.isBmd29())
+        {
             BMD += "29,";
+        }
         if (r.isBmdn29())
+        {
             BMD += "-29,";
+        }
         if (r.isBmd30())
+        {
             BMD += "30,";
+        }
         if (r.isBmdn30())
+        {
             BMD += "-30,";
+        }
         if (r.isBmd31())
+        {
             BMD += "31,";
+        }
         if (r.isBmdn31())
+        {
             BMD += "-31,";
+        }
         res.setBYMONTHDAY(BMD);
 
         // ByMonth
         String BM = "";
         if (r.isBm01())
+        {
             BM += "01,";
+        }
         if (r.isBm02())
+        {
             BM += "02,";
+        }
         if (r.isBm03())
+        {
             BM += "03,";
+        }
         if (r.isBm04())
+        {
             BM += "04,";
+        }
         if (r.isBm05())
+        {
             BM += "05,";
+        }
         if (r.isBm06())
+        {
             BM += "06,";
+        }
         if (r.isBm07())
+        {
             BM += "07,";
+        }
         if (r.isBm08())
+        {
             BM += "08,";
+        }
         if (r.isBm09())
+        {
             BM += "09,";
+        }
         if (r.isBm10())
+        {
             BM += "10,";
+        }
         if (r.isBm11())
+        {
             BM += "11,";
+        }
         if (r.isBm12())
+        {
             BM += "12,";
+        }
         res.setBYMONTH(BM);
 
         // ByHour
         String BH = "";
         if (r.isBh00())
+        {
             BH += "00,";
+        }
         if (r.isBh01())
+        {
             BH += "01,";
+        }
         if (r.isBh02())
+        {
             BH += "02,";
+        }
         if (r.isBh03())
+        {
             BH += "03,";
+        }
         if (r.isBh04())
+        {
             BH += "04,";
+        }
         if (r.isBh05())
+        {
             BH += "05,";
+        }
         if (r.isBh06())
+        {
             BH += "06,";
+        }
         if (r.isBh07())
+        {
             BH += "07,";
+        }
         if (r.isBh08())
+        {
             BH += "08,";
+        }
         if (r.isBh09())
+        {
             BH += "09,";
+        }
         if (r.isBh10())
+        {
             BH += "10,";
+        }
         if (r.isBh11())
+        {
             BH += "11,";
+        }
         if (r.isBh12())
+        {
             BH += "12,";
+        }
         if (r.isBh13())
+        {
             BH += "13,";
+        }
         if (r.isBh14())
+        {
             BH += "14,";
+        }
         if (r.isBh15())
+        {
             BH += "15,";
+        }
         if (r.isBh16())
+        {
             BH += "16,";
+        }
         if (r.isBh17())
+        {
             BH += "17,";
+        }
         if (r.isBh18())
+        {
             BH += "18,";
+        }
         if (r.isBh19())
+        {
             BH += "19,";
+        }
         if (r.isBh20())
+        {
             BH += "20,";
+        }
         if (r.isBh21())
+        {
             BH += "21,";
+        }
         if (r.isBh22())
+        {
             BH += "22,";
+        }
         if (r.isBh23())
+        {
             BH += "23,";
+        }
 
         res.setBYHOUR(BH);
 
         // ByMinute
         String BN = "";
         if (r.isBn00())
+        {
             BN += "00,";
+        }
         if (r.isBn01())
+        {
             BN += "01,";
+        }
         if (r.isBn02())
+        {
             BN += "02,";
+        }
         if (r.isBn03())
+        {
             BN += "03,";
+        }
         if (r.isBn04())
+        {
             BN += "04,";
+        }
         if (r.isBn05())
+        {
             BN += "05,";
+        }
         if (r.isBn06())
+        {
             BN += "06,";
+        }
         if (r.isBn07())
+        {
             BN += "07,";
+        }
         if (r.isBn08())
+        {
             BN += "08,";
+        }
         if (r.isBn09())
+        {
             BN += "09,";
+        }
         if (r.isBn10())
+        {
             BN += "10,";
+        }
         if (r.isBn11())
+        {
             BN += "11,";
+        }
         if (r.isBn12())
+        {
             BN += "12,";
+        }
         if (r.isBn13())
+        {
             BN += "13,";
+        }
         if (r.isBn14())
+        {
             BN += "14,";
+        }
         if (r.isBn15())
+        {
             BN += "15,";
+        }
         if (r.isBn16())
+        {
             BN += "16,";
+        }
         if (r.isBn17())
+        {
             BN += "17,";
+        }
         if (r.isBn18())
+        {
             BN += "18,";
+        }
         if (r.isBn19())
+        {
             BN += "19,";
+        }
         if (r.isBn20())
+        {
             BN += "20,";
+        }
         if (r.isBn21())
+        {
             BN += "21,";
+        }
         if (r.isBn22())
+        {
             BN += "22,";
+        }
         if (r.isBn23())
+        {
             BN += "23,";
+        }
         if (r.isBn24())
+        {
             BN += "24,";
+        }
         if (r.isBn25())
+        {
             BN += "25,";
+        }
         if (r.isBn26())
+        {
             BN += "26,";
+        }
         if (r.isBn27())
+        {
             BN += "27,";
+        }
         if (r.isBn28())
+        {
             BN += "28,";
+        }
         if (r.isBn29())
+        {
             BN += "29,";
+        }
         if (r.isBn30())
+        {
             BN += "30,";
+        }
         if (r.isBn31())
+        {
             BN += "31,";
+        }
         if (r.isBn32())
+        {
             BN += "32,";
+        }
         if (r.isBn33())
+        {
             BN += "33,";
+        }
         if (r.isBn34())
+        {
             BN += "34,";
+        }
         if (r.isBn35())
+        {
             BN += "35,";
+        }
         if (r.isBn36())
+        {
             BN += "36,";
+        }
         if (r.isBn37())
+        {
             BN += "37,";
+        }
         if (r.isBn38())
+        {
             BN += "38,";
+        }
         if (r.isBn39())
+        {
             BN += "39,";
+        }
         if (r.isBn40())
+        {
             BN += "40,";
+        }
         if (r.isBn41())
+        {
             BN += "41,";
+        }
         if (r.isBn42())
+        {
             BN += "42,";
+        }
         if (r.isBn43())
+        {
             BN += "43,";
+        }
         if (r.isBn44())
+        {
             BN += "44,";
+        }
         if (r.isBn45())
+        {
             BN += "45,";
+        }
         if (r.isBn46())
+        {
             BN += "46,";
+        }
         if (r.isBn47())
+        {
             BN += "47,";
+        }
         if (r.isBn48())
+        {
             BN += "48,";
+        }
         if (r.isBn49())
+        {
             BN += "49,";
+        }
         if (r.isBn50())
+        {
             BN += "50,";
+        }
         if (r.isBn51())
+        {
             BN += "51,";
+        }
         if (r.isBn52())
+        {
             BN += "52,";
+        }
         if (r.isBn53())
+        {
             BN += "53,";
+        }
         if (r.isBn54())
+        {
             BN += "54,";
+        }
         if (r.isBn55())
+        {
             BN += "55,";
+        }
         if (r.isBn56())
+        {
             BN += "56,";
+        }
         if (r.isBn57())
+        {
             BN += "57,";
+        }
         if (r.isBn58())
+        {
             BN += "58,";
+        }
         if (r.isBn59())
+        {
             BN += "59,";
+        }
         res.setBYMINUTE(BN);
 
         return res;

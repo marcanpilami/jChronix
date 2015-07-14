@@ -12,6 +12,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
 import org.oxymores.chronix.core.Place;
@@ -35,6 +36,7 @@ import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOExecutionNode;
 import org.oxymores.chronix.dto.DTOExternal;
+import org.oxymores.chronix.dto.DTONetwork;
 import org.oxymores.chronix.dto.DTONextOccurrence;
 import org.oxymores.chronix.dto.DTOParameter;
 import org.oxymores.chronix.dto.DTOPlace;
@@ -104,9 +106,8 @@ public class CoreToDto
         // Network
         res.setNodes(getNetwork(a));
 
-        for (Place p : a.getPlacesList())
-            res.getPlaces().add(getPlace(p));
-
+        /*for (Place p : a.getPlacesList())
+         res.getPlaces().add(getPlace(p));*/
         Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
         {
             public int compare(PlaceGroup c1, PlaceGroup c2)
@@ -117,15 +118,21 @@ public class CoreToDto
         List<PlaceGroup> pgs = a.getGroupsList();
         Collections.sort(pgs, comparator_pg);
         for (PlaceGroup pg : pgs)
+        {
             res.getGroups().add(getPlaceGroup(pg));
+        }
 
         // Calendars
         for (Calendar c : a.getCalendars())
+        {
             res.getCalendars().add(getCalendar(c));
+        }
 
         // Clocks
         for (ClockRRule r : a.getRRulesList())
+        {
             res.getRrules().add(getRRule(r));
+        }
 
         Comparator<ActiveNodeBase> comparator_act = new Comparator<ActiveNodeBase>()
         {
@@ -231,13 +238,21 @@ public class CoreToDto
                 t.setEnd(true);
             }
             if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof ChainStart)
+            {
                 t.setCanBeRemoved(false);
+            }
             if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or)
+            {
                 t.setCanReceiveMultipleLinks(true);
+            }
             if (s.getRepresents() instanceof And)
+            {
                 t.setAnd(true);
+            }
             if (s.getRepresents() instanceof Or)
+            {
                 t.setOr(true);
+            }
 
             res.addState(t);
         }
@@ -264,9 +279,9 @@ public class CoreToDto
     public static ArrayList<DTOExecutionNode> getNetwork(Application a)
     {
         ArrayList<DTOExecutionNode> res = new ArrayList<DTOExecutionNode>();
-        for (ExecutionNode en : a.getNodes().values())
-            res.add(getExecutionNode(en));
-
+        /* for (ExecutionNode en : a.getNodes().values())
+         res.add(getExecutionNode(en));
+         */
         return res;
     }
 
@@ -289,12 +304,16 @@ public class CoreToDto
         for (NodeLink nl : en.getCanSendTo())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
+            {
                 res.addToTcp(nl.getNodeTo().getId());
+            }
         }
         for (NodeLink nl : en.getCanReceiveFrom())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
+            {
                 res.addFromTcp(nl.getNodeFrom().getId());
+            }
         }
         for (Place p : en.getPlacesHosted())
         {
@@ -320,10 +339,9 @@ public class CoreToDto
 
         // TODO: re-add groups
         /*for (PlaceGroup pg : p.getMemberOfGroups())
-        {
-            res.addMemberOfGroup(pg.getId());
-        }*/
-
+         {
+         res.addMemberOfGroup(pg.getId());
+         }*/
         return res;
     }
 
@@ -378,227 +396,437 @@ public class CoreToDto
         for (String d : r.getBYDAY().split(","))
         {
             if (d.equals("MO"))
+            {
                 res.setBd01(true);
+            }
             else if (d.equals("TU"))
+            {
                 res.setBd02(true);
+            }
             else if (d.equals("WE"))
+            {
                 res.setBd03(true);
+            }
             else if (d.equals("TH"))
+            {
                 res.setBd04(true);
+            }
             else if (d.equals("FR"))
+            {
                 res.setBd05(true);
+            }
             else if (d.equals("SA"))
+            {
                 res.setBd06(true);
+            }
             else if (d.equals("SU"))
+            {
                 res.setBd07(true);
+            }
         }
         // ByMonthDay
         for (String d : r.getBYMONTHDAY().split(","))
         {
             if (d.equals("01"))
+            {
                 res.setBmd01(true);
+            }
             else if (d.equals("-01"))
+            {
                 res.setBmdn01(true);
+            }
             else if (d.equals("02"))
+            {
                 res.setBmd02(true);
+            }
             else if (d.equals("-02"))
+            {
                 res.setBmdn02(true);
+            }
             else if (d.equals("03"))
+            {
                 res.setBmd03(true);
+            }
             else if (d.equals("-03"))
+            {
                 res.setBmdn03(true);
+            }
             else if (d.equals("04"))
+            {
                 res.setBmd04(true);
+            }
             else if (d.equals("-04"))
+            {
                 res.setBmdn04(true);
+            }
             else if (d.equals("05"))
+            {
                 res.setBmd05(true);
+            }
             else if (d.equals("-05"))
+            {
                 res.setBmdn05(true);
+            }
             else if (d.equals("06"))
+            {
                 res.setBmd06(true);
+            }
             else if (d.equals("-06"))
+            {
                 res.setBmdn06(true);
+            }
             else if (d.equals("07"))
+            {
                 res.setBmd07(true);
+            }
             else if (d.equals("-07"))
+            {
                 res.setBmdn07(true);
+            }
             else if (d.equals("08"))
+            {
                 res.setBmd08(true);
+            }
             else if (d.equals("-08"))
+            {
                 res.setBmdn08(true);
+            }
             else if (d.equals("09"))
+            {
                 res.setBmd09(true);
+            }
             else if (d.equals("-09"))
+            {
                 res.setBmdn09(true);
+            }
             else if (d.equals("10"))
+            {
                 res.setBmd10(true);
+            }
             else if (d.equals("-10"))
+            {
                 res.setBmdn10(true);
+            }
             else if (d.equals("11"))
+            {
                 res.setBmd11(true);
+            }
             else if (d.equals("-11"))
+            {
                 res.setBmdn11(true);
+            }
             else if (d.equals("12"))
+            {
                 res.setBmd12(true);
+            }
             else if (d.equals("-12"))
+            {
                 res.setBmdn12(true);
+            }
             else if (d.equals("13"))
+            {
                 res.setBmd13(true);
+            }
             else if (d.equals("-13"))
+            {
                 res.setBmdn13(true);
+            }
             else if (d.equals("14"))
+            {
                 res.setBmd14(true);
+            }
             else if (d.equals("-14"))
+            {
                 res.setBmdn14(true);
+            }
             else if (d.equals("15"))
+            {
                 res.setBmd15(true);
+            }
             else if (d.equals("-15"))
+            {
                 res.setBmdn15(true);
+            }
             else if (d.equals("16"))
+            {
                 res.setBmd16(true);
+            }
             else if (d.equals("-16"))
+            {
                 res.setBmdn16(true);
+            }
             else if (d.equals("17"))
+            {
                 res.setBmd17(true);
+            }
             else if (d.equals("-17"))
+            {
                 res.setBmdn17(true);
+            }
             else if (d.equals("18"))
+            {
                 res.setBmd18(true);
+            }
             else if (d.equals("-18"))
+            {
                 res.setBmdn18(true);
+            }
             else if (d.equals("19"))
+            {
                 res.setBmd19(true);
+            }
             else if (d.equals("-19"))
+            {
                 res.setBmdn19(true);
+            }
             else if (d.equals("20"))
+            {
                 res.setBmd20(true);
+            }
             else if (d.equals("-20"))
+            {
                 res.setBmdn20(true);
+            }
             else if (d.equals("21"))
+            {
                 res.setBmd21(true);
+            }
             else if (d.equals("-21"))
+            {
                 res.setBmdn21(true);
+            }
             else if (d.equals("22"))
+            {
                 res.setBmd22(true);
+            }
             else if (d.equals("-22"))
+            {
                 res.setBmdn22(true);
+            }
             else if (d.equals("23"))
+            {
                 res.setBmd23(true);
+            }
             else if (d.equals("-23"))
+            {
                 res.setBmdn23(true);
+            }
             else if (d.equals("24"))
+            {
                 res.setBmd24(true);
+            }
             else if (d.equals("-24"))
+            {
                 res.setBmdn24(true);
+            }
             else if (d.equals("25"))
+            {
                 res.setBmd25(true);
+            }
             else if (d.equals("-25"))
+            {
                 res.setBmdn25(true);
+            }
             else if (d.equals("26"))
+            {
                 res.setBmd26(true);
+            }
             else if (d.equals("-26"))
+            {
                 res.setBmdn26(true);
+            }
             else if (d.equals("27"))
+            {
                 res.setBmd27(true);
+            }
             else if (d.equals("-27"))
+            {
                 res.setBmdn27(true);
+            }
             else if (d.equals("28"))
+            {
                 res.setBmd28(true);
+            }
             else if (d.equals("-28"))
+            {
                 res.setBmdn29(true);
+            }
             else if (d.equals("29"))
+            {
                 res.setBmd29(true);
+            }
             else if (d.equals("-29"))
+            {
                 res.setBmdn29(true);
+            }
             else if (d.equals("30"))
+            {
                 res.setBmd30(true);
+            }
             else if (d.equals("-30"))
+            {
                 res.setBmdn30(true);
+            }
             else if (d.equals("31"))
+            {
                 res.setBmd31(true);
+            }
             else if (d.equals("-31"))
+            {
                 res.setBmdn31(true);
+            }
         }
         // ByMonth
         for (String d : r.getBYMONTH().split(","))
         {
             if (d.equals("01"))
+            {
                 res.setBm01(true);
+            }
             else if (d.equals("02"))
+            {
                 res.setBm02(true);
+            }
             else if (d.equals("03"))
+            {
                 res.setBm03(true);
+            }
             else if (d.equals("04"))
+            {
                 res.setBm04(true);
+            }
             else if (d.equals("05"))
+            {
                 res.setBm05(true);
+            }
             else if (d.equals("06"))
+            {
                 res.setBm06(true);
+            }
             else if (d.equals("07"))
+            {
                 res.setBm07(true);
+            }
             else if (d.equals("08"))
+            {
                 res.setBm08(true);
+            }
             else if (d.equals("09"))
+            {
                 res.setBm09(true);
+            }
             else if (d.equals("10"))
+            {
                 res.setBm10(true);
+            }
             else if (d.equals("11"))
+            {
                 res.setBm11(true);
+            }
             else if (d.equals("12"))
+            {
                 res.setBm12(true);
+            }
         }
         // ByHour
         for (String d : r.getBYHOUR().split(","))
         {
             if (d.equals("00"))
+            {
                 res.setBh00(true);
+            }
             else if (d.equals("01"))
+            {
                 res.setBh01(true);
+            }
             else if (d.equals("02"))
+            {
                 res.setBh02(true);
+            }
             else if (d.equals("03"))
+            {
                 res.setBh03(true);
+            }
             else if (d.equals("04"))
+            {
                 res.setBh04(true);
+            }
             else if (d.equals("05"))
+            {
                 res.setBh05(true);
+            }
             else if (d.equals("06"))
+            {
                 res.setBh06(true);
+            }
             else if (d.equals("07"))
+            {
                 res.setBh07(true);
+            }
             else if (d.equals("08"))
+            {
                 res.setBh08(true);
+            }
             else if (d.equals("09"))
+            {
                 res.setBh09(true);
+            }
             else if (d.equals("10"))
+            {
                 res.setBh10(true);
+            }
             else if (d.equals("11"))
+            {
                 res.setBh11(true);
+            }
             else if (d.equals("12"))
+            {
                 res.setBh12(true);
+            }
             else if (d.equals("13"))
+            {
                 res.setBh13(true);
+            }
             else if (d.equals("14"))
+            {
                 res.setBh14(true);
+            }
             else if (d.equals("15"))
+            {
                 res.setBh15(true);
+            }
             else if (d.equals("16"))
+            {
                 res.setBh16(true);
+            }
             else if (d.equals("17"))
+            {
                 res.setBh17(true);
+            }
             else if (d.equals("18"))
+            {
                 res.setBh18(true);
+            }
             else if (d.equals("19"))
+            {
                 res.setBh19(true);
+            }
             else if (d.equals("20"))
+            {
                 res.setBh20(true);
+            }
             else if (d.equals("21"))
+            {
                 res.setBh21(true);
+            }
             else if (d.equals("22"))
+            {
                 res.setBh22(true);
+            }
             else if (d.equals("23"))
+            {
                 res.setBh23(true);
+            }
         }
         return res;
     }
@@ -646,6 +874,26 @@ public class CoreToDto
             cd.setId(day.getId().toString());
             cd.setSeq(day.getValue());
             res.getDays().add(cd);
+        }
+
+        return res;
+    }
+
+    public static DTONetwork getNetwork(Network n)
+    {
+        DTONetwork res = new DTONetwork();
+
+        List<DTOPlace> places = new ArrayList<>();
+        for (Place p : n.getPlacesList())
+        {
+            places.add(getPlace(p));
+        }
+        res.setPlaces(places);
+
+        List<DTOExecutionNode> nodes = new ArrayList<>();
+        for (ExecutionNode en : n.getNodesList())
+        {
+            nodes.add(getExecutionNode(en));
         }
 
         return res;

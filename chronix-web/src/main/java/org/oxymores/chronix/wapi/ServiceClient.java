@@ -1,11 +1,11 @@
 /**
  * @author Marc-Antoine Gouillart
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.wapi;
 
 import java.text.ParseException;
@@ -29,6 +28,12 @@ import java.util.UUID;
 import javax.jms.JMSException;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path.Node;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -48,6 +53,7 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
+import org.oxymores.chronix.dto.DTONetwork;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
@@ -56,9 +62,13 @@ import org.oxymores.chronix.internalapi.IServiceClient;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
+/**
+ Handles all the metadata related services. Both JSON (default) and XML.
+ */
+@Path("/meta")
 public class ServiceClient implements IServiceClient
 {
-    private static Logger log = Logger.getLogger(ChronixContext.class);
+    private static Logger log = Logger.getLogger(ServiceClient.class);
     private ChronixContext ctx;
 
     public ServiceClient(ChronixContext ctx)
@@ -67,6 +77,9 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
+    @GET
+    @Path("ping")
+    @Produces("text/plain")
     public String sayHello()
     {
         log.debug("Ping service was called");
@@ -74,14 +87,38 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
-    public DTOApplication getApplication(String name)
+    @GET
+    @Path("app/name/{appname}")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    public DTOApplication getApplication(@PathParam("appname") String name)
     {
         log.debug(String.format("getApplication service was called for app name %s", name));
         String id = ctx.getApplicationByName(name).getId().toString();
         return getApplicationById(id);
-    };
+    }
+
+    @GET
+    @Path("network")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    public DTONetwork getNetwork()
+    {
+        log.debug("getNetwork was called");
+        return CoreToDto.getNetwork(ctx.getNetwork());
+    }
 
     @Override
+    @GET
+    @Path("app/first")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
     public DTOApplication getFirstApplication()
     {
         log.debug(String.format("getFirstApplication service was called"));
@@ -93,10 +130,16 @@ public class ServiceClient implements IServiceClient
         {
             return createApplication("first application", "created automatically");
         }
-    };
+    }
 
     @Override
-    public DTOApplication getApplicationById(String id)
+    @GET
+    @Path("app/id/{appid}")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    public DTOApplication getApplicationById(@PathParam("appid") String id)
     {
         log.debug(String.format("getApplication service was called for app id %s", id));
         Application a = ctx.getApplication(id);
@@ -107,6 +150,16 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
+    @POST
+    @Path("app")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    @Consumes(
+    {
+        "application/json", "application/xml"
+    })
     public void stageApplication(DTOApplication app)
     {
         log.debug("stageApplication service was called");
@@ -130,7 +183,13 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
-    public void storeApplication(String uuid)
+    @POST
+    @Path("app/id/{uuid}/send")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    public void storeApplication(@PathParam("uuid") String uuid)
     {
         log.debug("storeApplication service was called");
 
@@ -188,9 +247,15 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
+    @GET
+    @Path("app")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
     public List<DTOApplicationShort> getAllApplications()
     {
-        ArrayList<DTOApplicationShort> res = new ArrayList<DTOApplicationShort>();
+        ArrayList<DTOApplicationShort> res = new ArrayList<>();
 
         for (Application a : this.ctx.getApplications())
         {
@@ -204,7 +269,13 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
-    public DTOApplication createApplication(String name, String description)
+    @POST
+    @Path("app/new/{name}/{description}")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
+    public DTOApplication createApplication(@PathParam("name") String name, @PathParam("description") String description)
     {
         // Check if no app of this name
         Application e = this.ctx.getApplicationByName(name);
@@ -215,7 +286,7 @@ public class ServiceClient implements IServiceClient
 
         // Create app
         Application a = PlanBuilder.buildApplication(name, description);
-        PlanBuilder.buildDefaultLocalNetwork(a);
+        a.createStarterGroups(this.ctx.getNetwork());
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
         ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);
         PlanBuilder.buildClock(a, "once a week day", "day clock", r);
@@ -224,11 +295,18 @@ public class ServiceClient implements IServiceClient
         return CoreToDto.getApplication(a);
     }
 
+    @POST
+    @Path("app/newdemo")
+    @Produces(
+    {
+        "application/json", "application/xml"
+    })
     public void createTestApplication()
     {
         Application a = DemoApplication.getNewDemoApplication();
         a.setname("test app");
-        PlaceGroup pgLocal = PlanBuilder.buildDefaultLocalNetwork(a, ctx.getMessagePort(), ctx.getMainInterface());
+        a.createStarterGroups(ctx.getNetwork());
+        PlaceGroup pgLocal = a.getGroupsList().get(0);
         Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
         ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 200);
