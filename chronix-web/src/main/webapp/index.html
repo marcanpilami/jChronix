@@ -9,17 +9,25 @@
         <script src="lib/jquery-2.1.4.min.js"></script>
         <script src="lib/jqui/jquery-ui.min.js"></script>
         <script src="lib/jsplumb/v1.7.5/js/dom.jsPlumb-1.7.5-min.js"></script>
+        <script src="lib/handsontable/v0.16.0/handsontable.full.min.js"></script>
+        <script src="lib/handsontable/v0.16.0/select2-editor-20150718.js"></script>
+        <script src="lib/select2/v3.5.2/select2.min.js"></script>
+        <script src="lib/node-uuid/v1.4.3/uuid.js"></script>
+        <script src="js/places.js"></script>
         <script src="js/main.js"></script>
 
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.structure.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.theme.min.css">
+        <link rel="stylesheet" type="text/css" href="lib/handsontable/v0.16.0/handsontable.full.min.css">
+        <link rel="stylesheet" type="text/css" href="lib/select2/v3.5.2/select2.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
     </head>
     <body style='height: 100%;'>
         <div id='tabs'>
             <ul>
-                <li><a href="#phynodes">Actual network</a></li>
+                <li><a href="#places">Logical Network</a></li>
+                <li><a href="#phynodes">Network</a></li>
                 <li><a href="#groups">Application deployment</a></li>
             </ul>
 
@@ -41,6 +49,10 @@
                 </div>
             </div>
 
+            <div id='places'>
+                <table id='pl-table'></table>
+            </div>
+                
             <div id='groups'></div>
         </div>
     </body>

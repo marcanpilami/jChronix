@@ -3,6 +3,8 @@ var instance;
 var en_template = "<div></div>";
 var selected_en;
 
+var network;
+
 function setDN(node, jspInstance)
 {
     // Not using classic anchors as source, as we want the links to be perimeter links
@@ -83,6 +85,8 @@ function initNetwork()
 
     $.getJSON("ws/meta/network").done(function (data)
     {
+        network = data;
+        
         // First pass: draw nodes
         $.each(data.nodes, function ()
         {
@@ -104,6 +108,9 @@ function initNetwork()
                 jspInstance.connect({source: source.id, target: this.toString()});
             });
         });
+        
+        // Done - initi other panels
+        initPlaces();
 
     }).fail(function (o, status)
     {
