@@ -5,12 +5,12 @@
         <title>Chronix console</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
+
         <script src="lib/jquery-2.1.4.min.js"></script>
         <script src="lib/jqui/jquery-ui.min.js"></script>
         <script src="lib/jsplumb/v1.7.5/js/dom.jsPlumb-1.7.5-min.js"></script>
         <script src="js/main.js"></script>
-        
+
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.structure.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.theme.min.css">
@@ -22,14 +22,21 @@
                 <li><a href="#phynodes">Actual network</a></li>
                 <li><a href="#groups">Application deployment</a></li>
             </ul>
-            
+
             <div id='phynodes'>
-                <div class="drawingPanel" id='node-c' style="height: 100%; width: 100%;">
-                    <div id='t1' class="execnode execnode-console">DDDD</div>
-                    <div id='t2' class="execnode">EEEEE</div>
+                <div style="height: 100%; width: 100%; position: relative;">
+                    <div class='palette' style="height: 100%; width: 200px;">
+                        <div style='palette-header'>Palette</div>
+                        <div class='paletteitem execnode'>Node</div>
+                        <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
+                    </div>
+                    <div class='drawingPanel' id='node-c' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;">
+                        <div id='t1' class="dn execnode execnode-console">DDDD</div>
+                        <div id='t2' class="dn execnode">EEEEE</div>
+                    </div>
                 </div>
             </div>
-            
+
             <div id='groups'></div>
         </div>
     </body>

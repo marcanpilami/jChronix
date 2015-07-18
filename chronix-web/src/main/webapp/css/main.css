@@ -1,11 +1,13 @@
-.execnode
+/* JQuery-ui overloads */
+.ui-tabs .ui-tabs-panel
+{
+    padding-top: 0px;
+}
+
+/* Generic drawing panel items */
+.dn
 {
     position: absolute;
-    border: solid black 1px;
-    min-width: 8em;
-    min-height: 2em;
-    text-align: center;
-    background-color: #0086B3;
 }
 
 .drawingPanel
@@ -13,12 +15,59 @@
     position: relative;
 }
 
+.drawingPanel-selected
+{
+    border: 2px dashed red !important;
+}
+
+.anchor
+{
+    font-size: 7pt;
+    border-style: groove;
+    border-width: 1px;
+    padding: 1px;
+}
+
+.arrow1
+{
+    color: red;
+}
+
+.arrow2
+{
+    color: blue;
+}
+
+/* Generic paeltte items */
+.palette
+{
+    background-color: #dad8d8;
+}
+
+.palette-header
+{
+    text-align: center;
+    vertical-align: middle;
+    width: 100%;
+}
+
+.palette-helper-text
+{
+    font-size: 10pt;
+    font-style: italic;
+}
+
+/* Execution nodes */
+.execnode
+{   
+    border: solid black 1px;
+    width: 8em;
+    min-height: 2em;
+    text-align: center;
+    background-color: #0086B3;
+}
+
 .execnode-console
 {
     background-color: #ffff99;
-}
-
-.ui-tabs .ui-tabs-panel
-{
-    padding-top: 0px;
 }
