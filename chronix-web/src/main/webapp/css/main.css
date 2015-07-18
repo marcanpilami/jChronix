@@ -10,6 +10,11 @@
     position: absolute;
 }
 
+.dn-smalltext
+{
+    font-size: 9pt;
+}
+
 .drawingPanel
 {
     position: relative;

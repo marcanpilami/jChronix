@@ -300,7 +300,8 @@ public class CoreToDto
         res.setWsPort(en.getWsPort());
         res.setX(en.getX());
         res.setY(en.getY());
-
+        res.setName(en.getName());
+        
         for (NodeLink nl : en.getCanSendTo())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
@@ -895,6 +896,7 @@ public class CoreToDto
         {
             nodes.add(getExecutionNode(en));
         }
+        res.setNodes(nodes);
 
         return res;
     }

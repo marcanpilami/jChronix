@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class DTOExecutionNode
 {
-    private String id, dns, osusername, ospassword, certFilePath;
+    private String id, dns, osusername, ospassword, certFilePath, name;
     private boolean isConsole, isSimpleRunner;
     private int qPort, wsPort, remoteExecPort, jmxPort, x, y;
     private List<String> toTCP = new ArrayList<String>(), toRCTRL = new ArrayList<String>(), fromTCP = new ArrayList<String>(),
@@ -220,4 +220,13 @@ public class DTOExecutionNode
         this.isSimpleRunner = isSimpleRunner;
     }
 
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 }

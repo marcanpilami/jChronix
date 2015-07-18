@@ -41,8 +41,14 @@ public class RestApplication extends ResourceConfig
         {
             Network n = new Network();
             ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
+            en1.setX(100);
+            en1.setY(100);
             ExecutionNode en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
+            en2.setX(200);
+            en2.setY(200);
             ExecutionNode en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
+            en3.setX(300);
+            en3.setY(300);
             en1.setConsole(true);
             en1.connectTo(en2, NodeConnectionMethod.TCP);
             en2.connectTo(en3, NodeConnectionMethod.RCTRL);

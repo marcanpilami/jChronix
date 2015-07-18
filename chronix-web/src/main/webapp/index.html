@@ -29,11 +29,15 @@
                         <div style='palette-header'>Palette</div>
                         <div class='paletteitem execnode'>Node</div>
                         <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
+                        <div id='phynodes-details' style="bottom: 0px; position: absolute; width: 200px;">
+                            <div id='pn-id'></div>
+                            <div><span>Name</span><span><input type="text" maxlength="20" id='pn-name'></span></div>
+                            <div><span>Q port</span><input type='number' id='pn-qport'></div>
+                            <div><span>HTTP port</span><input type='number' id='pn-httpport'></div>
+                            <div><span>Start engine</span><input type="checkbox" id='pn-engine'></div>
+                        </div>
                     </div>
-                    <div class='drawingPanel' id='node-c' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;">
-                        <div id='t1' class="dn execnode execnode-console">DDDD</div>
-                        <div id='t2' class="dn execnode">EEEEE</div>
-                    </div>
+                    <div class='drawingPanel' id='node-c' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
                 </div>
             </div>
 
