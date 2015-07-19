@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.planbuilder;
 
 import java.net.InetAddress;
@@ -32,6 +31,7 @@ import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -83,13 +83,11 @@ public final class DemoApplication
         // //////////////////////////////////////////////////////////////
         // Calendars
         // //////////////////////////////////////////////////////////////
-
         Calendar cal1 = CalendarBuilder.buildWorkDayCalendar(a, 2029);
 
         // //////////////////////////////////////////////////////////////
         // Sources
         // //////////////////////////////////////////////////////////////
-
         // ////////////////////
         // Shell commands
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo", "command 1", "test command 1");
@@ -110,12 +108,11 @@ public final class DemoApplication
         // ////////////////////
         // Clocks
         ClockRRule rr1 = PlanBuilder.buildRRuleWeekDays(a);
-        PlanBuilder.buildClock(a, "every workday", "test clock", rr1);
+        Clock clock1 = PlanBuilder.buildClock(a, "every workday", "test clock", rr1);
 
         // //////////////////////////////////////////////////////////////
         // Parameters
         // //////////////////////////////////////////////////////////////
-
         sc1.addParameter("k", "a", "param 1 for command 1");
         sc2.addParameter("k", "a", "param 1 for command 2");
 
@@ -129,10 +126,8 @@ public final class DemoApplication
         // //////////////////////////////////////////////////////////////
         // State/Transition
         // //////////////////////////////////////////////////////////////
-
         // ////////////////////
         // Chain 1 : simple S -> T1 -> E
-
         // Echo c1
         State s1 = PlanBuilder.buildState(c1, pg2, sc1);
         s1.setX(300);
@@ -144,7 +139,6 @@ public final class DemoApplication
 
         // ////////////////////
         // Chain 2 : simple S -> T2 -> E with calendar
-
         // Echo c1
         State s21 = PlanBuilder.buildState(c2, pg2, sc2);
         s21.setX(200);
@@ -157,7 +151,6 @@ public final class DemoApplication
 
         // ////////////////////
         // Chain 3 : simple S -> T3 -> E
-
         // Echo c1
         State s31 = PlanBuilder.buildState(c3, pg2, sc3);
         s31.setChain(c3);
@@ -172,7 +165,6 @@ public final class DemoApplication
 
         // ////////////////////
         // Chain 4 : simple S -> END CALENDAR -> E
-
         // End calendar state
         State s41 = PlanBuilder.buildState(c4, pg2, no1);
         s41.setX(200);
@@ -181,6 +173,27 @@ public final class DemoApplication
         // Transitions
         c4.getStartState().connectTo(s41);
         s41.connectTo(c4.getEndState());
+
+        // //////////////////////////////////////////////////////////////
+        // Master plan
+        // //////////////////////////////////////////////////////////////
+        Chain plan1 = PlanBuilder.buildPlan(a, "demo plan", "default plan containing all chains");
+        State s_plan1_1 = PlanBuilder.buildState(plan1, pg2, clock1);
+        State s_plan1_2 = PlanBuilder.buildState(plan1, pg2, c1);
+        State s_plan1_3 = PlanBuilder.buildState(plan1, pg2, c2);
+        State s_plan1_4 = PlanBuilder.buildState(plan1, pg2, c3);
+        State s_plan1_5 = PlanBuilder.buildState(plan1, pg2, c4);
+        State s_plan1_6 = PlanBuilder.buildStateAND(plan1, pg2);
+
+        s_plan1_1.connectTo(s_plan1_2);
+        s_plan1_1.connectTo(s_plan1_3);
+        s_plan1_1.connectTo(s_plan1_4);
+
+        s_plan1_2.connectTo(s_plan1_6);
+        s_plan1_3.connectTo(s_plan1_6);
+        s_plan1_4.connectTo(s_plan1_6);
+
+        s_plan1_6.connectTo(s_plan1_5);
 
         return a;
     }

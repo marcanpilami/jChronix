@@ -59,8 +59,8 @@ public class CoreToDto
         res.setDescription(a.getDescription());
 
         res.setChains(new ArrayList<DTOChain>());
+        res.setPlans(new ArrayList<DTOChain>());
         res.setShells(new ArrayList<DTOShellCommand>());
-        res.setPlaces(new ArrayList<DTOPlace>());
         res.setGroups(new ArrayList<DTOPlaceGroup>());
         res.setParameters(new ArrayList<DTOParameter>());
         res.setRrules(new ArrayList<DTORRule>());
@@ -103,9 +103,6 @@ public class CoreToDto
             }
         }
 
-        // Network
-        res.setNodes(getNetwork(a));
-
         /*for (Place p : a.getPlacesList())
          res.getPlaces().add(getPlace(p));*/
         Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
@@ -143,14 +140,21 @@ public class CoreToDto
         };
 
         // All the active elements!
-        List<ActiveNodeBase> active = new ArrayList<ActiveNodeBase>(a.getActiveElements().values());
+        List<ActiveNodeBase> active = new ArrayList<>(a.getActiveElements().values());
         Collections.sort(active, comparator_act);
         for (ActiveNodeBase o : active)
         {
             if (o instanceof Chain)
             {
                 Chain c = (Chain) o;
-                res.getChains().add(getChain(c));
+                if (c.isPlan())
+                {
+                    res.getPlans().add(getChain(c));
+                }
+                else
+                {
+                    res.getChains().add(getChain(c));
+                }
             }
 
             if (o instanceof Clock)
@@ -301,7 +305,7 @@ public class CoreToDto
         res.setX(en.getX());
         res.setY(en.getY());
         res.setName(en.getName());
-        
+
         for (NodeLink nl : en.getCanSendTo())
         {
             if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)

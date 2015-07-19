@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
@@ -76,8 +75,12 @@ public class Chain extends ActiveNodeBase
     public State getState(UUID id)
     {
         for (State s : this.states)
+        {
             if (s.getId().equals(id))
+            {
                 return s;
+            }
+        }
         return null;
     }
 
@@ -100,7 +103,9 @@ public class Chain extends ActiveNodeBase
         for (State s : states)
         {
             if (s.represents instanceof ChainStart)
+            {
                 return s;
+            }
         }
         return null;
     }
@@ -110,9 +115,16 @@ public class Chain extends ActiveNodeBase
         for (State s : states)
         {
             if (s.represents instanceof ChainEnd)
+            {
                 return s;
+            }
         }
         return null;
+    }
+
+    public boolean isPlan()
+    {
+        return this.getStartState() == null;
     }
 
     // ///////////////////////////////////////////////////////////////////

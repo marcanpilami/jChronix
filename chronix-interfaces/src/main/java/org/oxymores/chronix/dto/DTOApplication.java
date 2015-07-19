@@ -10,12 +10,11 @@ public class DTOApplication
     private String id;
     private boolean active = true;
 
-    private List<DTOPlace> places;
     private List<DTOPlaceGroup> groups;
     private List<DTOParameter> parameters;
     private List<DTOChain> chains;
+    private List<DTOChain> plans;
     private List<DTOShellCommand> shells;
-    private List<DTOExecutionNode> nodes;
     private List<DTOClock> clocks;
     private List<DTORRule> rrules;
     private List<DTOExternal> externals;
@@ -64,16 +63,6 @@ public class DTOApplication
     public void setId(String id)
     {
         this.id = id;
-    }
-
-    public List<DTOPlace> getPlaces()
-    {
-        return places;
-    }
-
-    public void setPlaces(List<DTOPlace> places)
-    {
-        this.places = places;
     }
 
     public List<DTOPlaceGroup> getGroups()
@@ -134,16 +123,6 @@ public class DTOApplication
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    public List<DTOExecutionNode> getNodes()
-    {
-        return nodes;
-    }
-
-    public void setNodes(List<DTOExecutionNode> nodes)
-    {
-        this.nodes = nodes;
     }
 
     public boolean isActive()
@@ -226,4 +205,13 @@ public class DTOApplication
         this.calendars = calendars;
     }
 
+    public List<DTOChain> getPlans()
+    {
+        return plans;
+    }
+
+    public void setPlans(List<DTOChain> plans)
+    {
+        this.plans = plans;
+    }
 }

@@ -90,7 +90,7 @@ function initNetwork()
     $.getJSON("ws/meta/network").done(function (data)
     {
         network = data;
-        
+
         // First pass: draw nodes
         $.each(data.nodes, function ()
         {
@@ -112,7 +112,7 @@ function initNetwork()
                 jspInstance.connect({source: source.id, target: this.toString()});
             });
         });
-        
+
         // Done - init other panels
         initPlaces();
 
@@ -138,6 +138,23 @@ function getExecNodeContent(node)
             "<div class='anchor arrow1' style='position: absolute; bottom: -15px; left: 10%;'>remote control</div>" +
             "<div class='anchor arrow2' style='position: absolute; bottom: -15px; left: 70%;'>channel</div>" +
             "</div>";
+}
+
+function initIdIfNone(changes, action)
+{
+    if (!changes)
+    {
+        return;
+    }
+    var grid = this;
+    $.each(changes, function ()
+    {
+        var n = grid.getSourceDataAtRow(this[0]);
+        if (!n.id)
+        {
+            n.id = uuid.v4();
+        }
+    });
 }
 
 $(

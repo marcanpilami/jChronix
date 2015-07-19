@@ -70,13 +70,6 @@ public class DtoToCore
         end.setDescription("Marks the end of a chain. Can be ignored in global plans");
         a.addActiveElement(end);
 
-        //for (DTOExecutionNode e : d.getNodes())
-        //    a.addNode(getExecutionNode(e, a));
-        for (DTOExecutionNode e : d.getNodes())
-        {
-            setExecutionNodeNetwork(e, a);
-        }
-
         //for (DTOPlace e : d.getPlaces())
         //    a.addPlace(getPlace(e, a));
         for (DTOPlaceGroup e : d.getGroups())
