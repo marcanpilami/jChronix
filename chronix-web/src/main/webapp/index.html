@@ -13,6 +13,7 @@
         <script src="lib/handsontable/v0.16.0/select2-editor-20150718.js"></script>
         <script src="lib/select2/v3.5.2/select2.min.js"></script>
         <script src="lib/node-uuid/v1.4.3/uuid.js"></script>
+        <script src="js/app-choice.js"></script>
         <script src="js/places.js"></script>
         <script src="js/main.js"></script>
 
@@ -26,6 +27,7 @@
     <body style='height: 100%;'>
         <div id='tabs'>
             <ul>
+                <li><a href="#applications">Applications</a></li>
                 <li><a href="#places">Logical Network</a></li>
                 <li><a href="#phynodes">Network</a></li>
                 <li><a href="#groups">Application deployment</a></li>
@@ -54,6 +56,12 @@
             </div>
                 
             <div id='groups'></div>
+            
+            <div id='applications'>
+                <table id='ac-table'></table>
+                <button id='ac-edit'>Editer l'application</button>
+                <button id='ac-new'>Nouvelle application</button>
+            </div>
         </div>
     </body>
 </html>

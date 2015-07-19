@@ -1,0 +1,33 @@
+
+function initAppChoice()
+{
+    $.getJSON("ws/meta/app").done(function (data)
+    {
+        apps_short = data;
+
+        var appstab = new Handsontable($('#ac-table')[0], {
+            data: apps_short,
+            minSpareRows: 0,
+            rowHeaders: true,
+            colHeaders: true,
+            contextMenu: false,
+            currentRowClassName: 'selected-table-row',
+            multiSelect: false,
+            columns: [
+                //{data: 'id', title: 'ID'},
+                {data: 'name', title: 'Name'},
+                {data: 'description', title: 'Description'}
+            ]
+        });
+        
+        $('#ac-table').on('dblclick', 'tbody tr th', function(event)
+        {
+            var a = appstab.getSourceDataAtRow($(this).text() -1);
+            
+            var t = "<li><a href='#tab-"+ a.id+"'>"+a.name+"</a></li>";
+            $(t).appendTo($("#tabs > ul"));
+            $("<div id='tab-"+ a.id +"'></div>").appendTo($("#tabs"));
+            $("div#tabs").tabs("refresh");
+        });
+    });
+}

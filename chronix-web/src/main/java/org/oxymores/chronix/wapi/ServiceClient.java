@@ -90,9 +90,9 @@ public class ServiceClient implements IServiceClient
     @GET
     @Path("app/name/{appname}")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public DTOApplication getApplication(@PathParam("appname") String name)
     {
         log.debug(String.format("getApplication service was called for app name %s", name));
@@ -103,9 +103,9 @@ public class ServiceClient implements IServiceClient
     @GET
     @Path("network")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public DTONetwork getNetwork()
     {
         log.debug("getNetwork was called");
@@ -116,9 +116,9 @@ public class ServiceClient implements IServiceClient
     @GET
     @Path("app/first")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public DTOApplication getFirstApplication()
     {
         log.debug(String.format("getFirstApplication service was called"));
@@ -136,9 +136,9 @@ public class ServiceClient implements IServiceClient
     @GET
     @Path("app/id/{appid}")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public DTOApplication getApplicationById(@PathParam("appid") String id)
     {
         log.debug(String.format("getApplication service was called for app id %s", id));
@@ -153,13 +153,13 @@ public class ServiceClient implements IServiceClient
     @POST
     @Path("app")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     @Consumes(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public void stageApplication(DTOApplication app)
     {
         log.debug("stageApplication service was called");
@@ -186,9 +186,9 @@ public class ServiceClient implements IServiceClient
     @POST
     @Path("app/id/{uuid}/send")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public void storeApplication(@PathParam("uuid") String uuid)
     {
         log.debug("storeApplication service was called");
@@ -250,11 +250,12 @@ public class ServiceClient implements IServiceClient
     @GET
     @Path("app")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public List<DTOApplicationShort> getAllApplications()
     {
+        log.debug("getAllApplications service was called");
         ArrayList<DTOApplicationShort> res = new ArrayList<>();
 
         for (Application a : this.ctx.getApplications())
@@ -272,9 +273,9 @@ public class ServiceClient implements IServiceClient
     @POST
     @Path("app/new/{name}/{description}")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public DTOApplication createApplication(@PathParam("name") String name, @PathParam("description") String description)
     {
         // Check if no app of this name
@@ -298,9 +299,9 @@ public class ServiceClient implements IServiceClient
     @POST
     @Path("app/newdemo")
     @Produces(
-    {
-        "application/json", "application/xml"
-    })
+            {
+                "application/json", "application/xml"
+            })
     public void createTestApplication()
     {
         Application a = DemoApplication.getNewDemoApplication();

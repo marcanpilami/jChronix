@@ -76,3 +76,14 @@
 {
     background-color: #ffff99;
 }
+
+/* Tables */
+.selected-table-row
+{
+    background-color: lightblue !important;
+}
+
+td.current, td.highlight
+{
+    background-color: #E0FFFF;
+}

@@ -3,7 +3,11 @@ var instance;
 var en_template = "<div></div>";
 var selected_en;
 
+var tabs;
+
 var network;
+var apps_short;
+var apps = new Object();
 
 function setDN(node, jspInstance)
 {
@@ -109,7 +113,7 @@ function initNetwork()
             });
         });
         
-        // Done - initi other panels
+        // Done - init other panels
         initPlaces();
 
     }).fail(function (o, status)
@@ -139,11 +143,12 @@ function getExecNodeContent(node)
 $(
         function ()
         {
-            $('#tabs').tabs({
+            tabs = $('#tabs').tabs({
                 active: 0,
                 heightStyle: 'fill'
             });
 
+            initAppChoice();
             initNetwork();
         }
 );
