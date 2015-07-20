@@ -23,29 +23,51 @@
         <div id="app-token-IDIDID"></div>
 
         <div id="app-chain-IDIDID">
-            <div class='palette' style="height: 100%; width: 200px;">
-                <div class='app-chain-IDIDID-planchoice' style="width: calc(100% - 30px);"></div>
-                <div style='palette-header'>Palette</div>
-                <div class='paletteitem execnode'>Node</div>
-                <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
-                <div id='phynodes-details' style="bottom: 0px; position: absolute; width: 200px;">
-                    <div id='pn-id'></div>
-                    <div><span>Name</span><span><input type="text" maxlength="20" id='pn-name'></span></div>
-                    <div><span>Q port</span><input type='number' id='pn-qport'></div>
-                    <div><span>HTTP port</span><input type='number' id='pn-httpport'></div>
-                    <div><span>Start engine</span><input type="checkbox" id='pn-engine'></div>
+            <div style="height: 100%; width: 100%; position: relative;">
+                <div class='palette' style="height: 100%; width: 200px;">
+                    <div class='app-chain-IDIDID-planchoice' style="width: calc(100% - 30px);"></div>
+                    <div style='palette-header'>Palette</div>
+                    <div class='paletteitem execnode'>Node</div>
+                    <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
+
+                    <ul class='menu' style="bottom: 0px; position: absolute; width: 200px;">
+                        <li class='c-remove'>
+                            <span class="fa fa-trash-o"></span> Delete
+                        </li>
+                        <li class='c-groups'>
+                            <span class="fa fa-server"></span> Change where it runs
+                            <ul></ul>
+                        </li>
+                        <li class='c-para'>
+                            <span class="fa fa-expand"></span> Toggle Parallelism
+                        </li>
+                        <li class='c-cals'><span class="fa fa-calendar"></span> Change Calendar
+                            <ul></ul>
+                        </li>
+                        <li class='c-calshifts'>
+                            <span class="fa fa-plus"></span> Calendar shift
+                            <ul class='calshift'>
+                                <li>-5</li>
+                                <li>-4</li>
+                                <li>-3</li>
+                                <li>-2</li>
+                                <li>-1</li>
+                                <li>+0</li>
+                                <li>+1</li>
+                                <li>+2</li>
+                                <li>+3</li>
+                                <li>+4</li>
+                                <li>+5</li>
+                            </ul>
+                        </li>                    
+                    </ul>
+
                 </div>
+
+                <div class='drawingPanel' id='app-IDIDID-chain' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
             </div>
-            <div class='drawingPanel' id='app-IDIDID-chain' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
         </div>
 
         <div id="app-place-IDIDID"></div>
     </div>
-
-    <div id="toolbar-options9" class="hidden">
-        <a href="#"><i class="fa fa-plane"></i></a>
-        <a href="#"><i class="fa fa-car"></i></a>
-        <a href="#"><i class="fa fa-bicycle"></i></a>
-    </div>
-
 </div>

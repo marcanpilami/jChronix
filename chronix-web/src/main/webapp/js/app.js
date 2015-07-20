@@ -23,8 +23,6 @@ function initApp(uuid)
             activate: function (e, ui)
             {
                 var i = ui.newPanel[0].id;
-                console.debug(ui.newPanel);
-                console.debug(i);
                 if (i.indexOf("app-chain") === 0)
                 {
                     chainPanel.initPanel();
@@ -58,10 +56,14 @@ function initCommand(app)
 
 var PanelChain = function (app)
 {
-    this.panelId = "app-" + app.id + "-chain";
-    this.panel = $('#' + this.panelId);
+    this.tabId = "app-chain-" + app.id;
+    this.drawPanelId = "app-" + app.id + "-chain";
+    this.tab = $('#' + this.tabId);
+    this.drawPanel = $('#' + this.drawPanelId);
     this.chain = app.chains[0];
     this.app = app;
+    this.selectedStateDiv = null;
+    this.selectedState = null;
 
     this.jspInstance = jsPlumb.getInstance({
         Connector: ["Bezier", {curviness: 50}],
@@ -71,7 +73,7 @@ var PanelChain = function (app)
         ConnectionOverlays: [['Arrow', {width: 12, location: 1}]],
         HoverPaintStyle: {strokeStyle: "#ec9f2e"},
         EndpointHoverStyle: {fillStyle: "#ec9f2e"},
-        Container: this.panelId
+        Container: this.drawPanelId
     });
 
     var t = this;
@@ -88,8 +90,6 @@ var PanelChain = function (app)
         }
     }).on('change', function (e)
     {
-        console.debug(e.val);
-        var c;
         $.each(app.chains, function ()
         {
             if (this.id === e.val)
@@ -99,24 +99,29 @@ var PanelChain = function (app)
             }
         });
     });
-    
+
     // Toolbar
-    this.panel.on('click', '.dn', function ()
+    var t = this;
+    this.drawPanel.on('click', '.dn', function ()
     {
         var node = $(this);
-        node.toolbar({
-            content: '#toolbar-options', //-' + app.id,
-            event: 'click',
-            hideOnClick: true
-        });
+        t.selectedStateDiv = node;
+        t.selectedState = node[0]._source;
+        t.drawPanel.find('.dn').removeClass('drawingPanel-selected');
+        node.addClass('drawingPanel-selected');
+        t.toggleMenu();
     });
 };
 
 PanelChain.prototype.initPanel = function ()
 {
-    // Cleanup    
+    // Cleanup  
+    this.selectedState = null;
+    this.selectedStateDiv = null;
     this.jspInstance.reset();
-    $("#" + this.panelId).find(".dn").remove();
+    this.drawPanel.find(".dn").remove();
+    this.initMenu();
+    this.toggleMenu();
 
     // Pass1: nodes
     var t = this;
@@ -148,8 +153,9 @@ PanelChain.prototype.getStateDiv = function (s)
 
 PanelChain.prototype.getStateDivContent = function (s)
 {
-    return "<div>" + s.label + "</div><div class='dn-smalltext'>" + s.runsOnName + (s.parallel ? ' //' : '') + (s.calendarId ? 'cal ' + s.calendarShift : '') +
-            "</div>";
+    return "<div>" + s.label + "</div>" +
+            "<div class='dn-smalltext'>" + s.runsOnName + (s.parallel ? '//' : '') + "</div>" +
+            "<div class='dn-smalltext'>" + (s.calendarId ? 'cal ' + s.calendarShift : '') + "</div>";
 };
 
 PanelChain.prototype.setJSPNode = function (node)
@@ -178,8 +184,143 @@ PanelChain.prototype.drawState = function (s)
 {
     var d = this.getStateDiv(s);
     d[0]._source = s;
-    d.appendTo($("#" + this.panelId));
+    d.appendTo(this.drawPanel);
     d.css('left', s.x);
     d.css('top', s.y);
     this.setJSPNode(d);
 };
+
+PanelChain.prototype.redrawSelectedState = function ()
+{
+    this.selectedStateDiv.html(this.getStateDivContent(this.selectedStateDiv[0]._source));
+};
+
+PanelChain.prototype.initMenu = function ()
+{
+    var m = this.tab.find('ul.menu');
+
+    var grouplist = m.find("li.c-groups > ul");
+    grouplist.empty();
+    $.each(this.app.groups, function ()
+    {
+        $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(grouplist);
+    });
+
+    var calendarlist = m.find("li.c-cals > ul");
+    calendarlist.empty();
+    $("<li>none</li>").appendTo(calendarlist);
+    $.each(this.app.calendars, function ()
+    {
+        $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(calendarlist);
+    });
+
+    m.menu();
+    var t = this;
+    m.find('.calshift > li').click(function ()
+    {
+        console.debug(this);
+    });
+
+    m.find('.c-para').click(function ()
+    {
+        t.selectedState.parallel = !t.selectedState.parallel;
+        t.redrawSelectedState();
+    });
+
+    m.find('li.c-groups > ul > li').click(function ()
+    {
+        t.selectedState.runsOnId = $(this).attr('value');
+        t.selectedState.runsOnName = $(this).text();
+        t.redrawSelectedState();
+    });
+
+    m.find('li.c-calshifts > ul > li').click(function ()
+    {
+        t.selectedState.calendarShift = $(this).text();
+        t.redrawSelectedState();
+    });
+
+    m.find('li.c-cals > ul > li').click(function ()
+    {
+        t.selectedState.calendarId = $(this).attr('value');
+        t.selectedState.calendarName = $(this).text();
+        t.redrawSelectedState();
+    });
+
+    m.find('li.c-remove').click(function ()
+    {
+        removeState(t.app, t.selectedState.id);
+        t.initPanel();
+    });
+};
+
+PanelChain.prototype.toggleMenu = function ()
+{
+    this.tab.find("ul.menu > li.c-remove").addClass('ui-state-disabled');
+    this.tab.find("ul.menu > li.c-para").addClass('ui-state-disabled');
+    this.tab.find("ul.menu > li.c-cals").addClass('ui-state-disabled');
+    this.tab.find("ul.menu > li.c-calshifts").addClass('ui-state-disabled');
+    this.tab.find("ul.menu > li.c-groups").addClass('ui-state-disabled');
+
+    if (!this.selectedState)
+    {
+        return;
+    }
+
+    if (!(this.selectedState.start || this.selectedState.end))
+    {
+        this.tab.find("ul.menu > li.c-remove").removeClass('ui-state-disabled');
+    }
+
+    if (!(this.selectedState.start || this.selectedState.end))
+    {
+        this.tab.find("ul.menu > li.c-para").removeClass('ui-state-disabled');
+    }
+
+    if (!(this.selectedState.start || this.selectedState.end))
+    {
+        this.tab.find("ul.menu > li.c-cals").removeClass('ui-state-disabled');
+    }
+
+    if (!(this.selectedState.start || this.selectedState.end))
+    {
+        this.tab.find("ul.menu > li.c-calshifts").removeClass('ui-state-disabled');
+    }
+    
+    this.tab.find("ul.menu > li.c-groups").removeClass('ui-state-disabled');
+};
+
+
+function removeState(app, stateId)
+{
+    var toDelete = [];
+    $.each(app.chains, function ()
+    {
+        var chain = this;
+        $.each(chain.states, function ()
+        {
+            if (this.id === stateId)
+            {
+                toDelete.push(this);
+            }
+        });
+        $.each(toDelete, function ()
+        {
+            chain.states.splice(chain.states.indexOf(this), 1);
+        });
+        toDelete = [];
+
+        $.each(chain.transitions, function ()
+        {
+            if (this.from === stateId || this.to === stateId)
+            {
+                toDelete.push(this);
+            }
+        });
+        $.each(toDelete, function ()
+        {
+            chain.transitions.splice(chain.transitions.indexOf(this), 1);
+        });
+        toDelete = [];
+    });
+}

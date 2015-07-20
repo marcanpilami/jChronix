@@ -129,3 +129,9 @@ td.current, td.highlight
 {
     background-color: #E0FFFF;
 }
+
+/* Menus */
+.ui-menu
+{
+    min-width: 10em;
+}
