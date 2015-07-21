@@ -26,6 +26,10 @@ function initApp(uuid)
                     {
                         initCommand(app);
                     }
+                    if (i.indexOf("app-external") === 0)
+                    {
+                        initExternal(app);
+                    }
                 }
             });
 
@@ -42,7 +46,8 @@ function initCommand(app)
 {
     var content = $("#app-command-" + app.id);
     var commands = app.shells;
-
+    
+    content.empty();
     new Handsontable(content[0], {
         data: commands,
         minSpareRows: 1,
@@ -59,4 +64,30 @@ function initCommand(app)
         ],
         afterChange: initIdIfNone
     });
+}
+
+function initExternal(app)
+{
+    var content = $("#app-external-" + app.id);
+    var externals = app.externals;
+    
+    content.empty();
+    new Handsontable(content[0], {
+        data: externals,
+        minSpareRows: 1,
+        rowHeaders: false,
+        colHeaders: true,
+        contextMenu: false,
+        manualColumnResize: true,
+        manualRowResize: false,
+        columns: [
+            {data: 'id', title: 'ID'},
+            {data: 'name', title: 'Name'},
+            {data: 'description', title: 'Description'},
+            {data: 'accountRestriction', title: 'Optional shared secret'},
+            {data: 'regularExpression', title:'Calendar occurrence extractor (regular expression)'}
+        ],
+        afterChange: initIdIfNone
+    });
+    
 }
