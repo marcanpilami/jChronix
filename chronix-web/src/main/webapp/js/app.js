@@ -3,6 +3,7 @@ function initApp(uuid)
     var app;
     var content = $("#tab-" + uuid + " > div");
     var chainPanel = null;
+    var recPanel = null;
 
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
@@ -30,11 +31,16 @@ function initApp(uuid)
                     {
                         initExternal(app);
                     }
+                    if (i.indexOf("app-rec") === 0)
+                    {
+                        recPanel.initPanel();
+                    }
                 }
             });
 
             // Inits requiring both tabs + app data
             chainPanel = new PanelChain(app);
+            recPanel = new PanelRec(app);
 
             // Open first tab
             initCommand(app);
