@@ -1,7 +1,7 @@
 /* JQuery-ui overloads */
 .ui-tabs .ui-tabs-panel
 {
-    padding-top: 0px;
+    padding: 0px;
 }
 
 /* Vertical tabs */

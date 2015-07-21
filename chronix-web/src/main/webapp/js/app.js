@@ -2,34 +2,39 @@ function initApp(uuid)
 {
     var app;
     var content = $("#tab-" + uuid + " > div");
-    var chainPanel;
+    var chainPanel = null;
 
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
         app = data;
-        initCommand(app);
-        chainPanel = new PanelChain(app);
 
+        content.load("app.html", function ()
+        {
+            // Replace ids  
+            content.html(content[0].innerHTML.replace(/IDIDID/g, uuid));
 
-    });
-
-    content.load("app.html", function ()
-    {
-        // Replace ids  
-        content.html(content[0].innerHTML.replace(/IDIDID/g, uuid));
-
-        // Setup
-        content.find(".tabs").tabs({
-            activate: function (e, ui)
-            {
-                var i = ui.newPanel[0].id;
-                if (i.indexOf("app-chain") === 0)
+            // Setup
+            content.find(".tabs").tabs({
+                activate: function (e, ui)
                 {
-                    chainPanel.initPanel();
+                    var i = ui.newPanel[0].id;
+                    if (i.indexOf("app-chain") === 0)
+                    {
+                        chainPanel.initPanel();
+                    }
+                    if (i.indexOf("app-command") === 0)
+                    {
+                        initCommand(app);
+                    }
                 }
-            }
-        });
+            });
 
+            // Inits requiring both tabs + app data
+            chainPanel = new PanelChain(app);
+
+            // Open first tab
+            initCommand(app);
+        });
     });
 }
 
@@ -41,9 +46,11 @@ function initCommand(app)
     new Handsontable(content[0], {
         data: commands,
         minSpareRows: 1,
-        rowHeaders: true,
+        rowHeaders: false,
         colHeaders: true,
         contextMenu: false,
+        manualColumnResize: true,
+        manualRowResize: false,
         columns: [
             {data: 'id', title: 'ID'},
             {data: 'name', title: 'Name'},
