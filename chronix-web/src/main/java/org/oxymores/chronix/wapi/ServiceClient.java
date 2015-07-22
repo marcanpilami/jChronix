@@ -1,25 +1,24 @@
 /**
  * @author Marc-Antoine Gouillart
  *
- * See the NOTICE file distributed with this work for
- * information regarding copyright ownership.
- * This file is licensed to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain
- * a copy of the License at
+ * See the NOTICE file distributed with this work for information regarding
+ * copyright ownership. This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package org.oxymores.chronix.wapi;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +33,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -55,6 +55,7 @@ import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTONetwork;
 import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
@@ -63,11 +64,12 @@ import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 /**
- Handles all the metadata related services. Both JSON (default) and XML.
+ * Handles all the metadata related services. Both JSON (default) and XML.
  */
 @Path("/meta")
 public class ServiceClient implements IServiceClient
 {
+
     private static Logger log = Logger.getLogger(ServiceClient.class);
     private ChronixContext ctx;
 
@@ -125,8 +127,7 @@ public class ServiceClient implements IServiceClient
         if (ctx.getApplications().size() > 0)
         {
             return getApplicationById(ctx.getApplications().iterator().next().getId().toString());
-        }
-        else
+        } else
         {
             return createApplication("first application", "created automatically");
         }
@@ -173,8 +174,7 @@ public class ServiceClient implements IServiceClient
         try
         {
             ctx.saveApplication(a);
-        }
-        catch (ChronixPlanStorageException e)
+        } catch (ChronixPlanStorageException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -196,8 +196,7 @@ public class ServiceClient implements IServiceClient
         try
         {
             SenderHelpers.sendApplicationToAllClients(this.ctx.getApplication(uuid), ctx);
-        }
-        catch (JMSException e)
+        } catch (JMSException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -215,32 +214,42 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
-    public List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound)
+    @POST
+    @Path("rrule/test")
+    @Produces(
+            {
+                "application/json", "application/xml"
+            })
+    @Consumes(MediaType.APPLICATION_JSON)
+    public DTOResultClock getNextRRuleOccurrences(DTORRule rule)
     {
+        log.info("RRRRRRRRRRRRRRRRRRR");
+        log.info(rule.getSimulStart());
+        log.info(rule.getSimulEnd());
+
+        //List<String> res = new ArrayList<>();
+        DTOResultClock res = new DTOResultClock();
         ClockRRule r = DtoToCore.getRRule(rule);
         Clock tmp = new Clock();
         tmp.addRRuleADD(r);
         PeriodList pl = null;
 
         DateTimeFormatter df = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm");
-        DateTime start = DateTime.parse(lowerBound, df);
-        DateTime end = DateTime.parse(higherBound, df);
-
         try
         {
-            pl = tmp.getOccurrences(start, end);
-        }
-        catch (ParseException e)
+            pl = tmp.getOccurrences(new DateTime(rule.getSimulStart()), new DateTime(rule.getSimulEnd()));
+        } catch (ParseException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        ArrayList<Date> res = new ArrayList<Date>();
         for (Object pe : pl)
         {
             Period p = (Period) pe;
-            res.add(p.getStart());
+            DateFormat dfo = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S'Z'");
+            //res.getRes().add(dfo.format(p.getStart()));
+            res.getRes().add(p.getStart());
         }
 
         return res;
@@ -347,8 +356,7 @@ public class ServiceClient implements IServiceClient
         {
             ctx.saveApplication(a);
             ctx.setWorkingAsCurrent(a);
-        }
-        catch (ChronixPlanStorageException e1)
+        } catch (ChronixPlanStorageException e1)
         {
             // DEBUG code, so no need for pretty exc handling
             e1.printStackTrace();

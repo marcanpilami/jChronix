@@ -1,12 +1,12 @@
 function PanelRec(app)
 {
     this.app = app;
-    this.tab = $("#app-rec-" + app.id);
+    this.tab = $("#app-seq-" + app.id);
     this.calendars = app.calendars;
 
     // Load the panel
-    t = this;
-    this.tab.load("rec.html", function ()
+    var t = this;
+    this.tab.load("seq.html", function ()
     {
         // Replace ids  
         t.tab.html(t.tab[0].innerHTML.replace(/IDIDID/g, app.id));

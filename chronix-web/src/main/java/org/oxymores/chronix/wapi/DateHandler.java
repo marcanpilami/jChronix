@@ -13,7 +13,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
-@Provider
+//@Provider
 public class DateHandler implements ParamConverterProvider
 {
     @SuppressWarnings("unchecked")
@@ -32,8 +32,7 @@ public class DateHandler implements ParamConverterProvider
                         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S'Z'");
                         Date date = df.parse(s);
                         return date;
-                    }
-                    catch (ParseException e)
+                    } catch (ParseException e)
                     {
                         throw new WebApplicationException(new Exception("Date format should be yyyy-MM-dd'T'HH:mm:ss.S'Z'"),
                                 Status.BAD_REQUEST);

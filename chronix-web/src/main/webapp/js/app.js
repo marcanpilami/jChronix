@@ -3,8 +3,9 @@ function initApp(uuid)
     var app;
     var content = $("#tab-" + uuid + " > div");
     var chainPanel = null;
-    var recPanel = null;
-
+    var seqPanel = null;
+    var clockPanel = null;
+    
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
         app = data;
@@ -31,17 +32,22 @@ function initApp(uuid)
                     {
                         initExternal(app);
                     }
-                    if (i.indexOf("app-rec") === 0)
+                    if (i.indexOf("app-seq") === 0)
                     {
-                        recPanel.initPanel();
+                        seqPanel.initPanel();
+                    }
+                    if (i.indexOf("app-clock") === 0)
+                    {
+                        clockPanel.initPanel();
                     }
                 }
             });
 
             // Inits requiring both tabs + app data
             chainPanel = new PanelChain(app);
-            recPanel = new PanelRec(app);
-
+            seqPanel = new PanelRec(app);
+            clockPanel = new PanelClock(app);
+            
             // Open first tab
             initCommand(app);
         });

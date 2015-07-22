@@ -169,3 +169,39 @@ $(
             initNetwork();
         }
 );
+
+Number.prototype.zeroPad = function (numZeros)
+{
+    var n = Math.abs(this);
+    var zeros = Math.max(0, numZeros - Math.floor(n).toString().length);
+    var zeroString = Math.pow(10, zeros).toString().substr(1);
+    if (this < 0) {
+        zeroString = '-' + zeroString;
+    }
+    return zeroString + n;
+};
+
+function getTomorrow()
+{
+    var d = new Date();
+    d.setHours(0);
+    d.setMinutes(0);
+    d.setSeconds(0);
+    d.setMilliseconds(0);
+    d.setDate(d.getDate() + 1);
+    return d;
+}
+
+$.postJSON = function (url, data, callback) {
+    return jQuery.ajax({
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        'type': 'POST',
+        'url': url,
+        'data': JSON.stringify(data),
+        'dataType': 'json',
+        'success': callback
+    });
+};

@@ -1,5 +1,7 @@
 package org.oxymores.chronix.dto;
 
+import java.util.Date;
+
 public class DTORRule
 {
     private String name;
@@ -8,6 +10,8 @@ public class DTORRule
 
     private String period;
     private int interval;
+
+    private Date simulStart, simulEnd;
 
     // ByDay (01 = Monday, 07 = Sunday)
     private boolean bd01 = false, bd02 = false, bd03 = false, bd04 = false, bd05 = false, bd06 = false, bd07 = false;
@@ -1739,4 +1743,23 @@ public class DTORRule
         this.bn59 = bn59;
     }
 
+    public Date getSimulStart()
+    {
+        return simulStart;
+    }
+
+    public void setSimulStart(Date simulStart)
+    {
+        this.simulStart = simulStart;
+    }
+
+    public Date getSimulEnd()
+    {
+        return simulEnd;
+    }
+
+    public void setSimulEnd(Date simulEnd)
+    {
+        this.simulEnd = simulEnd;
+    }
 }

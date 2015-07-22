@@ -150,8 +150,7 @@ public class CoreToDto
                 if (c.isPlan())
                 {
                     res.getPlans().add(getChain(c));
-                }
-                else
+                } else
                 {
                     res.getChains().add(getChain(c));
                 }
@@ -227,8 +226,7 @@ public class CoreToDto
             {
                 t.setRunsOnName(s.getRunsOn().getName());
                 t.setRunsOnId(s.getRunsOn().getId().toString());
-            }
-            catch (Exception e)
+            } catch (Exception e)
             {
             }
             if (s.getRepresents() instanceof ChainStart)
@@ -403,28 +401,22 @@ public class CoreToDto
             if (d.equals("MO"))
             {
                 res.setBd01(true);
-            }
-            else if (d.equals("TU"))
+            } else if (d.equals("TU"))
             {
                 res.setBd02(true);
-            }
-            else if (d.equals("WE"))
+            } else if (d.equals("WE"))
             {
                 res.setBd03(true);
-            }
-            else if (d.equals("TH"))
+            } else if (d.equals("TH"))
             {
                 res.setBd04(true);
-            }
-            else if (d.equals("FR"))
+            } else if (d.equals("FR"))
             {
                 res.setBd05(true);
-            }
-            else if (d.equals("SA"))
+            } else if (d.equals("SA"))
             {
                 res.setBd06(true);
-            }
-            else if (d.equals("SU"))
+            } else if (d.equals("SU"))
             {
                 res.setBd07(true);
             }
@@ -435,248 +427,187 @@ public class CoreToDto
             if (d.equals("01"))
             {
                 res.setBmd01(true);
-            }
-            else if (d.equals("-01"))
+            } else if (d.equals("-01"))
             {
                 res.setBmdn01(true);
-            }
-            else if (d.equals("02"))
+            } else if (d.equals("02"))
             {
                 res.setBmd02(true);
-            }
-            else if (d.equals("-02"))
+            } else if (d.equals("-02"))
             {
                 res.setBmdn02(true);
-            }
-            else if (d.equals("03"))
+            } else if (d.equals("03"))
             {
                 res.setBmd03(true);
-            }
-            else if (d.equals("-03"))
+            } else if (d.equals("-03"))
             {
                 res.setBmdn03(true);
-            }
-            else if (d.equals("04"))
+            } else if (d.equals("04"))
             {
                 res.setBmd04(true);
-            }
-            else if (d.equals("-04"))
+            } else if (d.equals("-04"))
             {
                 res.setBmdn04(true);
-            }
-            else if (d.equals("05"))
+            } else if (d.equals("05"))
             {
                 res.setBmd05(true);
-            }
-            else if (d.equals("-05"))
+            } else if (d.equals("-05"))
             {
                 res.setBmdn05(true);
-            }
-            else if (d.equals("06"))
+            } else if (d.equals("06"))
             {
                 res.setBmd06(true);
-            }
-            else if (d.equals("-06"))
+            } else if (d.equals("-06"))
             {
                 res.setBmdn06(true);
-            }
-            else if (d.equals("07"))
+            } else if (d.equals("07"))
             {
                 res.setBmd07(true);
-            }
-            else if (d.equals("-07"))
+            } else if (d.equals("-07"))
             {
                 res.setBmdn07(true);
-            }
-            else if (d.equals("08"))
+            } else if (d.equals("08"))
             {
                 res.setBmd08(true);
-            }
-            else if (d.equals("-08"))
+            } else if (d.equals("-08"))
             {
                 res.setBmdn08(true);
-            }
-            else if (d.equals("09"))
+            } else if (d.equals("09"))
             {
                 res.setBmd09(true);
-            }
-            else if (d.equals("-09"))
+            } else if (d.equals("-09"))
             {
                 res.setBmdn09(true);
-            }
-            else if (d.equals("10"))
+            } else if (d.equals("10"))
             {
                 res.setBmd10(true);
-            }
-            else if (d.equals("-10"))
+            } else if (d.equals("-10"))
             {
                 res.setBmdn10(true);
-            }
-            else if (d.equals("11"))
+            } else if (d.equals("11"))
             {
                 res.setBmd11(true);
-            }
-            else if (d.equals("-11"))
+            } else if (d.equals("-11"))
             {
                 res.setBmdn11(true);
-            }
-            else if (d.equals("12"))
+            } else if (d.equals("12"))
             {
                 res.setBmd12(true);
-            }
-            else if (d.equals("-12"))
+            } else if (d.equals("-12"))
             {
                 res.setBmdn12(true);
-            }
-            else if (d.equals("13"))
+            } else if (d.equals("13"))
             {
                 res.setBmd13(true);
-            }
-            else if (d.equals("-13"))
+            } else if (d.equals("-13"))
             {
                 res.setBmdn13(true);
-            }
-            else if (d.equals("14"))
+            } else if (d.equals("14"))
             {
                 res.setBmd14(true);
-            }
-            else if (d.equals("-14"))
+            } else if (d.equals("-14"))
             {
                 res.setBmdn14(true);
-            }
-            else if (d.equals("15"))
+            } else if (d.equals("15"))
             {
                 res.setBmd15(true);
-            }
-            else if (d.equals("-15"))
+            } else if (d.equals("-15"))
             {
                 res.setBmdn15(true);
-            }
-            else if (d.equals("16"))
+            } else if (d.equals("16"))
             {
                 res.setBmd16(true);
-            }
-            else if (d.equals("-16"))
+            } else if (d.equals("-16"))
             {
                 res.setBmdn16(true);
-            }
-            else if (d.equals("17"))
+            } else if (d.equals("17"))
             {
                 res.setBmd17(true);
-            }
-            else if (d.equals("-17"))
+            } else if (d.equals("-17"))
             {
                 res.setBmdn17(true);
-            }
-            else if (d.equals("18"))
+            } else if (d.equals("18"))
             {
                 res.setBmd18(true);
-            }
-            else if (d.equals("-18"))
+            } else if (d.equals("-18"))
             {
                 res.setBmdn18(true);
-            }
-            else if (d.equals("19"))
+            } else if (d.equals("19"))
             {
                 res.setBmd19(true);
-            }
-            else if (d.equals("-19"))
+            } else if (d.equals("-19"))
             {
                 res.setBmdn19(true);
-            }
-            else if (d.equals("20"))
+            } else if (d.equals("20"))
             {
                 res.setBmd20(true);
-            }
-            else if (d.equals("-20"))
+            } else if (d.equals("-20"))
             {
                 res.setBmdn20(true);
-            }
-            else if (d.equals("21"))
+            } else if (d.equals("21"))
             {
                 res.setBmd21(true);
-            }
-            else if (d.equals("-21"))
+            } else if (d.equals("-21"))
             {
                 res.setBmdn21(true);
-            }
-            else if (d.equals("22"))
+            } else if (d.equals("22"))
             {
                 res.setBmd22(true);
-            }
-            else if (d.equals("-22"))
+            } else if (d.equals("-22"))
             {
                 res.setBmdn22(true);
-            }
-            else if (d.equals("23"))
+            } else if (d.equals("23"))
             {
                 res.setBmd23(true);
-            }
-            else if (d.equals("-23"))
+            } else if (d.equals("-23"))
             {
                 res.setBmdn23(true);
-            }
-            else if (d.equals("24"))
+            } else if (d.equals("24"))
             {
                 res.setBmd24(true);
-            }
-            else if (d.equals("-24"))
+            } else if (d.equals("-24"))
             {
                 res.setBmdn24(true);
-            }
-            else if (d.equals("25"))
+            } else if (d.equals("25"))
             {
                 res.setBmd25(true);
-            }
-            else if (d.equals("-25"))
+            } else if (d.equals("-25"))
             {
                 res.setBmdn25(true);
-            }
-            else if (d.equals("26"))
+            } else if (d.equals("26"))
             {
                 res.setBmd26(true);
-            }
-            else if (d.equals("-26"))
+            } else if (d.equals("-26"))
             {
                 res.setBmdn26(true);
-            }
-            else if (d.equals("27"))
+            } else if (d.equals("27"))
             {
                 res.setBmd27(true);
-            }
-            else if (d.equals("-27"))
+            } else if (d.equals("-27"))
             {
                 res.setBmdn27(true);
-            }
-            else if (d.equals("28"))
+            } else if (d.equals("28"))
             {
                 res.setBmd28(true);
-            }
-            else if (d.equals("-28"))
+            } else if (d.equals("-28"))
             {
                 res.setBmdn29(true);
-            }
-            else if (d.equals("29"))
+            } else if (d.equals("29"))
             {
                 res.setBmd29(true);
-            }
-            else if (d.equals("-29"))
+            } else if (d.equals("-29"))
             {
                 res.setBmdn29(true);
-            }
-            else if (d.equals("30"))
+            } else if (d.equals("30"))
             {
                 res.setBmd30(true);
-            }
-            else if (d.equals("-30"))
+            } else if (d.equals("-30"))
             {
                 res.setBmdn30(true);
-            }
-            else if (d.equals("31"))
+            } else if (d.equals("31"))
             {
                 res.setBmd31(true);
-            }
-            else if (d.equals("-31"))
+            } else if (d.equals("-31"))
             {
                 res.setBmdn31(true);
             }
@@ -687,48 +618,37 @@ public class CoreToDto
             if (d.equals("01"))
             {
                 res.setBm01(true);
-            }
-            else if (d.equals("02"))
+            } else if (d.equals("02"))
             {
                 res.setBm02(true);
-            }
-            else if (d.equals("03"))
+            } else if (d.equals("03"))
             {
                 res.setBm03(true);
-            }
-            else if (d.equals("04"))
+            } else if (d.equals("04"))
             {
                 res.setBm04(true);
-            }
-            else if (d.equals("05"))
+            } else if (d.equals("05"))
             {
                 res.setBm05(true);
-            }
-            else if (d.equals("06"))
+            } else if (d.equals("06"))
             {
                 res.setBm06(true);
-            }
-            else if (d.equals("07"))
+            } else if (d.equals("07"))
             {
                 res.setBm07(true);
-            }
-            else if (d.equals("08"))
+            } else if (d.equals("08"))
             {
                 res.setBm08(true);
-            }
-            else if (d.equals("09"))
+            } else if (d.equals("09"))
             {
                 res.setBm09(true);
-            }
-            else if (d.equals("10"))
+            } else if (d.equals("10"))
             {
                 res.setBm10(true);
-            }
-            else if (d.equals("11"))
+            } else if (d.equals("11"))
             {
                 res.setBm11(true);
-            }
-            else if (d.equals("12"))
+            } else if (d.equals("12"))
             {
                 res.setBm12(true);
             }
@@ -739,98 +659,263 @@ public class CoreToDto
             if (d.equals("00"))
             {
                 res.setBh00(true);
-            }
-            else if (d.equals("01"))
+            } else if (d.equals("01"))
             {
                 res.setBh01(true);
-            }
-            else if (d.equals("02"))
+            } else if (d.equals("02"))
             {
                 res.setBh02(true);
-            }
-            else if (d.equals("03"))
+            } else if (d.equals("03"))
             {
                 res.setBh03(true);
-            }
-            else if (d.equals("04"))
+            } else if (d.equals("04"))
             {
                 res.setBh04(true);
-            }
-            else if (d.equals("05"))
+            } else if (d.equals("05"))
             {
                 res.setBh05(true);
-            }
-            else if (d.equals("06"))
+            } else if (d.equals("06"))
             {
                 res.setBh06(true);
-            }
-            else if (d.equals("07"))
+            } else if (d.equals("07"))
             {
                 res.setBh07(true);
-            }
-            else if (d.equals("08"))
+            } else if (d.equals("08"))
             {
                 res.setBh08(true);
-            }
-            else if (d.equals("09"))
+            } else if (d.equals("09"))
             {
                 res.setBh09(true);
-            }
-            else if (d.equals("10"))
+            } else if (d.equals("10"))
             {
                 res.setBh10(true);
-            }
-            else if (d.equals("11"))
+            } else if (d.equals("11"))
             {
                 res.setBh11(true);
-            }
-            else if (d.equals("12"))
+            } else if (d.equals("12"))
             {
                 res.setBh12(true);
-            }
-            else if (d.equals("13"))
+            } else if (d.equals("13"))
             {
                 res.setBh13(true);
-            }
-            else if (d.equals("14"))
+            } else if (d.equals("14"))
             {
                 res.setBh14(true);
-            }
-            else if (d.equals("15"))
+            } else if (d.equals("15"))
             {
                 res.setBh15(true);
-            }
-            else if (d.equals("16"))
+            } else if (d.equals("16"))
             {
                 res.setBh16(true);
-            }
-            else if (d.equals("17"))
+            } else if (d.equals("17"))
             {
                 res.setBh17(true);
-            }
-            else if (d.equals("18"))
+            } else if (d.equals("18"))
             {
                 res.setBh18(true);
-            }
-            else if (d.equals("19"))
+            } else if (d.equals("19"))
             {
                 res.setBh19(true);
-            }
-            else if (d.equals("20"))
+            } else if (d.equals("20"))
             {
                 res.setBh20(true);
-            }
-            else if (d.equals("21"))
+            } else if (d.equals("21"))
             {
                 res.setBh21(true);
-            }
-            else if (d.equals("22"))
+            } else if (d.equals("22"))
             {
                 res.setBh22(true);
-            }
-            else if (d.equals("23"))
+            } else if (d.equals("23"))
             {
                 res.setBh23(true);
+            }
+        }
+        // BYMINUTE
+        for (String d : r.getBYMINUTE().split(","))
+        {
+            switch (d)
+            {
+                case "00":
+                    res.setBn00(true);
+                    break;
+                case "01":
+                    res.setBn01(true);
+                    break;
+                case "02":
+                    res.setBn02(true);
+                    break;
+                case "03":
+                    res.setBn03(true);
+                    break;
+                case "04":
+                    res.setBn04(true);
+                    break;
+                case "05":
+                    res.setBn05(true);
+                    break;
+                case "06":
+                    res.setBn06(true);
+                    break;
+                case "07":
+                    res.setBn07(true);
+                    break;
+                case "08":
+                    res.setBn08(true);
+                    break;
+                case "09":
+                    res.setBn09(true);
+                    break;
+                case "10":
+                    res.setBn10(true);
+                    break;
+                case "11":
+                    res.setBn11(true);
+                    break;
+                case "12":
+                    res.setBn12(true);
+                    break;
+                case "13":
+                    res.setBn13(true);
+                    break;
+                case "14":
+                    res.setBn14(true);
+                    break;
+                case "15":
+                    res.setBn15(true);
+                    break;
+                case "16":
+                    res.setBn16(true);
+                    break;
+                case "17":
+                    res.setBn17(true);
+                    break;
+                case "18":
+                    res.setBn18(true);
+                    break;
+                case "19":
+                    res.setBn19(true);
+                    break;
+                case "20":
+                    res.setBn20(true);
+                    break;
+                case "21":
+                    res.setBn21(true);
+                    break;
+                case "22":
+                    res.setBn22(true);
+                    break;
+                case "23":
+                    res.setBn23(true);
+                    break;
+                case "24":
+                    res.setBn24(true);
+                    break;
+                case "25":
+                    res.setBn25(true);
+                    break;
+                case "26":
+                    res.setBn26(true);
+                    break;
+                case "27":
+                    res.setBn27(true);
+                    break;
+                case "28":
+                    res.setBn28(true);
+                    break;
+                case "29":
+                    res.setBn29(true);
+                    break;
+                case "30":
+                    res.setBn30(true);
+                    break;
+                case "31":
+                    res.setBn31(true);
+                    break;
+                case "32":
+                    res.setBn32(true);
+                    break;
+                case "33":
+                    res.setBn33(true);
+                    break;
+                case "34":
+                    res.setBn34(true);
+                    break;
+                case "35":
+                    res.setBn35(true);
+                    break;
+                case "36":
+                    res.setBn36(true);
+                    break;
+                case "37":
+                    res.setBn37(true);
+                    break;
+                case "38":
+                    res.setBn38(true);
+                    break;
+                case "39":
+                    res.setBn39(true);
+                    break;
+                case "40":
+                    res.setBn40(true);
+                    break;
+                case "41":
+                    res.setBn41(true);
+                    break;
+                case "42":
+                    res.setBn42(true);
+                    break;
+                case "43":
+                    res.setBn43(true);
+                    break;
+                case "44":
+                    res.setBn44(true);
+                    break;
+                case "45":
+                    res.setBn45(true);
+                    break;
+                case "46":
+                    res.setBn46(true);
+                    break;
+                case "47":
+                    res.setBn47(true);
+                    break;
+                case "48":
+                    res.setBn48(true);
+                    break;
+                case "49":
+                    res.setBn49(true);
+                    break;
+                case "50":
+                    res.setBn50(true);
+                    break;
+                case "51":
+                    res.setBn51(true);
+                    break;
+                case "52":
+                    res.setBn52(true);
+                    break;
+                case "53":
+                    res.setBn53(true);
+                    break;
+                case "54":
+                    res.setBn54(true);
+                    break;
+                case "55":
+                    res.setBn55(true);
+                    break;
+                case "56":
+                    res.setBn56(true);
+                    break;
+                case "57":
+                    res.setBn57(true);
+                    break;
+                case "58":
+                    res.setBn58(true);
+                    break;
+                case "59":
+                    res.setBn59(true);
+                    break;
+
             }
         }
         return res;

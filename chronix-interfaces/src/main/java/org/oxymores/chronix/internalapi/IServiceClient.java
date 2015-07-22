@@ -1,11 +1,11 @@
 /**
  * @author Marc-Antoine Gouillart
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,15 +17,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.internalapi;
 
-import java.util.Date;
 import java.util.List;
 
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTORRule;
+import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
 
 public interface IServiceClient
@@ -46,7 +45,7 @@ public interface IServiceClient
 
     void resetStage();
 
-    List<Date> getNextRRuleOccurrences(DTORRule rule, String lowerBound, String higherBound);
+    DTOResultClock getNextRRuleOccurrences(DTORRule rule);
 
     DTOApplication createApplication(String name, String description);
 
