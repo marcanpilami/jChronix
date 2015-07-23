@@ -181,14 +181,18 @@ Number.prototype.zeroPad = function (numZeros)
     return zeroString + n;
 };
 
-function getTomorrow()
+function getTomorrowPlus(days)
 {
+    if (!days)
+    {
+        days = 0;
+    }
     var d = new Date();
     d.setHours(0);
     d.setMinutes(0);
     d.setSeconds(0);
     d.setMilliseconds(0);
-    d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + 1 + days);
     return d;
 }
 

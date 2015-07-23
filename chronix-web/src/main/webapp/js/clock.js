@@ -46,10 +46,19 @@ function PanelClock(app)
         // Init test buttons
         t.tab.find("div#pane-rrulebasics-" + app.id + " > button[name=day]").click(function ()
         {
-            var d = getTomorrow();
-            var end = new Date();
-            end.setDate(d.getDate() + 1);
-            t.test(d, end);
+            t.test(getTomorrowPlus(0), getTomorrowPlus(1));
+        });
+        t.tab.find("div#pane-rrulebasics-" + app.id + " > button[name=week]").click(function ()
+        {
+            t.test(getTomorrowPlus(0), getTomorrowPlus(7));
+        });
+        t.tab.find("div#pane-rrulebasics-" + app.id + " > button[name=month]").click(function ()
+        {
+            t.test(getTomorrowPlus(0), getTomorrowPlus(31));
+        });
+        t.tab.find("div#pane-rrulebasics-" + app.id + " > button[name=year]").click(function ()
+        {
+            t.test(getTomorrowPlus(0), getTomorrowPlus(365));
         });
     });
 }
@@ -65,6 +74,7 @@ PanelClock.prototype.initPanel = function ()
         contextMenu: false,
         manualColumnResize: true,
         manualRowResize: false,
+        height: 200,
         columns: [
             {data: 'name', title: 'Name'},
             {data: 'description', title: 'Description'}
@@ -74,7 +84,8 @@ PanelClock.prototype.initPanel = function ()
             var occ = this.getSourceDataAtRow(line);
             t.selectedRule = occ;
             t.initRRule(occ);
-        }
+        },
+        dataSchema: newRec
     });
 
     return;
@@ -132,3 +143,36 @@ PanelClock.prototype.test = function (start, end)
         alert(data.res);
     });
 };
+
+function newRec()
+{
+    var res = new Object();
+    res.id = uuid.v4();
+    res.interval = 1;
+    res.period = 'DAILY';
+    for (var i = 0; i <= 59; i++)
+    {
+        res["bn" + i.zeroPad(2)] = false;
+    }
+    for (var i = 0; i <= 23; i++)
+    {
+        res["bh" + i.zeroPad(2)] = false;
+    }
+    for (var i = 1; i <= 7; i++)
+    {
+        res["bd" + i.zeroPad(2)] = false;
+    }
+    for (var i = 1; i <= 31; i++)
+    {
+        res["bmd" + i.zeroPad(2)] = false;
+    }
+    for (var i = -1; i >= -7; i--)
+    {
+        res["bmdn" + i.zeroPad(2)] = false;
+    }
+    for (var i = 1; i <= 12; i++)
+    {
+        res["bm" + i.zeroPad(2)] = false;
+    }
+    return res;
+}

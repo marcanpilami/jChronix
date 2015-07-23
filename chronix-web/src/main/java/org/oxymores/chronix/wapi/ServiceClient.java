@@ -223,11 +223,6 @@ public class ServiceClient implements IServiceClient
     @Consumes(MediaType.APPLICATION_JSON)
     public DTOResultClock getNextRRuleOccurrences(DTORRule rule)
     {
-        log.info("RRRRRRRRRRRRRRRRRRR");
-        log.info(rule.getSimulStart());
-        log.info(rule.getSimulEnd());
-
-        //List<String> res = new ArrayList<>();
         DTOResultClock res = new DTOResultClock();
         ClockRRule r = DtoToCore.getRRule(rule);
         Clock tmp = new Clock();
@@ -248,7 +243,6 @@ public class ServiceClient implements IServiceClient
         {
             Period p = (Period) pe;
             DateFormat dfo = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S'Z'");
-            //res.getRes().add(dfo.format(p.getStart()));
             res.getRes().add(p.getStart());
         }
 
