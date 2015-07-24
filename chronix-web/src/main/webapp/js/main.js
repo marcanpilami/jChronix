@@ -94,7 +94,6 @@ function initNetwork()
         // First pass: draw nodes
         $.each(data.nodes, function ()
         {
-            console.debug(this);
             var d = getExecNodeDiv(this);
             d[0]._source = this;
             d.appendTo($("#node-c"));

@@ -14,6 +14,11 @@ function PanelClock(app)
 
         // Init contents
         t.list_rec = t.tab.find("div#app-" + app.id + "-rrulelist");
+        t.list_clock = t.tab.find("div#app-" + app.id + "-clocklist");
+        t.list_recplus = t.tab.find("div#app-" + app.id + "-recpluslist");
+        t.list_recminus = t.tab.find("div#app-" + app.id + "-recminuslist");
+        t.list_dateplus = t.tab.find("div#app-" + app.id + "-datepluslist");
+        //t.list_dateminus = t.tab.find("div#app-" + app.id + "-dateminuslist");
 
         // Init data handlers/bindings
         t.tab.find("div#pane-rrulebasics-" + app.id + " > input[type=number]").change(function ()
@@ -60,6 +65,86 @@ function PanelClock(app)
         {
             t.test(getTomorrowPlus(0), getTomorrowPlus(365));
         });
+
+        // Init add/remove RRule buttons
+        t.list_recplus.on('click', "button[title=remplus]", function ()
+        {
+            var bt = this;
+            $.each(t.selectedClock.rulesADD, function (i)
+            {
+                if (String(this) === bt.value)
+                {
+                    t.selectedClock.rulesADD.splice(i, 1);
+                }
+            });
+            t.initClock(t.selectedClock);
+        });
+        t.list_recminus.on('click', "button[title=remminus]", function ()
+        {
+            var bt = this;
+            $.each(t.selectedClock.rulesEXC, function (i)
+            {
+                if (String(this) === bt.value)
+                {
+                    t.selectedClock.rulesEXC.splice(i, 1);
+                }
+            });
+            t.initClock(t.selectedClock);
+        });
+        t.list_dateplus.on('click', "button[title=remdateplus]", function ()
+        {
+
+        });
+
+        // ADD rules buttons
+        t.tab.find('button[name=adddateplus]').click(function ()
+        {
+            alert('tt');
+            var bt = this;
+            var found = false;
+            $.each(t.selectedClock.rulesADD, function (i)
+            {
+                if (String(this) === bt.value)
+                {
+                    found = true;
+                    return;
+                }
+            });
+            if (found)
+            {
+                t.selectedClock.rulesADD.push(t.selectedRule.id);
+                t.initClock(t.selectedClock);
+            }
+
+        });
+
+        t.tab.find('button[name=addrecplus]').click(function ()
+        {
+            var bt = this;
+            $.each(t.selectedClock.rulesADD, function ()
+            {
+                if (String(this) === bt.value)
+                {
+                    return;
+                }
+            });
+            t.selectedClock.rulesADD.push(t.selectedRule.id);
+            t.initClock(t.selectedClock);
+        });
+
+        t.tab.find('button[name=addrecminus]').click(function ()
+        {
+            var bt = this;
+            $.each(t.selectedClock.rulesEXC, function ()
+            {
+                if (String(this) === bt.value)
+                {
+                    return;
+                }
+            });
+            t.selectedClock.rulesEXC.push(t.selectedRule.id);
+            t.initClock(t.selectedClock);
+        });
     });
 }
 
@@ -88,7 +173,27 @@ PanelClock.prototype.initPanel = function ()
         dataSchema: newRec
     });
 
-    return;
+    this.table_clocks = new Handsontable(this.list_clock[0], {
+        data: this.clocks,
+        minSpareRows: 1,
+        rowHeaders: false,
+        colHeaders: true,
+        contextMenu: false,
+        manualColumnResize: true,
+        manualRowResize: false,
+        height: 200,
+        columns: [
+            {data: 'name', title: 'Name'},
+            {data: 'description', title: 'Description'}
+        ],
+        afterSelectionEnd: function (event, col, line)
+        {
+            var c = this.getSourceDataAtRow(line);
+            t.selectedClock = c;
+            t.initClock(c);
+        },
+        dataSchema: newClock
+    });
 };
 
 PanelClock.prototype.initRRule = function (rrule)
@@ -134,6 +239,52 @@ PanelClock.prototype.initRRule = function (rrule)
     }
 };
 
+PanelClock.prototype.initClock = function (clock)
+{
+    this.list_recplus.empty();
+    this.list_recminus.empty();
+    var t = this;
+    $.each(clock.rulesADD, function ()
+    {
+        var r_id = String(this);
+        var r_name = null;
+
+        // Find the rrule name
+        $.each(t.rrules, function ()
+        {
+            if (this.id === r_id)
+            {
+                r_name = this.name;
+            }
+        });
+
+        $("<div title='" + r_id + "'>" + r_name + "<button title='remplus' value='" + r_id + "'>X</button></div>").appendTo(t.list_recplus);
+    });
+
+    $.each(clock.rulesEXC, function ()
+    {
+        var r_id = String(this);
+        var r_name = null;
+
+        // Find the rrule name
+        $.each(t.rrules, function ()
+        {
+            if (this.id === r_id)
+            {
+                r_name = this.name;
+            }
+        });
+
+        $("<div title='" + r_id + "'>" + r_name + "<button title='remminus' value='" + r_id + "'>X</button></div>").appendTo(t.list_recminus);
+    });
+
+    /*$.each(clock.datesADD, function ()
+     {
+     var d = this;
+     $("<div>" + d + "<button title='remdateplus' value='" + d + "'>X</button></div>").appendTo(t.list_dateplus);
+     });*/
+};
+
 PanelClock.prototype.test = function (start, end)
 {
     this.selectedRule.simulStart = start;
@@ -143,6 +294,17 @@ PanelClock.prototype.test = function (start, end)
         alert(data.res);
     });
 };
+
+function newClock()
+{
+    var res = new Object();
+    res.id = uuid.v4();
+    res.rulesADD = [];
+    res.rulesEXC = [];
+    res.datesADD = [];
+    res.datesEXC = [];
+    return res;
+}
 
 function newRec()
 {
