@@ -1,7 +1,18 @@
+/* global network, uuid */
 
-function initPlaces()
+function PanelPlace()
 {
-    new Handsontable($('#pl-table')[0], {
+    this.table = null;
+}
+
+PanelPlace.prototype.initPanel = function ()
+{
+    if (this.table)
+    {
+        return;
+    }
+
+    this.table = new Handsontable($('#pl-table')[0], {
         data: network.places,
         minSpareRows: 1,
         rowHeaders: true,
@@ -28,21 +39,9 @@ function initPlaces()
                 }
             }
         ],
-        afterChange: function (changes, action)
+        dataSchema: function ()
         {
-            if (!changes)
-            {
-                return;
-            }
-            var grid = this;
-            $.each(changes, function ()
-            {
-                var n = grid.getSourceDataAtRow(this[0]);
-                if (!n.id)
-                {
-                    n.id = uuid.v4();
-                }
-            });
+            return {id: uuid.v4(), name: null, description: null};
         }
     });
 }

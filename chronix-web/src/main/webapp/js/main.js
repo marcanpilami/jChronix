@@ -4,12 +4,13 @@ var tabs;
 var network;
 var apps_short;
 var apps = new Object();
-var panel_phynode;
+var panel_phynode, panel_places;
 
 $(
         function ()
         {
             panel_phynode = new PanelPhyNode();
+            panel_places = new PanelPlace();
 
             tabs = $('#tabs').tabs({
                 active: 0,
@@ -21,13 +22,16 @@ $(
                     {
                         panel_phynode.initPanel();
                     }
+                    if (i.indexOf("place") === 0)
+                    {
+                        panel_places.initPanel();
+                    }
 
                 }});
 
             $.getJSON("ws/meta/network").done(function (data)
             {
                 network = data;
-                initPlaces();
             }).fail(function (o, status)
             {
                 alert("failed to fetch network " + status);
