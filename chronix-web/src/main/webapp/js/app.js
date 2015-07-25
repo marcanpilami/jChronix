@@ -44,7 +44,8 @@ function initApp(uuid)
                     {
                         initGroup(app);
                     }
-                }
+                },
+                disabled: [4]
             });
 
             // Inits requiring both tabs + app data
