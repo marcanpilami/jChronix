@@ -215,7 +215,13 @@ PanelChain.prototype.setJSPNode = function (node)
         anchor: ["Perimeter", {shape: "Rectangle"}]
     });
 
-    this.jspInstance.draggable(node, {containment: "parent", filter: 'div.anchor', filterExclude: true});
+    this.jspInstance.draggable(node, {containment: "parent", filter: 'div.anchor', filterExclude: true,
+        stop: function (event)
+        {
+            event.el._source.x = event.pos[0];
+            event.el._source.y = event.pos[1];
+        }}
+    );
 };
 
 PanelChain.prototype.drawState = function (s)
