@@ -25,10 +25,34 @@
         <div id="app-chain-IDIDID">
             <div style="height: 100%; width: 100%; position: relative;">
                 <div class='palette' style="height: 100%; width: 200px;">
-                    <div class='app-chain-IDIDID-planchoice' style="width: calc(100% - 30px);"></div>
-                    <div style='palette-header'>Palette</div>
-                    <div class='paletteitem execnode'>Node</div>
-                    <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
+                    <div class='block visibleblock'>
+                        <div style='palette-header'>Edited chain</div>
+                        <div class='app-chain-IDIDID-planchoice' style="width: 100%;"></div>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-shell' style='width: 100%;'></div>
+                        <button name="shell">add selected command >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-chain' style='width: 100%;'></div>
+                        <button name="chain">add selected chain >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-clock' style='width: 100%;'></div>
+                        <button name="clock">add selected clock >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-external' style='width: 100%;'></div>
+                        <button name="external">add selected external >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-calnext' style='width: 100%;'></div>
+                        <button name="calnext">add selected tick >></button>
+                    </div>
+                    <div class='block'>
+                        <button name="and">add AND >></button>
+                        <button name="or">add OR >></button>
+                    </div>
 
                     <ul class='menu' style="bottom: 0px; position: absolute; width: 200px;">
                         <li class='c-remove'>

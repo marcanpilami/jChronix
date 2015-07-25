@@ -5,45 +5,45 @@
 }
 
 /* Vertical tabs */
-.tabs-left 
-{ 
-    position: relative; 
-    padding-left: 6.5em; 
-} 
-.tabs-left .ui-tabs-nav 
-{ 
-    position: absolute; 
-    left: 0.25em; 
-    top: 0.25em; 
-    bottom: 0.25em; 
-    width: 6em; 
-    padding: 0.2em 0 0.2em 0.2em; 
-} 
-.tabs-left .ui-tabs-nav li 
-{ 
-    right: 1px; 
-    width: 100%; 
-    border-right: none; 
-    border-bottom-width: 1px !important; 
-    -moz-border-radius: 4px 0px 0px 4px; 
-    -webkit-border-radius: 4px 0px 0px 4px; 
-    border-radius: 4px 0px 0px 4px; 
-    overflow: hidden; 
-} 
-.tabs-left .ui-tabs-nav li.ui-tabs-selected, tabs-left .ui-tabs-nav li.ui-state-active 
-{ 
-    border-right: 1px solid transparent; 
-} 
-.tabs-left .ui-tabs-nav li a 
-{ 
-    float: right; 
-    width: 100%; 
-    text-align: right; 
-} 
-
-.tabs-left > div 
+.tabs-left
 {
-	height: 35em;
+    position: relative;
+    padding-left: 6.5em;
+}
+.tabs-left .ui-tabs-nav
+{
+    position: absolute;
+    left: 0.25em;
+    top: 0.25em;
+    bottom: 0.25em;
+    width: 6em;
+    padding: 0.2em 0 0.2em 0.2em;
+}
+.tabs-left .ui-tabs-nav li
+{
+    right: 1px;
+    width: 100%;
+    border-right: none;
+    border-bottom-width: 1px !important;
+    -moz-border-radius: 4px 0px 0px 4px;
+    -webkit-border-radius: 4px 0px 0px 4px;
+    border-radius: 4px 0px 0px 4px;
+    overflow: hidden;
+}
+.tabs-left .ui-tabs-nav li.ui-tabs-selected, tabs-left .ui-tabs-nav li.ui-state-active
+{
+    border-right: 1px solid transparent;
+}
+.tabs-left .ui-tabs-nav li a
+{
+    float: right;
+    width: 100%;
+    text-align: right;
+}
+
+.tabs-left > div
+{
+    height: 35em;
 }
 
 /* Generic drawing panel items */
@@ -104,9 +104,29 @@
     font-style: italic;
 }
 
+.palette > .block
+{
+    padding: 3px;
+}
+
+.palette > .visibleblock
+{
+    padding: 3px;
+    border: 1px solid black;
+}
+
+.palette > div > button
+{
+    font-size: 10pt;
+    font-style: italic;
+    width: 100%;
+    border: none;
+    background-color: #c2c1c1;
+}
+
 /* Execution nodes */
 .execnode
-{   
+{
     border: solid black 1px;
     width: 8em;
     min-height: 2em;

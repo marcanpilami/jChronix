@@ -107,3 +107,8 @@ function printStackTrace()
             .split('\n');
     console.log(stack);
 }
+
+function item2name(item)
+{
+    return item.name;
+}

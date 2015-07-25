@@ -1,3 +1,5 @@
+/* global jsPlumb, item2name */
+
 var PanelChain = function (app)
 {
     this.tabId = "app-chain-" + app.id;
@@ -26,12 +28,8 @@ var PanelChain = function (app)
         {
             return {results: [{name: 'Plans', children: app.plans}, {name: 'Chains', children: app.chains}]};
         },
-        formatSelection: function (item) {
-            return item.name;
-        },
-        formatResult: function (item) {
-            return item.name;
-        }
+        formatSelection: item2name,
+        formatResult: item2name
     }).on('change', function (e)
     {
         $.each(app.chains, function ()
@@ -42,7 +40,16 @@ var PanelChain = function (app)
                 t.initPanel();
             }
         });
-    });
+        $.each(app.plans, function ()
+        {
+            if (this.id === e.val)
+            {
+                t.chain = this;
+                t.initPanel();
+            }
+        });
+    }).select2('val', t.chain.id);
+    //$("div.app-chain-" + app.id + "-planchoice").val(app.chains[0]);
 
     // Toolbar
     var t = this;
@@ -55,11 +62,78 @@ var PanelChain = function (app)
         node.addClass('drawingPanel-selected');
         t.toggleMenu();
     });
+
+    // Palette lists
+    $("#app-" + t.app.id + "-palette-shell").select2({
+        data: t.app.shells,
+        formatSelection: item2name,
+        formatResult: item2name
+    });
+    $("#app-" + t.app.id + "-palette-chain").select2({
+        data: t.app.chains,
+        formatSelection: item2name,
+        formatResult: item2name
+    });
+    $("#app-" + t.app.id + "-palette-clock").select2({
+        data: t.app.clocks,
+        formatSelection: item2name,
+        formatResult: item2name
+    });
+    $("#app-" + t.app.id + "-palette-external").select2({
+        data: t.app.externals,
+        formatSelection: item2name,
+        formatResult: item2name
+    });
+    $("#app-" + t.app.id + "-palette-calnext").select2({
+        data: t.app.calnexts,
+        formatSelection: item2name,
+        formatResult: item2name
+    });
+
+    this.tab.find("div.palette > div > button").click(function ()
+    {
+        var source = null;
+        var orig = $(this).attr('name');
+
+        switch (orig)
+        {
+            case 'shell' :
+                source = $("#app-" + t.app.id + "-palette-shell").val();
+                break;
+            case 'chain' :
+                source = $("#app-" + t.app.id + "-palette-chain").val();
+                break;
+            case 'clock' :
+                source = $("#app-" + t.app.id + "-palette-clock").val();
+                break;
+            case 'external' :
+                source = $("#app-" + t.app.id + "-palette-external").val();
+                break;
+            case 'calnext' :
+                source = $("#app-" + t.app.id + "-palette-calnext").val();
+                break;
+            case 'and':
+                source = t.app.andId;
+                break;
+            case 'or':
+                source = t.app.orId;
+                break;
+        }
+        if (!source)
+        {
+            alert("Please select an item before trying to add it");
+            return;
+        }
+
+        var state = newState(t.app, 10, 10, source, t.app.groups[0].id);
+        t.chain.states.push(state);
+        t.drawState(state);
+    });
 };
 
 PanelChain.prototype.initPanel = function ()
 {
-    // Cleanup  
+    // Cleanup
     this.selectedState = null;
     this.selectedStateDiv = null;
     this.jspInstance.reset();
@@ -83,6 +157,26 @@ PanelChain.prototype.initPanel = function ()
             label: "[" + this.guard1 + "]"
         });
     });
+
+    // Show only neede palette items
+    this.plan = true;
+    $.each(this.chain.states, function ()
+    {
+        if (this.start)
+        {
+            t.plan = false;
+        }
+    });
+    if (this.plan)
+    {
+        this.tab.find(".palette > .block").show();
+    }
+    else
+    {
+        this.tab.find(".palette > .block > div[id$=chain]").parent().hide();
+        this.tab.find(".palette > .block > div[id$=clock]").parent().hide();
+        this.tab.find(".palette > .block > div[id$=external]").parent().hide();
+    }
 };
 
 PanelChain.prototype.getStateDiv = function (s)
@@ -230,6 +324,6 @@ PanelChain.prototype.toggleMenu = function ()
     {
         this.tab.find("ul.menu > li.c-calshifts").removeClass('ui-state-disabled');
     }
-    
+
     this.tab.find("ul.menu > li.c-groups").removeClass('ui-state-disabled');
 };
