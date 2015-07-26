@@ -5,28 +5,44 @@
 // Shells
 ////////////////////////////////////////////////////////////////////////////////
 
-function removeShell(app, shellId, removeItself)
+function filterStatesUsing(app, sourceId)
 {
-    // Clean from states
-    var toDelete = [];
+    var res = [];
     $.each(app.chains, function ()
     {
         var chain = this;
         $.each(chain.states, function ()
         {
             var state = this;
-            if (state.representsId === shellId)
+            if (state.representsId === sourceId)
             {
-                toDelete.push(state);
+                res.push(state);
             }
         });
     });
+    $.each(app.plans, function ()
+    {
+        var chain = this;
+        $.each(chain.states, function ()
+        {
+            var state = this;
+            if (state.representsId === sourceId)
+            {
+                res.push(state);
+            }
+        });
+    });
+    return res;
+}
+
+function removeShell(app, shellId, removeItself)
+{
+    // Clean from states
+    var toDelete = filterStatesUsing(app, shellId);
     $.each(toDelete, function ()
     {
-        console.debug(this);
         removeState(app, this.id);
     });
-    toDelete = [];
 
     // Remove from app
     if (removeItself)
@@ -42,13 +58,41 @@ function removeShell(app, shellId, removeItself)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Externals
+////////////////////////////////////////////////////////////////////////////////
+
+function removeExternal(app, id, removeItself)
+{
+    // Clean from states
+    var toDelete = filterStatesUsing(app, id);
+    $.each(toDelete, function ()
+    {
+        console.debug(this);
+        removeState(app, this.id);
+    });
+    toDelete = [];
+
+    // Remove from app
+    if (removeItself)
+    {
+        $.each(app.externals, function (i)
+        {
+            if (this.id === id)
+            {
+                app.externals.splice(i, 1);
+            }
+        });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // States
 ////////////////////////////////////////////////////////////////////////////////
 
 function removeState(app, stateId)
 {
     var toDelete = [];
-    $.each(app.chains, function ()
+    function clean()
     {
         var chain = this;
         $.each(chain.states, function ()
@@ -76,7 +120,10 @@ function removeState(app, stateId)
             chain.transitions.splice(chain.transitions.indexOf(this), 1);
         });
         toDelete = [];
-    });
+    }
+
+    $.each(app.chains, clean);
+    $.each(app.plans, clean);
 }
 
 function newState(app, x, y, representsId, runsOnId)

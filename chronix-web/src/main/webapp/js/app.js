@@ -7,6 +7,7 @@ function initApp(uuid)
     var chainPanel = null;
     var seqPanel = null;
     var clockPanel = null;
+    var external = false;
 
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
@@ -32,7 +33,11 @@ function initApp(uuid)
                     }
                     if (i.indexOf("app-external") === 0)
                     {
-                        initExternal(app);
+                        if (!external)
+                        {
+                            initExternal(app); // only init once simple panels
+                            external = true;
+                        }
                     }
                     if (i.indexOf("app-seq") === 0)
                     {
@@ -72,19 +77,18 @@ function initCommand(app)
         minSpareRows: 1,
         rowHeaders: false,
         colHeaders: true,
-        contextMenu: false,
+        contextMenu: ['remove_row', 'undo', 'redo'],
         manualColumnResize: true,
         manualRowResize: false,
         colWidths: [150, 300],
         stretchH: 'last',
         multiSelect: false,
-        contextMenu: ['remove_row', 'undo', 'redo'],
-                columns: [
-                    //{data: 'id', title: 'ID'},
-                    {data: 'name', title: 'Name'},
-                    {data: 'description', title: 'Description'},
-                    {data: 'command', title: 'Command'}
-                ],
+        columns: [
+            //{data: 'id', title: 'ID'},
+            {data: 'name', title: 'Name'},
+            {data: 'description', title: 'Description'},
+            {data: 'command', title: 'Command'}
+        ],
         dataSchema: function ()
         {
             return {id: uuid.v4(), name: null, command: null, description: null};
@@ -108,17 +112,28 @@ function initExternal(app)
         minSpareRows: 1,
         rowHeaders: false,
         colHeaders: true,
-        contextMenu: false,
+        contextMenu: ['remove_row', 'undo', 'redo'],
         manualColumnResize: true,
         manualRowResize: false,
+        colWidths: [150, 300, 200],
+        stretchH: 'last',
+        multiSelect: false,
         columns: [
-            {data: 'id', title: 'ID'},
+            //{data: 'id', title: 'ID'},
             {data: 'name', title: 'Name'},
             {data: 'description', title: 'Description'},
             {data: 'accountRestriction', title: 'Optional shared secret'},
             {data: 'regularExpression', title: 'Calendar occurrence extractor (regular expression)'}
         ],
-        afterChange: initIdIfNone
+        dataSchema: function ()
+        {
+            return {id: uuid.v4(), name: null, description: null, accountRestriction: null, machineRestriction: null, regularExpression: null};
+        },
+        beforeRemoveRow: function (row)
+        {
+            var c = this.getSourceDataAtRow(row);
+            removeExternal(app, c.id);
+        }
     });
 }
 
