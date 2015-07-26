@@ -1,5 +1,6 @@
 package org.oxymores.chronix.wapi;
 
+import java.io.Console;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -42,6 +43,7 @@ public class DtoToCore
     public static Application getApplication(DTOApplication d)
     {
         Application a = new Application();
+        System.out.println(d.getId());
         a.setId(UUID.fromString(d.getId()));
         a.setDescription(d.getDescription());
         a.setname(d.getName());
@@ -313,15 +315,11 @@ public class DtoToCore
     public static PlaceGroup getPlaceGroup(DTOPlaceGroup d, Application a)
     {
         PlaceGroup r = new PlaceGroup();
-        /* r.setDescription(d.getDescription());
-         r.setId(UUID.fromString(d.getId()));
-         r.setName(d.getName());
+        r.setDescription(d.getDescription());
+        r.setId(UUID.fromString(d.getId()));
+        r.setName(d.getName());
 
-         for (String s : d.getPlaces())
-         {
-         r.addPlace(a.getPlace(UUID.fromString(s)));
-         } */
-
+        // Places <-> Group links are defined inside Places, not Groups.
         return r;
     }
 

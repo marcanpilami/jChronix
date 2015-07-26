@@ -155,3 +155,23 @@ td.current, td.highlight
 {
     min-width: 10em;
 }
+
+/* Error table */
+
+.errortable
+{
+    border-collapse: collapse;
+    border: 1px black solid;
+}
+
+.errortable > tbody > tr > td
+{
+    border: 1px black solid;
+    padding: 2px;
+}
+
+.errortable > thead > tr > th
+{
+    border: 1px black solid;
+    padding: 2px;
+}

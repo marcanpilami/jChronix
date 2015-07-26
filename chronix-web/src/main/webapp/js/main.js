@@ -84,7 +84,7 @@ function getTomorrowPlus(days)
     return d;
 }
 
-$.postJSON = function (url, data, callback) {
+$.postJSON = function (url, data, callback, errorcallback) {
     return jQuery.ajax({
         headers: {
             'Accept': 'application/json',
@@ -94,7 +94,8 @@ $.postJSON = function (url, data, callback) {
         'url': url,
         'data': JSON.stringify(data),
         'dataType': 'json',
-        'success': callback
+        'success': callback,
+        'error': errorcallback
     });
 };
 

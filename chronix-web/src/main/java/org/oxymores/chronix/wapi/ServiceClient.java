@@ -127,7 +127,8 @@ public class ServiceClient implements IServiceClient
         if (ctx.getApplications().size() > 0)
         {
             return getApplicationById(ctx.getApplications().iterator().next().getId().toString());
-        } else
+        }
+        else
         {
             return createApplication("first application", "created automatically");
         }
@@ -174,7 +175,8 @@ public class ServiceClient implements IServiceClient
         try
         {
             ctx.saveApplication(a);
-        } catch (ChronixPlanStorageException e)
+        }
+        catch (ChronixPlanStorageException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -196,7 +198,8 @@ public class ServiceClient implements IServiceClient
         try
         {
             SenderHelpers.sendApplicationToAllClients(this.ctx.getApplication(uuid), ctx);
-        } catch (JMSException e)
+        }
+        catch (JMSException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -233,7 +236,8 @@ public class ServiceClient implements IServiceClient
         try
         {
             pl = tmp.getOccurrences(new DateTime(rule.getSimulStart()), new DateTime(rule.getSimulEnd()));
-        } catch (ParseException e)
+        }
+        catch (ParseException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -350,7 +354,8 @@ public class ServiceClient implements IServiceClient
         {
             ctx.saveApplication(a);
             ctx.setWorkingAsCurrent(a);
-        } catch (ChronixPlanStorageException e1)
+        }
+        catch (ChronixPlanStorageException e1)
         {
             // DEBUG code, so no need for pretty exc handling
             e1.printStackTrace();
@@ -359,10 +364,26 @@ public class ServiceClient implements IServiceClient
     }
 
     @Override
+    @POST
+    @Path("app/test")
+    @Produces(
+            {
+                "application/json", "application/xml"
+            })
+    @Consumes(MediaType.APPLICATION_JSON)
     public List<DTOValidationError> validateApp(DTOApplication app)
     {
-        List<DTOValidationError> res = new ArrayList<DTOValidationError>();
-        DTOValidationError tmp = null;
+        log.debug("validateApp service was called");
+        List<DTOValidationError> res = new ArrayList<>();
+        DTOValidationError tmp;
+
+        if (app == null)
+        {
+            tmp = new DTOValidationError();
+            tmp.setErrorMessage("Application sent could not be deserialized. Please check its format.");
+            res.add(tmp);
+            return res;
+        }
 
         // Read application
         Application a = DtoToCore.getApplication(app);

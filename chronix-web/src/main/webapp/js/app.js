@@ -9,6 +9,7 @@ function initApp(uuid)
     var clockPanel = null;
     var external = false;
     var groups = false;
+    var save = false;
 
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
@@ -54,6 +55,14 @@ function initApp(uuid)
                         {
                             initGroup(app);
                             groups = true;
+                        }
+                    }
+                    if (i.indexOf("app-save") === 0)
+                    {
+                        if (!save)
+                        {
+                            initSave(app); // only init once simple panels
+                            save = true;
                         }
                     }
                 },
