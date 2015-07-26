@@ -1,22 +1,15 @@
+/* global uuid */
+
 function PanelRec(app)
 {
     this.app = app;
     this.tab = $("#app-seq-" + app.id);
     this.calendars = app.calendars;
-
-    // Load the panel
-    var t = this;
-    this.tab.load("seq.html", function ()
-    {
-        // Replace ids
-        t.tab.html(t.tab[0].innerHTML.replace(/IDIDID/g, app.id));
-
-        // Init contents
-    });
 }
 
 PanelRec.prototype.initPanel = function ()
 {
+    var t = this;
     this.tab.find("#app-" + this.app.id + "-reclist").empty();
 
     this.occurrences_table = new Handsontable(this.tab.find("#app-" + this.app.id + "-occlist")[0], {
@@ -28,12 +21,15 @@ PanelRec.prototype.initPanel = function ()
         manualColumnResize: true,
         manualRowResize: false,
         columns: [
-            {data: 'id', title: 'ID'},
+            //{data: 'id', title: 'ID'},
             {data: 'seq', title: 'Occurrence name'}
-        ]
+        ],
+        dataSchema: function ()
+        {
+            return {id: uuid.v4(), seq: null};
+        }
     });
 
-    var t = this;
     this.maintable = new Handsontable(this.tab.find("#app-" + this.app.id + "-reclist")[0], {
         data: this.app.calendars,
         minSpareRows: 1,
@@ -43,11 +39,14 @@ PanelRec.prototype.initPanel = function ()
         manualColumnResize: true,
         manualRowResize: false,
         columns: [
-            {data: 'id', title: 'ID'},
+            //{data: 'id', title: 'ID'},
             {data: 'name', title: 'Name'},
             {data: 'description', title: 'Description'}
         ],
-        afterChange: initIdIfNone,
+        dataSchema: function ()
+        {
+            return {id: uuid.v4(), name: null, description: null, days: []};
+        },
         afterSelectionEnd: function (event, col, line)
         {
             var cal = this.getSourceDataAtRow(line);
