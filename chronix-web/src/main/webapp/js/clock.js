@@ -1,3 +1,5 @@
+/* global uuid */
+
 function PanelClock(app)
 {
     this.app = app;
@@ -18,14 +20,15 @@ function PanelClock(app)
         t.list_recplus = t.tab.find("div#app-" + app.id + "-recpluslist");
         t.list_recminus = t.tab.find("div#app-" + app.id + "-recminuslist");
         t.list_dateplus = t.tab.find("div#app-" + app.id + "-datepluslist");
+        t.rulepane = $("#pane-edit-rrule-" + app.id);
         //t.list_dateminus = t.tab.find("div#app-" + app.id + "-dateminuslist");
 
         // Init data handlers/bindings
-        t.tab.find("div#pane-rrulebasics-" + app.id + " > input[type=number]").change(function ()
+        $("div#pane-rrulebasics-" + app.id + " > input[type=number]").change(function ()
         {
             t.selectedRule.interval = $(this).val();
         });
-        t.tab.find("div#pane-rrulebasics-" + app.id + " > select").change(function ()
+        $("div#pane-rrulebasics-" + app.id + " > select").change(function ()
         {
             t.selectedRule.period = $(this).val();
         });
@@ -145,6 +148,18 @@ function PanelClock(app)
             t.selectedClock.rulesEXC.push(t.selectedRule.id);
             t.initClock(t.selectedClock);
         });
+
+        // The RRULE should be inside a dialog
+        var dialog = t.tab.find("#pane-edit-rrule-" + t.app.id).dialog({
+            autoOpen: false,
+            //height: 300,
+            width: 900,
+            modal: true});
+
+        t.tab.find("#app-" + t.app.id + "-rrulelist").prev().click(function () {
+            dialog.dialog('open');
+        });
+
     });
 }
 
@@ -198,43 +213,44 @@ PanelClock.prototype.initPanel = function ()
 
 PanelClock.prototype.initRRule = function (rrule)
 {
-    this.tab.find("div#pane-rrulebasics-" + this.app.id + " > input[type=number]").val(rrule.interval);
-    this.tab.find("div#pane-rrulebasics-" + this.app.id + " > select").val(rrule.period);
+    // Use global search, because the dialog may be anywhere.
+    this.rulepane.find("div#pane-rrulebasics-" + this.app.id + " > input[type=number]").val(rrule.interval);
+    this.rulepane.find("div#pane-rrulebasics-" + this.app.id + " > select").val(rrule.period);
 
     for (var i = 0; i <= 59; i++)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-byminute-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-byminute-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bn' + j]);
     }
     for (var i = 0; i <= 23; i++)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-byhour-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-byhour-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bh' + j]);
     }
     for (var i = 1; i <= 7; i++)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-byweekday-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-byweekday-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bd' + j]);
     }
     for (var i = 1; i <= 31; i++)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-bymonthday-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-bymonthday-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bmd' + j]);
     }
     for (var i = -1; i >= -7; i--)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-bymonthdayminus-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-bymonthdayminus-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bmdn' + j]);
     }
     for (var i = 1; i <= 12; i++)
     {
         var j = i.zeroPad(2);
-        var a = this.tab.find("div#pane-bymonth-" + this.app.id + " > div > span > input[value=" + j + "]");
+        var a = this.rulepane.find("div#pane-bymonth-" + this.app.id + " > div > span > input[value=" + j + "]");
         a.prop('checked', rrule['bm' + j]);
     }
 };
@@ -289,9 +305,15 @@ PanelClock.prototype.test = function (start, end)
 {
     this.selectedRule.simulStart = start;
     this.selectedRule.simulEnd = end;
+    var t = this;
     $.postJSON('ws/meta/rrule/test', this.selectedRule, function (data)
     {
-        alert(data.res);
+        var d = t.rulepane.find("div[title=results]");
+        d.empty();
+        $.each(data.res, function ()
+        {
+            $("<div>" + new Date(this) + "</div>").appendTo(d);
+        });
     });
 };
 

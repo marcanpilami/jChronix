@@ -184,3 +184,9 @@ td.current, td.highlight
     border: 1px black solid;
     padding: 2px;
 }
+
+/* Misc */
+.smallpanel
+{
+    margin-bottom: 5px;
+}

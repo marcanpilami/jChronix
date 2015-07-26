@@ -1,36 +1,49 @@
-<div>
-    <!-- clock list -->
-    <div>
-        <div id='app-IDIDID-clocklist'></div>
+<div style="width: 100%;">
+    <div style="display: table; width: 100%;">
+        <div style="display: table-row; width: 100%;">
+
+            <!-- clock list -->
+            <div style="display: table-cell; min-width: 200px;">
+                <div class="h4">Time Tiggers</div>
+                <div id='app-IDIDID-clocklist'></div>
+            </div>
+
+            <!-- clock edit panel -->
+            <div style="display: table-cell;">
+                <div class="h4" style="padding-right: 10px;">Selected time trigger content</div>
+                <div class='smallpanel'>
+                    <div class='title'>These rules are added</div>
+                    <div id='app-IDIDID-recpluslist'></div>
+                    <button name="addrecplus">Add selected rule</button>
+                </div>
+                <div class='smallpanel'>
+                    <div class='title'>These rules are substracted</div>
+                    <div id='app-IDIDID-recminuslist'></div>
+                    <button name="addrecminus">Add selected rule</button>
+                </div>
+                <div class='smallpanel' style="display: none">
+                    <div class='title'>These occurrences are added</div>
+                    <div id='ap-IDIDID-datepluslist'></div>
+                    <input type="datetime">
+                    <button name='adddateplus'>Add</button>
+                </div>
+            </div>
+
+            <!-- recurrence list -->
+            <div style='display: table-cell'>
+                <div class="h4" style="display: inline">Recurrence rules that can be included in triggers</div>
+                <button>Edit selected rule</button>
+                <div id='app-IDIDID-rrulelist'></div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- clock edit panel -->
-    <div>
-        <div class='smallpanel'>
-            <div class='title'>These rules are added</div>
-            <div id='app-IDIDID-recpluslist'></div>
-            <button name="addrecplus">Add selected rule</button>
-        </div>
-        <div class='smallpanel'>
-            <div class='title'>These rules are substracted</div>
-            <div id='app-IDIDID-recminuslist'></div>
-            <button name="addrecminus">Add selected rule</button>
-        </div>
-        <div class='smallpanel' style="display: none">
-            <div class='title'>These occurrences are added</div>
-            <div id='ap-IDIDID-datepluslist'></div>
-            <input type="datetime">
-            <button name='adddateplus'>Add</button>
-        </div>
-    </div>
 
-    <!-- recurrence list -->
-    <div style='height: 200px;'>
-        <div id='app-IDIDID-rrulelist' style='height: 200px;'></div>
-    </div>
+
 
     <!-- reccurrence edit panel -->
-    <div>
+    <div id='pane-edit-rrule-IDIDID'>
         <!-- generic data -->
         <div id='pane-rrulebasics-IDIDID' class='smallpanel'>
             Every <input type="number" value="1">
@@ -227,5 +240,7 @@
                 <span><input id='cbIDIDID-month-12' type='checkbox' value='12'><label for='cbIDIDID-month-12'>December</label></span>
             </div>
         </div>
+
+        <div title="results"></div>
     </div>
 </div>
