@@ -18,7 +18,6 @@ function initSave(app)
         });
     }
 
-    console.debug(tab.find("button[name=test]"));
     tab.find("button[name=test]").click(function ()
     {
         // Clear error tables

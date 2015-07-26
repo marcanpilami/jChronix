@@ -11,6 +11,7 @@ var PanelChain = function (app)
     this.app = app;
     this.selectedStateDiv = null;
     this.selectedState = null;
+    this.chainselect = $("div.app-chain-" + app.id + "-planchoice");
 
     this.jspInstance = jsPlumb.getInstance({
         Connector: ["Bezier", {curviness: 50}],
@@ -24,8 +25,8 @@ var PanelChain = function (app)
     });
 
 
-
-    $("div.app-chain-" + app.id + "-planchoice").select2({
+    // Chain/plan selection and creation
+    this.chainselect.select2({
         data: function ()
         {
             return {results: [{name: 'Plans', children: app.plans}, {name: 'Chains', children: app.chains}]};
@@ -51,7 +52,31 @@ var PanelChain = function (app)
             }
         });
     }).select2('val', t.chain.id);
-    //$("div.app-chain-" + app.id + "-planchoice").val(app.chains[0]);
+
+    this.tab.find("button[name=addplan]").click(function ()
+    {
+        var n = newPlan(t.app);
+        t.chainselect.select2('val', n.id);
+        t.chain = n;
+        t.initPanel();
+    });
+    this.tab.find("button[name=addchain]").click(function ()
+    {
+        var n = newChain(t.app);
+        t.chainselect.select2('val', n.id);
+        t.chain = n;
+        t.initPanel();
+    });
+    this.tab.find("div > div > div > span").click(function ()
+    {
+        if (t.chain)
+        {
+            removeChain(t.app, t.chain, true);
+            t.chain = null;
+            t.initPanel();
+            t.chainselect.select2('val', null);
+        }
+    });
 
     // Toolbar
     var t = this;
@@ -142,6 +167,11 @@ PanelChain.prototype.initPanel = function ()
     this.drawPanel.find(".dn").remove();
     this.initMenu();
     this.toggleMenu();
+
+    if (!this.chain)
+    {
+        return;
+    }
 
     // Pass1: nodes
     var t = this;

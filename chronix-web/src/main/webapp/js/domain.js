@@ -315,3 +315,54 @@ function newState(app, x, y, representsId, runsOnId)
         start: isStart, end: isEnd, and: isAnd, or: isOr
     };
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Chains
+////////////////////////////////////////////////////////////////////////////////
+
+function newPlan(app)
+{
+    var res = {id: uuid.v4(), name: "plan " + (app.plans.length + 1), description: "mandatory description", states: [], transitions: []};
+    app.plans.push(res);
+    return res;
+}
+
+function newChain(app)
+{
+    var res = {id: uuid.v4(), name: "chain " + (app.chains.length + 1), description: "mandatory description", states: [], transitions: []};
+    var start = newState(app, 150, 50, app.startId, app.groups[0].id);
+    var end = newState(app, 150, 350, app.endId, app.groups[0].id);
+    res.states.push(start);
+    res.states.push(end);
+    app.chains.push(res);
+    return res;
+}
+
+function removeChain(app, chain, removeItself)
+{
+    var toDelete = filterStatesUsing(app, chain.id);
+    $.each(toDelete, function ()
+    {
+        removeState(app, this.id);
+    });
+
+    // Remove from app
+    if (removeItself)
+    {
+        $.each(app.chains, function (i)
+        {
+            if (this.id === chain.id)
+            {
+                app.chains.splice(i, 1);
+            }
+        });
+        $.each(app.plans, function (i)
+        {
+            if (this.id === chain.id)
+            {
+                app.plans.splice(i, 1);
+            }
+        });
+    }
+}

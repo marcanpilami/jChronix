@@ -124,6 +124,15 @@
     background-color: #c2c1c1;
 }
 
+.palette > div > div > button
+{
+    font-size: 10pt;
+    font-style: italic;
+    width: 45%;
+    border: none;
+    background-color: #c2c1c1;
+}
+
 /* Execution nodes */
 .execnode
 {
