@@ -1,5 +1,50 @@
 /* global uuid */
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Shells
+////////////////////////////////////////////////////////////////////////////////
+
+function removeShell(app, shellId, removeItself)
+{
+    // Clean from states
+    var toDelete = [];
+    $.each(app.chains, function ()
+    {
+        var chain = this;
+        $.each(chain.states, function ()
+        {
+            var state = this;
+            if (state.representsId === shellId)
+            {
+                toDelete.push(state);
+            }
+        });
+    });
+    $.each(toDelete, function ()
+    {
+        console.debug(this);
+        removeState(app, this.id);
+    });
+    toDelete = [];
+
+    // Remove from app
+    if (removeItself)
+    {
+        $.each(app.shells, function (i)
+        {
+            if (this.id === shellId)
+            {
+                app.shells.splice(i, 1);
+            }
+        });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// States
+////////////////////////////////////////////////////////////////////////////////
+
 function removeState(app, stateId)
 {
     var toDelete = [];

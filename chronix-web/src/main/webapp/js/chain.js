@@ -1,7 +1,8 @@
-/* global jsPlumb, item2name */
+/* global jsPlumb, item2name, uuid */
 
 var PanelChain = function (app)
 {
+    var t = this;
     this.tabId = "app-chain-" + app.id;
     this.drawPanelId = "app-" + app.id + "-chain";
     this.tab = $('#' + this.tabId);
@@ -22,7 +23,8 @@ var PanelChain = function (app)
         Container: this.drawPanelId
     });
 
-    var t = this;
+
+
     $("div.app-chain-" + app.id + "-planchoice").select2({
         data: function ()
         {
@@ -177,6 +179,38 @@ PanelChain.prototype.initPanel = function ()
         this.tab.find(".palette > .block > div[id$=clock]").parent().hide();
         this.tab.find(".palette > .block > div[id$=external]").parent().hide();
     }
+
+    // New connections
+    this.jspInstance.bind("beforeDrop", function (params) {
+        var dest = null;
+        $.each(t.chain.states, function ()
+        {
+            if (params.targetId === this.id)
+            {
+                dest = this;
+            }
+        });
+
+        var received = 0;
+        $.each(t.chain.transitions, function ()
+        {
+            if (this.to === params.targetId)
+            {
+                received++;
+            }
+        });
+
+        if (received !== 0 && !dest.canReceiveMultipleLinks)
+        {
+            return false;
+        }
+
+        // It's OK, register the link
+        var tr = {from: params.sourceId, to: params.targetId, guard1: 0, id: uuid.v4(), calendarAware: false, calendarShift: 0};
+        t.chain.transitions.push(tr);
+        params.connection._source = tr;
+        return true;
+    });
 };
 
 PanelChain.prototype.getStateDiv = function (s)
@@ -191,29 +225,40 @@ PanelChain.prototype.getStateDiv = function (s)
 
 PanelChain.prototype.getStateDivContent = function (s)
 {
-    return "<div>" + s.label + "</div>" +
+    res = "<div>" + s.label + "</div>" +
             "<div class='dn-smalltext'>" + s.runsOnName + (s.parallel ? '//' : '') + "</div>" +
             "<div class='dn-smalltext'>" + (s.calendarId ? 'cal ' + s.calendarShift : '') + "</div>";
+    if (s.canEmitLinks)
+    {
+        res += "<div class='anchor arrow2' style='position: absolute; bottom: -16px; right: 5%; min-width: 20px;'>+</div>";
+    }
+    return res;
 };
 
 PanelChain.prototype.setJSPNode = function (node)
 {
     // Not using classic anchors as source, as we want the links to be perimeter links
-    this.jspInstance.makeSource(node, {
-        maxConnections: 100,
-        endpoint: 'Blank',
-        anchor: ["Perimeter", {shape: "Rectangle"}],
-        filter: "div.arrow1",
-        connectorStyle: {strokeStyle: 'red'}
-    });
+    if (node[0]._source.canEmitLinks)
+    {
+        this.jspInstance.makeSource(node, {
+            maxConnections: 100,
+            endpoint: 'Blank',
+            anchor: ["Perimeter", {shape: "Rectangle"}],
+            filter: "div.arrow2",
+            connectorStyle: {strokeStyle: 'red'}
+        });
+    }
 
-    this.jspInstance.makeTarget(node, {
-        isTarget: true,
-        maxConnections: 100,
-        endpoint: 'Blank',
-        allowLoopback: false,
-        anchor: ["Perimeter", {shape: "Rectangle"}]
-    });
+    if (node[0]._source.canReceiveLink)
+    {
+        this.jspInstance.makeTarget(node, {
+            isTarget: true,
+            maxConnections: 100,
+            endpoint: 'Blank',
+            allowLoopback: false,
+            anchor: ["Perimeter", {shape: "Rectangle"}]
+        });
+    }
 
     this.jspInstance.draggable(node, {containment: "parent", filter: 'div.anchor', filterExclude: true,
         stop: function (event)

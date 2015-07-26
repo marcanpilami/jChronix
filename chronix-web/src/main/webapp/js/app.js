@@ -1,3 +1,5 @@
+/* global uuid */
+
 function initApp(uuid)
 {
     var app;
@@ -26,7 +28,7 @@ function initApp(uuid)
                     }
                     if (i.indexOf("app-command") === 0)
                     {
-                        initCommand(app);
+                        //initCommand(app); // Only init once!
                     }
                     if (i.indexOf("app-external") === 0)
                     {
@@ -73,13 +75,25 @@ function initCommand(app)
         contextMenu: false,
         manualColumnResize: true,
         manualRowResize: false,
-        columns: [
-            {data: 'id', title: 'ID'},
-            {data: 'name', title: 'Name'},
-            {data: 'description', title: 'Description'},
-            {data: 'command', title: 'Command'}
-        ],
-        afterChange: initIdIfNone
+        colWidths: [150, 300],
+        stretchH: 'last',
+        multiSelect: false,
+        contextMenu: ['remove_row', 'undo', 'redo'],
+                columns: [
+                    //{data: 'id', title: 'ID'},
+                    {data: 'name', title: 'Name'},
+                    {data: 'description', title: 'Description'},
+                    {data: 'command', title: 'Command'}
+                ],
+        dataSchema: function ()
+        {
+            return {id: uuid.v4(), name: null, command: null, description: null};
+        },
+        beforeRemoveRow: function (row)
+        {
+            var c = this.getSourceDataAtRow(row);
+            removeShell(app, c.id);
+        }
     });
 }
 
