@@ -8,6 +8,7 @@ function initApp(uuid)
     var seqPanel = null;
     var clockPanel = null;
     var external = false;
+    var groups = false;
 
     $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
     {
@@ -49,7 +50,11 @@ function initApp(uuid)
                     }
                     if (i.indexOf("app-group") === 0)
                     {
-                        initGroup(app);
+                        if (!groups)
+                        {
+                            initGroup(app);
+                            groups = true;
+                        }
                     }
                 },
                 disabled: [4]
@@ -151,6 +156,9 @@ function initGroup(app)
         contextMenu: ['remove_row', 'undo', 'redo'],
         manualColumnResize: true,
         manualRowResize: false,
+        colWidths: [150, 300, 200],
+        stretchH: 'last',
+        multiSelect: false,
         columns: [
             {data: 'name', title: 'Name'},
             {data: 'description', title: 'Description'}
@@ -163,14 +171,7 @@ function initGroup(app)
         beforeRemoveRow: function (row)
         {
             var c = this.getSourceDataAtRow(row);
-            $.each(network.places, function ()
-            {
-                var place = this;
-                $.each(place.memberOf, function ()
-                {
-                    place.memberOf.splice(place.memberOf.indexOf(c.id), 1);
-                });
-            });
+            removeGroup(app, c.id);
         }
     });
 }

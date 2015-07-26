@@ -8,7 +8,7 @@ function PanelRec(app)
     var t = this;
     this.tab.load("seq.html", function ()
     {
-        // Replace ids  
+        // Replace ids
         t.tab.html(t.tab[0].innerHTML.replace(/IDIDID/g, app.id));
 
         // Init contents
@@ -18,7 +18,7 @@ function PanelRec(app)
 PanelRec.prototype.initPanel = function ()
 {
     this.tab.find("#app-" + this.app.id + "-reclist").empty();
-    
+
     this.occurrences_table = new Handsontable(this.tab.find("#app-" + this.app.id + "-occlist")[0], {
         data: null,
         minSpareRows: 1,
@@ -29,13 +29,12 @@ PanelRec.prototype.initPanel = function ()
         manualRowResize: false,
         columns: [
             {data: 'id', title: 'ID'},
-            {data: 'seq', title: 'Occurrence name'}          
+            {data: 'seq', title: 'Occurrence name'}
         ]
     });
-    console.debug(this.occurrences_table);
-    
+
     var t = this;
-    this.maintable  = new Handsontable(this.tab.find("#app-" + this.app.id + "-reclist")[0], {
+    this.maintable = new Handsontable(this.tab.find("#app-" + this.app.id + "-reclist")[0], {
         data: this.app.calendars,
         minSpareRows: 1,
         rowHeaders: false,
@@ -46,10 +45,10 @@ PanelRec.prototype.initPanel = function ()
         columns: [
             {data: 'id', title: 'ID'},
             {data: 'name', title: 'Name'},
-            {data: 'description', title: 'Description'}           
+            {data: 'description', title: 'Description'}
         ],
         afterChange: initIdIfNone,
-        afterSelectionEnd: function(event, col, line)
+        afterSelectionEnd: function (event, col, line)
         {
             var cal = this.getSourceDataAtRow(line);
             t.occurrences_table.loadData(cal.days);

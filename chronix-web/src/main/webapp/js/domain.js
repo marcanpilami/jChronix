@@ -1,4 +1,4 @@
-/* global uuid */
+/* global uuid, network */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,10 +67,8 @@ function removeExternal(app, id, removeItself)
     var toDelete = filterStatesUsing(app, id);
     $.each(toDelete, function ()
     {
-        console.debug(this);
         removeState(app, this.id);
     });
-    toDelete = [];
 
     // Remove from app
     if (removeItself)
@@ -83,6 +81,55 @@ function removeExternal(app, id, removeItself)
             }
         });
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Groups
+////////////////////////////////////////////////////////////////////////////////
+
+function removeGroup(app, id)
+{
+    // Remove states using this group
+    var toDelete = [];
+    $.each(app.chains, function ()
+    {
+        var chain = this;
+        $.each(chain.states, function ()
+        {
+            var state = this;
+            if (state.runsOnId === id)
+            {
+                toDelete.push(state);
+            }
+        });
+    });
+    $.each(app.plans, function ()
+    {
+        var chain = this;
+        $.each(chain.states, function ()
+        {
+            var state = this;
+            if (state.runsOnId === id)
+            {
+                toDelete.push(state);
+            }
+        });
+    });
+
+    $.each(toDelete, function ()
+    {
+        removeState(app, this.id);
+    });
+
+    // Clean places referencing this group
+    $.each(network.places, function ()
+    {
+        var place = this;
+        $.each(place.memberOf, function ()
+        {
+            place.memberOf.splice(place.memberOf.indexOf(id), 1);
+        });
+    });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
