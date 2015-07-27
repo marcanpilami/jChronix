@@ -37,7 +37,7 @@
 
         <div id="app-chain-IDIDID">
             <div style="height: 100%; width: 100%; position: relative;">
-                <div class='palette' style="height: 100%; width: 200px;">
+                <div class='palette' style="height: 100%; width: 200px;position: relative;">
                     <div class='block visibleblock' style="position: relative; width: 100%;">
                         <div class='palette-header' style="display: inline;">Edited chain</div>
                         <span class="fa fa-trash-o" style="right: 7px; position: absolute;"></span>
@@ -72,7 +72,20 @@
                         <button name="or">add OR >></button>
                     </div>
 
-                    <ul class='menu' style="bottom: 0px; position: absolute; width: 200px;">
+                    <ul class='menu trmenu' style="bottom: 0px; position: absolute; width: 200px; z-index: 60;">
+                        <li class='c-remove'>
+                            <span class="fa fa-trash-o"></span> Delete
+                        </li>
+                        <li class='c-calaware'>
+                            <span class="fa fa-calendar"></span> Toggle calendar awareness
+                        </li>
+                        <li>
+                            <span class="fa fa-filter"></span> Return code
+                        </li>
+                    </ul>
+                    <input type="number" style="width: 60px; bottom: 0px; right: 5px; position: absolute; z-index: 61;">
+
+                    <ul class='menu statemenu' style="bottom: 0px; position: absolute; width: 200px;">
                         <li class='c-remove'>
                             <span class="fa fa-trash-o"></span> Delete
                         </li>

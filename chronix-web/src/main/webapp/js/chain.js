@@ -12,15 +12,18 @@ var PanelChain = function (app)
     this.selectedStateDiv = null;
     this.selectedState = null;
     this.chainselect = $("div.app-chain-" + app.id + "-planchoice");
+    this.connectorColor = "DodgerBlue";
+    this.connectorColorSelected = "red";
+    this.connectorColorHover = "Sienna";
 
     this.jspInstance = jsPlumb.getInstance({
         Connector: ["Bezier", {curviness: 50}],
         DragOptions: {cursor: "pointer", zIndex: 2000},
-        PaintStyle: {strokeStyle: "gray", lineWidth: 2},
+        PaintStyle: {strokeStyle: this.connectorColor, lineWidth: 2, fillStyle: this.connectorColor},
         EndpointStyle: {radius: 9, fillStyle: "gray"},
         ConnectionOverlays: [['Arrow', {width: 12, location: 1}]],
-        HoverPaintStyle: {strokeStyle: "#ec9f2e"},
-        EndpointHoverStyle: {fillStyle: "#ec9f2e"},
+        HoverPaintStyle: {strokeStyle: this.connectorColorHover},
+        EndpointHoverStyle: {fillStyle: this.connectorColorHover},
         Container: this.drawPanelId
     });
 
@@ -78,17 +81,20 @@ var PanelChain = function (app)
         }
     });
 
-    // Toolbar
+    // Node selection
     var t = this;
     this.drawPanel.on('click', '.dn', function ()
     {
+        t.deselectAll();
         var node = $(this);
         t.selectedStateDiv = node;
         t.selectedState = node[0]._source;
-        t.drawPanel.find('.dn').removeClass('drawingPanel-selected');
         node.addClass('drawingPanel-selected');
+
         t.toggleMenu();
     });
+
+    // Transition selection: inside initPanel (linked to jsPlumb)
 
     // Palette lists
     $("#app-" + t.app.id + "-palette-shell").select2({
@@ -156,6 +162,8 @@ var PanelChain = function (app)
         t.chain.states.push(state);
         t.drawState(state);
     });
+
+    this.initMenu();
 };
 
 PanelChain.prototype.initPanel = function ()
@@ -165,7 +173,6 @@ PanelChain.prototype.initPanel = function ()
     this.selectedStateDiv = null;
     this.jspInstance.reset();
     this.drawPanel.find(".dn").remove();
-    this.initMenu();
     this.toggleMenu();
 
     if (!this.chain)
@@ -183,11 +190,12 @@ PanelChain.prototype.initPanel = function ()
     // Pass2: transitions
     $.each(this.chain.transitions, function ()
     {
-        t.jspInstance.connect({
+        var tr = t.jspInstance.connect({
             source: this.from,
             target: this.to,
-            label: "[" + this.guard1 + "]"
+            label: t.getTransitionLabel(this)
         });
+        tr._source = this;
     });
 
     // Show only neede palette items
@@ -239,6 +247,19 @@ PanelChain.prototype.initPanel = function ()
         var tr = {from: params.sourceId, to: params.targetId, guard1: 0, id: uuid.v4(), calendarAware: false, calendarShift: 0};
         t.chain.transitions.push(tr);
         params.connection._source = tr;
+        params.connection.setLabel(t.getTransitionLabel(tr));
+        return true;
+    });
+
+    // Click on connections (not inside constructor because jsplumb reset)
+    this.jspInstance.bind("click", function (connector, origEvent) {
+        t.deselectAll();
+
+        t.selectedTransitionConnector = connector;
+        t.selectedTransition = connector._source;
+        t.selectedTransitionConnector.setPaintStyle({fillStyle: t.connectorColorSelected, strokeStyle: t.connectorColorSelected});
+
+        t.toggleMenu();
         return true;
     });
 };
@@ -274,8 +295,7 @@ PanelChain.prototype.setJSPNode = function (node)
             maxConnections: 100,
             endpoint: 'Blank',
             anchor: ["Perimeter", {shape: "Rectangle"}],
-            filter: "div.arrow2",
-            connectorStyle: {strokeStyle: 'red'}
+            filter: "div.arrow2"
         });
     }
 
@@ -314,9 +334,43 @@ PanelChain.prototype.redrawSelectedState = function ()
     this.selectedStateDiv.html(this.getStateDivContent(this.selectedStateDiv[0]._source));
 };
 
+PanelChain.prototype.getTransitionLabel = function (dtoTransition)
+{
+    var res = "<div style='text-align: center;'>[" + dtoTransition.guard1 + "]";
+    if (dtoTransition.calendarAware)
+    {
+        res += "<div>[same cal ocurrence]</div>";
+    }
+    res += "</div>";
+    return res;
+};
+
+PanelChain.prototype.redrawSelectedTransition = function ()
+{
+    this.selectedTransitionConnector.setLabel(this.getTransitionLabel(this.selectedTransition));
+};
+
+PanelChain.prototype.deselectAll = function ()
+{
+    this.selectedStateDiv = null;
+    this.selectedState = null;
+    this.selectedTransition = null;
+    this.selectedTransitionConnector = null;
+
+    this.drawPanel.find('.drawingPanel-selected').removeClass('drawingPanel-selected');
+    var t = this;
+    $.each(this.jspInstance.getConnections(), function ()
+    {
+        this.setPaintStyle({fillStyle: t.connectorColor, strokeStyle: t.connectorColor});
+    });
+};
+
 PanelChain.prototype.initMenu = function ()
 {
-    var m = this.tab.find('ul.menu');
+    ///////////////////////////////////////////
+    // State menu
+
+    var m = this.tab.find('ul.statemenu');
 
     var grouplist = m.find("li.c-groups > ul");
     grouplist.empty();
@@ -377,40 +431,76 @@ PanelChain.prototype.initMenu = function ()
         removeState(t.app, t.selectedState.id);
         t.initPanel();
     });
+
+    ///////////////////////////////////////////
+    // Transition menu
+    m = this.tab.find('ul.trmenu');
+    m.menu();
+
+    t.tab.find('input').change(function ()
+    {
+        t.selectedTransition.guard1 = $(this).val();
+        t.redrawSelectedTransition();
+    });
+    m.find('li.c-calaware').click(function () {
+        t.selectedTransition.calendarAware = !t.selectedTransition.calendarAware;
+        t.redrawSelectedTransition();
+    });
+    m.find('li.c-remove').click(function () {
+        t.chain.transitions.splice(t.chain.transitions.indexOf(t.selectedTransition), 1);
+        t.initPanel();
+    });
+
 };
 
 PanelChain.prototype.toggleMenu = function ()
 {
-    this.tab.find("ul.menu > li.c-remove").addClass('ui-state-disabled');
+    this.tab.find("ul.menu.statemenu > li.c-remove").addClass('ui-state-disabled');
     this.tab.find("ul.menu > li.c-para").addClass('ui-state-disabled');
     this.tab.find("ul.menu > li.c-cals").addClass('ui-state-disabled');
     this.tab.find("ul.menu > li.c-calshifts").addClass('ui-state-disabled');
     this.tab.find("ul.menu > li.c-groups").addClass('ui-state-disabled');
 
-    if (!this.selectedState)
+    this.tab.find("ul.menu.statemenu").show();
+    this.tab.find("ul.menu.trmenu").hide();
+    this.tab.find("ul.menu.trmenu").next().hide();
+
+    if (!this.selectedState && !this.selectedTransition)
     {
         return;
     }
 
-    if (!(this.selectedState.start || this.selectedState.end))
+    if (this.selectedState)
     {
-        this.tab.find("ul.menu > li.c-remove").removeClass('ui-state-disabled');
+        if (!(this.selectedState.start || this.selectedState.end))
+        {
+            this.tab.find("ul.menu > li.c-remove").removeClass('ui-state-disabled');
+        }
+
+        if (!(this.selectedState.start || this.selectedState.end))
+        {
+            this.tab.find("ul.menu > li.c-para").removeClass('ui-state-disabled');
+        }
+
+        if (!(this.selectedState.start || this.selectedState.end))
+        {
+            this.tab.find("ul.menu > li.c-cals").removeClass('ui-state-disabled');
+        }
+
+        if (!(this.selectedState.start || this.selectedState.end))
+        {
+            this.tab.find("ul.menu > li.c-calshifts").removeClass('ui-state-disabled');
+        }
+
+        this.tab.find("ul.menu > li.c-groups").removeClass('ui-state-disabled');
     }
 
-    if (!(this.selectedState.start || this.selectedState.end))
+    if (this.selectedTransition)
     {
-        this.tab.find("ul.menu > li.c-para").removeClass('ui-state-disabled');
-    }
+        this.tab.find("ul.menu.statemenu").hide();
+        this.tab.find("ul.menu.trmenu").show();
+        this.tab.find("ul.menu.trmenu").next().show();
 
-    if (!(this.selectedState.start || this.selectedState.end))
-    {
-        this.tab.find("ul.menu > li.c-cals").removeClass('ui-state-disabled');
+        this.tab.find("ul.menu.trmenu").next().val(this.selectedTransition.guard1);
     }
-
-    if (!(this.selectedState.start || this.selectedState.end))
-    {
-        this.tab.find("ul.menu > li.c-calshifts").removeClass('ui-state-disabled');
-    }
-
-    this.tab.find("ul.menu > li.c-groups").removeClass('ui-state-disabled');
 };
