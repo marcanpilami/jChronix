@@ -322,7 +322,10 @@ PanelChain.prototype.initMenu = function ()
     grouplist.empty();
     $.each(this.app.groups, function ()
     {
-        $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(grouplist);
+        if (this.name)
+        {
+            $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(grouplist);
+        }
     });
 
     var calendarlist = m.find("li.c-cals > ul");
@@ -330,7 +333,10 @@ PanelChain.prototype.initMenu = function ()
     $("<li>none</li>").appendTo(calendarlist);
     $.each(this.app.calendars, function ()
     {
-        $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(calendarlist);
+        if (this.name)
+        {
+            $("<li value='" + this.id + "'>" + this.name + "</li>").appendTo(calendarlist);
+        }
     });
 
     m.menu();
