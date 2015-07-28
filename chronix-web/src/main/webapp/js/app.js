@@ -66,7 +66,7 @@ function initApp(uuid)
                         }
                     }
                 },
-                disabled: [4]
+                disabled: [5]
             });
 
             // Inits requiring both tabs + app data

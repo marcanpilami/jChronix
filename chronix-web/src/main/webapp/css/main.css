@@ -51,7 +51,7 @@ tabs-min > .ui-tabs-nav > .ui-state-active a {
 .tabs-left
 {
     position: relative;
-    padding-left: 9em;
+    padding-left: 10em;
     background: transparent;
     border: none;
 }
@@ -70,7 +70,7 @@ tabs-min > .ui-tabs-nav > .ui-state-active a {
     left: 0.25em;
     top: 0;
     bottom: 0.25em;
-    width: 8em;
+    width: 9em;
     padding-top: 0;
     padding-bottom: 0;
     padding-left: 0;
