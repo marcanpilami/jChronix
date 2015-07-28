@@ -83,7 +83,7 @@ var PanelChain = function (app)
 
     // Node selection
     var t = this;
-    this.drawPanel.on('click', '.dn', function ()
+    this.drawPanel.on('click', '.dn', function (e)
     {
         t.deselectAll();
         var node = $(this);
@@ -91,6 +91,13 @@ var PanelChain = function (app)
         t.selectedState = node[0]._source;
         node.addClass('drawingPanel-selected');
 
+        t.toggleMenu();
+        e.stopPropagation();
+    });
+
+    this.drawPanel.click(function ()
+    {
+        t.deselectAll();
         t.toggleMenu();
     });
 
@@ -260,6 +267,7 @@ PanelChain.prototype.initPanel = function ()
         t.selectedTransitionConnector.setPaintStyle({fillStyle: t.connectorColorSelected, strokeStyle: t.connectorColorSelected});
 
         t.toggleMenu();
+        origEvent.stopImmediatePropagation();
         return true;
     });
 };
