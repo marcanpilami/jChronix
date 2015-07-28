@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html style='height: 100%;'>
     <head>
         <title>Chronix console</title>
@@ -35,34 +34,53 @@
         <link rel="stylesheet" type="text/css" href="css/main.css">
     </head>
     <body style='height: 100%;'>
-        <div class='tabs-min' id='tabs'>
+        <div class='tabs tabs-min' id='tabs'>
             <ul>
+                <li><a href='#home'>Home</a></li>
+                <li><a href='#environment'>Environment</a></li>
                 <li><a href="#applications">Applications</a></li>
-                <li><a href="#places">Logical Network</a></li>
-                <li><a href="#phynodes">Network</a></li>
-                <li><a href="#groups">Application deployment</a></li>
             </ul>
 
-            <div id='phynodes'>
-                <div style="height: 100%; width: 100%; position: relative;">
-                    <div class='palette' style="height: 100%; width: 200px; position: relative;">
-                        <div style='palette-header'>Palette</div>
-                        <div class='paletteitem execnode'>Node</div>
-                        <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
-                        <div id='phynodes-details' style="bottom: 0px; position: absolute; width: 200px;">
-                            <div id='pn-id'></div>
-                            <div><span>Name</span><span><input type="text" maxlength="20" id='pn-name'></span></div>
-                            <div><span>Q port</span><input type='number' id='pn-qport'></div>
-                            <div><span>HTTP port</span><input type='number' id='pn-httpport'></div>
-                            <div><span>Start engine</span><input type="checkbox" id='pn-engine'></div>
-                        </div>
-                    </div>
-                    <div class='drawingPanel' id='node-c' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
-                </div>
+            <div id='home'>
+                <h1>Chronix administration console</h1>
+                <div>Version will go here.</div>
+                <div>Help will go here.</div>
             </div>
 
-            <div id='places'>
-                <table id='pl-table'></table>
+            <div id='environment'>
+                <div style="height: 100%; position: relative;">
+                    <div class='tabs tabs-left' id='tabsenvt'>
+                        <ul>
+                            <li><a href="#phynodes">Network <span class="fa fa-cog"></span></a></li>
+                            <li><a href="#places">Logical Network <span class="fa fa-cogs"></span></a></li>
+                            <li><a href="#saveenvt">Validate & save <span class="fa fa-floppy-o"></span></a></li>
+                        </ul>
+
+                        <div id='phynodes'>
+                            <div style='height: 100%; width: 100%; position: relative;'>
+                                <div class='palette' style="height: 100%; width: 200px; position: relative;">
+                                    <div style='palette-header'>Palette</div>
+                                    <div class='paletteitem execnode'>Node</div>
+                                    <div class='palette-helper-text'>Drag and drop items from the palette to the drawing area</div>
+                                    <div id='phynodes-details' style="bottom: 0px; position: absolute; width: 200px;">
+                                        <div id='pn-id'></div>
+                                        <div><span>Name</span><span><input type="text" maxlength="20" id='pn-name'></span></div>
+                                        <div><span>Q port</span><input type='number' id='pn-qport'></div>
+                                        <div><span>HTTP port</span><input type='number' id='pn-httpport'></div>
+                                        <div><span>Start engine</span><input type="checkbox" id='pn-engine'></div>
+                                    </div>
+                                </div>
+                                <div class='drawingPanel' id='node-c' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
+                            </div>
+                        </div>
+
+                        <div id='places'>
+                            <table id='pl-table'></table>
+                        </div>
+
+                        <div id='saveenvt'></div>
+                    </div>
+                </div>
             </div>
 
             <div id='groups'></div>

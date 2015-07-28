@@ -1,6 +1,11 @@
 
 function initAppChoice()
 {
+    if (apps_short)
+    {
+        return;
+    }
+
     $.getJSON("ws/meta/app").done(function (data)
     {
         apps_short = data;

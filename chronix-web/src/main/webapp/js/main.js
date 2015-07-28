@@ -11,35 +11,56 @@ $(
         {
             panel_phynode = new PanelPhyNode();
             panel_places = new PanelPlace();
-
             tabs = $('#tabs').tabs({
-                active: 0,
+                //active: 0,
                 heightStyle: 'fill',
                 activate: function (e, ui)
                 {
                     var i = ui.newPanel[0].id;
-                    if (i.indexOf("phynode") === 0)
+                    if (i.indexOf("environment") === 0)
                     {
-                        panel_phynode.initPanel();
+                        initEnvironment();
                     }
-                    if (i.indexOf("place") === 0)
+                    if (i.indexOf("applications") === 0)
                     {
-                        panel_places.initPanel();
+                        initAppChoice();
                     }
-
-                }});
-
-            $.getJSON("ws/meta/network").done(function (data)
-            {
-                network = data;
-            }).fail(function (o, status)
-            {
-                alert("failed to fetch network " + status);
+                }
             });
-
-            initAppChoice();
         }
 );
+
+function initEnvironment()
+{
+    if (network)
+    {
+        return;
+    }
+
+    $.getJSON("ws/meta/network").done(function (data)
+    {
+        network = data;
+        tabs.find("#tabsenvt").tabs({
+            activate: function (e, ui)
+            {
+                var i = ui.newPanel[0].id;
+                if (i.indexOf("phynode") === 0)
+                {
+                    console.debug('rrrrrrrr');
+                    panel_phynode.initPanel();
+                }
+                if (i.indexOf("place") === 0)
+                {
+                    panel_places.initPanel();
+                }
+            }
+        });
+        panel_phynode.initPanel();
+    }).fail(function (o, status)
+    {
+        alert("failed to fetch network " + status);
+    });
+}
 
 function initIdIfNone(changes, action)
 {
@@ -68,7 +89,6 @@ Number.prototype.zeroPad = function (numZeros)
     }
     return zeroString + n;
 };
-
 function getTomorrowPlus(days)
 {
     if (!days)
@@ -98,7 +118,6 @@ $.postJSON = function (url, data, callback, errorcallback) {
         'error': errorcallback
     });
 };
-
 function printStackTrace()
 {
     var e = new Error('dummy');
