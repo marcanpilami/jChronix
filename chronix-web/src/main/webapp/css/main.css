@@ -4,36 +4,96 @@
     padding: 0px;
 }
 
+body
+{
+    margin: 0px;
+    font-size: 14px;
+}
+
+.ui-tabs
+{
+    padding: 0px;
+}
+
+.ui-tabs .ui-tabs-nav
+{
+    padding: 0px;
+}
+
+/* Horizontal tabs */
+.tabs-min {
+    background: transparent;
+    border: none;
+}
+
+.tabs-min  > .ui-widget-header {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #c0c0c0;
+    border-radius: 0px;
+}
+.tabs-min > .ui-tabs-nav > .ui-state-default {
+    background: transparent;
+    border: none;
+}
+.tabs-min > .ui-tabs-nav > .ui-state-active {
+    background: transparent url(uiTabsArrow.png) no-repeat bottom center;
+    border: none;
+}
+tabs-min > .ui-tabs-nav > .ui-state-default a {
+    color: #c0c0c0;
+}
+tabs-min > .ui-tabs-nav > .ui-state-active a {
+    color: #459e00;
+}
+
 /* Vertical tabs */
 .tabs-left
 {
     position: relative;
-    padding-left: 6.5em;
+    padding-left: 9em;
+    background: transparent;
+    border: none;
 }
+
+.tabs-left .ui-widget-header
+{
+    background: transparent;
+    border: none;
+    border-right: 1px solid #c0c0c0;
+    border-radius: 0px;
+}
+
 .tabs-left .ui-tabs-nav
 {
     position: absolute;
     left: 0.25em;
-    top: 0.25em;
+    top: 0;
     bottom: 0.25em;
-    width: 6em;
-    padding: 0.2em 0 0.2em 0.2em;
+    width: 8em;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0.5em;
 }
 .tabs-left .ui-tabs-nav li
 {
     right: 1px;
     width: 100%;
-    border-right: none;
-    border-bottom-width: 1px !important;
-    -moz-border-radius: 4px 0px 0px 4px;
-    -webkit-border-radius: 4px 0px 0px 4px;
-    border-radius: 4px 0px 0px 4px;
+    border: none;
     overflow: hidden;
 }
-.tabs-left .ui-tabs-nav li.ui-tabs-selected, tabs-left .ui-tabs-nav li.ui-state-active
-{
-    border-right: 1px solid transparent;
+
+.tabs-left > .ui-tabs-nav > .ui-state-default {
+    background: transparent;
+    border: none;
 }
+
+.tabs-left > .ui-tabs-nav > .ui-state-active {
+    background: transparent url(uiTabsArrowLeft.png) no-repeat left center;
+    border: none;
+}
+
 .tabs-left .ui-tabs-nav li a
 {
     float: right;
@@ -44,6 +104,14 @@
 .tabs-left > div
 {
     height: 35em;
+}
+
+.tabs-left > .ui-tabs-nav > li > .ui-tabs-anchor
+{
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 0.5em;
+    padding-left: 0px;
 }
 
 /* Generic drawing panel items */
