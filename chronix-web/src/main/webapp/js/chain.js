@@ -70,7 +70,7 @@ var PanelChain = function (app)
         t.chain = n;
         t.initPanel();
     });
-    this.tab.find("div > div > div > span").click(function ()
+    this.tab.find("div > div > div > span[title=remove]").click(function ()
     {
         if (t.chain)
         {
@@ -78,6 +78,29 @@ var PanelChain = function (app)
             t.chain = null;
             t.initPanel();
             t.chainselect.select2('val', null);
+        }
+    });
+    var diag = this.tab.find("div > div > div > form").dialog({
+        autoOpen: false,
+        modal: true,
+        width: 400,
+        buttons: {
+            "apply": function ()
+            {
+                t.chain.name = diag.find("input[name='name']").val();
+                t.chain.description = diag.find("input[name='description']").val();
+                t.chainselect.select2('val', t.chain.id);
+                diag.dialog('close');
+            }
+        }
+    });
+    this.tab.find("div > div > div > span[title=rename]").click(function ()
+    {
+        if (t.chain)
+        {
+            diag.find("input[name='name']").val(t.chain.name);
+            diag.find("input[name='description']").val(t.chain.description);
+            diag.dialog("open");
         }
     });
 
