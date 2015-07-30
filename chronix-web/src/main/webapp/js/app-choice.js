@@ -28,13 +28,25 @@ function initAppChoice()
         $('#ac-table').on('dblclick', 'tbody tr th', function (event)
         {
             var a = appstab.getSourceDataAtRow($(this).text() - 1);
-
-            var t = "<li id='tabhead-" + a.id + "' ><a href='#tab-" + a.id + "'>" + a.name + "</a></li>";
-            $(t).appendTo($("#tabs > ul"));
-            $("<div id='tab-" + a.id + "'><div></div></div>").appendTo($("#tabs"));
-            $("div#tabs").tabs("refresh");
-            $("div#tabs").tabs("option", "active", $("#tabhead-" + a.id).index());
-            initApp(a.id);
+            openAppTab(a);
         });
     });
+}
+
+function openAppTab(a)
+{
+    var exists = $("#tabs > ul > li[id=tabhead-" + a.id);
+    if (exists.length > 0)
+    {
+        $("#tabs").tabs("option", "active", exists.index());
+    }
+    else
+    {
+        var t = "<li id='tabhead-" + a.id + "' ><a href='#tab-" + a.id + "'>" + a.name + "</a></li>";
+        $(t).appendTo($("#tabs > ul"));
+        $("<div id='tab-" + a.id + "'><div></div></div>").appendTo($("#tabs"));
+        $("div#tabs").tabs("refresh");
+        $("div#tabs").tabs("option", "active", $("#tabhead-" + a.id).index());
+        initApp(a.id);
+    }
 }
