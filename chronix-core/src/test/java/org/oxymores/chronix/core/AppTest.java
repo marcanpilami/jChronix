@@ -60,7 +60,7 @@ public class AppTest
         {
             log.debug(violation.getMessage());
         }
-        Assert.assertEquals(2, v.size());
+        Assert.assertEquals(1, v.size());
 
         log.debug("** Validating a correct chain");
         c = PlanBuilder.buildChain(a, "test", "description", pg1);

@@ -12,7 +12,8 @@ public class ChainCheckEndsValidator implements ConstraintValidator<ChainCheckEn
 {
     @Override
     public void initialize(ChainCheckEnds constraintAnnotation)
-    {}
+    {
+    }
 
     @Override
     public boolean isValid(Chain value, ConstraintValidatorContext context)
@@ -34,7 +35,14 @@ public class ChainCheckEndsValidator implements ConstraintValidator<ChainCheckEn
                 ends++;
             }
         }
-        if (starts != 1 || ends != 1)
+
+        if (starts == 0 || ends == 0)
+        {
+            // This is a plan
+            return true;
+        }
+
+        if (starts == 0 || ends == 0)
         {
             return false;
         }
