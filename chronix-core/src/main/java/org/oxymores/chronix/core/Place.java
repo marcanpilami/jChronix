@@ -95,7 +95,7 @@ public class Place extends NetworkObject
         }
     }
 
-    List<UUID> getMemberOfIds()
+    public List<UUID> getMemberOfIds()
     {
         return new ArrayList<>(memberOfIds);
     }
