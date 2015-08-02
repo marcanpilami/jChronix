@@ -132,7 +132,7 @@ public class TestToken extends TestBase
         // Start chain
         log.debug("*** RUN ******************************************************************************");
         SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
-        Thread.sleep(7000); // Time to consume message
+        LogHelpers.waitForHistoryCount(e1.ctx, 5);
 
         // Tests
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);

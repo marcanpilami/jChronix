@@ -345,22 +345,6 @@ public class Application extends ChronixObject
         return this.groups.get(id);
     }
 
-    public List<UUID> getAllPlacesId()
-    {
-        List<UUID> res = new ArrayList<>();
-        for (PlaceGroup g : this.groups.values())
-        {
-            for (UUID i : g.getPlacesId())
-            {
-                if (!res.contains(i))
-                {
-                    res.add(i);
-                }
-            }
-        }
-        return res;
-    }
-
     public List<Place> getAllPlaces()
     {
         List<Place> res = new ArrayList<>();
@@ -379,7 +363,6 @@ public class Application extends ChronixObject
 
     /////////////////////////////
     // Versioning
-
     public int getVersion()
     {
         return version;

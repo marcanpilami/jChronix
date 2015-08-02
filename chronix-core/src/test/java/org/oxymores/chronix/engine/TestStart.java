@@ -74,7 +74,7 @@ public class TestStart extends TestBase
         ChronixEngine e2 = addEngine(db2, "remote", "TransacUnit2", "HistoryUnit2");
 
         Application a = PlanBuilder.buildApplication("test", "description");
-        Network n = new Network();
+        n = new Network();
         ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "local", 1789);
         ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "remote", 1400);
         n1.connectTo(n2, NodeConnectionMethod.TCP);

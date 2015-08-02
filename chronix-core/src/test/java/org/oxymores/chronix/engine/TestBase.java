@@ -128,6 +128,7 @@ public class TestBase
     {
         try
         {
+            ChronixContext.saveNetwork(n, new File(database_path));
             ChronixContext.saveApplicationAndMakeCurrent(a, new File(database_path));
         }
         catch (ChronixPlanStorageException e)

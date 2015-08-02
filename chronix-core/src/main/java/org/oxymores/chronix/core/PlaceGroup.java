@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,23 +17,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 public class PlaceGroup extends NamedApplicationObject
 {
     private static final long serialVersionUID = 4569641718657486177L;
-
-    @NotNull
-    @Size(min = 0, max = 255)
-    protected List<UUID> places_id = new ArrayList<>();
 
     transient protected List<Place> places = new ArrayList<>();
 
@@ -42,23 +34,15 @@ public class PlaceGroup extends NamedApplicationObject
         super();
     }
 
-    public List<UUID> getPlacesId()
-    {
-        return this.places_id;
-    }
-
     public List<Place> getPlaces()
     {
-        return places;
+        return new ArrayList<>(places);
     }
 
     public void addPlace(Place p)
     {
-        if (!places.contains(p))
-        {
-            places.add(p);
-            places_id.add(p.getId());
-        }
+        p.addGroupMembership(this);
+        this.places.add(p);
     }
 
     void map_places(Network n)
@@ -69,13 +53,13 @@ public class PlaceGroup extends NamedApplicationObject
             this.places = new ArrayList<>();
         }
 
-        for (Place e : n.getPlaces().values())
+        for (Place p : n.getPlaces().values())
         {
-            for (UUID i : this.places_id)
+            for (UUID groupId : p.getMemberOfIds())
             {
-                if (i.equals(e.getId()))
+                if (groupId.equals(this.getId()))
                 {
-                    this.places.add(e);
+                    this.places.add(p);
                     break;
                 }
             }

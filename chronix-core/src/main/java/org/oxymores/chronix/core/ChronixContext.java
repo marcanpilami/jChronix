@@ -251,12 +251,11 @@ public class ChronixContext
         }
 
         // TODO: Don't load applications that are not active on the local node
-        if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
-        {
-            // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
-            // return null;
-        }
-
+        //if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
+        //{
+        // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
+        // return null;
+        //}
         // Set the context so as to enable network access through the application
         res.setContext(this);
 
