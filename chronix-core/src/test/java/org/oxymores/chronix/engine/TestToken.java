@@ -181,6 +181,6 @@ public class TestToken extends TestBase
         DateTime end2 = new DateTime(rl2.getStoppedRunningAt());
         DateTime start2 = new DateTime(rl2.getBeganRunningAt());
 
-        Assert.assertTrue(end2.isBefore(start3) || end3.isBefore(start2));
+        Assert.assertTrue((end2.isBefore(start3) || end2.equals(start3)) || (end3.isBefore(start2) || end3.equals(start2)));
     }
 }
