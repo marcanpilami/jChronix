@@ -1,4 +1,4 @@
-/* global jsPlumb, network */
+/* global jsPlumb, network, uuid */
 
 function PanelPhyNode()
 {
@@ -26,13 +26,14 @@ function PanelPhyNode()
     $('#' + this.network_panel_root).droppable({
         drop: function (event, ui)
         {
-            var node = {name: 'new node', dns: 'localhost', qPort: 1789, wsPort: 1790, simpleRunner: false};
+            var node = {id: uuid.v4(), name: 'new node', dns: 'localhost', qPort: 1789, wsPort: 1790, simpleRunner: false, toTCP: [], toRCTRL: []};
             var n = getExecNodeDiv(node);
             n.css('left', ui.helper.css('left'));
             n.css('top', ui.helper.css('top'));
             n[0]._source = node;
             n.appendTo(this);
             setDN(n, t.jspInstance);
+            network.nodes.push(node);
         }});
 
     // Edit panel changes
@@ -44,6 +45,26 @@ function PanelPhyNode()
         n.wsPort = $("#pn-httpport").val();
         n.simpleRunner = !$("#pn-engine").prop('checked');
         t.selected_en.html(getExecNodeContent(n));
+    });
+
+    // Type of connection depends on the origin of the arrow so store it here
+    $("#" + this.network_panel_root).on('mouseenter', '.anchor', function (e)
+    {
+        if (e.which > 0)
+        {
+            // Button pressed = dragging in progress.
+            return true;
+        }
+
+        if ($(this).hasClass('arrow1'))
+        {
+            t.link_type = 'rctrl';
+        }
+        else if ($(this).hasClass('arrow2'))
+        {
+            t.link_type = 'tcp';
+        }
+        return true;
     });
 }
 
@@ -86,6 +107,7 @@ PanelPhyNode.prototype.initPanel = function ()
         d.css('top', this.y);
         setDN(d, t.jspInstance);
     });
+
     // Second pass: links
     $.each(network.nodes, function ()
     {
@@ -93,8 +115,117 @@ PanelPhyNode.prototype.initPanel = function ()
         $.each(source.toTCP, function ()
         {
             var target = this;
-            t.jspInstance.connect({source: source.id, target: target.toString()});
+            t.jspInstance.connect({source: source.id, target: target.toString(), paintStyle: {strokeStyle: 'blue'}});
         });
+        $.each(source.toRCTRL, function ()
+        {
+            var target = this;
+            t.jspInstance.connect({source: source.id, target: target.toString(), paintStyle: {strokeStyle: 'red'}});
+        });
+    });
+
+    // New connections
+    this.jspInstance.bind("beforeDrop", function (params) {
+        // First, fetch model data corresponding to the nodes
+        var target = null;
+        var source = null;
+        $.each(network.nodes, function ()
+        {
+            if (params.targetId === this.id)
+            {
+                target = this;
+            }
+            if (params.sourceId === this.id)
+            {
+                source = this;
+            }
+        });
+
+        // Forbid more than one incoming link on a remote controlled node.
+        var res = true;
+        $.each(network.nodes, function ()
+        {
+            $.each(this.toRCTRL, function ()
+            {
+                if (this.toString() === target.id)
+                {
+                    res = false;
+                }
+            });
+        });
+        if (!res)
+        {
+            return false;
+        }
+
+        // Forbid multiple links between the same nodes, both ways.
+        $.each(source.toRCTRL, function ()
+        {
+            if (this.toString() === target.id)
+            {
+                res = false;
+            }
+        });
+        $.each(source.toTCP, function ()
+        {
+            if (this.toString() === target.id)
+            {
+                res = false;
+            }
+        });
+        $.each(target.toRCTRL, function ()
+        {
+            if (this.toString() === source.id)
+            {
+                res = false;
+            }
+        });
+        $.each(target.toTCP, function ()
+        {
+            if (this.toString() === source.id)
+            {
+                res = false;
+            }
+        });
+        if (!res)
+        {
+            return false;
+        }
+
+        // A remotely controled node cannot have outgoing links
+        $.each(network.nodes, function ()
+        {
+            $.each(this.toRCTRL, function ()
+            {
+                if (this.toString() === source.id)
+                {
+                    res = false;
+                }
+            });
+        });
+        if (!res)
+        {
+            return false;
+        }
+
+        // Register the new link and paint it in the right color.
+        if (t.link_type === 'tcp')
+        {
+            source.toTCP.push(target.id);
+            params.connection.setPaintStyle({strokeStyle: 'blue', fillStyle: 'blue'});
+        }
+        else
+        {
+            source.toRCTRL.push(target.id);
+            params.connection.setPaintStyle({strokeStyle: 'red', fillStyle: 'red'});
+        }
+
+        return true;
+    });
+
+    this.jspInstance.bind("connection", function (info)
+    {
+        //   info.connection.setPaintStyle({strokeStyle: 'red', fillStyle: 'red'});
     });
 };
 
@@ -124,14 +255,14 @@ function setDN(node, jspInstance)
         endpoint: 'Blank',
         anchor: ["Perimeter", {shape: "Rectangle"}],
         filter: "div.arrow1",
-        connectorStyle: {strokeStyle: 'red'}
+        //connectorStyle: {strokeStyle: 'red'}
     });
     jspInstance.makeSource(node, {
         maxConnections: 100,
         endpoint: 'Blank',
         anchor: ["Perimeter", {shape: "Rectangle"}],
         filter: "div.arrow2",
-        connectorStyle: {strokeStyle: 'blue'}
+        //connectorStyle: {strokeStyle: 'blue'}
     });
     jspInstance.makeTarget(node, {
         isTarget: true,
@@ -140,5 +271,10 @@ function setDN(node, jspInstance)
         allowLoopback: false,
         anchor: ["Perimeter", {shape: "Rectangle"}]
     });
-    jspInstance.draggable(node, {containment: "parent", filter: 'div.anchor', filterExclude: true});
+    jspInstance.draggable(node, {containment: "parent", filter: 'div.anchor', filterExclude: true,
+        stop: function (event)
+        {
+            event.el._source.x = event.pos[0];
+            event.el._source.y = event.pos[1];
+        }});
 }

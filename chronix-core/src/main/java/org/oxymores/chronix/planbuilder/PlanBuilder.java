@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.planbuilder;
 
 import java.net.InetAddress;
@@ -150,10 +149,9 @@ public final class PlanBuilder
         return n1;
     }
 
-    public static Place buildPlace(Network a, String name, String description, ExecutionNode en)
+    public static Place buildPlace(Network a, String name, ExecutionNode en)
     {
         Place p1 = new Place();
-        p1.setDescription(description);
         p1.setName(name);
         p1.setNode(en);
         a.addPlace(p1);
@@ -212,7 +210,7 @@ public final class PlanBuilder
         n1.setConsole(true);
 
         // Place
-        buildPlace(n, "local", "the local server", n1);
+        buildPlace(n, "local", n1);
 
         return n;
     }

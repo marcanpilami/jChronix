@@ -299,16 +299,13 @@ public class CoreToDto
 
         for (NodeLink nl : en.getCanSendTo())
         {
-            if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
+            if (nl.getMethod() == NodeConnectionMethod.TCP)
             {
                 res.addToTcp(nl.getNodeTo().getId());
             }
-        }
-        for (NodeLink nl : en.getCanReceiveFrom())
-        {
-            if (nl.getMethod() == NodeConnectionMethod.RCTRL || nl.getMethod() == NodeConnectionMethod.TCP)
+            if (nl.getMethod() == NodeConnectionMethod.RCTRL)
             {
-                res.addFromTcp(nl.getNodeFrom().getId());
+                res.addToRctrl(nl.getNodeTo().getId());
             }
         }
         for (Place p : en.getPlacesHosted())
@@ -324,7 +321,6 @@ public class CoreToDto
     public static DTOPlace getPlace(Place p)
     {
         DTOPlace res = new DTOPlace();
-        res.setDescription(p.getDescription());
         res.setId(p.getId().toString());
         res.setName(p.getName());
         res.setNodeid(p.getNode().getId().toString());

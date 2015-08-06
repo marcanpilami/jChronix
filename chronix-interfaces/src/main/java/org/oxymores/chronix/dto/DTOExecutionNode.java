@@ -9,9 +9,8 @@ public class DTOExecutionNode
     private String id, dns, osusername, ospassword, certFilePath, name;
     private boolean isConsole, isSimpleRunner;
     private int qPort, wsPort, remoteExecPort, jmxPort, x, y;
-    private List<String> toTCP = new ArrayList<String>(), toRCTRL = new ArrayList<String>(), fromTCP = new ArrayList<String>(),
-            fromRCTRL = new ArrayList<String>();
-    private List<String> places = new ArrayList<String>();
+    private List<String> toTCP = new ArrayList<>(), toRCTRL = new ArrayList<>();
+    private List<String> places = new ArrayList<>();
 
     // Add to list
     public void addToTcp(UUID id)
@@ -19,19 +18,9 @@ public class DTOExecutionNode
         this.toTCP.add(id.toString());
     }
 
-    public void addFromTcp(UUID id)
-    {
-        this.fromTCP.add(id.toString());
-    }
-
     public void addToRctrl(UUID id)
     {
         this.toRCTRL.add(id.toString());
-    }
-
-    public void addFromRctrl(UUID id)
-    {
-        this.fromRCTRL.add(id.toString());
     }
 
     public void addPlace(UUID id)
@@ -178,26 +167,6 @@ public class DTOExecutionNode
     void setToRCTRL(List<String> toRCTRL)
     {
         this.toRCTRL = toRCTRL;
-    }
-
-    public List<String> getFromTCP()
-    {
-        return fromTCP;
-    }
-
-    void setFromTCP(List<String> fromTCP)
-    {
-        this.fromTCP = fromTCP;
-    }
-
-    public List<String> getFromRCTRL()
-    {
-        return fromRCTRL;
-    }
-
-    void setFromRCTRL(List<String> fromRCTRL)
-    {
-        this.fromRCTRL = fromRCTRL;
     }
 
     public List<String> getPlaces()

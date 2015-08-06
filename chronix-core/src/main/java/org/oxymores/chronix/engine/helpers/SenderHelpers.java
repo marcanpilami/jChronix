@@ -38,6 +38,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -253,6 +254,50 @@ public class SenderHelpers
     }
 
     // Application
+    // /////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
+    // Network
+    public static void sendNetwork(Network n, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
+    {
+        String qName = String.format(Constants.Q_META, target.getBrokerName());
+        log.info(String.format("An environment specification will be sent over the wire on queue %s", qName));
+
+        Destination destination = jmsSession.createQueue(qName);
+        ObjectMessage m = jmsSession.createObjectMessage(n);
+        jmsProducer.send(destination, m);
+
+        if (commit)
+        {
+            jmsSession.commit();
+        }
+    }
+
+    public static void sendNetworkToAllNodes(Network n, ChronixContext ctx) throws JMSException
+    {
+        // Connect to the local broker
+        JmsSendData d = new JmsSendData(ctx);
+
+        // In case of misconfiguration, we may have double nodes.
+        ArrayList<String> sent = new ArrayList<>();
+
+        for (ExecutionNode en : ctx.getNetwork().getNodesList())
+        {
+            if (en.isHosted() || sent.contains(en.getBrokerName()))
+            {
+                continue;
+            }
+
+            // Go
+            SenderHelpers.sendNetwork(n, en, d.jmsProducer, d.jmsSession, false);
+            sent.add(en.getBrokerName());
+        }
+
+        // Cleanup
+        d.jmsSession.commit();
+        d.close();
+    }
+
+    // Network
     // /////////////////////////////////////////////////////////////////////////
     // /////////////////////////////////////////////////////////////////////////
     // Send command to a runner agent directly (total shun of the engine)

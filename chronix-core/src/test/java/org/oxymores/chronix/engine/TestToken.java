@@ -29,7 +29,7 @@ public class TestToken extends TestBase
     {
         e1 = addEngine(db1, "local");
 
-        PlanBuilder.buildPlace(n, "second", "second node on master", n.getNode("local"));
+        PlanBuilder.buildPlace(n, "second", n.getNode("local"));
         storeNetwork(db1, n);
 
         a1 = PlanBuilder.buildApplication("Single node test", "test");

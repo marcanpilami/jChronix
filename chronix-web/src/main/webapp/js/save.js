@@ -2,22 +2,6 @@ function initSave(app)
 {
     var tab = $("#app-save-" + app.id);
 
-    function removeIfNoName(collection)
-    {
-        var toRemove = [];
-        $.each(collection, function ()
-        {
-            if (!this.name)
-            {
-                toRemove.push(this);
-            }
-        });
-        $.each(toRemove, function ()
-        {
-            collection.splice(collection.indexOf(this), 1);
-        });
-    }
-
     tab.find("button[name=test]").click(function ()
     {
         // Clear error tables

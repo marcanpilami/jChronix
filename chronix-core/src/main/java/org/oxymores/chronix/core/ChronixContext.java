@@ -219,6 +219,11 @@ public class ChronixContext
         return getValidator().validate(a);
     }
 
+    public static Set<ConstraintViolation<Network>> validate(Network n)
+    {
+        return getValidator().validate(n);
+    }
+
     public Application loadApplication(UUID id, boolean workingCopy, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
         if (workingCopy)
@@ -293,6 +298,11 @@ public class ChronixContext
         }
 
         return res;
+    }
+
+    public void setNetwork(Network n)
+    {
+        this.network = n;
     }
 
     public void saveApplication(String name) throws ChronixPlanStorageException

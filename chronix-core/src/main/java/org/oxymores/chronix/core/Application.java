@@ -101,7 +101,6 @@ public class Application extends ChronixObject
             {
                 pg = new PlaceGroup();
                 pg.setApplication(this);
-                pg.setDescription(p.getDescription());
                 pg.setName(p.getName());
                 this.addGroup(pg);
             }

@@ -1,6 +1,5 @@
 package org.oxymores.chronix.wapi;
 
-import java.io.Console;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -9,6 +8,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -30,6 +30,7 @@ import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOExecutionNode;
 import org.oxymores.chronix.dto.DTOExternal;
+import org.oxymores.chronix.dto.DTONetwork;
 import org.oxymores.chronix.dto.DTONextOccurrence;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
@@ -72,8 +73,6 @@ public class DtoToCore
         end.setDescription("Marks the end of a chain. Can be ignored in global plans");
         a.addActiveElement(end);
 
-        //for (DTOPlace e : d.getPlaces())
-        //    a.addPlace(getPlace(e, a));
         for (DTOPlaceGroup e : d.getGroups())
         {
             a.addGroup(getPlaceGroup(e, a));
@@ -210,7 +209,7 @@ public class DtoToCore
 
         for (DTOCalendarDay dd : d.getDays())
         {
-            new CalendarDay(dd.getSeq(), r);
+            CalendarDay calendarDay = new CalendarDay(dd.getSeq(), r);
         }
         return r;
     }
@@ -258,9 +257,15 @@ public class DtoToCore
         return r;
     }
 
-    public static ExecutionNode getExecutionNode(DTOExecutionNode d, Application a)
+    /**
+     * Pass 1: create nodes without transitions
+     * @param d the DTO object describing the execution node - a true EN will be created from this.
+     * @return the core execution node corresponding to the DTO object.
+     */
+    public static ExecutionNode getExecutionNode(DTOExecutionNode d)
     {
         ExecutionNode r = new ExecutionNode();
+        r.setName(d.getName());
         r.setConsole(d.isConsole());
         r.setDns(d.getDns());
         r.setId(UUID.fromString(d.getId()));
@@ -279,36 +284,37 @@ public class DtoToCore
         return r;
     }
 
-    public static void setExecutionNodeNetwork(DTOExecutionNode d, Application a)
+    /**
+     * Pass 2: add connections between nodes. All nodes must exist when this method is called.
+     * @param d the DTO object describing the node to connect.
+     * @param n the Network that the new connections should be added to.
+     */
+    public static void setExecutionNodeNetwork(DTOExecutionNode d, Network n)
     {
-        /*ExecutionNode r = a.getNode(UUID.fromString(d.getId()));
+        ExecutionNode from = n.getNode(UUID.fromString(d.getId()));
 
-         for (String s : d.getFromTCP())
-         {
-         ExecutionNode remote = a.getNode(UUID.fromString(s));
-         if (!d.isSimpleRunner())
-         {
-         remote.connectTo(r, NodeConnectionMethod.TCP);
-         }
-         else
-         {
-         remote.connectTo(r, NodeConnectionMethod.RCTRL);
-         }
-         }*/
-
+        for (String s : d.getToTCP())
+        {
+            ExecutionNode target = n.getNode(UUID.fromString(s));
+            from.connectTo(target, NodeConnectionMethod.TCP);
+        }
+        for (String s : d.getToRCTRL())
+        {
+            ExecutionNode target = n.getNode(UUID.fromString(s));
+            from.connectTo(target, NodeConnectionMethod.RCTRL);
+        }
     }
 
-    public static Place getPlace(DTOPlace d, Application a)
+    public static Place getPlace(DTOPlace d, Network n)
     {
         Place r = new Place();
-        /* r.setDescription(d.getDescription());
-         r.setId(UUID.fromString(d.getId()));
-         r.setName(d.getName());
-         r.setNode(a.getNode(UUID.fromString(d.getNodeid())));
-         r.setProperty1(d.getProp1());
-         r.setProperty2(d.getProp2());
-         r.setProperty3(d.getProp3());
-         r.setProperty4(d.getProp4()); */
+        r.setId(UUID.fromString(d.getId()));
+        r.setName(d.getName());
+        r.setNode(n.getNode(UUID.fromString(d.getNodeid())));
+        r.setProperty1(d.getProp1());
+        r.setProperty2(d.getProp2());
+        r.setProperty3(d.getProp3());
+        r.setProperty4(d.getProp4());
         return r;
     }
 
@@ -1026,5 +1032,26 @@ public class DtoToCore
         res.setBYMINUTE(BN);
 
         return res;
+    }
+
+    public static Network getNetwork(DTONetwork d)
+    {
+        Network n = new Network();
+
+        for (DTOExecutionNode e : d.getNodes())
+        {
+            n.addNode(getExecutionNode(e));
+        }
+        for (DTOExecutionNode e : d.getNodes())
+        {
+            setExecutionNodeNetwork(e, n);
+        }
+
+        for (DTOPlace e : d.getPlaces())
+        {
+            n.addPlace(getPlace(e, n));
+        }
+
+        return n;
     }
 }

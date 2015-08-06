@@ -35,7 +35,7 @@ public class TestPurge extends TestBase
         en1.setConsole(true);
 
         // Logical network
-        p1 = PlanBuilder.buildPlace(n, "master node", "master node", en1);
+        p1 = PlanBuilder.buildPlace(n, "master node", en1);
         storeNetwork(db1, n);
 
         // App

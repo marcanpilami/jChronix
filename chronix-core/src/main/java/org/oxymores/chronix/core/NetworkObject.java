@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import javax.validation.constraints.NotNull;
@@ -33,9 +32,6 @@ public class NetworkObject extends ChronixObject
     @NotNull
     @Size(min = 1, max = 50)
     protected String name;
-    @NotNull
-    @Size(min = 1, max = 255)
-    protected String description;
 
     public String getName()
     {
@@ -45,16 +41,6 @@ public class NetworkObject extends ChronixObject
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
     }
 
     public Network getNetwork()

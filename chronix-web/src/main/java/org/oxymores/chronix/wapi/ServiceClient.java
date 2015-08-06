@@ -20,8 +20,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jms.JMSException;
@@ -45,6 +45,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
@@ -70,8 +71,8 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 public class ServiceClient implements IServiceClient
 {
 
-    private static Logger log = Logger.getLogger(ServiceClient.class);
-    private ChronixContext ctx;
+    private static final Logger log = Logger.getLogger(ServiceClient.class);
+    private final ChronixContext ctx;
 
     public ServiceClient(ChronixContext ctx)
     {
@@ -112,6 +113,25 @@ public class ServiceClient implements IServiceClient
     {
         log.debug("getNetwork was called");
         return CoreToDto.getNetwork(ctx.getNetwork());
+    }
+
+    @POST
+    @Path("network")
+    @Consumes("application/json")
+    public void storeNetwork(DTONetwork n)
+    {
+        log.debug("storeNetwork was called");
+        try
+        {
+            Network network = DtoToCore.getNetwork(n);
+            ctx.saveNetwork(network);
+            ctx.setNetwork(network);
+            SenderHelpers.sendNetworkToAllNodes(network, ctx);
+        }
+        catch (ChronixPlanStorageException | JMSException ex)
+        {
+            log.error("Could not store network", ex);
+        }
     }
 
     @Override
@@ -178,8 +198,7 @@ public class ServiceClient implements IServiceClient
         }
         catch (ChronixPlanStorageException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Could not stage the application", e);
         }
         log.debug("End of stageApplication call.");
     }
@@ -201,8 +220,7 @@ public class ServiceClient implements IServiceClient
         }
         catch (JMSException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Could not send the application to its clients", e);
         }
 
         log.debug("End of storeApplication call.");
@@ -239,8 +257,7 @@ public class ServiceClient implements IServiceClient
         }
         catch (ParseException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Could not compute next ocurrences", e);
         }
 
         for (Object pe : pl)
@@ -358,7 +375,7 @@ public class ServiceClient implements IServiceClient
         catch (ChronixPlanStorageException e1)
         {
             // DEBUG code, so no need for pretty exc handling
-            e1.printStackTrace();
+            log.error(e1);
             System.exit(1);
         }
     }
@@ -389,7 +406,45 @@ public class ServiceClient implements IServiceClient
         Application a = DtoToCore.getApplication(app);
 
         // Validate & translate results for the GUI
-        for (ConstraintViolation<Application> err : ChronixContext.validate(a))
+        res = getErrors(ChronixContext.validate(a));
+        return res;
+    }
+
+    @POST
+    @Path("network/test")
+    @Produces(
+            {
+                "application/json", "application/xml"
+            })
+    @Consumes(MediaType.APPLICATION_JSON)
+    public List<DTOValidationError> validateNetwork(DTONetwork nn)
+    {
+        log.debug("validateNetwork service was called");
+        List<DTOValidationError> res = new ArrayList<>();
+        DTOValidationError tmp;
+
+        if (nn == null)
+        {
+            tmp = new DTOValidationError();
+            tmp.setErrorMessage("Environment could not be deserialized. Please check its format.");
+            res.add(tmp);
+            return res;
+        }
+
+        // Read application
+        Network n = DtoToCore.getNetwork(nn);
+
+        // Validate & translate results for the GUI
+        res = getErrors(ChronixContext.validate(n));
+        return res;
+    }
+
+    private <T> List<DTOValidationError> getErrors(Set<ConstraintViolation<T>> violations)
+    {
+        DTOValidationError tmp;
+        List<DTOValidationError> res = new ArrayList<>();
+
+        for (ConstraintViolation<T> err : violations)
         {
             tmp = new DTOValidationError();
             tmp.setErroneousValue(err.getInvalidValue() == null ? "" : err.getInvalidValue().toString());

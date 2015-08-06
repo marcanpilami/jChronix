@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public class DTOPlace
 {
-    private String id, name, description, prop1, prop2, prop3, prop4;
-    private List<String> memberOf = new ArrayList<String>();
+    private String id, name, prop1, prop2, prop3, prop4;
+    private List<String> memberOf = new ArrayList<>();
     private String nodeid;
 
     // Add to lists
@@ -35,16 +35,6 @@ public class DTOPlace
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
     }
 
     public String getProp1()

@@ -50,16 +50,16 @@ public class TestParallelism extends TestBase
         en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
         // Logical network
-        p1 = PlanBuilder.buildPlace(n, "master node", "master node reference place", en1);
-        p2 = PlanBuilder.buildPlace(n, "second node", "second node reference place", en2);
-        p3 = PlanBuilder.buildPlace(n, "hosted node by second node reference place", "third node", en3);
+        p1 = PlanBuilder.buildPlace(n, "master node", en1);
+        p2 = PlanBuilder.buildPlace(n, "second node", en2);
+        p3 = PlanBuilder.buildPlace(n, "hosted node by second node reference place", en3);
 
-        h11 = PlanBuilder.buildPlace(n, "P11", "master node 1", en1);
-        h12 = PlanBuilder.buildPlace(n, "P12", "master node 2", en1);
-        h21 = PlanBuilder.buildPlace(n, "P21", "second node 1", en2);
-        h22 = PlanBuilder.buildPlace(n, "P22", "second node 2", en2);
-        h31 = PlanBuilder.buildPlace(n, "P31", "hosted node by second node 1", en3);
-        h32 = PlanBuilder.buildPlace(n, "P32", "hosted node by second node 2", en3);
+        h11 = PlanBuilder.buildPlace(n, "P11", en1);
+        h12 = PlanBuilder.buildPlace(n, "P12", en1);
+        h21 = PlanBuilder.buildPlace(n, "P21", en2);
+        h22 = PlanBuilder.buildPlace(n, "P22", en2);
+        h31 = PlanBuilder.buildPlace(n, "P31", en3);
+        h32 = PlanBuilder.buildPlace(n, "P32", en3);
 
         pg1 = PlanBuilder.buildPlaceGroup(a, "master node reference group", "master node", p1);
         pg2 = PlanBuilder.buildPlaceGroup(a, "second node reference group", "second node", p2);

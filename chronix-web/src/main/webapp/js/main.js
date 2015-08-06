@@ -60,6 +60,53 @@ function initEnvironment()
     {
         alert("failed to fetch network " + status);
     });
+
+    $("#bt_saveenvt").click(function ()
+    {
+        // Work on a copy, as we are going to modify the data
+        var n = JSON.parse(JSON.stringify(network));
+
+        // Remove all empty lines added by the grids
+        removeIfNoName(n.places);
+        removeIfNoName(n.nodes);
+
+        $.postJSON("ws/meta/network", n, null, function (jqXHR, errorType, exc) {
+            alert(errorType);
+        });
+    });
+
+    $("#bt_validateenvt").click(function ()
+    {
+        var errors = $("#envt_errors > tbody");
+
+        // Clear errors
+        errors.empty();
+
+        // Work on a copy, as we are going to modify the data
+        var n = JSON.parse(JSON.stringify(network));
+
+        // Remove all empty lines added by the grids
+        removeIfNoName(n.places);
+        removeIfNoName(n.nodes);
+
+        $.postJSON("ws/meta/network/test", n, function (data)
+        {
+            if (data.length === 0)
+            {
+                $("<tr><td></td><td>No errors detected!</td><td></td><td></td><td></td></tr>").appendTo(errors);
+            }
+            else
+            {
+                $.each(data, function ()
+                {
+                    $("<tr><td>" + this.itemType + "</td><td>" + this.errorMessage + "</td><td>" + this.errorPath + "</td><td>" +
+                            this.itemIdentification + "</td><td>" + this.erroneousValue + "</td></tr>").appendTo(errors);
+                });
+            }
+        }, function (jqXHR, errorType, exc) {
+            alert(errorType);
+        });
+    });
 }
 
 function initIdIfNone(changes, action)
@@ -131,4 +178,20 @@ function printStackTrace()
 function item2name(item)
 {
     return item.name;
+}
+
+function removeIfNoName(collection)
+{
+    var toRemove = [];
+    $.each(collection, function ()
+    {
+        if (!this.name)
+        {
+            toRemove.push(this);
+        }
+    });
+    $.each(toRemove, function ()
+    {
+        collection.splice(collection.indexOf(this), 1);
+    });
 }

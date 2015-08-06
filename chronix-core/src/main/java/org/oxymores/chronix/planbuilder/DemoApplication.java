@@ -71,9 +71,9 @@ public final class DemoApplication
         n1.connectTo(n2, NodeConnectionMethod.TCP);
 
         // Logical network
-        Place p1 = PlanBuilder.buildPlace(n, "place 1", "test place 1", n1);
-        Place p2 = PlanBuilder.buildPlace(n, "place 2", "test place 2", n1);
-        Place p3 = PlanBuilder.buildPlace(n, "place 3", "test place 3", n1);
+        Place p1 = PlanBuilder.buildPlace(n, "place 1", n1);
+        Place p2 = PlanBuilder.buildPlace(n, "place 2", n1);
+        Place p3 = PlanBuilder.buildPlace(n, "place 3", n1);
 
         PlanBuilder.buildPlaceGroup(a, "group all", "test group all", p1, p2, p3);
         PlaceGroup pg2 = PlanBuilder.buildPlaceGroup(a, "group 1", "test group 1", p1);

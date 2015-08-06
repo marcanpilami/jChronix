@@ -100,7 +100,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException ex)
         {
-            log.fatal("Could not fetch netwok definition from console", ex);
+            log.fatal("Could not fetch network definition from console", ex);
             return false;
         }
 
@@ -139,12 +139,13 @@ public class BootstrapListener implements MessageListener
             Network n = (Network) o;
             log.info("network was received from remote node and will now be stored to disk");
             ctx.saveNetwork(n);
+            jmsCommit();
             ok = true;
             stop();
         }
         catch (JMSException | ChronixPlanStorageException ex)
         {
-            Logger.getLogger(BootstrapListener.class.getName()).log(Level.SEVERE, null, ex);
+            log.error(ex);
         }
     }
 

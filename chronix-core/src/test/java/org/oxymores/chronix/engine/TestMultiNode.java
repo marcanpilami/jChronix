@@ -55,9 +55,9 @@ public class TestMultiNode extends TestBase
         e2.setFeeder(en1);
 
         // Logical network
-        p1 = PlanBuilder.buildPlace(n, "master node", "master node", en1);
-        p2 = PlanBuilder.buildPlace(n, "second node", "second node", en2);
-        p3 = PlanBuilder.buildPlace(n, "hosted node by second node", "third node", en3);
+        p1 = PlanBuilder.buildPlace(n, "master node", en1);
+        p2 = PlanBuilder.buildPlace(n, "second node", en2);
+        p3 = PlanBuilder.buildPlace(n, "hosted node by second node", en3);
 
         pg1 = PlanBuilder.buildPlaceGroup(a1, "master node", "master node", p1);
         pg2 = PlanBuilder.buildPlaceGroup(a1, "second node", "second node", p2);

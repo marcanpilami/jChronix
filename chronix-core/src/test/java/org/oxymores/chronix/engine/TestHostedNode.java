@@ -39,15 +39,14 @@ public class TestHostedNode extends TestBase
         en1.connectTo(en2, NodeConnectionMethod.RCTRL);
 
         // Logical network
-        Place p1 = PlanBuilder.buildPlace(n, "master node", "master node", en1);
-        Place p2 = PlanBuilder.buildPlace(n, "hosted node", "hosted node", en2);
+        Place p1 = PlanBuilder.buildPlace(n, "master node", en1);
+        Place p2 = PlanBuilder.buildPlace(n, "hosted node", en2);
 
         PlanBuilder.buildPlaceGroup(a, "master node", "master node", p1);
         PlanBuilder.buildPlaceGroup(a, "hosted node", "hosted node", p2);
         PlanBuilder.buildPlaceGroup(a, "all nodes", "all nodes", p1, p2);
 
         // Chains and other stuff are created by the tests themselves
-
         ChronixContext.saveNetwork(n, new File(db1));
 
         e1 = addEngine(db1, "local");
