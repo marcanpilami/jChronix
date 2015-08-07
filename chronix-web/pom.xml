@@ -12,11 +12,9 @@
     <packaging>war</packaging>
 
     <properties>
-        <cxf.version>3.1.1</cxf.version>
-        <jersey.version>2.19</jersey.version>
-        <jetty.version>9.2.11.v20150529</jetty.version>
+        <jersey.version>2.20</jersey.version>
     </properties>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -40,6 +38,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>chronix-core</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hsqldb</artifactId>
+                    <groupId>org.hsqldb</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -48,38 +52,16 @@
             <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-jetty-http</artifactId>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
             <version>${jersey.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-annotations</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jettison</groupId>
-            <artifactId>jettison</artifactId>
-            <version>1.3.7</version>
         </dependency>
 
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <version>3.0.1</version>
+            <scope>provided</scope>
         </dependency>
-
     </dependencies>
 </project>
