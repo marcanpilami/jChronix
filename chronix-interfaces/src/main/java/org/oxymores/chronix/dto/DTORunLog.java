@@ -1,6 +1,7 @@
 package org.oxymores.chronix.dto;
 
 import java.util.Date;
+import javax.xml.bind.annotation.XmlElement;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -21,10 +22,10 @@ public class DTORunLog
     String osAccount;
     String whatWasRun;
     int resultCode;
-    Date enteredPipeAt;
-    Date markedForUnAt;
-    Date beganRunningAt;
-    Date stoppedRunningAt;
+
+    @XmlElement(nillable = true)
+    Date enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
+
     long dataIn, dataOut;
     long sequence;
 
@@ -178,14 +179,14 @@ public class DTORunLog
         this.enteredPipeAt = enteredPipeAt;
     }
 
-    public Date getMarkedForUnAt()
+    public Date getMarkedForRunAt()
     {
-        return (Date) markedForUnAt.clone();
+        return markedForRunAt;
     }
 
-    public void setMarkedForUnAt(Date markedForUnAt)
+    public void setMarkedForRunAt(Date markedForRunAt)
     {
-        this.markedForUnAt = markedForUnAt;
+        this.markedForRunAt = markedForRunAt;
     }
 
     public Date getBeganRunningAt()

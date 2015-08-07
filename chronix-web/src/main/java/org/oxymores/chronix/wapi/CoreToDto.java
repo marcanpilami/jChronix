@@ -1027,7 +1027,7 @@ public class CoreToDto
         res.setEnteredPipeAt(rl.getEnteredPipeAt());
         res.setExecutionNodeName(rl.getExecutionNodeName());
         res.setLastKnownStatus(rl.getLastKnownStatus());
-        res.setMarkedForUnAt(rl.getMarkedForUnAt());
+        res.setMarkedForRunAt(rl.getMarkedForUnAt());
         res.setOsAccount(rl.getOsAccount());
         res.setPlaceName(rl.getPlaceName());
         res.setResultCode(rl.getResultCode());

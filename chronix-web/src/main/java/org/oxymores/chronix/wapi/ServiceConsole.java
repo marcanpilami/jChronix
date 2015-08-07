@@ -7,14 +7,17 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
@@ -24,80 +27,100 @@ import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
-import org.oxymores.chronix.internalapi.IServiceConsoleRest;
 
-@Path("/main")
-public class ServiceConsole implements IServiceConsoleRest
+@Path("/live")
+public class ServiceConsole
 {
     private static Logger log = Logger.getLogger(ServiceConsole.class);
 
     private ChronixContext ctx = null;
-    private EntityManagerFactory emfHistory;
 
     public ServiceConsole(ChronixContext ctx)
     {
         this.ctx = ctx;
-        if (ctx != null)
-        {
-            this.emfHistory = this.ctx.getHistoryEMF();
-        }
     }
 
-    @Override
-    @GET
-    @Path("/logs/{a}/{b}/{c}")
-    public List<DTORunLog> getLog(@PathParam("a") Date from, @PathParam("b") Date to, @PathParam("c") Date since)
+    @POST
+    @Path("logs")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public HistoryQuery getLog(HistoryQuery q)
     {
-        log.debug(String.format("Service getLog was called between %s and %s (received since %s)", from, (since.after(from) ? new Date()
-                : to), since));
-        EntityManager em = emfHistory.createEntityManager();
-        TypedQuery<RunLog> q = em
-                .createQuery(
-                        "SELECT r FROM RunLog r WHERE r.markedForUnAt >= ?1 AND r.markedForUnAt <= ?2 AND r.lastLocallyModified >= ?3 ORDER BY r.markedForUnAt",
-                        RunLog.class);
-        q.setParameter(1, from);
-        q.setParameter(2, (since.after(from) ? new Date() : to)); // if since is used, the end should always be now
-        q.setParameter(3, since);
-        ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
+        log.debug("getLog POST was called");
 
-        for (RunLog rl : q.getResultList())
+        if (q.getMarkedForRunAfter() == null)
         {
-            res.add(CoreToDto.getDTORunLog(rl));
+            q.setMarkedForRunAfter(DateTime.now().minusDays(1).toDate());
+            log.debug(q.getMarkedForRunAfter());
+        }
+        if (q.getMarkedForRunBefore() == null)
+        {
+            q.setMarkedForRunBefore(DateTime.now().plusDays(1).toDate());
+            log.debug(q.getMarkedForRunBefore());
         }
 
-        log.debug("End of call to getLog - returning " + res.size() + " logs");
-        return res;
+        EntityManager em = ctx.getHistoryEM();
+        try
+        {
+            TypedQuery<RunLog> l = em.createQuery("SELECT r FROM RunLog r WHERE r.markedForUnAt >= ?1 AND r.markedForUnAt <= ?2 ORDER BY r.markedForUnAt", RunLog.class);
+            l.setParameter(1, q.getMarkedForRunAfter());
+            l.setParameter(2, q.getMarkedForRunBefore());
+
+            List<DTORunLog> res = new ArrayList<>();
+            for (RunLog rl : l.getResultList())
+            {
+                res.add(CoreToDto.getDTORunLog(rl));
+            }
+            q.setRes(res);
+        }
+        finally
+        {
+            em.close();
+        }
+
+        log.debug("End of call to getLog - returning " + q.getRes().size() + " logs");
+        return q;
     }
 
-    @Override
     @GET
-    @Path("/alllogs")
-    @Produces("application/json")
-    public ArrayList<DTORunLog> getLog()
+    @Path("alllogs")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<DTORunLog> getLog()
     {
         log.debug("Service getLog was called");
-        EntityManager em = emfHistory.createEntityManager();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
-        ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
+        EntityManager em = null;
+        List<DTORunLog> res = null;
 
-        for (RunLog rl : q.getResultList())
+        try
         {
-            res.add(CoreToDto.getDTORunLog(rl));
+            em = ctx.getHistoryEM();
+
+            TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
+            res = new ArrayList<>();
+
+            for (RunLog rl : q.getResultList())
+            {
+                res.add(CoreToDto.getDTORunLog(rl));
+            }
+            log.debug("End of call to getLog - returning " + res.size());
+        }
+        finally
+        {
+            em.close();
         }
 
-        log.debug("End of call to getLog - returning " + res.size());
         return res;
     }
 
-    @Override
     @GET
     @Path("/shortlog/{id}")
     @Produces("text/plain")
     public String getShortLog(@PathParam("id") UUID id)
     {
         log.debug("Service getShortLog was called for ID " + id.toString());
-        EntityManager em = emfHistory.createEntityManager();
+        EntityManager em = ctx.getHistoryEM();
         RunLog rl = em.find(RunLog.class, id);
+        em.close();
 
         if (rl == null)
         {
@@ -111,28 +134,27 @@ public class ServiceConsole implements IServiceConsoleRest
         }
     }
 
-    @Override
     @GET
     @Path("/logssince/{a}")
     public List<DTORunLog> getLogSince(@PathParam("a") Date since)
     {
         log.debug("Service getLogSince was called");
-        EntityManager em = emfHistory.createEntityManager();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r WHERE r.lastLocallyModified > ? ORDER BY r.enteredPipeAt",
+        EntityManager em = ctx.getHistoryEM();
+        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r WHERE r.lastLocallyModified > ?1 ORDER BY r.enteredPipeAt",
                 RunLog.class);
-        q.setParameter(0, since);
-        ArrayList<DTORunLog> res = new ArrayList<DTORunLog>();
+        q.setParameter(1, since);
+        ArrayList<DTORunLog> res = new ArrayList<>();
 
         for (RunLog rl : q.getResultList())
         {
             res.add(CoreToDto.getDTORunLog(rl));
         }
 
+        em.close();
         log.debug("End of call to getLogSince - returning " + res.size());
         return res;
     }
 
-    @Override
     @GET
     @Path("/order/forceok/{launchId}")
     @Produces("application/json")
@@ -141,8 +163,9 @@ public class ServiceConsole implements IServiceConsoleRest
         log.debug("Service orderForceOK was called");
         try
         {
-            EntityManager em = emfHistory.createEntityManager();
+            EntityManager em = ctx.getHistoryEM();
             RunLog rl = em.find(RunLog.class, launchId);
+            em.close();
             SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), ctx);
         }
         catch (ChronixException e)
@@ -154,14 +177,14 @@ public class ServiceConsole implements IServiceConsoleRest
         return new ResOrder("ForceOK", true, "The order was sent successfuly");
     }
 
-    @Override
     @GET
     @Path("/logfile/{launchId}")
     @Produces("text/plain; charset=utf-8")
     public File getLogFile(@PathParam("launchId") String launchId)
     {
-        EntityManager em = emfHistory.createEntityManager();
+        EntityManager em = ctx.getHistoryEM();
         RunLog rl = em.find(RunLog.class, launchId);
+        em.close();
 
         File f = new File(rl.getLogPath());
         return f;
@@ -193,8 +216,9 @@ public class ServiceConsole implements IServiceConsoleRest
     public ResOrder orderLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
     {
         log.debug("Service orderLaunchOutOfPlan was called");
-        EntityManager em = emfHistory.createEntityManager();
+        EntityManager em = ctx.getHistoryEM();
         RunLog rl = em.find(RunLog.class, launchId);
+        em.close();
         return orderLaunchOutOfPlan(UUID.fromString(rl.getApplicationId()), UUID.fromString(rl.getStateId()),
                 UUID.fromString(rl.getPlaceId()));
     }
