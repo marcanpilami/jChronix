@@ -1,16 +1,75 @@
 package org.oxymores.chronix.wapi;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 import org.oxymores.chronix.dto.DTORunLog;
 
 public class HistoryQuery
 {
     private Date startedBefore, startedAfter, markedForRunBefore, markedForRunAfter;
-    private List<DTORunLog> res;
     private Integer startLine = 0, pageSize = 100;
-    private Long totalLogs = null;
 
+    // Sort fields
+    @XmlElementWrapper(name = "sortby")
+    private List<SortSpec> sorts = new ArrayList<>();
+
+    // Result fields
+    private Long totalLogs = null;
+    private List<DTORunLog> res;
+
+    // Sort helpers
+    public static enum SortOrder
+    {
+        ASC, DESC;
+    }
+
+    public static enum SortColumn
+    {
+        id("id"),
+        activeNodeName("activeNodeName"),
+        chainName("chainName"),
+        lastKnownStatus("lastKnownStatus"),
+        markedForRunAt("markedForUnAt");
+
+        private final String coreLogField;
+
+        private SortColumn(String coreLogField)
+        {
+            this.coreLogField = coreLogField;
+        }
+
+        String getCoreLogField()
+        {
+            return this.coreLogField;
+        }
+    }
+
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class SortSpec
+    {
+        SortOrder order = SortOrder.ASC;
+        SortColumn col;
+
+        @SuppressWarnings("unused")
+        private SortSpec()
+        {
+            // Stupid bean convention requires this empty constructor.
+        }
+
+        SortSpec(SortOrder order, SortColumn column)
+        {
+            this.order = order;
+            this.col = column;
+        }
+    }
+
+    // Stupid accessors at the ned of the file
     public Date getStartedBefore()
     {
         return startedBefore;
@@ -89,5 +148,15 @@ public class HistoryQuery
     public void setTotalLogs(Long totalLogs)
     {
         this.totalLogs = totalLogs;
+    }
+
+    public List<SortSpec> getSorts()
+    {
+        return sorts;
+    }
+
+    protected void setSorts(List<SortSpec> sorts)
+    {
+        this.sorts = sorts;
     }
 }

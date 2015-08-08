@@ -14,6 +14,8 @@ import java.util.Random;
 import javax.persistence.EntityManager;
 import javax.ws.rs.ApplicationPath;
 import org.apache.log4j.Logger;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
+import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
@@ -129,6 +131,9 @@ public class RestApplication extends ResourceConfig
             log.error(e);
             return;
         }
+
+        this.property(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
+        this.property(UnmarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
 
         this.register(new ServiceClient(ctx));
         this.register(new ServiceConsole(ctx));

@@ -60,7 +60,18 @@ public class ServiceConsole
         EntityManager em = ctx.getHistoryEM();
         try
         {
-            TypedQuery<RunLog> l = em.createQuery("SELECT r FROM RunLog r WHERE r.markedForUnAt >= ?1 AND r.markedForUnAt <= ?2 ORDER BY r.markedForUnAt", RunLog.class);
+            String sort = "";
+            if (q.getSorts().size() > 0)
+            {
+                sort = " ORDER BY ";
+                for (HistoryQuery.SortSpec s : q.getSorts())
+                {
+                    sort += " r." + s.col.getCoreLogField() + " " + s.order.name() + ",";
+                }
+                sort = sort.substring(0, sort.length() - 1);
+            }
+
+            TypedQuery<RunLog> l = em.createQuery("SELECT r FROM RunLog r WHERE r.markedForUnAt >= ?1 AND r.markedForUnAt <= ?2 " + sort, RunLog.class);
             l.setParameter(1, q.getMarkedForRunAfter());
             l.setParameter(2, q.getMarkedForRunBefore());
 

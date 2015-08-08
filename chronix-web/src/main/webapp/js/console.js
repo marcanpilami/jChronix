@@ -3,24 +3,32 @@ $(document).ready(function ()
 {
     $('#history').DataTable({
         columns: [
-            {data: 'id', title: 'id'},
+            {data: 'id', title: 'id', orderable: false},
             {data: 'activeNodeName', title: 'Item'},
             {data: 'chainName', title: 'inside chain'},
             {data: 'lastKnownStatus', title: 'status'},
-            {data: 'markedForRunAt', title: 'enqueued'},
-            {data: 'stoppedRunningAt', title: 'ended'}
+            {data: 'markedForRunAt', title: 'enqueued', type: 'date'}, // 2015-08-08T10:20:04.903+02:00
+            {data: 'stoppedRunningAt', title: 'ended', type: 'date', orderable: false}
         ],
+        order: [[1, "asc"]],
         serverSide: true,
         ajax: function (data, callback, settings)
         {
             console.debug(data);
             console.debug(settings);
 
+            var sorts = [];
+            $.each(data.order, function ()
+            {
+                sorts.push({col: data.columns[this.column].data, order: this.dir.toUpperCase()});
+            });
+
             $.postJSON(
                     'ws/live/log',
                     {
                         pageSize: data.length,
-                        startLine: data.start
+                        startLine: data.start,
+                        sortby: sorts
                     },
             function (serverdata)
             {
