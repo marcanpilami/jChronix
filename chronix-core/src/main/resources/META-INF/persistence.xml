@@ -20,6 +20,8 @@
         <class>org.oxymores.chronix.core.timedata.RunMetrics</class>
         <class>org.oxymores.chronix.core.timedata.RunStats</class>
 
+        <validation-mode>NONE</validation-mode>
+
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb" />
             <property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbc.JDBCDriver" />
@@ -36,6 +38,8 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <class>org.oxymores.chronix.core.timedata.RunLog</class>
         <class>org.oxymores.chronix.core.timedata.UserTrace</class>
+
+        <validation-mode>NONE</validation-mode>
 
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhist" />
@@ -66,6 +70,8 @@
         <class>org.oxymores.chronix.core.timedata.RunMetrics</class>
         <class>org.oxymores.chronix.core.timedata.RunStats</class>
 
+        <validation-mode>NONE</validation-mode>
+
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdb2" />
             <property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbc.JDBCDriver" />
@@ -82,6 +88,8 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <class>org.oxymores.chronix.core.timedata.RunLog</class>
         <class>org.oxymores.chronix.core.timedata.UserTrace</class>
+
+        <validation-mode>NONE</validation-mode>
 
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhist2" />
@@ -113,6 +121,8 @@
         <class>org.oxymores.chronix.core.timedata.RunMetrics</class>
         <class>org.oxymores.chronix.core.timedata.RunStats</class>
 
+        <validation-mode>NONE</validation-mode>
+
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbsim" />
             <property name="openjpa.ConnectionDriverName" value="org.hsqldb.jdbc.JDBCDriver" />
@@ -129,6 +139,8 @@
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <class>org.oxymores.chronix.core.timedata.RunLog</class>
         <class>org.oxymores.chronix.core.timedata.UserTrace</class>
+
+        <validation-mode>NONE</validation-mode>
 
         <properties>
             <property name="openjpa.ConnectionURL" value="jdbc:hsqldb:mem:testdbhistsim" />
