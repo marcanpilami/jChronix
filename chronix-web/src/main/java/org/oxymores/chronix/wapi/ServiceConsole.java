@@ -41,7 +41,7 @@ public class ServiceConsole
     }
 
     @POST
-    @Path("logs")
+    @Path("log")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public HistoryQuery getLog(HistoryQuery q)
@@ -51,12 +51,10 @@ public class ServiceConsole
         if (q.getMarkedForRunAfter() == null)
         {
             q.setMarkedForRunAfter(DateTime.now().minusDays(1).toDate());
-            log.debug(q.getMarkedForRunAfter());
         }
         if (q.getMarkedForRunBefore() == null)
         {
             q.setMarkedForRunBefore(DateTime.now().plusDays(1).toDate());
-            log.debug(q.getMarkedForRunBefore());
         }
 
         EntityManager em = ctx.getHistoryEM();
@@ -66,24 +64,34 @@ public class ServiceConsole
             l.setParameter(1, q.getMarkedForRunAfter());
             l.setParameter(2, q.getMarkedForRunBefore());
 
+            if (q.getStartLine() != null)
+            {
+                l.setFirstResult(q.getStartLine());
+            }
+            if (q.getPageSize() != null)
+            {
+                l.setMaxResults(q.getPageSize());
+            }
+
             List<DTORunLog> res = new ArrayList<>();
             for (RunLog rl : l.getResultList())
             {
                 res.add(CoreToDto.getDTORunLog(rl));
             }
             q.setRes(res);
+            q.setTotalLogs((long) em.createQuery("SELECT COUNT(l) FROM RunLog l").getSingleResult());
         }
         finally
         {
             em.close();
         }
 
-        log.debug("End of call to getLog - returning " + q.getRes().size() + " logs");
+        log.debug("End of call to getLog - returning " + q.getRes().size() + " logs out of a total of " + q.getTotalLogs());
         return q;
     }
 
     @GET
-    @Path("alllogs")
+    @Path("log")
     @Produces(MediaType.APPLICATION_JSON)
     public List<DTORunLog> getLog()
     {

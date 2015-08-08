@@ -17,18 +17,21 @@ $(document).ready(function ()
             console.debug(settings);
 
             $.postJSON(
-                    'ws/live/logs',
-                    {},
-                    function (serverdata)
+                    'ws/live/log',
                     {
-                        var res = {
-                            draw: data.draw,
-                            recordsTotal: -1,
-                            recordsFiltered: -1,
-                            data: serverdata.res
-                        };
-                        callback(res);
+                        pageSize: data.length,
+                        startLine: data.start
                     },
+            function (serverdata)
+            {
+                var res = {
+                    draw: data.draw,
+                    recordsTotal: serverdata.totalLogs,
+                    recordsFiltered: serverdata.totalLogs, // No filter for now
+                    data: serverdata.res
+                };
+                callback(res);
+            },
                     function (error)
                     {
                         alert("could not fetch data");

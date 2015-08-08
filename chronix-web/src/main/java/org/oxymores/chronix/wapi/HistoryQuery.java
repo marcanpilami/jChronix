@@ -9,6 +9,7 @@ public class HistoryQuery
     private Date startedBefore, startedAfter, markedForRunBefore, markedForRunAfter;
     private List<DTORunLog> res;
     private Integer startLine = 0, pageSize = 100;
+    private Long totalLogs = null;
 
     public Date getStartedBefore()
     {
@@ -78,5 +79,15 @@ public class HistoryQuery
     public void setPageSize(Integer pageSize)
     {
         this.pageSize = pageSize;
+    }
+
+    public Long getTotalLogs()
+    {
+        return totalLogs;
+    }
+
+    public void setTotalLogs(Long totalLogs)
+    {
+        this.totalLogs = totalLogs;
     }
 }
