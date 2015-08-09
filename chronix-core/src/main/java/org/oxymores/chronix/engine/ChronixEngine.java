@@ -356,6 +356,11 @@ public class ChronixEngine extends Thread
         this.feederPort = port;
     }
 
+    public void setLocalNodeName(String name)
+    {
+        this.localNodeName = name;
+    }
+
     public void setFeeder(ExecutionNode en)
     {
         this.setFeeder(en.getHost().getDns(), en.getqPort());
