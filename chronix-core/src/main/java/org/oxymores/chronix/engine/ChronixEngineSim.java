@@ -45,9 +45,6 @@ public class ChronixEngineSim extends ChronixEngine
         log.info(String.format("(%s) simulation engine starting between %s and %s", this.dbPath, this.start, this.end));
         try
         {
-            this.startCritical.acquire();
-            this.startSequenceOngoing.release(1);
-
             // Context
             this.ctx = new ChronixContext("simu", this.dbPath, this.transacUnitName, this.historyUnitName, false, null, null);
             this.ctx.setSimulator();
@@ -87,12 +84,11 @@ public class ChronixEngineSim extends ChronixEngine
             this.stAgent.startAgent(ctx, broker.getConnection(), this.start);
 
             // Done
-            this.startCritical.release();
             this.engineStarts.release();
             log.info("Simulator for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
 
         }
-        catch (InterruptedException | ChronixInitializationException | JMSException | IOException e)
+        catch (ChronixInitializationException | JMSException | IOException e)
         {
             log.error("The simulation engine has failed to start", e);
             this.run = false;

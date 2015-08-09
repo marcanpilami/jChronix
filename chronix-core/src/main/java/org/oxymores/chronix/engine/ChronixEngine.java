@@ -29,7 +29,6 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Network;
-import org.oxymores.chronix.engine.helpers.ContextHelper;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
@@ -44,7 +43,7 @@ public class ChronixEngine extends Thread
 {
     private static Logger log = Logger.getLogger(ChronixEngine.class);
 
-    private boolean runnerMode, cleanStart = false;
+    private boolean runnerMode;
     private int runnerPort, feederPort;
     private String runnerHost, feederHost;
 
@@ -56,7 +55,7 @@ public class ChronixEngine extends Thread
     protected Broker broker;
     protected SelfTriggerAgent stAgent;
 
-    protected Semaphore startCritical, stop, startSequenceOngoing, stopped, engineStops, engineStarts;
+    protected Semaphore stop, stopped, engineStops, engineStarts;
     protected boolean run = true;
     protected int nbRunner;
 
@@ -94,11 +93,8 @@ public class ChronixEngine extends Thread
         this.historyDbPath = historyDBPath;
         this.transacDbPath = transacDbPath;
 
-        // Startup phase is synchronized with this
-        this.startCritical = new Semaphore(1);
         // Putting a token in this will stop the engine
         this.stop = new Semaphore(0);
-        this.startSequenceOngoing = new Semaphore(0);
         // A token is created when the engines stops. (not when it reboots)
         this.stopped = new Semaphore(0);
         // The stop & start sequence is protected with this
@@ -112,11 +108,9 @@ public class ChronixEngine extends Thread
     protected void startEngine(boolean blocking) throws Exception
     {
         log.info(String.format("Engine %s starting on database %s", this.localNodeName, this.dbPath));
-        this.startCritical.acquire();
-        this.startSequenceOngoing.release(1);
 
         // Remote nodes must fetch the network on startup if not already present
-        if (!runnerMode && feederHost != null && !ctx.hasNetworkFile(this.dbPath))
+        if (!runnerMode && feederHost != null && !ChronixContext.hasNetworkFile(this.dbPath))
         {
             BootstrapListener bl = new BootstrapListener(new File(this.dbPath), localNodeName, feederHost, feederPort);
             if (!bl.fetchNetwork())
@@ -148,7 +142,7 @@ public class ChronixEngine extends Thread
         // Broker with all the consumer threads
         if (this.broker == null)
         {
-            this.broker = new Broker(this.ctx, cleanStart, !this.runnerMode, true);
+            this.broker = new Broker(this.ctx, false, !this.runnerMode, true);
         }
         else
         {
@@ -172,8 +166,6 @@ public class ChronixEngine extends Thread
         }
 
         // Done
-        this.startCritical.release();
-        this.startSequenceOngoing.acquire();
         log.info("Engine has finished its boot sequence");
 
         if (blocking)
@@ -199,9 +191,7 @@ public class ChronixEngine extends Thread
             {
                 log.fatal("The engine has failed to start", e);
                 this.run = false;
-                this.startCritical.release();
                 this.stop.release();
-                this.startSequenceOngoing.release();
                 return;
             }
             finally
