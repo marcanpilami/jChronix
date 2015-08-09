@@ -295,6 +295,12 @@ public class ChronixEngine extends Thread
         this.stop.release();
     }
 
+    /** Test method only */
+    void stopOutgoingJms()
+    {
+        this.broker.stopAllOutgoingLinks();
+    }
+
     protected void preContextLoad()
     {
         // First start? (only create apps if first start on a console)

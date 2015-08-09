@@ -48,9 +48,15 @@ public class TestBase
         {
             if (e.shouldRun())
             {
-                // Stop sequentially so as to avoid connection errors on shutdown
+                e.stopOutgoingJms();
+            }
+        }
+
+        for (ChronixEngine e : engines.values())
+        {
+            if (e.shouldRun())
+            {
                 e.stopEngine();
-                //e.waitForStopEnd();
             }
         }
         for (ChronixEngine e : engines.values())

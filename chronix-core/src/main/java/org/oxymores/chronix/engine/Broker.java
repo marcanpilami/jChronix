@@ -342,7 +342,7 @@ class Broker
         stopBroker();
     }
 
-    private void stopAllOutgoingLinks() throws ChronixInitializationException
+    void stopAllOutgoingLinks() throws ChronixInitializationException
     {
         if (this.broker.isStarted())
         {
