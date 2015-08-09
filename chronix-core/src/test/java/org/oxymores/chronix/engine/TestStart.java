@@ -20,7 +20,6 @@ public class TestStart extends TestBase
     @Test
     public void testNoDb() throws Exception
     {
-        log.info("***** Test: without a db, the scheduler fails with a adequate exception");
         ChronixEngine e = null;
         try
         {
@@ -38,8 +37,8 @@ public class TestStart extends TestBase
     @Test
     public void testCreateAutoApplications() throws Exception
     {
-        log.info("***** Test: with an empty db, the scheduler creates two auto applications");
-
+        // With an empty db, the scheduler creates two auto applications
+        cleanDirectory(db1);
         ChronixEngine e = addEngine(db1, "local");
         startEngines();
 
@@ -86,12 +85,12 @@ public class TestStart extends TestBase
         startEngines();
 
         SenderHelpers.sendApplication(a, n2, e1.ctx); // Send through 2 - it won't reboot
-        e2.waitForRebootEnd();
+        e2.waitForInitEnd();
 
         SenderHelpers.sendApplication(a, n1, e2.ctx);
-        e1.waitForRebootEnd();
+        e1.waitForInitEnd();
 
         SenderHelpers.sendApplication(a, n1, e2.ctx);
-        e1.waitForRebootEnd();
+        e1.waitForInitEnd();
     }
 }

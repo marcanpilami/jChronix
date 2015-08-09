@@ -78,7 +78,7 @@ public class TestPurge extends TestBase
         e1.ctx.deleteCurrentApplication(a1);
         Application a2 = PlanBuilder.buildApplication("test2", "description");
         SenderHelpers.sendApplicationToAllClients(a2, e1.getContext());
-        e1.waitForRebootEnd();
+        e1.waitForInitEnd();
         Assert.assertEquals(0L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
 
         // Done
@@ -119,7 +119,7 @@ public class TestPurge extends TestBase
         // Remove the chain from the application. Events from this chain should be purged.
         a1.removeActiveElement(c1);
         SenderHelpers.sendApplicationToAllClients(a1, e1.getContext());
-        e1.waitForRebootEnd();
+        e1.waitForInitEnd();
 
         Assert.assertEquals(0L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
 

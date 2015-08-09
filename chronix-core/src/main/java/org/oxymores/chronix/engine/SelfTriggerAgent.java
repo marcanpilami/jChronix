@@ -29,7 +29,6 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
@@ -41,7 +40,7 @@ import org.oxymores.chronix.core.ChronixContext;
 
 class SelfTriggerAgent extends Thread
 {
-    private static Logger log = Logger.getLogger(SelfTriggerAgent.class);
+    private static final Logger log = Logger.getLogger(SelfTriggerAgent.class);
 
     protected Semaphore loop;
     protected boolean run = true;
@@ -77,18 +76,18 @@ class SelfTriggerAgent extends Thread
         loop.release();
     }
 
-    public void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx) throws JMSException
+    public void startAgent(ChronixContext ctx, Connection cnx) throws JMSException
     {
-        this.startAgent(emf, ctx, cnx, DateTime.now());
+        this.startAgent(ctx, cnx, DateTime.now());
     }
 
-    void startAgent(EntityManagerFactory emf, ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
+    void startAgent(ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
     {
         log.debug(String.format("Agent responsible for clocks will start"));
 
         // Save pointers
         this.loop = new Semaphore(0);
-        this.em = emf.createEntityManager();
+        this.em = ctx.getTransacEM();
         this.ctx = ctx;
         this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
         this.producerEvents = jmsSession.createProducer(null);
@@ -97,7 +96,7 @@ class SelfTriggerAgent extends Thread
         this.nextLoopVirtualTime = startTime;
 
         // Get all self triggered nodes
-        this.nodes = new ArrayList<ActiveNodeBase>();
+        this.nodes = new ArrayList<>();
         for (Application a : this.ctx.getApplications())
         {
             for (ActiveNodeBase n : a.getActiveElements().values())
@@ -110,9 +109,9 @@ class SelfTriggerAgent extends Thread
             // TODO: select only clocks with local consequences
         }
         log.debug(String.format("Agent responsible for clocks will handle %s clock nodes", this.nodes.size()));
-        for (int i = 0; i < this.nodes.size(); i++)
+        for (ActiveNodeBase node : this.nodes)
         {
-            log.debug(String.format("\t\t" + this.nodes.get(i).getName()));
+            log.debug(String.format("\t\t" + node.getName()));
         }
 
         // Start thread
@@ -220,6 +219,5 @@ class SelfTriggerAgent extends Thread
 
     protected void preLoopHook()
     {
-        return;
     }
 }

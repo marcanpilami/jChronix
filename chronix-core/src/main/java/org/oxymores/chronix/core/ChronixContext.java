@@ -34,7 +34,6 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
-import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 import org.apache.commons.io.FilenameUtils;
@@ -49,25 +48,34 @@ import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
+import java.sql.Connection;
+import java.sql.Statement;
+import javax.sql.DataSource;
+import org.apache.openjpa.conf.OpenJPAConfiguration;
+import org.apache.openjpa.persistence.OpenJPAEntityManagerFactory;
+import org.apache.openjpa.persistence.OpenJPAPersistence;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 
-public class ChronixContext
+public final class ChronixContext
 {
     private static final Logger log = Logger.getLogger(ChronixContext.class);
-    private static ValidatorFactory validatorFactory;
-    private EntityManagerFactory historyEmf, transacEmf;
+    private static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     private static final XStream xmlUtility = new XStream(new StaxDriver());
 
+    // JPA factories
+    private EntityManagerFactory historyEmf, transacEmf;
+
     // Data needed to load the applications
-    private DateTime loaded;
-    private File configurationDirectory;
-    private String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+    private final DateTime loaded;
+    private final File configurationDirectory;
+    private final String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
 
     // Network
     private Network network;
 
     // Loaded applications
-    private Map<UUID, Application> applicationsById;
-    private Map<String, Application> applicationsByName;
+    private final Map<UUID, Application> applicationsById;
+    private final Map<String, Application> applicationsByName;
 
     // Local node identification
     private String localNodeName;
@@ -82,58 +90,53 @@ public class ChronixContext
     }
 
     /**
-     * Creates a minimal Context with no applications loaded.
+     * Creates a new Context.
      *
-     * @param appConfDirectory
-     * @param transacUnitName
-     * @param historyUnitName
-     * @param simulation
-     * @return
-     */
-    public static ChronixContext initContext(String appConfDirectory, String transacUnitName, String historyUnitName, boolean simulation)
-    {
-        ChronixContext ctx = new ChronixContext();
-        ctx.loaded = DateTime.now();
-        ctx.configurationDirectory = new File(FilenameUtils.normalize(appConfDirectory));
-        ctx.applicationsById = new HashMap<>();
-        ctx.applicationsByName = new HashMap<>();
-        ctx.historyUnitName = historyUnitName;
-        ctx.transacUnitName = transacUnitName;
-        ctx.setSimulation(simulation);
-
-        return ctx;
-    }
-
-    /**
-     * Creates a new Context. This calls initContext, so no need to call it beforehand.
-     *
-     * @param appConfDirectory
-     * @param transacUnitName
-     * @param historyUnitName
      * @param localNodeName
+     * @param appConfDirectory
+     * @param transacUnitName
+     * @param historyUnitName
      * @param simulation
      * @param historyDBPath
      * @param transacDbPath
-     * @return
-     * @throws ChronixPlanStorageException
      */
-    public static ChronixContext loadContext(String appConfDirectory, String transacUnitName, String historyUnitName, String localNodeName, boolean simulation,
-            String historyDBPath, String transacDbPath) throws ChronixPlanStorageException
+    public ChronixContext(String localNodeName, String appConfDirectory, String transacUnitName, String historyUnitName, boolean simulation, String historyDBPath, String transacDbPath)
     {
-        log.info(String.format("Creating a new context from configuration database %s", appConfDirectory));
-
-        if (!(new File(appConfDirectory).isDirectory()))
+        this.loaded = DateTime.now();
+        this.localNodeName = localNodeName;
+        this.configurationDirectory = new File(FilenameUtils.normalize(appConfDirectory));
+        this.applicationsById = new HashMap<>();
+        this.applicationsByName = new HashMap<>();
+        this.historyUnitName = historyUnitName;
+        this.transacUnitName = transacUnitName;
+        this.historyDbPath = historyDBPath;
+        this.transacDbPath = transacDbPath;
+        this.setSimulation(simulation);
+        if (transacUnitName == null)
         {
-            throw new ChronixPlanStorageException("Directory " + appConfDirectory + " does not exist", null);
+            // Runner without metabase - don't load anything
+            return;
         }
 
-        ChronixContext ctx = initContext(appConfDirectory, transacUnitName, historyUnitName, simulation);
-        ctx.historyDbPath = historyDBPath;
-        ctx.transacDbPath = transacDbPath;
-        ctx.localNodeName = localNodeName;
+        if (!this.configurationDirectory.canRead())
+        {
+            throw new ChronixInitializationException("metabase is not readable");
+        }
+
+        this.loadContext();
+
+        if (!"simu".equals(localNodeName) && this.getLocalNode() == null)
+        {
+            throw new ChronixInitializationException("there is no node named " + localNodeName + " described inside the metabase");
+        }
+    }
+
+    private void loadContext()
+    {
+        log.info(String.format("Creating a new context from configuration database %s", this.configurationDirectory));
 
         // List files in directory - and therefore applications
-        File[] fileList = ctx.configurationDirectory.listFiles();
+        File[] fileList = this.configurationDirectory.listFiles();
         HashMap<String, File[]> toLoad = new HashMap<>();
 
         for (File f : fileList)
@@ -155,25 +158,25 @@ public class ChronixContext
         // ///////////////////
         // Load network
         // ///////////////////
-        ctx.network = ctx.loadNetwork();
+        this.network = this.loadNetwork();
 
         // ///////////////////
         // Load apps
         // ///////////////////
         for (File[] ss : toLoad.values())
         {
-            ctx.loadApplication(ss[0], simulation);
+            this.loadApplication(ss[0], this.simulateExternalPayloads);
         }
 
         // ///////////////////
         // Post load checkup & inits
         // ///////////////////
-        if (ctx.applicationsById.values().size() > 0)
+        if (this.applicationsById.values().size() > 0)
         {
-            EntityManager em = ctx.getTransacEM();
+            EntityManager em = this.getTransacEM();
             EntityTransaction tr = em.getTransaction();
             tr.begin();
-            for (Application a : ctx.applicationsById.values())
+            for (Application a : this.applicationsById.values())
             {
                 a.isFromCurrentFile(true);
                 for (Calendar c : a.calendars.values())
@@ -182,12 +185,13 @@ public class ChronixContext
                 }
                 for (PlaceGroup g : a.getGroupsList())
                 {
-                    g.map_places(ctx.network);
+                    g.map_places(this.network);
                 }
             }
             tr.commit();
+
             tr.begin();
-            for (Application a : ctx.applicationsById.values())
+            for (Application a : this.applicationsById.values())
             {
                 for (State s : a.getStates())
                 {
@@ -200,29 +204,24 @@ public class ChronixContext
 
         // TODO: cleanup event data (elements they reference may have been removed)
         // TODO: validate apps
-        // Done!
-        return ctx;
     }
 
-    public static Validator getValidator()
-    {
-        if (validatorFactory == null)
-        {
-            validatorFactory = Validation.buildDefaultValidatorFactory();
-        }
-        return validatorFactory.getValidator();
-    }
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Validation
+    ///////////////////////////////////////////////////////////////////////////
     public static Set<ConstraintViolation<Application>> validate(Application a)
     {
-        return getValidator().validate(a);
+        return validatorFactory.getValidator().validate(a);
     }
 
     public static Set<ConstraintViolation<Network>> validate(Network n)
     {
-        return getValidator().validate(n);
+        return validatorFactory.getValidator().validate(n);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Application loading
+    ///////////////////////////////////////////////////////////////////////////
     public Application loadApplication(UUID id, boolean workingCopy, boolean loadNotLocalApps) throws ChronixPlanStorageException
     {
         if (workingCopy)
@@ -270,9 +269,12 @@ public class ChronixContext
         return res;
     }
 
-    public boolean hasNetworkFile()
+    ///////////////////////////////////////////////////////////////////////////
+    // Network loading
+    ///////////////////////////////////////////////////////////////////////////
+    public static boolean hasNetworkFile(String configurationDirectory)
     {
-        File f = new File(getNetworkPath(this.configurationDirectory));
+        File f = new File(getNetworkPath(new File(configurationDirectory)));
         return f.isFile();
     }
 
@@ -282,7 +284,7 @@ public class ChronixContext
         log.info(String.format("Loading network from file %s", f.getAbsolutePath()));
         Network res = null;
 
-        if (!hasNetworkFile())
+        if (!hasNetworkFile(this.configurationDirectory.getAbsolutePath()))
         {
             throw new ChronixPlanStorageException("Network file " + f.getAbsolutePath() + " does not exist", null);
         }
@@ -304,6 +306,9 @@ public class ChronixContext
         this.network = n;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Save
+    ///////////////////////////////////////////////////////////////////////////
     public void saveApplication(String name) throws ChronixPlanStorageException
     {
         saveApplication(this.applicationsByName.get(name));
@@ -361,6 +366,9 @@ public class ChronixContext
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Paths
+    ///////////////////////////////////////////////////////////////////////////
     protected static String getWorkingPath(UUID appId, File dir)
     {
         return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_WORKING_.crn");
@@ -534,7 +542,7 @@ public class ChronixContext
         return network;
     }
 
-    public EntityManagerFactory getTransacEMF()
+    private EntityManagerFactory getTransacEMF()
     {
         if (transacEmf != null)
         {
@@ -545,10 +553,11 @@ public class ChronixContext
         {
             p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.transacDbPath);
         }
-        return Persistence.createEntityManagerFactory(this.transacUnitName, p);
+        transacEmf = Persistence.createEntityManagerFactory(this.transacUnitName, p);
+        return transacEmf;
     }
 
-    public EntityManagerFactory getHistoryEMF()
+    private EntityManagerFactory getHistoryEMF()
     {
         if (historyEmf != null)
         {
@@ -559,7 +568,8 @@ public class ChronixContext
         {
             p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.historyDbPath);
         }
-        return Persistence.createEntityManagerFactory(this.historyUnitName, p);
+        historyEmf = Persistence.createEntityManagerFactory(this.historyUnitName, p);
+        return historyEmf;
     }
 
     public EntityManager getTransacEM()
@@ -654,14 +664,44 @@ public class ChronixContext
     {
         if (this.historyEmf != null)
         {
+            try
+            {
+                OpenJPAEntityManagerFactory kemf = OpenJPAPersistence.cast(historyEmf);
+                OpenJPAConfiguration conf = kemf.getConfiguration();
+                DataSource dataSource = (DataSource) conf.getConnectionFactory();
+                Connection conn = dataSource.getConnection();
+                Statement st = conn.createStatement();
+                st.execute("SHUTDOWN");
+                conn.close();
+                log.debug("History database closed");
+            }
+            catch (Exception e)
+            {
+                log.warn("Could not close history database on context destruction", e);
+            }
             getHistoryEMF().close();
+            historyEmf = null;
         }
         if (this.transacEmf != null)
         {
+            try
+            {
+                OpenJPAEntityManagerFactory kemf = OpenJPAPersistence.cast(transacEmf);
+                OpenJPAConfiguration conf = kemf.getConfiguration();
+                DataSource dataSource = (DataSource) conf.getConnectionFactory();
+                Connection conn = dataSource.getConnection();
+                Statement st = conn.createStatement();
+                st.execute("SHUTDOWN");
+                conn.close();
+                log.debug("Transac database closed");
+            }
+            catch (Exception e)
+            {
+                log.warn("Could not close transac database on context destruction", e);
+            }
             getTransacEMF().close();
+            transacEmf = null;
         }
-        historyEmf = null;
-        transacEmf = null;
     }
 
     public void setLocalNodeName(String name)

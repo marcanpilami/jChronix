@@ -78,7 +78,7 @@ public class TestMultiNode extends TestBase
         try
         {
             SenderHelpers.sendApplication(e1.ctx.getApplicationByName("Multinode test"), en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -113,17 +113,8 @@ public class TestMultiNode extends TestBase
         addApplicationToDb(db1, a1);
         startEngines();
 
-        // Send the chain to node 2
-        try
-        {
-            SenderHelpers.sendApplication(a1, en2, e1.ctx);
-            e2.waitForRebootEnd();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail();
-        }
+        // Node 2 will fetch applications from node 1 as it has no metadata and then reboot
+        e2.waitForInitEnd();
 
         // Test reception is OK
         Application a2 = e2.ctx.getApplicationByName("Multinode test");
@@ -178,7 +169,7 @@ public class TestMultiNode extends TestBase
         try
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
             log.debug("Application integration should be over by now...");
         }
         catch (Exception e)
@@ -255,7 +246,6 @@ public class TestMultiNode extends TestBase
     @Test
     public void testRemoteHostedAgent()
     {
-        storeNetwork(db2, n); // Avoid some restarts
         log.debug("****CREATE CHAIN**********************************************************************");
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
@@ -292,13 +282,14 @@ public class TestMultiNode extends TestBase
 
         log.debug("****SAVE CHAIN************************************************************************");
         addApplicationToDb(db1, a1);
+        storeNetwork(db2, n); // Avoid some restarts
         startEngines();
 
         log.debug("****SEND CHAIN************************************************************************");
         try
         {
             SenderHelpers.sendApplication(a1, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {

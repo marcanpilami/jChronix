@@ -19,6 +19,7 @@
  */
 package org.oxymores.chronix.engine;
 
+import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
@@ -49,7 +50,7 @@ public class BootstrapListener implements MessageListener
 {
     private final static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(BootstrapListener.class);
 
-    private final ChronixContext ctx;
+    private final File confDir;
     private final String localNodeName;
     private boolean ok = false;
     private final Semaphore ended = new Semaphore(0);
@@ -63,12 +64,12 @@ public class BootstrapListener implements MessageListener
     private MessageConsumer responseConsumer;
     private String corelId;
 
-    public BootstrapListener(ChronixContext ctx, String localNodeName, String remoteHost, int remotePort)
+    public BootstrapListener(File confDir, String localNodeName, String remoteHost, int remotePort)
     {
-        this.ctx = ctx;
         this.localNodeName = localNodeName;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
+        this.confDir = confDir;
     }
 
     public boolean fetchNetwork()
@@ -77,7 +78,25 @@ public class BootstrapListener implements MessageListener
         this.factory = new ActiveMQConnectionFactory("tcp://" + this.remoteHost + ":" + this.remotePort);
         try
         {
-            this.conn = this.factory.createConnection();
+            // Try to connect 5 times
+            int nbErrors = 0;
+            while (this.conn == null)
+            {
+                try
+                {
+                    this.conn = this.factory.createConnection();
+                }
+                catch (JMSException e)
+                {
+                    nbErrors++;
+                    if (nbErrors > 5)
+                    {
+                        throw e;
+                    }
+                    log.info("Could not connect to remote host. Will retry (" + (5 - nbErrors) + " retries left).");
+                    Thread.sleep(1000);
+                }
+            }
             this.conn.start();
             this.jmsSession = this.conn.createSession(true, Session.SESSION_TRANSACTED);
 
@@ -98,7 +117,7 @@ public class BootstrapListener implements MessageListener
             jmsCommit();
             producer.close();
         }
-        catch (JMSException ex)
+        catch (JMSException | InterruptedException ex)
         {
             log.fatal("Could not fetch network definition from console", ex);
             return false;
@@ -138,7 +157,7 @@ public class BootstrapListener implements MessageListener
 
             Network n = (Network) o;
             log.info("network was received from remote node and will now be stored to disk");
-            ctx.saveNetwork(n);
+            ChronixContext.saveNetwork(n, confDir);
             jmsCommit();
             ok = true;
             stop();

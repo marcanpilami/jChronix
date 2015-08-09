@@ -284,9 +284,12 @@ class OrderListener extends BaseListener
         // Enqueue all applications using the standard queues and send network in the answer queue
         try
         {
+            int nbApps = this.ctx.getApplications().size();
+            int nbSent = 0;
             for (Application a : this.ctx.getApplications())
             {
-                SenderHelpers.sendApplication(a, en, jmsProducer, jmsSession, false);
+                nbSent++;
+                SenderHelpers.sendApplication(a, en, jmsProducer, jmsSession, false, nbSent != nbApps);
             }
 
             log.info(String.format("The network will be sent to node %s", nodeName));

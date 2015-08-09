@@ -49,10 +49,20 @@ class MetadataListener extends BaseListener
     @Override
     public void onMessage(Message msg)
     {
-        log.debug("An metadata object was received");
+        log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;
         Application a = null;
         Network n = null;
+        boolean restart = true;
+        try
+        {
+            restart = !msg.getBooleanProperty("dont_restart");
+        }
+        catch (JMSException e)
+        {
+            // Nothing to do - default value is ued if property is absent.
+        }
+
         try
         {
             Object o = omsg.getObject();
@@ -126,7 +136,10 @@ class MetadataListener extends BaseListener
         jmsCommit();
 
         // Recycle engine.
-        engine.queueReloadConfiguration();
+        if (restart)
+        {
+            engine.queueReloadConfiguration();
+        }
         log.debug("Metadata was correctly received, engine will now reload its configuration");
     }
 }

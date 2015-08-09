@@ -2,6 +2,7 @@ package org.oxymores.chronix.engine;
 
 import java.io.File;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -33,15 +34,16 @@ public class TestBase
     public void prepare() throws Exception
     {
         log.debug("****BEGINNING OF TEST " + testName.getMethodName() + "***********************************************************************");
-        ChronixEngine.emptyDb(db1);
-        ChronixEngine.emptyDb(db2);
-        ChronixEngine.emptyDb(db3);
+        cleanDirectory(db1);
+        cleanDirectory(db2);
+        cleanDirectory(db3);
         this.addNetworkToDb(db1);
     }
 
     @After
     public void cleanup()
     {
+        log.debug("********** Shutdown sequence - end of test");
         for (ChronixEngine e : engines.values())
         {
             if (e.shouldRun())
@@ -76,7 +78,6 @@ public class TestBase
     protected ChronixEngine addEngine(String database_path, String name, String transacUnitName, String histUnitName)
     {
         ChronixEngine e = new ChronixEngine(database_path, name, transacUnitName, histUnitName);
-        LogHelpers.clearAllTranscientElements(e.ctx);
         engines.put(name, e);
         return e;
     }
@@ -171,6 +172,19 @@ public class TestBase
         catch (InterruptedException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    protected void cleanDirectory(String path)
+    {
+        File dir = new File(path);
+        File[] fileList = dir.listFiles();
+        for (File ff : fileList)
+        {
+            if (!FileUtils.deleteQuietly(ff))
+            {
+                log.warn("Purge has failed for file " + ff.getAbsolutePath());
+            }
         }
     }
 }

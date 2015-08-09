@@ -1,7 +1,9 @@
 package org.oxymores.chronix.engine;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import javax.jms.JMSException;
 
 import javax.persistence.EntityManager;
 
@@ -12,18 +14,19 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 
 public class ChronixEngineSim extends ChronixEngine
 {
-    private static Logger log = Logger.getLogger(ChronixEngineSim.class);
+    private static final Logger log = Logger.getLogger(ChronixEngineSim.class);
 
-    private UUID appToSimulateId;
-    private DateTime start, end;
+    private final UUID appToSimulateId;
+    private final DateTime start, end;
 
     public static List<RunLog> simulate(String configurationDirectoryPath, UUID appID, DateTime start, DateTime end)
     {
         ChronixEngineSim es = new ChronixEngineSim(configurationDirectoryPath, appID, start, end);
-        es.startEngine(false, false);
+        es.startEngine(false);
         return es.waitForSimEnd();
     }
 
@@ -31,30 +34,31 @@ public class ChronixEngineSim extends ChronixEngine
     {
         super(configurationDirectoryPath, "raccoon:9999", "TransacUnitSim", "HistoryUnitSim", false, 0);
         this.appToSimulateId = appID;
-        this.ctx.setSimulator();
         this.start = start;
         this.end = end;
     }
 
     // params are ignored!
     @Override
-    protected void startEngine(boolean blocking, boolean purgeQueues)
+    protected void startEngine(boolean blocking)
     {
-        log.info(String.format("(%s) simulation engine starting (%s) between %s and %s", this.dbPath, this.ctx.getContextRoot(), this.start, this.end));
+        log.info(String.format("(%s) simulation engine starting between %s and %s", this.dbPath, this.start, this.end));
         try
         {
             this.startCritical.acquire();
-            this.threadInit.release(1);
+            this.startSequenceOngoing.release(1);
 
             // Context
-            this.ctx = ChronixContext.loadContext(this.dbPath, this.transacUnitName, this.historyUnitName, "simu", true, null, null);
+            this.ctx = new ChronixContext("simu", this.dbPath, this.transacUnitName, this.historyUnitName, false, null, null);
             this.ctx.setSimulator();
 
             // This is a simulation: we are only interested in a single application
             for (Application ap : this.ctx.getApplications())
             {
                 if (!ap.getId().equals(appToSimulateId))
+                {
                     this.ctx.removeApplicationFromCache(ap.getId());
+                }
             }
 
             // This is a simulation: there is no network, only one simulation node.
@@ -77,20 +81,18 @@ public class ChronixEngineSim extends ChronixEngine
             this.broker.registerListeners(this, false, false, true, true, true, true, true, false, true);
 
             // Active sources agent
-            if (broker.getEmf() != null)
-            {
-                this.stAgent = new SelfTriggerAgentSim();
-                ((SelfTriggerAgentSim) this.stAgent).setBeginTime(start);
-                ((SelfTriggerAgentSim) this.stAgent).setEndTime(end);
-                this.stAgent.startAgent(broker.getEmf(), ctx, broker.getConnection(), this.start);
-            }
+            this.stAgent = new SelfTriggerAgentSim();
+            ((SelfTriggerAgentSim) this.stAgent).setBeginTime(start);
+            ((SelfTriggerAgentSim) this.stAgent).setEndTime(end);
+            this.stAgent.startAgent(ctx, broker.getConnection(), this.start);
 
             // Done
             this.startCritical.release();
+            this.engineStarts.release();
             log.info("Simulator for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
 
         }
-        catch (Exception e)
+        catch (InterruptedException | ChronixInitializationException | JMSException | IOException e)
         {
             log.error("The simulation engine has failed to start", e);
             this.run = false;
@@ -106,7 +108,8 @@ public class ChronixEngineSim extends ChronixEngine
             this.stAgent.join();
         }
         catch (InterruptedException e)
-        {}
+        {
+        }
         log.info("Simulation has ended. Returning results");
 
         EntityManager em = this.ctx.getHistoryEM();

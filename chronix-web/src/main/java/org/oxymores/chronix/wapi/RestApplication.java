@@ -87,7 +87,7 @@ public class RestApplication extends ResourceConfig
 
         try
         {
-            ctx = ChronixContext.loadContext(dbPath, "TransacUnit", "HistoryUnit", "test", true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+            ctx = new ChronixContext("simu", dbPath, null, "HistoryUnit", true, dbPath + "\\hist.db", dbPath + "\\transac.db");
             ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
         }
         catch (Exception e)

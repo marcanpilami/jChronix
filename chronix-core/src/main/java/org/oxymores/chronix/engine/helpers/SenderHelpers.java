@@ -208,19 +208,20 @@ public class SenderHelpers
         JmsSendData d = new JmsSendData(ctx);
 
         // Go
-        SenderHelpers.sendApplication(a, target, d.jmsProducer, d.jmsSession, true);
+        SenderHelpers.sendApplication(a, target, d.jmsProducer, d.jmsSession, true, false);
 
         // Cleanup
         d.close();
     }
 
-    public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
+    public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit, boolean dontRestart) throws JMSException
     {
         String qName = String.format(Constants.Q_META, target.getBrokerName());
         log.info(String.format("An app will be sent over the wire on queue %s", qName));
 
         Destination destination = jmsSession.createQueue(qName);
         ObjectMessage m = jmsSession.createObjectMessage(a);
+        m.setBooleanProperty("dont_restart", dontRestart);
         jmsProducer.send(destination, m);
 
         if (commit)
@@ -245,7 +246,7 @@ public class SenderHelpers
             }
 
             // Go
-            SenderHelpers.sendApplication(a, n, d.jmsProducer, d.jmsSession, true);
+            SenderHelpers.sendApplication(a, n, d.jmsProducer, d.jmsSession, true, false);
             sent.add(n.getBrokerName());
         }
 

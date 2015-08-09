@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,12 +17,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.exceptions;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
 
-public class ChronixException extends Exception
+public class ChronixException extends RuntimeException
 {
     private static final long serialVersionUID = 6684815812625785453L;
 

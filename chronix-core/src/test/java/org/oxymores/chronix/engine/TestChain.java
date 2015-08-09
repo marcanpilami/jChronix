@@ -121,6 +121,6 @@ public class TestChain extends TestBase
         Assert.assertEquals(17, res.size());
         RunLog rl0 = res.get(0);
 
-        Assert.assertEquals(rl0.getActiveNodeName(), "simple chain 1");
+        Assert.assertEquals("simple chain 1", rl0.getActiveNodeName());
     }
 }

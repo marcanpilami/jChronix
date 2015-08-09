@@ -108,7 +108,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -164,7 +164,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -252,7 +252,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -325,7 +325,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -394,7 +394,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {
@@ -514,7 +514,7 @@ public class TestParallelism extends TestBase
         try
         {
             SenderHelpers.sendApplication(a, en2, e1.ctx);
-            e2.waitForRebootEnd();
+            e2.waitForInitEnd();
         }
         catch (Exception e)
         {

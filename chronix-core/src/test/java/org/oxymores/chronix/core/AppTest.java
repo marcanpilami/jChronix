@@ -3,6 +3,7 @@ package org.oxymores.chronix.core;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
 
 import org.apache.log4j.Logger;
@@ -18,13 +19,13 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
  */
 public class AppTest
 {
-    private static Logger log = Logger.getLogger(AppTest.class);
+    private static final Logger log = Logger.getLogger(AppTest.class);
     private static Validator validator;
 
     @BeforeClass
     public static void setUp()
     {
-        validator = ChronixContext.getValidator();
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test

@@ -109,7 +109,6 @@ public class Place extends NetworkObject
     {
         if (!this.memberOfIds.contains(g.getId()))
         {
-            log.info("Adding place " + this.id + " as a member of group " + g.getId());
             this.memberOfIds.add(g.getId());
         }
     }

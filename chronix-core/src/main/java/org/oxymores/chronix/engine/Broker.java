@@ -26,7 +26,6 @@ import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.persistence.EntityManagerFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -59,7 +58,6 @@ class Broker
     // Chronix running context
     private ChronixContext ctx;
     private ChronixEngine engine;
-    private EntityManagerFactory emf;
 
     // Threads
     private MetadataListener thrML;
@@ -94,12 +92,8 @@ class Broker
         this.brokerName = ctx.getLocalNode().getBrokerName();
         this.url = "vm://" + this.brokerName;
 
-        log.info(String.format("Starting configuration of a message broker listening on %s (db is %s)", url, ctx.getContextRoot()));
-        if (persistent)
-        {
-            this.emf = ctx.getTransacEMF();
-        }
-        this.thrsRA = new ArrayList<RunnerAgent>();
+        log.info(String.format("Starting configuration of a message broker listening on %s", url));
+        this.thrsRA = new ArrayList<>();
 
         // Create broker service
         broker = new BrokerService();
@@ -211,7 +205,7 @@ class Broker
             this.thrML.startListening(this, this.engine);
         }
 
-        if (startRunnerAgent && this.thrsRA.size() == 0)
+        if (startRunnerAgent && this.thrsRA.isEmpty())
         {
             for (int i = 0; i < this.nbRunners; i++)
             {
@@ -221,19 +215,19 @@ class Broker
             }
         }
 
-        if (startEventListener && this.emf != null && this.thrEL == null)
+        if (startEventListener && this.thrEL == null)
         {
             this.thrEL = new EventListener();
             this.thrEL.startListening(this);
         }
 
-        if (startPipeline && this.emf != null && this.thrPL == null)
+        if (startPipeline && this.thrPL == null)
         {
             this.thrPL = new Pipeline();
             this.thrPL.startListening(this);
         }
 
-        if (startRunner && this.emf != null && this.thrRU == null)
+        if (startRunner && this.thrRU == null)
         {
             this.thrRU = new Runner();
             this.thrRU.startListening(this);
@@ -245,19 +239,19 @@ class Broker
             this.thrLL.startListening(this);
         }
 
-        if (startTranscient && this.emf != null && this.thrTL == null)
+        if (startTranscient && this.thrTL == null)
         {
             this.thrTL = new TranscientListener();
             this.thrTL.startListening(this);
         }
 
-        if (startOrderListener && this.emf != null && this.thrOL == null)
+        if (startOrderListener && this.thrOL == null)
         {
             this.thrOL = new OrderListener();
             this.thrOL.startListening(this);
         }
 
-        if (startTokenDistributionCenter && this.emf != null && this.thrTC == null)
+        if (startTokenDistributionCenter && this.thrTC == null)
         {
             this.thrTC = new TokenDistributionCenter();
             this.thrTC.startListening(this);
@@ -372,7 +366,7 @@ class Broker
     {
         stopAllOutgoingLinks();
 
-        ArrayList<String> opened = new ArrayList<String>();
+        ArrayList<String> opened = new ArrayList<>();
         for (Application a : this.ctx.getApplications())
         {
             for (NodeLink nl : a.getLocalNode().getCanSendTo())
@@ -419,11 +413,6 @@ class Broker
     BrokerService getBroker()
     {
         return this.broker;
-    }
-
-    EntityManagerFactory getEmf()
-    {
-        return emf;
     }
 
     Connection getConnection()
