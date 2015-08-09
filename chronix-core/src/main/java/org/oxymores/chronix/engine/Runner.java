@@ -190,17 +190,19 @@ public class Runner extends BaseListener
                 jmsCommit();
             }
 
-            try
+            try (FileOutputStream fos = new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))))
             {
                 int l = (int) bmsg.getBodyLength();
                 byte[] r = new byte[l];
                 bmsg.readBytes(r);
-                IOUtils.write(r, new FileOutputStream(new File(FilenameUtils.concat(this.logDbPath, fn))));
-                jmsCommit();
+                IOUtils.write(r, fos);
             }
             catch (Exception e)
             {
                 log.error("An error has occured while receiving a log file. It will be lost. Will not impact the scheduler itself.", e);
+            }
+            finally
+            {
                 jmsCommit();
             }
         }
