@@ -80,19 +80,19 @@ public class RestApplication extends ResourceConfig
             }
             catch (ChronixPlanStorageException ex)
             {
-                log.fatal(ex);
+                log.fatal("", ex);
                 return;
             }
         }
 
         try
         {
-            ctx = new ChronixContext("simu", dbPath, null, "HistoryUnit", true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+            ctx = new ChronixContext("simu", dbPath, "TransacUnit", "HistoryUnit", true, dbPath + "\\hist.db", dbPath + "\\transac.db");
             ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
         }
         catch (Exception e)
         {
-            log.fatal(e);
+            log.fatal("", e);
             return;
         }
 
@@ -128,7 +128,7 @@ public class RestApplication extends ResourceConfig
         }
         catch (Exception e)
         {
-            log.error(e);
+            log.error("", e);
             return;
         }
 
