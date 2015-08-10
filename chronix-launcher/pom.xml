@@ -11,6 +11,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <jetty.version>8.1.17.v20150415</jetty.version>
     </properties>
 
     <build>
@@ -58,12 +59,38 @@
     </build>
 
     <dependencies>
+        <!-- Obviously -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>chronix-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
+        <!-- We need a full servlet container to house the WS -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-jsp</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-annotations</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
+        <!-- As the WS is copied raw without its libs, we also need this -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>chronix-web</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Test only -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>

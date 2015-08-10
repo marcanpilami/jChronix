@@ -13,7 +13,7 @@
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/..</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory></outputDirectory>
             <includes>
                 <include>README*</include>
                 <include>LICENSE*</include>
@@ -22,27 +22,27 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/scripts</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
             <includes>
                 <include>*.sh</include>
                 <include>*.ps1</include>
-                <include>*.bat</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/scripts</directory>
-            <outputDirectory>service</outputDirectory>
-            <includes>
-                <include>*.exe</include>
-            </includes>
+            <directory>${project.basedir}/src/main/scripts/procrun</directory>
+            <outputDirectory>bin/procrun</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.parent.basedir}/chronix-doc/target/docs</directory>
             <outputDirectory>docs</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/chronix-gui</directory>
-            <outputDirectory>chronix-gui</outputDirectory>
+            <directory>${project.parent.basedir}/chronix-web/target/chronix-web-${project.version}</directory>
+            <outputDirectory>www</outputDirectory>
+            <excludes>
+                <exclude>**/WEB-INF/lib/**</exclude>
+                <exclude>**/META-INF/context.xml</exclude>
+            </excludes>
         </fileSet>
     </fileSets>
 
@@ -55,13 +55,18 @@
         <file>
             <source>${project.basedir}/src/main/resources/scheduler.properties</source>
             <outputDirectory>conf</outputDirectory>
-            <destName>scheduler.properties.example</destName>
+            <destName>scheduler.properties.sample</destName>
+        </file>
+        <file>
+            <source>${project.basedir}/src/main/resources/scheduler.properties</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>scheduler.properties</destName>
         </file>
     </files>
 
     <dependencySets>
         <dependencySet>
-            <outputDirectory>/lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>false</unpack>
             <scope>runtime</scope>

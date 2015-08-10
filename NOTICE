@@ -1,10 +1,9 @@
 ﻿Oxymores jChronix
-Copyright 2012-2013 Marc-Antoine Gouillart
+Copyright 2012-2015 Marc-Antoine Gouillart
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
-Top level project used are :
-	- Apache CXF
+Top level projects used are :
 	- Apache ActiveMQ
 	- Apache OpenJPA
 	- Apache log4j
@@ -38,18 +37,34 @@ which is open source software under an Apache 2 license, by the
 Joda Project. The original software is available at 
 http://joda-time.sourceforge.net/
 
+JAX-RS support is provided by Jersey under a CDD license by the 
+Glassfish Project. The original software can be found at
+https://jersey.java.net
+
+Servlet 3 container is provided by Jetty under an Apache 2 license,
+by the Eclipse Foundation. Original software can be found at
+http://www.eclipse.org/jetty
+
 Some level of sanity in JavaScript programming is provided by jQuery,
 which is open source software under a MIT license by the jQuery Foundation.
 The original software is available at http://jquery.org
 
-Javascript SVG drawing is provided by Raphael, which is open source
-software under a MIT license by Dmitry Baranovskiy. The original 
-software is available at http://raphaeljs.com
+Javascript SVG drawing is provided by jsPlumb Community Edition, which 
+is open source software under a MIT license by jsPlumb, Inc. The original 
+software is available at https://jsplumbtoolkit.com/
 
-HTML data tables are provided by SlickGrid, which is open source software
-under a MIT license by Michael Leibman. The original software is available at
-https://github.com/mleibman/SlickGrid
+HTML data tables are provided by HandsOnTable, which is open source software
+under a MIT license by Handsoncode. The original software is available at
+http://handsontable.com/
+
+Advanced HTML select support is provided by Select2, which is open source
+software under a MIT license by Kevin Brown and Igor Vaynberg. The original
+software can be found at https://select2.github.io/
 
 The web console favicon is 'Date and Time' by Scott Lewis from the Noun 
 Project, used under a Creative Commons 3 license. The original icon can be
 fount at https://thenounproject.com/search/?q=schedule&i=9143
+
+Icons that are not from jQuery are provided by Font Awesome, which is
+open source software used under an OFL license. The original project can 
+be found at http://fortawesome.github.io/Font-Awesome/

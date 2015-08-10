@@ -28,24 +28,36 @@ public class TestLaunch
         }
 
         // Test a fetch
-        HttpGet rq = new HttpGet("http://localhost:9000/chain.js");
+        HttpGet rq = new HttpGet("http://localhost:1790/js/chain.js");
         HttpClient cl = HttpClients.createDefault();
         HttpResponse rs = null;
-        /*try
-         {
-         rs = cl.execute(rq);
-         }
-         catch (Exception e)
-         {
-         log.error(e);
-         Assert.fail("could not fetch");
-         }*/
+        try
+        {
+            rs = cl.execute(rq);
+        }
+        catch (Exception e)
+        {
+            log.error(e);
+            Assert.fail("could not fetch");
+        }
+
+        rq = new HttpGet("http://localhost:1790/ws/meta/network");
+        HttpResponse rs2 = null;
+        try
+        {
+            rs2 = cl.execute(rq);
+        }
+        catch (Exception e)
+        {
+            log.error(e);
+            Assert.fail("could not fetch");
+        }
+
         // Stop
-        Scheduler.handler.stopEngine();
-        Scheduler.handler.waitForStopEnd();
+        Scheduler.stop(null);
 
         // Test
-        if (rs != null)
+        if (rs != null || rs2 == null)
         {
             Assert.assertEquals(200, rs.getStatusLine().getStatusCode());
         }

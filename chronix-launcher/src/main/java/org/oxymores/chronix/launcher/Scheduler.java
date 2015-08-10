@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.TimeZone;
-import org.apache.commons.io.FilenameUtils;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
@@ -31,12 +30,13 @@ public class Scheduler
 
     // A pointer on the latest launched engine - for tests only, so package visibility.
     static ChronixEngine handler = null;
+    static JettyContainer c = null;
+    static Thread shutdownHook;
 
     /**
      * Start function for service/Daemon wrapper
      *
      * @param args
-     * @throws Exception
      */
     static void start(String[] args)
     {
@@ -47,14 +47,18 @@ public class Scheduler
      * Stop function for service/Daemon wrapper
      *
      * @param args
-     * @throws Exception
      */
     static void stop(String[] args)
     {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
         if (handler != null)
         {
             handler.stopEngine();
             handler.waitForStopEnd();
+        }
+        if (c != null)
+        {
+            c.stop();
         }
     }
 
@@ -206,7 +210,21 @@ public class Scheduler
         e.start();
         e.waitForInitEnd();
 
-        // TODO: Jetty
+        // Jetty
+        c = new JettyContainer(dbPath, e.getContext().getLocalNode().getId().toString(), e.getContext().getLocalNode().getWsPort());
+
+        // Save the engine in order to be able to stop it later
         handler = e;
+
+        // Register CTRL-C handler
+        shutdownHook = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                Scheduler.stop(null);
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 }
