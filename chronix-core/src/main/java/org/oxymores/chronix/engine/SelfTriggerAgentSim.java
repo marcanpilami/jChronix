@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.util.Enumeration;
@@ -28,10 +27,11 @@ import javax.jms.QueueBrowser;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.sql2o.Connection;
 
 public class SelfTriggerAgentSim extends SelfTriggerAgent
 {
-    private static Logger log = Logger.getLogger(SelfTriggerAgentSim.class);
+    private static final Logger log = Logger.getLogger(SelfTriggerAgentSim.class);
     protected DateTime beginTime, endTime;
 
     @Override
@@ -43,15 +43,19 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
 
     private Long getRunningCount()
     {
-        Long running = this.em.createQuery("SELECT COUNT(e) FROM Event e WHERE e.analysed = False", Long.class).getSingleResult()
-                + this.em.createQuery("SELECT COUNT(p) FROM PipelineJob p WHERE p.status <> 'DONE'", Long.class).getSingleResult();
+        Long running;
+        try (Connection conn = this.ctx.getTransacDataSource().open())
+        {
+            running = conn.createQuery("SELECT COUNT(1) FROM Event e WHERE e.analysed = :f").addParameter("f", false).executeScalar(Long.class)
+                    + conn.createQuery("SELECT COUNT(1) FROM PipelineJob p WHERE p.status <> 'DONE'").executeScalar(Long.class);
+        }
         log.debug(String.format("There are %s elements unack in the db", running));
 
-        QueueBrowser events = null;
-        QueueBrowser pjs = null;
+        QueueBrowser events;
+        QueueBrowser pjs;
         Queue devents, dpjs;
         @SuppressWarnings("rawtypes")
-        Enumeration enu = null;
+        Enumeration enu;
         try
         {
             String eventQueueName = String.format(Constants.Q_EVENT, this.ctx.getLocalNode().getBrokerName());
@@ -107,7 +111,6 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
 
         // Here, should trigger external events
         // TODO: external events simulation
-
         // Exit if we are now out of the simulation window
         if (this.endTime.isBefore(this.nextLoopVirtualTime))
         {

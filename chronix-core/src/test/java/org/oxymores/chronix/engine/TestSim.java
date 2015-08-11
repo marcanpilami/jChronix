@@ -38,7 +38,10 @@ public class TestSim extends TestBase
 
         // Now start the simulation
         List<RunLog> res = ChronixEngineSim.simulate(db1, a.getId(), DateTime.now(), DateTime.now().plusSeconds(10));
+        for (RunLog l : res)
+        {
+            log.info(l.getLine());
+        }
         Assert.assertEquals(1, res.size());
     }
-
 }

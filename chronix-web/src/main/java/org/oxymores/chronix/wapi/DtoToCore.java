@@ -44,7 +44,6 @@ public class DtoToCore
     public static Application getApplication(DTOApplication d)
     {
         Application a = new Application();
-        System.out.println(d.getId());
         a.setId(UUID.fromString(d.getId()));
         a.setDescription(d.getDescription());
         a.setname(d.getName());

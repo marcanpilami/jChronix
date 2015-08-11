@@ -34,7 +34,7 @@ public class TestParallelism extends TestBase
         a = PlanBuilder.buildApplication("// test", "test");
 
         e1 = addEngine(db1, "e1");
-        e2 = addEngine(db2, "e2", "TransacUnit2", "HistoryUnit2");
+        e2 = addEngine(db2, "e2");
         e3 = addRunner(db3, "e3", "localhost", 1804);
 
         // Create a test application and save it inside context
@@ -120,7 +120,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -136,13 +136,13 @@ public class TestParallelism extends TestBase
         }
 
         // Test auto variable
-        Assert.assertEquals(nl + "Display jobname", res.get(2).getShortLog());
+        Assert.assertEquals("Display jobname", res.get(2).getShortLog());
 
         // Test propagated variable on the local node
-        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(4).getShortLog());
+        Assert.assertEquals("12 54 pohfgh)'", res.get(4).getShortLog());
 
         // Test propagated variable on the remotely hosted node
-        Assert.assertEquals(nl + "12 54 pohfgh)'", res.get(5).getShortLog());
+        Assert.assertEquals("12 54 pohfgh)'", res.get(5).getShortLog());
     }
 
     @Test
@@ -176,7 +176,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -264,7 +264,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -337,7 +337,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -406,7 +406,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -420,7 +420,7 @@ public class TestParallelism extends TestBase
         for (RunLog rl : res)
         {
             log.debug(rl.getStateId());
-            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s1.getId().toString()))
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s1.getId()))
             {
                 failedLog = rl;
             }
@@ -443,7 +443,7 @@ public class TestParallelism extends TestBase
         failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s2.getId().toString()))
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s2.getId()))
             {
                 failedLog = rl;
             }
@@ -465,7 +465,7 @@ public class TestParallelism extends TestBase
         failedLog = null;
         for (RunLog rl : res)
         {
-            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s3.getId().toString()))
+            if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s3.getId()))
             {
                 failedLog = rl;
             }
@@ -526,7 +526,7 @@ public class TestParallelism extends TestBase
         log.debug("****START CHAIN***********************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {

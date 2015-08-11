@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -35,6 +34,7 @@ import org.oxymores.chronix.core.active.ChainStart;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.core.validation.ChainCheckCycle;
 import org.oxymores.chronix.core.validation.ChainCheckEnds;
+import org.sql2o.Connection;
 
 @ChainCheckEnds
 @ChainCheckCycle
@@ -54,8 +54,8 @@ public class Chain extends ActiveNodeBase
     public Chain()
     {
         super();
-        states = new ArrayList<State>();
-        transitions = new ArrayList<Transition>();
+        states = new ArrayList<>();
+        transitions = new ArrayList<>();
     }
 
     public void addState(State state)
@@ -130,12 +130,12 @@ public class Chain extends ActiveNodeBase
     // ///////////////////////////////////////////////////////////////////
     // Run methods
     @Override
-    public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
     {
         // Create a new run for the chain.
         pj.setBeganRunningAt(new DateTime());
         State s = this.getStartState();
-        s.runInsidePlan(em, jmsProducer, jmsSession, pj.getIdU(), null);
+        s.runInsidePlan(conn, jmsProducer, jmsSession, pj.getId(), null);
     }
 
     @Override

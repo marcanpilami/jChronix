@@ -11,15 +11,15 @@
  */
 package org.oxymores.chronix.engine;
 
-import java.util.Date;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
+import org.sql2o.Connection;
 
 /**
  * Responsible for storing RunLog in the database (i.e. history elements, including a short text log). Sending a copy to the console if necessary is handled at
@@ -28,12 +28,12 @@ import org.oxymores.chronix.core.timedata.RunStats;
  */
 class LogListener extends BaseListener
 {
-    private static Logger log = Logger.getLogger(LogListener.class);
+    private static final Logger log = Logger.getLogger(LogListener.class);
 
     void startListening(Broker b) throws JMSException
     {
         // Base initialization
-        this.init(b, true, true);
+        this.init(b);
         log.debug(String.format("Initializing LogListener"));
 
         // Register current object as a listener on LOG queue
@@ -63,25 +63,31 @@ class LogListener extends BaseListener
             jmsRollback();
             return;
         }
-        trHistory.begin();
-        trTransac.begin();
 
-        log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.getId(),
-                rlog.getActiveNodeName(), rlog.getPlaceName(), rlog.getStateId()));
-        log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
-        rlog.setLastLocallyModified(new Date());
-        emHistory.merge(rlog);
-        RunStats.storeMetrics(rlog, emTransac);
-        trHistory.commit();
-        trTransac.commit();
+        try (Connection connHistory = this.ctx.getHistoryDataSource().beginTransaction();
+                Connection connTransac = this.ctx.getTransacDataSource().beginTransaction();)
+        {
+
+            log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.getId(),
+                    rlog.getActiveNodeName(), rlog.getPlaceName(), rlog.getStateId()));
+            log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
+            rlog.setLastLocallyModified(DateTime.now());
+            rlog.insertOrUpdate(connHistory);
+
+            RunStats.storeMetrics(rlog, connTransac);
+            connHistory.commit();
+            connTransac.commit();
+        }
         jmsCommit();
 
         //TODO: merge this with above transaction (only one test)
         if (!ctx.isSimulator() && rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
         {
-            trTransac.begin();
-            RunStats.updateStats(rlog, emTransac);
-            trTransac.commit();
+            try (Connection connTransac = this.ctx.getTransacDataSource().beginTransaction())
+            {
+                RunStats.updateStats(rlog, connTransac);
+                connTransac.commit();
+            }
         }
     }
 }

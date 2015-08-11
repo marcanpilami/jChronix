@@ -13,13 +13,12 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.sql2o.Connection;
 
 class LogHelpers
 {
@@ -27,27 +26,21 @@ class LogHelpers
 
     public static List<RunLog> displayAllHistory(ChronixContext ctx)
     {
-        EntityManager em = ctx.getHistoryEM();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.beganRunningAt", RunLog.class);
-        List<RunLog> res = q.getResultList();
-
+        List<RunLog> res = getAllHistory(ctx);
         log.info(RunLog.getTitle());
         for (RunLog l : res)
         {
             log.info(l.getLine());
         }
-
-        em.close();
         return res;
     }
 
     public static List<RunLog> getAllHistory(ChronixContext ctx)
     {
-        EntityManager em = ctx.getHistoryEM();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.beganRunningAt", RunLog.class);
-        List<RunLog> res = q.getResultList();
-        em.close();
-        return res;
+        try (Connection conn = ctx.getHistoryDataSource().open())
+        {
+            return conn.createQuery("SELECT * FROM RunLog r ORDER BY r.beganRunningAt").executeAndFetch(RunLog.class);
+        }
     }
 
     public static List<RunLog> waitForHistoryCount(ChronixContext ctx, int expected)
@@ -70,12 +63,31 @@ class LogHelpers
             {
                 e.printStackTrace();
             }
-            EntityManager em = ctx.getHistoryEM();
-            TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r WHERE r.lastKnownStatus = 'DONE' ORDER BY r.beganRunningAt", RunLog.class);
-            res = q.getResultList();
-            em.close();
+
+            try (Connection conn = ctx.getHistoryDataSource().open())
+            {
+                res = conn.createQuery("SELECT * FROM RunLog r WHERE r.lastKnownStatus = 'DONE' ORDER BY r.beganRunningAt").executeAndFetch(RunLog.class);
+            }
             nb = res.size();
         }
         return res;
+    }
+
+    public static void testEventCount(ChronixContext ctx, int nbTheory)
+    {
+        try (Connection conn = ctx.getTransacDataSource().open())
+        {
+            int nbEvents = conn.createQuery("SELECT COUNT(1) FROM Event e").executeScalar(Integer.class);
+            Assert.assertEquals(nbTheory, nbEvents);
+        }
+    }
+
+    public static void testCalendarPointerCount(ChronixContext ctx, int nbTheory)
+    {
+        try (Connection conn = ctx.getTransacDataSource().open())
+        {
+            int nbEvents = conn.createQuery("SELECT COUNT(1) FROM CalendarPointer e").executeScalar(Integer.class);
+            Assert.assertEquals(nbTheory, nbEvents);
+        }
     }
 }

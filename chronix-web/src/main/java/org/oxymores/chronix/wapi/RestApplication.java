@@ -9,9 +9,7 @@ import java.io.File;
 import java.util.UUID;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
-import java.util.Date;
 import java.util.Random;
-import javax.persistence.EntityManager;
 import javax.ws.rs.ApplicationPath;
 import org.apache.log4j.Logger;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -87,7 +85,7 @@ public class RestApplication extends ResourceConfig
 
         try
         {
-            ctx = new ChronixContext("simu", dbPath, "TransacUnit", "HistoryUnit", true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+            ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
             ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
         }
         catch (Exception e)
@@ -96,35 +94,32 @@ public class RestApplication extends ResourceConfig
             return;
         }
 
-        try
+        try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
         {
-            EntityManager em = ctx.getHistoryEM();
             RunLog l1 = new RunLog();
-            l1.setActiveNodeId("123");
-            l1.setApplicationId("123");
-            l1.setChainId("123");
-            l1.setChainLaunchId("123");
-            l1.setExecutionNodeId("123");
+            l1.setActiveNodeId(UUID.randomUUID());
+            l1.setApplicationId(UUID.randomUUID());
+            l1.setChainId(UUID.randomUUID());
+            l1.setChainLaunchId(UUID.randomUUID());
+            l1.setExecutionNodeId(UUID.randomUUID());
             Random gen = new Random(DateTime.now().getMillis());
-            l1.setId(((Integer) gen.nextInt()).toString());
-            l1.setPlaceId("123");
+            l1.setId(UUID.randomUUID());
+            l1.setPlaceId(UUID.randomUUID());
             l1.setActiveNodeName("nodename");
             l1.setApplicationName("appli");
-            l1.setBeganRunningAt(new Date());
+            l1.setBeganRunningAt(DateTime.now());
             l1.setChainName("chain");
             l1.setDns("localhost");
-            l1.setEnteredPipeAt(new Date());
+            l1.setEnteredPipeAt(DateTime.now());
             l1.setExecutionNodeName("nodename");
             l1.setLastKnownStatus("OK");
             l1.setLogPath("/ii/oo");
             l1.setWhatWasRun("cmd1");
             l1.setResultCode(0);
-            l1.setMarkedForUnAt(new Date());
+            l1.setMarkedForUnAt(DateTime.now());
 
-            em.getTransaction().begin();
-            em.persist(l1);
-            em.getTransaction().commit();
-            em.close();
+            l1.insertOrUpdate(conn);
+            conn.commit();
         }
         catch (Exception e)
         {

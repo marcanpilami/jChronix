@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.active;
 
 import javax.jms.JMSException;
@@ -27,16 +26,16 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.RunnerManager;
 import org.oxymores.chronix.engine.data.RunDescription;
 
 public class ShellParameter extends Parameter
 {
     private static final long serialVersionUID = 7528888158440570804L;
-    private static Logger log = Logger.getLogger(ShellParameter.class);
+    private static final Logger log = Logger.getLogger(ShellParameter.class);
 
     @Override
-    public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
+    public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         RunDescription rd = new RunDescription();
         rd.setCommand(this.value);

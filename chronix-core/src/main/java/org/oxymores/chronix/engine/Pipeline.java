@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,13 +17,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -33,9 +30,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -46,15 +40,13 @@ import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.sql2o.Connection;
 
 class Pipeline extends BaseListener implements Runnable
 {
-    private static Logger log = Logger.getLogger(Pipeline.class);
+    private static final Logger log = Logger.getLogger(Pipeline.class);
 
     private MessageProducer jmsJRProducer;
-
-    private EntityManager emInjector;
-    private EntityTransaction transacMainLoop, transacInjector;
 
     private LinkedBlockingQueue<PipelineJob> entering;
     private List<PipelineJob> waitingSequence;
@@ -68,34 +60,28 @@ class Pipeline extends BaseListener implements Runnable
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker, false, false);
+        this.init(broker);
 
         this.analyze = new Semaphore(1);
 
         // Outgoing producer for job runner
         this.jmsJRProducer = this.jmsSession.createProducer(null);
 
-        // OpenJPA stuff
-        EntityManager emMainLoop = broker.getCtx().getTransacEM();
-        transacMainLoop = emMainLoop.getTransaction();
-
-        emInjector = broker.getCtx().getTransacEM();
-        transacInjector = emInjector.getTransaction();
-
         // Create analysis queues
-        entering = new LinkedBlockingQueue<PipelineJob>();
-        waitingSequence = new ArrayList<PipelineJob>();
-        waitingToken = new ArrayList<PipelineJob>();
-        waitingExclusion = new ArrayList<PipelineJob>();
-        waitingRun = new ArrayList<PipelineJob>();
-        waitingTokenAnswer = new ArrayList<PipelineJob>();
+        entering = new LinkedBlockingQueue<>();
+        waitingSequence = new ArrayList<>();
+        waitingToken = new ArrayList<>();
+        waitingExclusion = new ArrayList<>();
+        waitingRun = new ArrayList<>();
+        waitingTokenAnswer = new ArrayList<>();
 
         // Retrieve jobs from previous service launches
-        Query q = emMainLoop.createQuery("SELECT j FROM PipelineJob j WHERE j.status = ?1");
-        q.setParameter(1, "CHECK_SYNC_CONDS");
-        @SuppressWarnings("unchecked")
-        List<PipelineJob> sessionEvents = q.getResultList();
-        entering.addAll(sessionEvents);
+        List<PipelineJob> old;
+        try (Connection conn = ctx.getTransacDataSource().open())
+        {
+            old = conn.createQuery("SELECT * FROM PipelineJob j WHERE j.status = :status").addParameter("status", "CHECK_SYNC_CONDS").executeAndFetch(PipelineJob.class);
+        }
+        entering.addAll(old);
 
         // Register on incoming queue
         qName = String.format(Constants.Q_PJ, brokerName);
@@ -149,7 +135,7 @@ class Pipeline extends BaseListener implements Runnable
             {
                 Place p = null;
                 org.oxymores.chronix.core.State s = null;
-                Application a = null;
+                Application a;
                 try
                 {
                     a = pj.getApplication(ctx);
@@ -186,7 +172,7 @@ class Pipeline extends BaseListener implements Runnable
             }
 
             // On to analysis
-            ArrayList<PipelineJob> toAnalyse = new ArrayList<PipelineJob>();
+            ArrayList<PipelineJob> toAnalyse = new ArrayList<>();
 
             toAnalyse.clear();
             toAnalyse.addAll(waitingSequence);
@@ -253,19 +239,14 @@ class Pipeline extends BaseListener implements Runnable
 
         if (pj != null)
         {
-            if (transacInjector == null)
+            try (Connection conn = ctx.getTransacDataSource().beginTransaction())
             {
-                log.error("Euh ?");
+                // So that we find it again after a crash/stop
+                pj.setStatus(Constants.JI_STATUS_CHECK_SYNC_CONDS);
+                pj.setEnteredPipeAt(DateTime.now());
+                pj.insertOrUpdate(conn);
+                conn.commit();
             }
-            transacInjector.begin();
-
-            // So that we find it again after a crash/stop
-            pj.setStatus(Constants.JI_STATUS_CHECK_SYNC_CONDS);
-            pj.setEnteredPipeAt(DateTime.now().toDate());
-            emInjector.merge(pj);
-
-            transacInjector.commit();
-
             log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
             jmsCommit();
             entering.add(pj);
@@ -286,7 +267,7 @@ class Pipeline extends BaseListener implements Runnable
             pj = null;
             for (PipelineJob jj : waitingTokenAnswer)
             {
-                if (jj.getIdU().equals(rq.pipelineJobID))
+                if (jj.getId().equals(rq.pipelineJobID))
                 {
                     pj = jj;
                 }
@@ -305,7 +286,7 @@ class Pipeline extends BaseListener implements Runnable
 
             this.analyze.release();
             jmsCommit();
-            entering.add(new PipelineJob());
+            entering.add(new PipelineJob()); //TODO: why?
         }
     }
 
@@ -325,15 +306,15 @@ class Pipeline extends BaseListener implements Runnable
             for (Token tk : s.getTokens())
             {
                 TokenRequest tr = new TokenRequest();
-                tr.applicationID = UUID.fromString(pj.getAppID());
+                tr.applicationID = pj.getAppID();
                 tr.local = true;
-                tr.placeID = UUID.fromString(pj.getPlaceID());
+                tr.placeID = pj.getPlaceID();
                 tr.requestedAt = new DateTime();
                 tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
-                tr.stateID = pj.getStateIDU();
+                tr.stateID = pj.getStateID();
                 tr.tokenID = tk.getId();
                 tr.type = TokenRequestType.REQUEST;
-                tr.pipelineJobID = pj.getIdU();
+                tr.pipelineJobID = pj.getId();
 
                 try
                 {
@@ -371,8 +352,6 @@ class Pipeline extends BaseListener implements Runnable
         // Remove from queue
         waitingRun.remove(pj);
 
-        transacMainLoop.begin();
-
         String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctx).getNode().getHost().getBrokerName());
         try
         {
@@ -388,11 +367,14 @@ class Pipeline extends BaseListener implements Runnable
         }
 
         pj.setStatus(Constants.JI_STATUS_RUNNING);
-        pj.setMarkedForRunAt(new Date());
+        pj.setMarkedForRunAt(DateTime.now());
+        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        {
+            pj.insertOrUpdate(conn);
+            conn.commit();
+        }
 
-        transacMainLoop.commit();
         jmsCommit();
-
         log.debug(String.format("Job %s was given to the runner queue %s", pj.getId(), qName));
     }
 }

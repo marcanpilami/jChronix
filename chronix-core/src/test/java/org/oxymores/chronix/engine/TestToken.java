@@ -2,8 +2,6 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,6 +15,7 @@ import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.sql2o.Connection;
 
 public class TestToken extends TestBase
 {
@@ -57,11 +56,13 @@ public class TestToken extends TestBase
 
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("**** RUN *****************************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            SenderHelpers.runStateInsidePlan(sp, e1.ctx, conn);
+        }
 
         // Tests
         List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 4);
@@ -72,7 +73,7 @@ public class TestToken extends TestBase
         DateTime end0 = new DateTime(rl0.getStoppedRunningAt());
         DateTime end3 = new DateTime(rl3.getStoppedRunningAt());
 
-        Assert.assertEquals(rl0.getActiveNodeName(), "simple chain");
+        Assert.assertEquals("simple chain", rl0.getActiveNodeName());
         Assert.assertTrue(end0.isAfter(end3) || end0.isEqual(end3));
     }
 
@@ -96,11 +97,13 @@ public class TestToken extends TestBase
 
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("**** RUN *****************************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            SenderHelpers.runStateInsidePlan(sp, e1.ctx, conn);
+        }
         Thread.sleep(5000); // Time to consume message - long so as to allow more than expected
 
         // Tests
@@ -127,11 +130,13 @@ public class TestToken extends TestBase
 
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("*** RUN ******************************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            SenderHelpers.runStateInsidePlan(sp, e1.ctx, conn);
+        }
         LogHelpers.waitForHistoryCount(e1.ctx, 5);
 
         // Tests
@@ -164,11 +169,13 @@ public class TestToken extends TestBase
 
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("**** RUN *****************************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, e1.ctx, em);
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            SenderHelpers.runStateInsidePlan(sp, e1.ctx, conn);
+        }
         Thread.sleep(9000); // Time to consume message
 
         // Tests

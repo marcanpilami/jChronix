@@ -1,8 +1,5 @@
 package org.oxymores.chronix.engine;
 
-import javax.persistence.EntityManager;
-
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
@@ -25,7 +22,7 @@ public class TestPurge extends TestBase
     PlaceGroup pg1, pg2;
 
     @Before
-    public void prepare() throws Exception
+    public void prepareA() throws Exception
     {
         e1 = addEngine(db1, "e1");
 
@@ -63,26 +60,22 @@ public class TestPurge extends TestBase
 
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
-        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
 
         // Wait for end of run
         sleep(5);
 
         // Check some events exist inside the database
-        Assert.assertEquals(1L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
+        LogHelpers.testEventCount(e1.ctx, 1);
 
         // Create a new app, remove the old one.
         e1.ctx.deleteCurrentApplication(a1);
         Application a2 = PlanBuilder.buildApplication("test2", "description");
         SenderHelpers.sendApplicationToAllClients(a2, e1.getContext());
         e1.waitForInitEnd();
-        Assert.assertEquals(0L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
-
-        // Done
-        em.close();
+        LogHelpers.testEventCount(e1.ctx, 0);
     }
 
     @Test
@@ -105,26 +98,22 @@ public class TestPurge extends TestBase
         // Save plan
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
-        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
 
         // Wait for end of run
         Thread.sleep(5000);
 
         // Check some events exist inside the database
-        Assert.assertEquals(1L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
+        LogHelpers.testEventCount(e1.ctx, 1);
 
         // Remove the chain from the application. Events from this chain should be purged.
         a1.removeActiveElement(c1);
         SenderHelpers.sendApplicationToAllClients(a1, e1.getContext());
         e1.waitForInitEnd();
 
-        Assert.assertEquals(0L, em.createQuery("SELECT COUNT(tb) FROM Event tb", Long.class).getSingleResult().longValue());
-
-        // Done
-        em.close();
+        LogHelpers.testEventCount(e1.ctx, 0);
     }
 
     // TODO: add tests for Token & clocktick purge.

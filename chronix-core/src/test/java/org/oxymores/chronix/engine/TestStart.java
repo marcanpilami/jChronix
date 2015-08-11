@@ -1,8 +1,6 @@
 package org.oxymores.chronix.engine;
 
 import javax.jms.JMSException;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,17 +8,17 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
-import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.sql2o.Connection;
 
 public class TestStart extends TestBase
 {
     @Test
     public void testNoDb() throws Exception
     {
-        ChronixEngine e = null;
+        ChronixEngine e;
         try
         {
             e = new ChronixEngine("C:\\WONTEXISTEVER", "local");
@@ -61,16 +59,18 @@ public class TestStart extends TestBase
         addApplicationToDb(db1, a);
         startEngines();
 
-        EntityManager em = e.ctx.getTransacEM();
-        TypedQuery<CalendarPointer> q = em.createQuery("SELECT c from CalendarPointer c", CalendarPointer.class);
-        Assert.assertEquals(1, q.getResultList().size());
+        try (Connection conn = e.ctx.getTransacDataSource().open())
+        {
+            int nbCals = conn.createQuery("SELECT COUNT(1) from CalendarPointer c").executeScalar(Integer.class);
+            Assert.assertEquals(1, nbCals);
+        }
     }
 
     @Test
     public void testRestart() throws JMSException
     {
         ChronixEngine e1 = addEngine(db1, "local");
-        ChronixEngine e2 = addEngine(db2, "remote", "TransacUnit2", "HistoryUnit2");
+        ChronixEngine e2 = addEngine(db2, "remote");
 
         Application a = PlanBuilder.buildApplication("test", "description");
         n = new Network();

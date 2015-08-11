@@ -146,14 +146,11 @@ public class Scheduler
         String logLevel = applicationProps.getProperty("jChronix.log.level", "INFO");
         int nbRunners = Integer.parseInt(applicationProps.getProperty("jChronix.runner.maxjobs", "5"));
 
-        String trUnit = applicationProps.getProperty("jChronix.engine.transacPersistenceUnitName", "TransacUnit");
-        String hiUnit = applicationProps.getProperty("jChronix.engine.historyPersistenceUnitName", "HistoryUnit");
-
         // Log level
         Logger.getRootLogger().setLevel(Level.toLevel(logLevel));
         log.info("Logging is set at level " + Level.toLevel(logLevel).toString());
 
-        ChronixEngine e = new ChronixEngine(dbPath, nodeName, trUnit, hiUnit, mode.equals("RUNNER"), nbRunners);
+        ChronixEngine e = new ChronixEngine(dbPath, nodeName, mode.equals("RUNNER"), nbRunners);
 
         // init the metabase
         File dbFile = new File(dbPath);

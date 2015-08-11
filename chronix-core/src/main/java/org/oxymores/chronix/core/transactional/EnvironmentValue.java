@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,39 +17,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.UUID;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import org.sql2o.Connection;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-@Entity
 public class EnvironmentValue implements Serializable
 {
     private static final long serialVersionUID = -3301527648471127170L;
-    protected static final int UUID_LENGTH = 36;
 
-    @Id
-    @Column(length = UUID_LENGTH)
-    private String id;
+    // UUID and not Integer => we may need to transmit this to other nodes
+    @NotNull
+    private UUID id;
 
-    @Column(length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
     private String key, value;
+
+    @NotNull
+    private UUID transientID;
 
     public EnvironmentValue()
     {
-        id = UUID.randomUUID().toString();
+        id = UUID.randomUUID();
     }
 
-    public EnvironmentValue(String key, String value)
+    public EnvironmentValue(String key, String value, TranscientBase tb)
     {
-        id = UUID.randomUUID().toString();
+        id = UUID.randomUUID();
         this.key = key;
         this.value = value;
+        this.transientID = tb.getId();
     }
 
     @Override
@@ -65,15 +67,17 @@ public class EnvironmentValue implements Serializable
     @Override
     public int hashCode()
     {
-        return UUID.fromString(id).hashCode();
+        int hash = 7;
+        hash = 23 * hash + Objects.hashCode(this.id);
+        return hash;
     }
 
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }
@@ -96,5 +100,21 @@ public class EnvironmentValue implements Serializable
     public void setValue(String value)
     {
         this.value = value;
+    }
+
+    public UUID getTransientID()
+    {
+        return transientID;
+    }
+
+    public void setTransientID(UUID transientID)
+    {
+        this.transientID = transientID;
+    }
+
+    public void insert(Connection conn)
+    {
+        conn.createQuery("INSERT INTO EnvironmentValue(id, key, transientID, value) "
+                + "VALUES(:id, :key, :transientID, :value)").bind(this).executeUpdate();
     }
 }

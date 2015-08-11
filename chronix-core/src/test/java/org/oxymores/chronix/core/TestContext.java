@@ -34,7 +34,7 @@ public class TestContext
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
         ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
 
-        ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), "TransacUnit", "HistoryUnit", false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
+        ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         Application a = context.getApplicationByName("Demo");
         Assert.assertEquals("test application auto created", a.getDescription());
 
@@ -47,7 +47,7 @@ public class TestContext
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
         ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
 
-        ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), "TransacUnit", "HistoryUnit", false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
+        ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         Application a = context.getApplicationByName("Demo");
         Assert.assertEquals("test application auto created", a.getDescription());
         Assert.assertEquals(1, a.getVersion());
@@ -58,7 +58,7 @@ public class TestContext
         context.saveApplication(a);
         context.setWorkingAsCurrent(a);
         // Reload application to simulate engine restart...
-        context = new ChronixContext("local", ctx.getAbsolutePath(), "TransacUnit", "HistoryUnit", false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
+        context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         a = context.getApplicationByName("Demo");
         Assert.assertEquals("pppp", a.getDescription());
         Assert.assertEquals(2, a.getVersion());
@@ -69,7 +69,7 @@ public class TestContext
         a.setDescription("gggg");
         context.saveApplication(a);
         context.setWorkingAsCurrent(a);
-        context = new ChronixContext("local", ctx.getAbsolutePath(), "TransacUnit", "HistoryUnit", false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
+        context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         a = context.getApplicationByName("Demo");
         Assert.assertEquals("gggg", a.getDescription());
         Assert.assertEquals(3, a.getVersion());

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,27 +17,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.active;
-
-import java.util.Date;
 
 import javax.jms.Destination;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.data.RunResult;
+import org.sql2o.Connection;
 
 public class ChainEnd extends ActiveNodeBase
 {
-    private static Logger log = Logger.getLogger(ChainEnd.class);
+    private static final Logger log = Logger.getLogger(ChainEnd.class);
     private static final long serialVersionUID = 4129809921422152571L;
 
     public ChainEnd()
@@ -52,13 +50,13 @@ public class ChainEnd extends ActiveNodeBase
     }
 
     @Override
-    public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
     {
         RunResult rr = new RunResult();
         rr.returnCode = 0;
         rr.logStart = this.name;
         rr.id1 = pj.getLevel2Id();
-        rr.end = new Date();
+        rr.end = DateTime.now();
 
         try
         {

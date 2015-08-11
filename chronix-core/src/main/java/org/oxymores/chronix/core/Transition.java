@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,20 +17,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.EntityManager;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
+import org.sql2o.Connection;
 
 public class Transition extends ApplicationObject
 {
@@ -136,33 +135,41 @@ public class Transition extends ApplicationObject
     {
         this.chain = chain;
         if (chain != null)
+        {
             chain.addTransition(this);
+        }
     }
 
     public Boolean isTransitionParallelEnabled()
     {
         if (!this.stateFrom.parallel || !this.stateTo.parallel)
+        {
             return false;
+        }
 
         if (!this.stateFrom.runsOn.equals(this.stateTo.runsOn))
+        {
             return false;
+        }
 
         return true;
     }
 
-    public TransitionAnalysisResult isTransitionAllowed(List<Event> events, EntityManager em)
+    public TransitionAnalysisResult isTransitionAllowed(List<Event> events, Connection conn)
     {
         TransitionAnalysisResult res = new TransitionAnalysisResult(this);
 
         for (Place p : this.stateFrom.runsOn.places)
         {
-            ArrayList<Event> virginEvents = new ArrayList<Event>();
+            ArrayList<Event> virginEvents = new ArrayList<>();
             for (Event e : events)
             {
-                if (!e.wasConsumedOnPlace(p, this.stateTo) && !virginEvents.contains(e))
+                if (!e.wasConsumedOnPlace(p, this.stateTo, conn) && !virginEvents.contains(e))
+                {
                     virginEvents.add(e);
+                }
             }
-            res.addPlaceAnalysis(this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p, em));
+            res.addPlaceAnalysis(this.stateFrom.represents.createdEventRespectsTransitionOnPlace(this, virginEvents, p, conn));
 
             if (!this.isTransitionParallelEnabled() && !res.allowedOnAllPlaces())
             {

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine.data;
 
 import java.util.ArrayList;
@@ -34,8 +33,8 @@ import org.oxymores.chronix.core.transactional.Event;
 public class EventAnalysisResult
 {
     public State state;
-    public Map<UUID, TransitionAnalysisResult> analysis = new HashMap<UUID, TransitionAnalysisResult>();
-    public List<Event> consumedEvents = new ArrayList<Event>();
+    public Map<UUID, TransitionAnalysisResult> analysis = new HashMap<>();
+    public List<Event> consumedEvents = new ArrayList<>();
 
     public EventAnalysisResult(State s)
     {
@@ -51,10 +50,11 @@ public class EventAnalysisResult
 
     public List<Place> getPossiblePlaces()
     {
-        ArrayList<Place> res = new ArrayList<Place>();
-        places: for (Place p : state.getRunsOn().getPlaces())
+        ArrayList<Place> res = new ArrayList<>();
+        places:
+        for (Place p : state.getRunsOn().getPlaces())
         {
-            ArrayList<Event> ce = new ArrayList<Event>();
+            ArrayList<Event> ce = new ArrayList<>();
             if (state.getRepresents().multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND)
             {
                 for (TransitionAnalysisResult tra : this.analysis.values())
@@ -84,6 +84,18 @@ public class EventAnalysisResult
 
             this.consumedEvents.addAll(ce);
         }
+
+        // Remove event doubles
+        // TODO: it's costly so do it another way.
+        List<Event> rr = new ArrayList<>();
+        for (Event e : this.consumedEvents)
+        {
+            if (!rr.contains(e))
+            {
+                rr.add(e);
+            }
+        }
+        this.consumedEvents = rr;
 
         return res;
     }

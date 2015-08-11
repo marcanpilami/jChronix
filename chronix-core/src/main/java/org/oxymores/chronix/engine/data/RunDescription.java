@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine.data;
 
 import java.io.Serializable;
@@ -33,10 +32,10 @@ public class RunDescription implements Serializable
 
     private String reportToQueueName;
     private String command;
-    private List<String> paramNames = new ArrayList<String>();
-    private List<String> paramValues = new ArrayList<String>();
-    private List<String> envNames = new ArrayList<String>();
-    private List<String> envValues = new ArrayList<String>();
+    private List<String> paramNames = new ArrayList<>();
+    private List<String> paramValues = new ArrayList<>();
+    private List<String> envNames = new ArrayList<>();
+    private List<String> envValues = new ArrayList<>();
 
     private Boolean helperExecRequest = false;
     private Boolean shouldSendLogFile = false;
@@ -47,12 +46,12 @@ public class RunDescription implements Serializable
     // Helper for log file naming
     private String placeName = "";
     private String activeSourceName = "";
-    private String appID = "";
+    private UUID appID = null;
 
     // The following data is only useful for the engine, not the runner.
     // It should be put as is in the run result object.
     // ID1 is PJ ID
-    private String id1;
+    private UUID id1;
     // ID2 is the active element ID
     private UUID id2;
     private Boolean outOfPlan = false;
@@ -189,22 +188,22 @@ public class RunDescription implements Serializable
         this.activeSourceName = activeSourceName;
     }
 
-    public String getAppID()
+    public UUID getAppID()
     {
         return appID;
     }
 
-    public void setAppID(String appID)
+    public void setAppID(UUID appID)
     {
         this.appID = appID;
     }
 
-    public String getId1()
+    public UUID getId1()
     {
         return id1;
     }
 
-    public void setId1(String id1)
+    public void setId1(UUID id1)
     {
         this.id1 = id1;
     }

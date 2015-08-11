@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -35,19 +33,26 @@ import javax.jms.ObjectMessage;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.RunResult;
 
 class RunnerAgent extends BaseListener
 {
-    private static Logger log = Logger.getLogger(RunnerAgent.class);
+    private static final Logger log = Logger.getLogger(RunnerAgent.class);
+
+    private static final DateTimeFormatter JODA_LOG_FORMATTER = DateTimeFormat.forPattern("dd/MM HH:mm:ss");
+    private static final DateTimeFormatter JODA_DIR_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd");
+    private static final DateTimeFormatter JODA_FILE_FORMATTER = DateTimeFormat.forPattern("yyyyMMddhhmmssSSS");
 
     private MessageProducer jmsProducer;
     private String logDbPath;
 
     void startListening(Broker broker) throws JMSException, IOException
     {
-        this.init(broker, false, false);
+        this.init(broker);
         log.info(String.format("Starting a runner agent"));
 
         // Log repository
@@ -71,7 +76,7 @@ class RunnerAgent extends BaseListener
         log.info("Run request received");
         ObjectMessage omsg = (ObjectMessage) msg;
         RunDescription rd;
-        RunResult res = null;
+        RunResult res;
 
         try
         {
@@ -103,13 +108,10 @@ class RunnerAgent extends BaseListener
         // Log file (only if true run)
         String logFilePath = null;
         String logFileName = null;
-        Date start = new Date();
+        DateTime start = DateTime.now();
         if (!rd.getHelperExecRequest())
         {
-            SimpleDateFormat myFormatDir = new SimpleDateFormat("yyyyMMdd");
-            SimpleDateFormat myFormatFile = new SimpleDateFormat("yyyyMMddhhmmssSSS");
-            String dd = myFormatDir.format(start);
-            String logFileDateDir = FilenameUtils.concat(this.logDbPath, dd);
+            String logFileDateDir = FilenameUtils.concat(this.logDbPath, start.toString(JODA_DIR_FORMATTER));
             if (!(new File(logFileDateDir)).exists() && !(new File(logFileDateDir)).mkdir())
             {
                 log.fatal("Could not create log directory, failing engine");
@@ -117,7 +119,7 @@ class RunnerAgent extends BaseListener
                 jmsRollback();
                 return;
             }
-            logFileName = String.format("%s_%s_%s_%s.log", myFormatFile.format(start), rd.getPlaceName().replace(" ", "-"), rd
+            logFileName = String.format("%s_%s_%s_%s.log", start.toString(JODA_FILE_FORMATTER), rd.getPlaceName().replace(" ", "-"), rd
                     .getActiveSourceName().replace(" ", "-"), rd.getId1());
             logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
         }
@@ -135,7 +137,7 @@ class RunnerAgent extends BaseListener
             log.error(String.format("An unimplemented exec method (%s) was called! Job will be failed.", rd.getMethod()));
         }
         res.start = start;
-        res.end = new Date();
+        res.end = DateTime.now();
         res.logFileName = logFileName;
         res.logPath = logFilePath;
 
@@ -174,7 +176,7 @@ class RunnerAgent extends BaseListener
                     log.warn("A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
                 }
             }
-            catch (Exception e1)
+            catch (JMSException | IOException e1)
             {
                 log.error("The runner was not able to send the result of an execution to the engine. This may corrupt plan execution!", e1);
                 IOUtils.closeQuietly(is);

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,50 +17,47 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.timedata;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.util.UUID;
+import javax.validation.constraints.NotNull;
+import org.joda.time.DateTime;
+import org.sql2o.Connection;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-
-@Entity
 public class RunMetrics implements Serializable
 {
     private static final long serialVersionUID = -4424619647312566179L;
-    private static final int UUID_LENGTH = 36;
 
-    @Column(length = UUID_LENGTH)
-    private String stateId;
+    @NotNull
+    private UUID stateId;
 
-    @Column(length = UUID_LENGTH)
-    private String placeId;
+    @NotNull
+    private UUID placeId;
 
     private Long duration;
 
-    private Date startTime;
+    private DateTime startTime;
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Stupid accessors
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
-    public String getStateId()
+    public UUID getStateId()
     {
         return stateId;
     }
 
-    public void setStateId(String stateId)
+    public void setStateId(UUID stateId)
     {
         this.stateId = stateId;
     }
 
-    public String getPlaceId()
+    public UUID getPlaceId()
     {
         return placeId;
     }
 
-    public void setPlaceId(String placeId)
+    public void setPlaceId(UUID placeId)
     {
         this.placeId = placeId;
     }
@@ -75,13 +72,19 @@ public class RunMetrics implements Serializable
         this.duration = duration;
     }
 
-    public Date getStartTime()
+    public DateTime getStartTime()
     {
         return startTime;
     }
 
-    public void setStartTime(Date startTime)
+    public void setStartTime(DateTime startTime)
     {
         this.startTime = startTime;
+    }
+
+    public void insert(Connection conn)
+    {
+        conn.createQuery("INSERT INTO RunMetrics(duration, placeId, startTime, stateId)"
+                + " VALUES(:duration, :placeId, :startTime, :stateId)").bind(this).executeUpdate();
     }
 }

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,15 +17,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
@@ -35,35 +31,37 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
+import org.sql2o.Connection;
 
-@Entity
 public class TokenReservation implements Serializable
 {
     private static final long serialVersionUID = 4126830397920944723L;
     protected static final int UUID_LENGTH = 36;
 
-    @Column(length = UUID_LENGTH)
-    private String applicationId;
+    private Long id;
 
-    @Column(length = UUID_LENGTH)
-    private String placeId;
+    @NotNull
+    private UUID applicationId;
 
-    @Column(length = UUID_LENGTH)
-    private String stateId;
+    @NotNull
+    private UUID placeId;
 
-    @Column(length = UUID_LENGTH)
-    private String tokenId;
+    @NotNull
+    private UUID stateId;
 
-    @Column(length = UUID_LENGTH)
-    private String pipelineJobId;
+    @NotNull
+    private UUID tokenId;
+
+    @NotNull
+    private UUID pipelineJobId;
 
     // ExecutionNodeId
-    @Column(length = UUID_LENGTH)
-    private String requestedBy;
+    @NotNull
+    private UUID requestedBy;
 
-    private Date requestedOn;
-    private Date grantedOn;
-    private Date renewedOn;
+    private DateTime requestedOn;
+    private DateTime grantedOn;
+    private DateTime renewedOn;
 
     private boolean localRenew = false;
     private boolean pending = false;
@@ -94,108 +92,107 @@ public class TokenReservation implements Serializable
     private TokenRequest getRequest()
     {
         TokenRequest tr = new TokenRequest();
-        tr.applicationID = UUID.fromString(this.applicationId);
-        tr.placeID = UUID.fromString(this.placeId);
-        tr.tokenID = UUID.fromString(this.tokenId);
-        tr.stateID = UUID.fromString(this.stateId);
+        tr.applicationID = this.applicationId;
+        tr.placeID = this.placeId;
+        tr.tokenID = this.tokenId;
+        tr.stateID = this.stateId;
         tr.requestedAt = new DateTime(this.grantedOn);
-        tr.requestingNodeID = UUID.fromString(this.requestedBy);
-        tr.pipelineJobID = UUID.fromString(this.pipelineJobId);
+        tr.requestingNodeID = this.requestedBy;
+        tr.pipelineJobID = this.pipelineJobId;
         tr.local = false;
         return tr;
     }
 
     //
     // ///////////////////////////////////////////
-
     // ///////////////////////////////////////////
     // Stupid get/set
-    public String getApplicationId()
+    public UUID getApplicationId()
     {
         return applicationId;
     }
 
-    public void setApplicationId(String applicationId)
+    public void setApplicationId(UUID applicationId)
     {
         this.applicationId = applicationId;
     }
 
-    public String getPlaceId()
+    public UUID getPlaceId()
     {
         return placeId;
     }
 
-    public void setPlaceId(String placeId)
+    public void setPlaceId(UUID placeId)
     {
         this.placeId = placeId;
     }
 
-    public String getStateId()
+    public UUID getStateId()
     {
         return stateId;
     }
 
-    public void setStateId(String stateId)
+    public void setStateId(UUID stateId)
     {
         this.stateId = stateId;
     }
 
-    public String getTokenId()
+    public UUID getTokenId()
     {
         return tokenId;
     }
 
-    public void setTokenId(String tokenId)
+    public void setTokenId(UUID tokenId)
     {
         this.tokenId = tokenId;
     }
 
-    public String getPipelineJobId()
+    public UUID getPipelineJobId()
     {
         return pipelineJobId;
     }
 
-    public void setPipelineJobId(String pipelineJobId)
+    public void setPipelineJobId(UUID pipelineJobId)
     {
         this.pipelineJobId = pipelineJobId;
     }
 
-    public String getRequestedBy()
+    public UUID getRequestedBy()
     {
         return requestedBy;
     }
 
-    public void setRequestedBy(String requestedBy)
+    public void setRequestedBy(UUID requestedBy)
     {
         this.requestedBy = requestedBy;
     }
 
-    public Date getRequestedOn()
+    public DateTime getRequestedOn()
     {
         return requestedOn;
     }
 
-    public void setRequestedOn(Date requestedOn)
+    public void setRequestedOn(DateTime requestedOn)
     {
         this.requestedOn = requestedOn;
     }
 
-    public Date getGrantedOn()
+    public DateTime getGrantedOn()
     {
         return grantedOn;
     }
 
-    public void setGrantedOn(Date grantedOn)
+    public void setGrantedOn(DateTime grantedOn)
     {
         this.grantedOn = grantedOn;
     }
 
-    public Date getRenewedOn()
+    public DateTime getRenewedOn()
     {
         return renewedOn;
     }
 
-    public void setRenewedOn(Date renewedOn)
+    public void setRenewedOn(DateTime renewedOn)
     {
         this.renewedOn = renewedOn;
     }
@@ -222,7 +219,6 @@ public class TokenReservation implements Serializable
 
     //
     // ///////////////////////////////////////////
-
     public Application getApplication(ChronixContext ctx)
     {
         return ctx.getApplication(this.applicationId);
@@ -230,16 +226,39 @@ public class TokenReservation implements Serializable
 
     public Place getPlace(ChronixContext ctx)
     {
-        return ctx.getNetwork().getPlace(UUID.fromString(this.placeId));
+        return ctx.getNetwork().getPlace(this.placeId);
     }
 
     public State getState(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getState(UUID.fromString(this.stateId));
+        return this.getApplication(ctx).getState(this.stateId);
     }
 
     public Token getToken(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getToken(UUID.fromString(this.stateId));
+        return this.getApplication(ctx).getToken(this.stateId);
+    }
+
+    public Long getId()
+    {
+        return this.id;
+    }
+
+    public void insertOrUpdate(Connection conn)
+    {
+        int i = conn.createQuery("UPDATE TokenReservation SET grantedOn=:grantedOn, pending=:pending, renewedOn=:renewedOn WHERE id=:id").
+                bind(this).executeUpdate().getResult();
+        if (i == 0)
+        {
+            conn.createQuery("INSERT INTO TokenReservation(applicationId, grantedOn, localRenew, pending, pipelineJobId, placeId, "
+                    + "renewedOn, requestedBy, requestedOn, stateId, tokenId) "
+                    + "VALUES(:applicationId, :grantedOn, :localRenew, :pending, :pipelineJobId, :placeId, :renewedOn, "
+                    + ":requestedBy, :requestedOn, :stateId, :tokenId)").bind(this).executeUpdate();
+        }
+    }
+
+    public void delete(Connection conn)
+    {
+        conn.createQuery("DELETE FROM TokenReservation WHERE id=:id").addParameter("id", this.getId()).executeUpdate();
     }
 }

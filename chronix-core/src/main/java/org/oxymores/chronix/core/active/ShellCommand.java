@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.RunnerManager;
 
 public class ShellCommand extends ActiveNodeBase
 {
@@ -61,7 +61,7 @@ public class ShellCommand extends ActiveNodeBase
     }
 
     @Override
-    public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
+    public String getCommandName(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
     {
         return this.command;
     }

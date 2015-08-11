@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,66 +17,79 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+import org.joda.time.DateTime;
 
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.active.Clock;
+import org.sql2o.Connection;
 
-@Entity
 public class ClockTick implements Serializable
 {
     private static final long serialVersionUID = 4194251899101238989L;
     protected static final int UUID_LENGTH = 36;
 
-    @Column(length = UUID_LENGTH, nullable = false)
-    private String appId;
+    @NotNull
+    private long id;
 
-    @Column(length = UUID_LENGTH, nullable = false)
-    private String clockId;
+    @NotNull
+    private UUID appId, clockId;
 
-    @Column(nullable = false)
-    private Date tickTime;
+    @NotNull
+    private DateTime tickTime;
 
     public Clock getClock(ChronixContext ctx)
     {
-        return (Clock) ctx.getApplication(this.appId).getActiveNode(UUID.fromString(this.clockId));
+        return (Clock) ctx.getApplication(this.appId).getActiveNode(this.clockId);
     }
 
-    public String getClockId()
+    public UUID getClockId()
     {
         return clockId;
     }
 
-    public void setClockId(String clockId)
+    public void setClockId(UUID clockId)
     {
         this.clockId = clockId;
     }
 
-    public Date getTickTime()
+    public DateTime getTickTime()
     {
         return tickTime;
     }
 
-    public void setTickTime(Date tickTime)
+    public void setTickTime(DateTime tickTime)
     {
         this.tickTime = tickTime;
     }
 
-    public String getAppId()
+    public UUID getAppId()
     {
         return appId;
     }
 
-    public void setAppId(String appId)
+    public void setAppId(UUID appId)
     {
         this.appId = appId;
+    }
+
+    public long getId()
+    {
+        return id;
+    }
+
+    public void setId(long id)
+    {
+        this.id = id;
+    }
+
+    public void insert(Connection conn)
+    {
+        conn.createQuery("INSERT INTO ClockTick(appID, clockID, tickTime) VALUES(:appId, :clockId, :tickTime)")
+                .bind(this).executeUpdate();
     }
 }

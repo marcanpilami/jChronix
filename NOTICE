@@ -5,7 +5,6 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 Top level projects used are :
 	- Apache ActiveMQ
-	- Apache OpenJPA
 	- Apache log4j
 
 This software reuses preparatory works created for the
@@ -23,6 +22,10 @@ software is available from http://build.mnode.org/projects/ical4j
 Database support is provided by the HSQLDB library package, which is
 open source software under a BSD licence. Original
 software is available at http://hsqldb.org
+
+JDBC helpers are provided by the sql2o library package, which is
+open source software under an MIT-like license by Lars Aaberg. 
+Original software is available at http://www.sql2o.org/ 
 
 Command line parsing is provided by the args4j library package,
 which is open source software under a MIT license by Kohsuke Kawaguchi. 

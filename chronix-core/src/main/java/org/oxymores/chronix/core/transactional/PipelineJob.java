@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,21 +17,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -44,43 +36,35 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.RunResult;
+import org.sql2o.Connection;
 
-@Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class PipelineJob extends TranscientBase
 {
     private static final long serialVersionUID = -3301527645931127170L;
 
-    @Column(length = 20)
+    @NotNull
+    @Size(min = 1, max = 20)
     String status;
 
-    @Column(length = PATH_LENGTH)
+    @NotNull
+    @Size(min = 1, max = PATH_LENGTH)
     String runThis;
 
-    Date warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
-
-    @Column(length = UUID_LENGTH)
-    String level0Id, level1Id, level2Id, level3Id;
+    DateTime warnNotEndedAt, mustLaunchBefore, killAt, enteredPipeAt, markedForRunAt, beganRunningAt, stoppedRunningAt;
 
     Boolean outOfPlan = false;
 
     Integer resultCode = -1;
 
-    /**
-     * Holder for the resolved values of parameters
-     */
-    @Transient
-    Map<Integer, String> paramValues;
+    private final Map<Integer, String> resolvedParameters = new HashMap<>();
 
     public PipelineJob()
     {
         super();
-        paramValues = new HashMap<Integer, String>();
     }
 
     // ///////////////////////////////////////////////////////////////
     // Set/Get
-
     public Integer getResultCode()
     {
         return resultCode;
@@ -105,22 +89,17 @@ public class PipelineJob extends TranscientBase
     // Params
     public void setParamValue(Integer index, String value)
     {
-        paramValues.put(index, value);
+        resolvedParameters.put(index, value);
     }
 
     public String getParamValue(int index)
     {
-        return paramValues.get(index);
+        return resolvedParameters.get(index);
     }
 
     protected Map<Integer, String> getParamValues()
     {
-        return paramValues;
-    }
-
-    protected void setParamValues(Map<Integer, String> paramValues)
-    {
-        this.paramValues = paramValues;
+        return resolvedParameters;
     }
 
     // ///////////////////
@@ -152,224 +131,84 @@ public class PipelineJob extends TranscientBase
         }
     }
 
-    public Date getWarnNotEndedAt()
+    public DateTime getWarnNotEndedAt()
     {
         return warnNotEndedAt;
     }
 
-    public void setWarnNotEndedAt(Date warnNotEndedAt)
+    public void setWarnNotEndedAt(DateTime warnNotEndedAt)
     {
         this.warnNotEndedAt = warnNotEndedAt;
     }
 
-    public Date getMustLaunchBefore()
+    public DateTime getMustLaunchBefore()
     {
         return mustLaunchBefore;
     }
 
-    public void setMustLaunchBefore(Date mustLaunchBefore)
+    public void setMustLaunchBefore(DateTime mustLaunchBefore)
     {
         this.mustLaunchBefore = mustLaunchBefore;
     }
 
-    public Date getKillAt()
+    public DateTime getKillAt()
     {
         return killAt;
     }
 
-    public void setKillAt(Date killAt)
+    public void setKillAt(DateTime killAt)
     {
         this.killAt = killAt;
     }
 
-    public Date getEnteredPipeAt()
+    public DateTime getEnteredPipeAt()
     {
         return enteredPipeAt;
     }
 
     public void setEnteredPipeAt(DateTime enteredPipeAt)
     {
-        this.setEnteredPipeAt(enteredPipeAt.toDate());
-    }
-
-    public void setEnteredPipeAt(Date enteredPipeAt)
-    {
         this.enteredPipeAt = enteredPipeAt;
     }
 
-    public Date getMarkedForRunAt()
+    public DateTime getMarkedForRunAt()
     {
         return markedForRunAt;
     }
 
     public void setMarkedForRunAt(DateTime markedForRunAt)
     {
-        this.setMarkedForRunAt(markedForRunAt.toDate());
-    }
-
-    public void setMarkedForRunAt(Date markedForRunAt)
-    {
         this.markedForRunAt = markedForRunAt;
     }
 
-    public Date getBeganRunningAt()
+    public DateTime getBeganRunningAt()
     {
         return beganRunningAt;
     }
 
     public void setBeganRunningAt(DateTime beganRunningAt)
     {
-        this.setBeganRunningAt(beganRunningAt.toDate());
-    }
-
-    public void setBeganRunningAt(Date beganRunningAt)
-    {
         this.beganRunningAt = beganRunningAt;
     }
 
-    public Date getStoppedRunningAt()
+    public DateTime getStoppedRunningAt()
     {
         return stoppedRunningAt;
     }
 
-    public void setStoppedRunningAt(Date stoppedRunningAt)
+    public void setStoppedRunningAt(DateTime stoppedRunningAt)
     {
         this.stoppedRunningAt = stoppedRunningAt;
-    }
-
-    public UUID getLevel0IdU()
-    {
-        if (this.level0Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level0Id);
-    }
-
-    public void setLevel0IdU(UUID level0Id)
-    {
-        if (level0Id == null)
-        {
-            this.level0Id = null;
-        }
-        else
-        {
-            this.level0Id = level0Id.toString();
-        }
-    }
-
-    public UUID getLevel1IdU()
-    {
-        if (this.level1Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level1Id);
-    }
-
-    public void setLevel1IdU(UUID level1Id)
-    {
-        if (level1Id == null)
-        {
-            this.level1Id = null;
-        }
-        else
-        {
-            this.level1Id = level1Id.toString();
-        }
-    }
-
-    public UUID getLevel2IdU()
-    {
-        if (this.level2Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level2Id);
-    }
-
-    public void setLevel2IdU(UUID level2Id)
-    {
-        if (level2Id == null)
-        {
-            this.level2Id = null;
-        }
-        else
-        {
-            this.level2Id = level2Id.toString();
-        }
-    }
-
-    public UUID getLevel3IdU()
-    {
-        if (this.level3Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level3Id);
-    }
-
-    public void setLevel3IdU(UUID level3Id)
-    {
-        if (level3Id == null)
-        {
-            this.level3Id = null;
-        }
-        else
-        {
-            this.level3Id = level3Id.toString();
-        }
-    }
-
-    protected String getLevel0Id()
-    {
-        return level0Id;
-    }
-
-    protected void setLevel0Id(String level0Id)
-    {
-        this.level0Id = level0Id;
-    }
-
-    public String getLevel1Id()
-    {
-        return level1Id;
-    }
-
-    protected void setLevel1Id(String level1Id)
-    {
-        this.level1Id = level1Id;
-    }
-
-    public String getLevel2Id()
-    {
-        return level2Id;
-    }
-
-    protected void setLevel2Id(String level2Id)
-    {
-        this.level2Id = level2Id;
-    }
-
-    public String getLevel3Id()
-    {
-        return level3Id;
-    }
-
-    protected void setLevel3Id(String level3Id)
-    {
-        this.level3Id = level3Id;
     }
 
     public boolean isReady(ChronixContext ctx)
     {
         ActiveNodeBase a = this.getActive(ctx);
-        return a.getParameters().size() == this.paramValues.size();
+        return a.getParameters().size() == this.resolvedParameters.size();
     }
 
     //
     // //////////////////////////////////////////////////////////////////////
-
     public RunDescription getRD(ChronixContext ctx)
     {
         RunDescription rd = new RunDescription();
@@ -391,11 +230,11 @@ public class PipelineJob extends TranscientBase
         ArrayList<Parameter> prms = this.getActive(ctx).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
-            rd.addParameter(prms.get(i).getKey(), this.paramValues.get(i));
+            rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));
         }
 
         // All environment variables should be included
-        for (EnvironmentValue ev : this.envParams)
+        for (EnvironmentValue ev : this.envValues)
         {
             rd.addEnvVar(ev.getKey(), ev.getValue());
         }
@@ -432,17 +271,20 @@ public class PipelineJob extends TranscientBase
         e.setStateID(this.stateID);
         e.setAppID(this.appID);
         e.setActiveID(this.activeID);
-        e.setCreatedAt(new Date());
+        e.setCreatedAt(DateTime.now());
         e.setVirtualTime(this.virtualTime);
 
         // Report environment
-        for (EnvironmentValue ev : this.envParams)
+        if (this.envValues != null)
         {
-            e.envParams.add(new EnvironmentValue(ev.getKey(), ev.getValue()));
+            for (EnvironmentValue ev : this.envValues)
+            {
+                e.addEnvValueToCache(ev.getKey(), ev.getValue());
+            }
         }
         for (String name : rr.newEnvVars.keySet())
         {
-            e.envParams.add(new EnvironmentValue(name, rr.newEnvVars.get(name)));
+            e.addEnvValueToCache(name, rr.newEnvVars.get(name));
         }
 
         return e;
@@ -457,7 +299,7 @@ public class PipelineJob extends TranscientBase
     {
         RunLog rlog = new RunLog();
         Application a = ctx.getApplication(this.appID);
-        Place p = ctx.getNetwork().getPlace(UUID.fromString(this.placeID));
+        Place p = ctx.getNetwork().getPlace(this.placeID);
         ActiveNodeBase act = this.getActive(ctx);
 
         rlog.setActiveNodeId(this.activeID);
@@ -467,12 +309,12 @@ public class PipelineJob extends TranscientBase
         rlog.setBeganRunningAt(this.beganRunningAt);
         rlog.setChainLaunchId(this.level1Id);
         rlog.setChainId(this.level0Id);
-        rlog.setChainName(a.getActiveNode(UUID.fromString(this.level0Id)).getName());
+        rlog.setChainName(a.getActiveNode(this.level0Id).getName());
         rlog.setDns(rr.envtServer);
         rlog.setEnteredPipeAt(this.enteredPipeAt);
-        rlog.setExecutionNodeId(p.getNode().getId().toString());
+        rlog.setExecutionNodeId(p.getNode().getId());
         rlog.setExecutionNodeName(p.getNode().getBrokerUrl());
-        rlog.setId(this.id.toString());
+        rlog.setId(this.id);
         rlog.setLastKnownStatus(this.status);
         rlog.setMarkedForUnAt(this.markedForRunAt);
         rlog.setOsAccount(rr.envtUser);
@@ -489,15 +331,15 @@ public class PipelineJob extends TranscientBase
         // Calendar
         if (this.calendarID != null)
         {
-            Calendar c = a.getCalendar(UUID.fromString(this.calendarID));
+            Calendar c = a.getCalendar(this.calendarID);
             rlog.setCalendarName(c.getName());
-            rlog.setCalendarOccurrence(c.getDay(UUID.fromString(this.calendarOccurrenceID)).getValue());
+            rlog.setCalendarOccurrence(c.getDay(this.calendarOccurrenceID).getValue());
         }
 
         return rlog;
     }
 
-    public RunResult getSimulatedResult(EntityManager emTransac)
+    public RunResult getSimulatedResult(Connection connTransac)
     {
         RunResult res = new RunResult();
         res.returnCode = 0;
@@ -506,8 +348,32 @@ public class PipelineJob extends TranscientBase
         res.logStart = "simulated run";
 
         res.start = this.getVirtualTime();
-        res.end = new DateTime(res.start).plusSeconds((int) RunStats.getMean(emTransac, this.stateID, this.placeID)).toDate();
+        res.end = new DateTime(res.start).plusSeconds((int) RunStats.getMean(connTransac, this.stateID, this.placeID));
 
         return res;
+    }
+
+    public void insertOrUpdate(Connection conn)
+    {
+        int i = conn.createQuery("UPDATE PipelineJob SET beganRunningAt=:beganRunningAt, enteredPipeAt=:enteredPipeAt"
+                + ", killAt=:killAt, markedForRunAt=:markedForRunAt, mustLaunchBefore=:mustLaunchBefore"
+                + ", outOfPlan=:outOfPlan, resultCode=:resultCode, runThis=:runThis, status=:status"
+                + ", stoppedRunningAt=:stoppedRunningAt, warnNotEndedAt=:warnNotEndedAt WHERE id=:id")
+                .bind(this).executeUpdate().getResult();
+        if (i == 0)
+        {
+            conn.createQuery("INSERT INTO PipelineJob(id, beganRunningAt, enteredPipeAt, killAt, markedForRunAt, "
+                    + "mustLaunchBefore, outOfPlan, resultCode, runThis, status, stoppedRunningAt, "
+                    + "warnNotEndedAt, activeId, appId, calendarID, calendarOccurrenceID, createdAt,"
+                    + "ignoreCalendarUpdating, level0Id, level1Id, level2Id, level3Id, outsideChainLaunch, placeId,"
+                    + "simulationID, stateID, virtualTime) "
+                    + "VALUES(:id, :beganRunningAt, :enteredPipeAt, :killAt, :markedForRunAt, "
+                    + ":mustLaunchBefore, :outOfPlan, :resultCode, :runThis, :status, :stoppedRunningAt, "
+                    + ":warnNotEndedAt, :activeID, :appID, :calendarID, :calendarOccurrenceID, :createdAt,"
+                    + ":ignoreCalendarUpdating, :level0Id, :level1Id, :level2Id, :level3Id, :outsideChainLaunch, :placeID,"
+                    + ":simulationID, :stateID, :virtualTime)").bind(this).executeUpdate();
+        }
+
+        updateEnvValues(conn);
     }
 }

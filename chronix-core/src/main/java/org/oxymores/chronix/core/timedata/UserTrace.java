@@ -1,43 +1,45 @@
 package org.oxymores.chronix.core.timedata;
 
-import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import java.util.UUID;
+import javax.validation.constraints.Size;
+import org.joda.time.DateTime;
 
 import org.oxymores.chronix.engine.helpers.OrderType;
 
-@Entity
+/**
+ Future use.
+ */
 public class UserTrace
 {
     private static final int UUID_LENGTH = 36;
     private static final int DESCR_LENGTH = 100;
 
-    @Column(length = UUID_LENGTH)
-    @Id
-    private String id;
+    private UUID id;
 
     private OrderType type;
 
-    @Column(length = DESCR_LENGTH)
+    @Size(min = 1, max = DESCR_LENGTH)
     private String username;
 
-    @Column(length = DESCR_LENGTH)
+    @Size(min = 1, max = DESCR_LENGTH)
     private String details;
 
-    private Date submitted, ended;
+    private DateTime submitted, ended;
+
+    public UserTrace()
+    {
+        this.id = UUID.randomUUID();
+    }
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Stupid accessors
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }
@@ -72,22 +74,22 @@ public class UserTrace
         this.details = details;
     }
 
-    public Date getSubmitted()
+    public DateTime getSubmitted()
     {
         return submitted;
     }
 
-    public void setSubmitted(Date submitted)
+    public void setSubmitted(DateTime submitted)
     {
         this.submitted = submitted;
     }
 
-    public Date getEnded()
+    public DateTime getEnded()
     {
         return ended;
     }
 
-    public void setEnded(Date ended)
+    public void setEnded(DateTime ended)
     {
         this.ended = ended;
     }

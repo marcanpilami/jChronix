@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,20 +17,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -45,10 +40,11 @@ import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.sql2o.Connection;
 
 public class State extends ConfigurableBase
 {
-    private static Logger log = Logger.getLogger(State.class);
+    private static final Logger log = Logger.getLogger(State.class);
     private static final long serialVersionUID = -2640644872229489081L;
 
     // /////////////////////////////////////////////////////////////////////////////////
@@ -98,22 +94,20 @@ public class State extends ConfigurableBase
 
     // Fields
     // /////////////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////////////
     // Construction / destruction
     public State()
     {
         super();
-        this.exclusiveStates = new ArrayList<State>();
-        this.trFromHere = new ArrayList<Transition>();
-        this.trReceivedHere = new ArrayList<Transition>();
-        this.sequences = new ArrayList<AutoSequence>();
-        this.tokens = new ArrayList<Token>();
+        this.exclusiveStates = new ArrayList<>();
+        this.trFromHere = new ArrayList<>();
+        this.trReceivedHere = new ArrayList<>();
+        this.sequences = new ArrayList<>();
+        this.tokens = new ArrayList<>();
     }
 
     //
     // /////////////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////////////
     // Stupid GET/SET
     public int getCalendarShift()
@@ -345,13 +339,11 @@ public class State extends ConfigurableBase
 
     // Stupid GET/SET
     // /////////////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////////////
     // Relationship handling
-
     public List<State> getClientStates()
     {
-        ArrayList<State> res = new ArrayList<State>();
+        ArrayList<State> res = new ArrayList<>();
         for (Transition t : trFromHere)
         {
             res.add(t.stateTo);
@@ -361,7 +353,7 @@ public class State extends ConfigurableBase
 
     public List<State> getParentStates()
     {
-        ArrayList<State> res = new ArrayList<State>();
+        ArrayList<State> res = new ArrayList<>();
         for (Transition t : trReceivedHere)
         {
             res.add(t.stateFrom);
@@ -420,7 +412,7 @@ public class State extends ConfigurableBase
 
     public List<ExecutionNode> getRunsOnExecutionNodes()
     {
-        ArrayList<ExecutionNode> res = new ArrayList<ExecutionNode>();
+        ArrayList<ExecutionNode> res = new ArrayList<>();
         for (Place p : this.runsOn.getPlaces())
         {
             if (!res.contains(p.getNode()))
@@ -458,22 +450,20 @@ public class State extends ConfigurableBase
 
     // Relationship handling
     // /////////////////////////////////////////////////////////////////////////////////
-
-    public void consumeEvents(List<Event> events, List<Place> places, EntityManager em)
+    public void consumeEvents(List<Event> events, List<Place> places, Connection conn)
     {
         for (Event e : events)
         {
             for (Place p : places)
             {
+                log.debug(String.format("Event %s marked as consumed on place %s", e.getId(), p.name));
                 EventConsumption ec = new EventConsumption();
-                ec.setEvent(e);
-                ec.setPlace(p);
-                ec.setState(this);
+                ec.setEventID(e.getId());
+                ec.setPlaceID(p.getId());
+                ec.setStateID(this.getId());
                 ec.setAppID(e.getAppID());
 
-                em.persist(ec);
-
-                log.debug(String.format("Event %s marked as consumed on place %s", e.getId(), p.name));
+                ec.insert(conn);
             }
         }
     }
@@ -490,75 +480,75 @@ public class State extends ConfigurableBase
         run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null, null);
     }
 
-    public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession)
+    public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession)
     {
         for (Place p : this.runsOn.places)
         {
-            runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), null, null);
+            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null);
         }
     }
 
-    public void runInsidePlan(EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id)
+    public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id)
     {
         for (Place p : this.runsOn.places)
         {
-            runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id);
+            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id);
         }
     }
 
-    public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession)
+    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession)
     {
-        runInsidePlan(p, em, pjProducer, jmsSession, UUID.randomUUID(), null, null);
+        runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null);
     }
 
-    public void runInsidePlan(Place p, EntityManager em, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id)
+    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id)
     {
         // Calendar update
-        String calendarOccurrenceID = null;
+        UUID calendarOccurrenceID = null;
         CalendarPointer cpToUpdate = null;
         if (this.usesCalendar())
         {
-            CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
+            CalendarPointer cp = this.getCurrentCalendarPointer(conn, p);
             calendarOccurrenceID = cp.getNextRunOccurrenceId();
-            cpToUpdate = this.getCurrentCalendarPointer(em, p);
+            cpToUpdate = this.getCurrentCalendarPointer(conn, p);
 
         }
 
         run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate, null);
     }
 
-    public void runFromEngine(Place p, EntityManager em, MessageProducer pjProducer, Session session, Event e)
+    public void runFromEngine(Place p, Connection conn, MessageProducer pjProducer, Session session, Event e)
     {
         // Calendar update
-        String calendarOccurrenceID = null;
+        UUID calendarOccurrenceID = null;
         CalendarPointer cpToUpdate = null;
         if (this.usesCalendar())
         {
-            CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
+            CalendarPointer cp = this.getCurrentCalendarPointer(conn, p);
             calendarOccurrenceID = cp.getNextRunOccurrenceId();
-            cpToUpdate = this.getCurrentCalendarPointer(em, p);
+            cpToUpdate = this.getCurrentCalendarPointer(conn, p);
 
         }
 
-        run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0IdU(), e.getLevel1IdU(), e.getLevel2IdU(), e.getLevel3IdU(), cpToUpdate,
-                e.getVirtualTime(), e.getEnvParams().toArray(new EnvironmentValue[0]));
+        run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0Id(), e.getLevel1Id(), e.getLevel2Id(), e.getLevel3Id(), cpToUpdate,
+                e.getVirtualTime(), e.getEnvValues(conn).toArray(new EnvironmentValue[0]));
     }
 
-    public void run(Place p, MessageProducer pjProducer, Session session, String calendarOccurrenceID, boolean updateCalendarPointer, boolean outOfPlan, boolean outOfChainLaunch,
-            UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id, CalendarPointer cpToUpdate, Date virtualTime, EnvironmentValue... params)
+    public void run(Place p, MessageProducer pjProducer, Session session, UUID calendarOccurrenceID, boolean updateCalendarPointer, boolean outOfPlan, boolean outOfChainLaunch,
+            UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id, CalendarPointer cpToUpdate, DateTime virtualTime, EnvironmentValue... params)
     {
         DateTime now = DateTime.now();
 
         PipelineJob pj = new PipelineJob();
 
         // Common fields
-        pj.setLevel0IdU(level0Id);
-        pj.setLevel1IdU(level1Id);
-        pj.setLevel2IdU(level2Id);
-        pj.setLevel3IdU(level3Id);
-        pj.setMarkedForRunAt(now.toDate());
+        pj.setLevel0Id(level0Id);
+        pj.setLevel1Id(level1Id);
+        pj.setLevel2Id(level2Id);
+        pj.setLevel3Id(level3Id);
+        pj.setMarkedForRunAt(now);
         pj.setPlace(p);
-        pj.setAppID(this.getApplication().getId().toString());
+        pj.setAppID(this.getApplication().getId());
         pj.setState(this);
         pj.setStatus("ENTERING_QUEUE");
         pj.setApplication(this.application);
@@ -570,22 +560,22 @@ public class State extends ConfigurableBase
         // Warning and kill
         if (this.warnAfterMn != null)
         {
-            pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn).toDate());
+            pj.setWarnNotEndedAt(now.plusMinutes(this.warnAfterMn));
         }
         else
         {
-            pj.setWarnNotEndedAt(now.plusDays(1).toDate());
+            pj.setWarnNotEndedAt(now.plusDays(1));
         }
 
         if (this.killAfterMn != null)
         {
-            pj.setKillAt(now.plusMinutes(this.killAfterMn).toDate());
+            pj.setKillAt(now.plusMinutes(this.killAfterMn));
         }
 
         // Environment variables from the State itself
         for (EnvironmentParameter ep : this.envParams)
         {
-            pj.addValue(ep.key, ep.value);
+            pj.addEnvValueToCache(ep.key, ep.value);
         }
 
         // Environment variables passed from other jobs through the event (or manually set)
@@ -596,18 +586,18 @@ public class State extends ConfigurableBase
                 // Don't propagate auto variables
                 continue;
             }
-            pj.addValue(ep.getKey(), ep.getValue());
+            pj.addEnvValueToCache(ep.getKey(), ep.getValue());
         }
 
         // Environment variables auto
-        pj.addValue("CHR_STATEID", this.id.toString());
-        pj.addValue("CHR_CHAINID", this.chain.id.toString());
-        pj.addValue("CHR_LAUNCHID", pj.getId());
-        pj.addValue("CHR_JOBNAME", this.represents.name);
-        pj.addValue("CHR_PLACEID", p.id.toString());
-        pj.addValue("CHR_PLACENAME", p.name);
-        pj.addValue("CHR_PLACEGROUPID", this.runsOn.id.toString());
-        pj.addValue("CHR_PLACEGROUPNAME", this.runsOn.name);
+        pj.addEnvValueToCache("CHR_STATEID", this.id.toString());
+        pj.addEnvValueToCache("CHR_CHAINID", this.chain.id.toString());
+        pj.addEnvValueToCache("CHR_LAUNCHID", pj.getId().toString());
+        pj.addEnvValueToCache("CHR_JOBNAME", this.represents.name);
+        pj.addEnvValueToCache("CHR_PLACEID", p.id.toString());
+        pj.addEnvValueToCache("CHR_PLACENAME", p.name);
+        pj.addEnvValueToCache("CHR_PLACEGROUPID", this.runsOn.id.toString());
+        pj.addEnvValueToCache("CHR_PLACEGROUPNAME", this.runsOn.name);
 
         // Calendar update
         if (this.usesCalendar())
@@ -622,15 +612,15 @@ public class State extends ConfigurableBase
                 cpToUpdate.setLastStartedOccurrenceId(cpToUpdate.getNextRunOccurrenceId());
             }
 
-            pj.addValue(Constants.ENV_AUTO_CHR_CALENDAR, this.calendar.name);
-            pj.addValue(Constants.ENV_AUTO_CHR_CHR_CALENDARID, this.calendar.id.toString());
-            pj.addValue(Constants.ENV_AUTO_CHR_CHR_CALENDARDATE, cpToUpdate.getNextRunOccurrenceId());
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CALENDAR, this.calendar.name);
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CHR_CALENDARID, this.calendar.id.toString());
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CHR_CALENDARDATE, cpToUpdate.getNextRunOccurrenceId().toString());
         }
         else
         {
-            pj.addValue(Constants.ENV_AUTO_CHR_CALENDAR, "NONE");
-            pj.addValue(Constants.ENV_AUTO_CHR_CHR_CALENDARID, "NONE");
-            pj.addValue(Constants.ENV_AUTO_CHR_CHR_CALENDARDATE, "NONE");
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CALENDAR, "NONE");
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CHR_CALENDARID, "NONE");
+            pj.addEnvValueToCache(Constants.ENV_AUTO_CHR_CHR_CALENDARDATE, "NONE");
         }
 
         // Send it (commit is done by main engine later)
@@ -649,12 +639,10 @@ public class State extends ConfigurableBase
 
     // Create and post PJ for run
     // /////////////////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////////////////
     // Calendar stuff
-
     // Called within an open transaction. Won't be committed here.
-    public void createPointers(EntityManager em)
+    public void createPointers(Connection conn)
     {
         if (!this.usesCalendar())
         {
@@ -662,9 +650,8 @@ public class State extends ConfigurableBase
         }
 
         // Get existing pointers
-        TypedQuery<CalendarPointer> q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1", CalendarPointer.class);
-        q.setParameter(1, this.id.toString());
-        List<CalendarPointer> ptrs = q.getResultList();
+        List<CalendarPointer> ptrs = conn.createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID = :stateID").
+                addParameter("stateID", this.id).executeAndFetch(CalendarPointer.class);
 
         // A pointer should exist on all places
         int i = 0;
@@ -674,7 +661,7 @@ public class State extends ConfigurableBase
             CalendarPointer existing = null;
             for (CalendarPointer retrieved : ptrs)
             {
-                if (retrieved.getPlaceID().equals(p.id.toString()))
+                if (retrieved.getPlaceID().equals(p.id))
                 {
                     existing = retrieved;
                     break;
@@ -685,7 +672,7 @@ public class State extends ConfigurableBase
             if (existing == null)
             {
                 // A pointer should be created on this place!
-                CalendarDay cd = this.calendar.getCurrentOccurrence(em);
+                CalendarDay cd = this.calendar.getCurrentOccurrence(conn);
                 CalendarDay cdLast = this.calendar.getOccurrenceShiftedBy(cd, this.calendarShift - 1);
                 CalendarDay cdNext = this.calendar.getOccurrenceShiftedBy(cd, this.calendarShift);
                 CalendarPointer tmp = new CalendarPointer();
@@ -696,11 +683,11 @@ public class State extends ConfigurableBase
                 tmp.setLastStartedOccurrenceCd(cdLast);
                 tmp.setNextRunOccurrenceCd(cdNext);
                 tmp.setPlace(p);
-                tmp.setAppID(this.calendar.getApplication().getId().toString());
+                tmp.setApplication(this.calendar.getApplication());
                 tmp.setState(this);
                 i++;
 
-                em.persist(tmp);
+                tmp.insertOrUpdate(conn);
             }
         }
 
@@ -711,7 +698,7 @@ public class State extends ConfigurableBase
         // Commit is done by the calling method
     }
 
-    public boolean canRunAccordingToCalendarOnPlace(EntityManager em, Place p)
+    public boolean canRunAccordingToCalendarOnPlace(Connection conn, Place p)
     {
         if (!this.usesCalendar())
         {
@@ -722,20 +709,26 @@ public class State extends ConfigurableBase
 
         log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id, this.represents.name, this.chain.name));
 
-        // Get the pointer
-        Query q = em.createQuery("SELECT e FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2");
-        q.setParameter(1, this.id.toString());
-        q.setParameter(2, p.getId().toString());
-
-        CalendarPointer cp = this.getCurrentCalendarPointer(em, p);
-
+        // Get the pointer (on the given place)
+        /*conn.createQuery("SELECT e.* FROM CalendarPointer p WHERE p.stateID = :stateID AND p.placeID = :placeID").
+         addParameter("stateID", this.id).addParameter("placeID", p.getId())
+         Query q = em.createQuery();
+         q.setParameter(1, this.id.toString());
+         q.setParameter(2, p.getId().toString());
+         */
+        CalendarPointer cp = this.getCurrentCalendarPointer(conn, p);
         if (cp == null)
         {
             log.error(String.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.", this.id, this.represents.name, this.chain.name));
             return false;
         }
 
-        CalendarDay nextRunOccurrence = this.calendar.getDay(UUID.fromString(cp.getNextRunOccurrenceId()));
+        CalendarDay nextRunOccurrence = this.calendar.getDay(cp.getNextRunOccurrenceId());
+        if (nextRunOccurrence == null)
+        {
+            log.error(String.format("There is no next occurrence for calendar %s. Please add some.", this.calendar.getName()));
+            return false;
+        }
 
         // Only one occurrence can run at the same time
         if (cp.getRunning())
@@ -753,9 +746,10 @@ public class State extends ConfigurableBase
 
         // Sequence must be respected
         // But actually, nothing has to be done to enforce it as it comes from either the scheduler itself or the user.
-
         // No further than the calendar itself
-        CalendarDay baseLimit = this.calendar.getCurrentOccurrence(em);
+        CalendarDay baseLimit = this.calendar.getCurrentOccurrence(conn);
+        log.debug(baseLimit);
+        log.debug(nextRunOccurrence);
         log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s", baseLimit.seq, this.calendarShift,
                 nextRunOccurrence.seq));
         CalendarDay shiftedLimit = this.calendar.getOccurrenceShiftedBy(baseLimit, this.calendarShift);
@@ -774,11 +768,11 @@ public class State extends ConfigurableBase
         return true;
     }
 
-    public boolean isLate(EntityManager em, Place p)
+    public boolean isLate(Connection conn, Place p)
     {
         // LATE MEANS: State Latest OK < Calendar current + State shift
-        CalendarDay cd = this.getCurrentCalendarOccurrence(em, p);
-        CalendarDay limit = this.calendar.getOccurrenceShiftedBy(this.calendar.getCurrentOccurrence(em), this.calendarShift);
+        CalendarDay cd = this.getCurrentCalendarOccurrence(conn, p);
+        CalendarDay limit = this.calendar.getOccurrenceShiftedBy(this.calendar.getCurrentOccurrence(conn), this.calendarShift);
 
         return this.calendar.isBefore(cd, limit);
     }
@@ -788,12 +782,12 @@ public class State extends ConfigurableBase
         return this.calendar != null;
     }
 
-    public CalendarDay getCurrentCalendarOccurrence(EntityManager em, Place p)
+    public CalendarDay getCurrentCalendarOccurrence(Connection conn, Place p)
     {
-        return this.calendar.getDay(this.getCurrentCalendarPointer(em, p).getLastEndedOkOccurrenceUuid());
+        return this.calendar.getDay(this.getCurrentCalendarPointer(conn, p).getLastEndedOkOccurrenceUuid());
     }
 
-    public CalendarPointer getCurrentCalendarPointer(EntityManager em, Place p)
+    public CalendarPointer getCurrentCalendarPointer(Connection conn, Place p)
     {
         if (!usesCalendar())
         {
@@ -801,13 +795,8 @@ public class State extends ConfigurableBase
             return null;
         }
 
-        Query q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID = ?1 AND p.placeID = ?2 AND p.calendarID = ?3");
-        q.setParameter(1, this.id.toString());
-        q.setParameter(2, p.id.toString());
-        q.setParameter(3, this.calendar.id.toString());
-        CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-        em.refresh(cp);
-        return cp;
+        return conn.createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID = :stateID AND p.placeID = :placeID AND p.calendarID = :calendarID")
+                .addParameter("stateID", this.id).addParameter("placeID", p.id).addParameter("calendarID", this.calendar.id).executeAndFetchFirst(CalendarPointer.class);
     }
 
     // Calendar stuff

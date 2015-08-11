@@ -35,7 +35,7 @@ class MetadataListener extends BaseListener
 
     void startListening(Broker b, ChronixEngine engine) throws JMSException
     {
-        this.init(b, false, false);
+        this.init(b);
         log.debug(String.format("Initializing MetadataListener"));
 
         // Pointers

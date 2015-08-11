@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,60 +17,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.timedata;
 
 import java.io.Serializable;
-import java.util.List;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import java.util.UUID;
+import javax.validation.constraints.NotNull;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.sql2o.Connection;
 
-@Entity
 public class RunStats implements Serializable
 {
     private static final long serialVersionUID = -3318147581838188039L;
-    private static Logger log = Logger.getLogger(RunStats.class);
+    private static final Logger log = Logger.getLogger(RunStats.class);
     private static final int UUID_LENGTH = 36;
 
-    @Column(length = UUID_LENGTH)
-    private String stateId;
+    @NotNull
+    private Long id;
 
-    @Column(length = UUID_LENGTH)
-    private String placeId;
+    @NotNull
+    private UUID stateId;
+
+    @NotNull
+    private UUID placeId;
 
     private float meanDuration, maxDuration, minDuration;
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Statistics calculation
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static RunStats getRS(EntityManager em, String stateId, String placeId)
+    private static RunStats getRS(Connection conn, UUID stateId, UUID placeId)
     {
-        TypedQuery<RunStats> q = em.createQuery("SELECT rr FROM RunStats rr where rr.placeId = ?1 AND rr.stateId = ?2", RunStats.class);
-        q.setParameter(1, placeId);
-        q.setParameter(2, stateId);
-        try
-        {
-            return q.getSingleResult();
-        }
-        catch (NoResultException e)
-        {
-            return null;
-        }
+        // null if does not exist
+        return conn.createQuery("SELECT * FROM RunStats rr where rr.placeId = :placeId AND rr.stateId = :stateId").
+                addParameter("placeId", placeId).addParameter("stateId", stateId).executeAndFetchFirst(RunStats.class);
     }
 
-    public static float getMean(EntityManager em, String stateId, String placeId)
+    public static float getMean(Connection conn, UUID stateId, UUID placeId)
     {
         // Retrieve the statistics object
-        RunStats rs = RunStats.getRS(em, stateId, placeId);
+        RunStats rs = RunStats.getRS(conn, stateId, placeId);
 
         // If it does not exist, return default time - 1 minute
         if (rs == null)
@@ -83,7 +71,7 @@ public class RunStats implements Serializable
     }
 
     // Must be called inside open transaction
-    public static void storeMetrics(RunLog rlog, EntityManager em)
+    public static void storeMetrics(RunLog rlog, Connection conn)
     {
         if (rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
         {
@@ -96,15 +84,15 @@ public class RunStats implements Serializable
             rm.setStartTime(rlog.getBeganRunningAt());
             rm.setStateId(rlog.getStateId());
 
-            em.persist(rm);
+            rm.insert(conn);
         }
     }
 
     // Must be called inside open transaction
-    public static void updateStats(RunLog rlog, EntityManager em)
+    public static void updateStats(RunLog rlog, Connection conn)
     {
         // Retrieve the statistics object
-        RunStats rs = RunStats.getRS(em, rlog.getStateId(), rlog.getPlaceId());
+        RunStats rs = RunStats.getRS(conn, rlog.getStateId(), rlog.getPlaceId());
 
         // If it does not exist, create it
         if (rs == null)
@@ -112,58 +100,47 @@ public class RunStats implements Serializable
             rs = new RunStats();
             rs.placeId = rlog.getPlaceId();
             rs.stateId = rlog.getStateId();
-            em.persist(rs);
+            rs.insertOrUpdate(conn);
         }
 
         // Update calculations
-        Query q2 = em
-                .createQuery("SELECT AVG(rm.duration) AS A, MAX(rm.duration) AS B, MIN(rm.duration) AS C FROM RunMetrics rm WHERE rm.placeId = ?1 AND rm.stateId = ?2");
-        q2.setParameter(1, rlog.getPlaceId());
-        q2.setParameter(2, rlog.getStateId());
+        RunStats tmp = conn.createQuery("SELECT AVG(rm.duration) AS meanDuration, MAX(rm.duration) AS maxDuration, "
+                + "MIN(rm.duration) AS minDuration FROM RunMetrics rm "
+                + "WHERE rm.placeId = :placeId AND rm.stateId = :stateId").addParameter("placeId", rs.placeId)
+                .addParameter("stateId", rs.stateId).executeAndFetchFirst(RunStats.class);
 
-        Object[] o = (Object[]) q2.getSingleResult();
-        
-        rs.meanDuration = (Long) o[0];
-        rs.maxDuration = (Long) o[1];
-        rs.minDuration = (Long) o[2];
+        rs.meanDuration = tmp.meanDuration;
+        rs.maxDuration = tmp.maxDuration;
+        rs.minDuration = tmp.minDuration;
 
         log.debug(String.format("New run duration mean is now %s ms", rs.meanDuration));
 
         // Purge all old entries
-        TypedQuery<RunMetrics> q3 = em.createQuery(
-                "SELECT rr FROM RunMetrics rr where rr.placeId = ?1 AND rr.stateId = ?2 ORDER BY rr.startTime asc", RunMetrics.class);
-        q3.setParameter(1, rlog.getPlaceId());
-        q3.setParameter(2, rlog.getStateId());
-        List<RunMetrics> res = q3.getResultList();
-        if (res.size() > 10)
-        {
-            for (RunMetrics rm : res.subList(10, res.size()))
-            {
-                em.remove(rm);
-            }
-        }
+        conn.createQuery("DELETE FROM RunMetrics rm1 WHERE rm1.id NOT IN (SELECT rm2.id FROM RunMetrics rm2"
+                + " WHERE rm2.stateId=:stateId AND rm2.placeId=:placeId AND ROWNUM() < 10 "
+                + "ORDER BY rm2.startTime desc)").
+                addParameter("stateId", rs.stateId).addParameter("placeId", rs.placeId).executeUpdate();
     }
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Stupid accessors
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getStateId()
+    public UUID getStateId()
     {
         return stateId;
     }
 
-    public void setStateId(String stateId)
+    public void setStateId(UUID stateId)
     {
         this.stateId = stateId;
     }
 
-    public String getPlaceId()
+    public UUID getPlaceId()
     {
         return placeId;
     }
 
-    public void setPlaceId(String placeId)
+    public void setPlaceId(UUID placeId)
     {
         this.placeId = placeId;
     }
@@ -196,5 +173,21 @@ public class RunStats implements Serializable
     public void setMinDuration(float minDuration)
     {
         this.minDuration = minDuration;
+    }
+
+    public long getId()
+    {
+        return this.id;
+    }
+
+    public void insertOrUpdate(Connection conn)
+    {
+        int i = conn.createQuery("UPDATE RunStats SET maxDuration=:maxDuration, meanDuration=:meanDuration "
+                + "WHERE stateId=:stateId AND placeId=:placeId").bind(this).executeUpdate().getResult();
+        if (i == 0)
+        {
+            conn.createQuery("INSERT INTO RunStats(maxDuration, meanDuration, placeId, stateId) "
+                    + "VALUES(:maxDuration, :meanDuration, :placeId, :stateId)").bind(this).executeUpdate();
+        }
     }
 }

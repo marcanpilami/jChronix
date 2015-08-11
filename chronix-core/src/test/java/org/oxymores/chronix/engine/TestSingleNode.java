@@ -3,8 +3,6 @@ package org.oxymores.chronix.engine;
 import java.util.List;
 
 import javax.jms.JMSException;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -22,6 +20,7 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.CalendarBuilder;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.sql2o.Connection;
 
 public class TestSingleNode extends TestBase
 {
@@ -59,36 +58,36 @@ public class TestSingleNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("****FIRST (PASSING) RUN***************************************************************");
-        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 3);
         Assert.assertEquals(3, res.size());
 
         // Now, launch again. Should block after echo, for the calendar has not progressed.
         log.debug("****SECOND (BLOCKING - CALENDAR) RUN**************************************************");
-        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         Thread.sleep(2000); // Time to consume message
 
         res = LogHelpers.displayAllHistory(e1.ctx);
         Assert.assertEquals(4, res.size());
 
-        EntityManager em2 = e1.ctx.getTransacEM();
-        TypedQuery<CalendarPointer> q2 = em2.createQuery("SELECT r FROM CalendarPointer r", CalendarPointer.class);
-        for (CalendarPointer c : q2.getResultList())
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
         {
-            log.debug(c.getRunning());
-        }
+            List<CalendarPointer> q2 = conn.createQuery("SELECT * FROM CalendarPointer r").executeAndFetch(CalendarPointer.class);
+            for (CalendarPointer c : q2)
+            {
+                log.debug(c.getRunning());
+            }
 
-        TypedQuery<Event> q3 = em2.createQuery("SELECT e FROM Event e", Event.class);
-        List<Event> events = q3.getResultList();
-        Assert.assertEquals(1, events.size()); // purge - only pending remain
+            int nbEvents = conn.createQuery("SELECT COUNT(1) FROM Event e").executeScalar(Integer.class);
+            Assert.assertEquals(1, nbEvents); // purge - only pending remain
+        }
 
         // Now, advance calendar...
         log.debug("****CALENDAR UPDATE*******************************************************************");
-        SenderHelpers.runStateInsidePlan(s2, e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(s2, e1.ctx);
         Thread.sleep(1000);
 
         // Test the event has been reanalyzed
@@ -97,21 +96,23 @@ public class TestSingleNode extends TestBase
 
         // and do it again: the end of chain1 should not run.
         log.debug("****THIRD (BLOCKING - CALENDAR) RUN***************************************************");
-        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         Thread.sleep(2000); // Time to consume message
 
         res = LogHelpers.displayAllHistory(e1.ctx);
         Assert.assertEquals(8, res.size());
 
-        // and finally free the calendar, and test that state s3 is considered
-        // as straggling
+        // and finally free the calendar, and test that state s3 is considered as straggling
         log.debug("****CALENDAR UPDATE*******************************************************************");
-        SenderHelpers.runStateInsidePlan(s2, e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(s2, e1.ctx);
         Thread.sleep(2000);
 
         // Test stragglers
-        ca1.processStragglers(em2); // Display to ease debug
-        Assert.assertEquals(1, ca1.getStragglers(em2).size());
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            ca1.processStragglers(conn); // Display to ease debug
+            Assert.assertEquals(1, ca1.getStragglers(conn).size());
+        }
 
         // and test scheduling...
         res = LogHelpers.displayAllHistory(e1.ctx);
@@ -137,13 +138,12 @@ public class TestSingleNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Run the chain
         log.debug("****START OF CHAIN1*******************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -186,7 +186,6 @@ public class TestSingleNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Shift the state by 1 so that it cannot start (well, shouldn't)
         log.debug("****SHIFT CALENDAR********************************************************************");
@@ -205,7 +204,7 @@ public class TestSingleNode extends TestBase
         log.debug("****ORDER START OF CHAIN1*************************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -215,14 +214,17 @@ public class TestSingleNode extends TestBase
         List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 2);
         Assert.assertEquals(2, res.size());
 
-        TypedQuery<Event> q1 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
-        Assert.assertEquals(2, q1.getResultList().size());
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            int nbEvents = conn.createQuery("SELECT COUNT(1) FROM Event e").executeScalar(Integer.class);
+            Assert.assertEquals(2, nbEvents);
+        }
 
         // Run second chain - should unlock the first chain
         log.debug("****ORDER START SECOND CHAIN**********************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx);
         }
         catch (Exception e3)
         {
@@ -231,7 +233,11 @@ public class TestSingleNode extends TestBase
 
         res = LogHelpers.waitForHistoryCount(e1.ctx, 8);
         Assert.assertEquals(8, res.size());
-        Assert.assertEquals(0, q1.getResultList().size()); // events
+        try (Connection conn = e1.ctx.getTransacDataSource().open())
+        {
+            int nbEvents = conn.createQuery("SELECT COUNT(1) FROM Event e").executeScalar(Integer.class);
+            Assert.assertEquals(0, nbEvents);
+        }
     }
 
     @Test
@@ -291,7 +297,8 @@ public class TestSingleNode extends TestBase
             Thread.sleep(2000);
         }
         catch (InterruptedException e3)
-        {}
+        {
+        }
         List<RunLog> res = LogHelpers.displayAllHistory(e1.ctx);
         Assert.assertEquals(0, res.size());
 

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
@@ -36,8 +35,8 @@ public class ConfigurableBase extends ApplicationObject
     public ConfigurableBase()
     {
         super();
-        parameters = new ArrayList<Parameter>();
-        envParams = new ArrayList<EnvironmentParameter>();
+        parameters = new ArrayList<>();
+        envParams = new ArrayList<>();
     }
 
     public ArrayList<Parameter> getParameters()
@@ -74,8 +73,10 @@ public class ConfigurableBase extends ApplicationObject
     {
         for (EnvironmentParameter p : envParams)
         {
-            if (p.key == key)
+            if (p.key.equals(key))
+            {
                 envParams.remove(p);
+            }
         }
     }
 }

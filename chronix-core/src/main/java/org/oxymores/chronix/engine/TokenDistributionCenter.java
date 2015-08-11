@@ -20,7 +20,6 @@
 package org.oxymores.chronix.engine;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -31,7 +30,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.persistence.TypedQuery;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -43,10 +41,11 @@ import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.sql2o.Connection;
 
 class TokenDistributionCenter extends BaseListener implements Runnable
 {
-    private static Logger log = Logger.getLogger(TokenDistributionCenter.class);
+    private static final Logger log = Logger.getLogger(TokenDistributionCenter.class);
 
     private MessageProducer jmsProducer;
 
@@ -56,13 +55,13 @@ class TokenDistributionCenter extends BaseListener implements Runnable
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker, true, false);
+        this.init(broker);
         log.debug(String.format("Initializing TokenDistributionCenter"));
 
         // Sync
         mainLoop = new Semaphore(0);
         localResource = new Semaphore(1);
-        this.shouldRenew = new ArrayList<TokenReservation>();
+        this.shouldRenew = new ArrayList<>();
 
         // Register current object as a listener on ORDER queue
         qName = String.format(Constants.Q_TOKEN, brokerName);
@@ -138,21 +137,23 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         {
             // Should be stored locally, so as to refresh the request every 5 minutes
             TokenReservation tr = new TokenReservation();
-            tr.setApplicationId(request.applicationID.toString());
-            tr.setGrantedOn(new Date());
+            tr.setApplicationId(request.applicationID);
+            tr.setGrantedOn(DateTime.now());
             tr.setLocalRenew(true);
-            tr.setPlaceId(request.placeID.toString());
+            tr.setPlaceId(request.placeID);
             tr.setRenewedOn(tr.getGrantedOn());
             tr.setRequestedOn(tr.getGrantedOn());
-            tr.setStateId(request.stateID.toString());
-            tr.setTokenId(request.tokenID.toString());
+            tr.setStateId(request.stateID);
+            tr.setTokenId(request.tokenID);
             tr.setPending(true);
-            tr.setRequestedBy(request.requestingNodeID.toString());
+            tr.setRequestedBy(request.requestingNodeID);
+            tr.setPipelineJobId(request.pipelineJobID);
 
-            trTransac.begin();
-            emTransac.persist(tr);
-            trTransac.commit();
-            shouldRenew.add(tr);
+            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            {
+                tr.insertOrUpdate(conn);
+                shouldRenew.add(tr);
+            }
 
             // Request should be sent to the node responsible for the distribution of this token
             request.local = false;
@@ -176,7 +177,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             TokenReservation toRemove = null;
             for (TokenReservation tr : shouldRenew)
             {
-                if (tr.getStateId().equals(request.stateID.toString()) && tr.getPlaceId().equals(request.placeID.toString()))
+                if (tr.getStateId().equals(request.stateID) && tr.getPlaceId().equals(request.placeID))
                 {
                     toRemove = tr;
                 }
@@ -204,27 +205,28 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Case 3: TDC: request
         if (!request.local && request.type == TokenRequestType.REQUEST)
         {
-            trTransac.begin();
-            log.debug(String.format("Analysing token request for PJ %s", request.pipelineJobID));
-            processRequest(request);
-            trTransac.commit();
+            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            {
+                log.debug(String.format("Analysing token request for PJ %s", request.pipelineJobID));
+                processRequest(request, conn);
+                conn.commit();
+            }
         }
 
         // Case 4: TDC: release
         if (!request.local && request.type == TokenRequestType.RELEASE)
         {
-            // Data
-
             // Log
             log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(), p.getName(), a.getName(),
                     en.getBrokerName(), s.getRepresents().getName()));
 
             // Find the element
-            TokenReservation tr = getTR(request);
-
-            trTransac.begin();
-            emTransac.remove(tr);
-            trTransac.commit();
+            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            {
+                TokenReservation tr = getTR(request, conn);
+                tr.delete(conn);
+                conn.commit();
+            }
         }
 
         // Case 5: TDC: RENEW
@@ -234,12 +236,15 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(), p.getName(), a.getName(),
                     en.getBrokerName(), s.getRepresents().getName()));
 
-            // Find the element
-            TokenReservation tr = getTR(request);
+            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            {
+                // Find the element
+                TokenReservation tr = getTR(request, conn);
 
-            trTransac.begin();
-            tr.setRenewedOn(new Date());
-            trTransac.commit();
+                // Renew it
+                tr.setRenewedOn(DateTime.now());
+                conn.commit();
+            }
         }
 
         // Case 6: TDC proxy: AGREE
@@ -250,9 +255,9 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qName = String.format(Constants.Q_PJ, a.getLocalNode().getHost().getBrokerName());
-                Destination d = jmsSession.createQueue(qName);
-                log.debug(String.format("A message will be sent to queue %s", qName));
+                String qNameDest = String.format(Constants.Q_PJ, a.getLocalNode().getHost().getBrokerName());
+                Destination d = jmsSession.createQueue(qNameDest);
+                log.debug(String.format("A message will be sent to queue %s", qNameDest));
                 jmsProducer.send(d, response);
             }
             catch (JMSException e)
@@ -263,37 +268,44 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             }
         }
 
-        // TDC: Step 1: Purge granted requests that are too old
-        if (!request.local)
+        // Classic TDC run - purge, then analyse all pending requests
+        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
         {
-            trTransac.begin();
-            TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.renewedOn < ?1 AND q.pending = FALSE", TokenReservation.class);
-            q.setParameter(1, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
-            for (TokenReservation tr : q.getResultList())
+            // TDC: Step 1: Purge granted requests that are too old
+            if (!request.local)
             {
-                Application aa = ctx.getApplication(tr.getApplicationId());
-                org.oxymores.chronix.core.State ss = aa.getState(UUID.fromString(tr.getStateId()));
-                Place pp = ctx.getNetwork().getPlace(UUID.fromString(tr.getPlaceId()));
-                ExecutionNode enn = ctx.getNetwork().getNode(UUID.fromString(tr.getRequestedBy()));
-                log.info(String.format(
-                        "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
-                        pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
+                // Note: we do not use a simple DELETE statement as we want to log the term of the reservation (should be very rare!)
 
-                // Remove from database
-                emTransac.remove(tr);
+                List<TokenReservation> q = conn.createQuery("SELECT * from TokenReservation q where q.renewedOn < :notRenewedSince AND q.pending = :pending").
+                        addParameter("notRenewedSince", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
+                        addParameter("pending", false).executeAndFetch(TokenReservation.class);
+                for (TokenReservation tr : q)
+                {
+                    Application aa = ctx.getApplication(tr.getApplicationId());
+                    org.oxymores.chronix.core.State ss = aa.getState(tr.getStateId());
+                    Place pp = ctx.getNetwork().getPlace(tr.getPlaceId());
+                    ExecutionNode enn = ctx.getNetwork().getNode(tr.getRequestedBy());
+                    log.warn(String.format(
+                            "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
+                            pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
+
+                    // Remove from database
+                    tr.delete(conn);
+                }
             }
-        }
 
-        // TDC: Step 2: Now that the purge is done, analyse pending requests again - tokens may have freed
-        if (!request.local)
-        {
-            TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.pending = TRUE AND q.localRenew = FALSE", TokenReservation.class);
-            for (TokenReservation tr : q.getResultList())
+            // TDC: Step 2: Now that the purge is done, analyse pending requests again - tokens may have freed
+            if (!request.local)
             {
-                log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
-                processRequest(tr);
+                List<TokenReservation> q = conn.createQuery("SELECT * from TokenReservation q where q.pending = :pending AND q.localRenew = :localRenew").
+                        addParameter("pending", true).addParameter("localRenew", false).executeAndFetch(TokenReservation.class);
+                for (TokenReservation tr : q)
+                {
+                    log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
+                    processRequest(tr, conn);
+                }
             }
-            trTransac.commit();
+            conn.commit();
         }
 
         // The end: commit JMS
@@ -301,14 +313,14 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         log.debug("Commit successful");
     }
 
-    private TokenReservation getTR(TokenRequest request)
+    private TokenReservation
+            getTR(TokenRequest request, Connection conn)
     {
-        TypedQuery<TokenReservation> q = emTransac.createQuery("SELECT q from TokenReservation q where q.pipelineJobId = ?1 AND q.localRenew = FALSE", TokenReservation.class);
-        q.setParameter(1, request.pipelineJobID.toString());
-        return q.getSingleResult();
+        return conn.createQuery("SELECT * from TokenReservation q where q.pipelineJobId = :pjId AND q.localRenew = :local")
+                .addParameter("pjId", request.pipelineJobID).addParameter("local", false).executeAndFetchFirst(TokenReservation.class);
     }
 
-    private void processRequest(TokenRequest request)
+    private void processRequest(TokenRequest request, Connection conn)
     {
         // Get data
         Application a = ctx.getApplication(request.applicationID);
@@ -317,48 +329,52 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
 
         // Process
-        processRequest(a, tk, p, request.requestedAt, s, null, request.pipelineJobID.toString(), request.requestingNodeID.toString());
+        processRequest(conn, a, tk, p, request.requestedAt, s, null, request.pipelineJobID, request.requestingNodeID);
     }
 
-    private void processRequest(TokenReservation tr)
+    private void processRequest(TokenReservation tr, Connection conn)
     {
         // Get data
         Application a = ctx.getApplication(tr.getApplicationId());
-        Token tk = a.getToken(UUID.fromString(tr.getTokenId()));
-        Place p = ctx.getNetwork().getPlace(UUID.fromString(tr.getPlaceId()));
-        org.oxymores.chronix.core.State s = a.getState(UUID.fromString(tr.getStateId()));
+        Token tk = a.getToken(tr.getTokenId());
+        Place p = ctx.getNetwork().getPlace(tr.getPlaceId());
+        org.oxymores.chronix.core.State s = a.getState(tr.getStateId());
 
         // Process
-        processRequest(a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
+        processRequest(conn, a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
     }
 
-    private void processRequest(Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s, TokenReservation existing, String pipelineJobId,
-            String requestingNodeId)
+    private void processRequest(Connection conn, Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
+            TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId)
     {
         // Locate all the currently allocated tokens on this Token/Place
-        TypedQuery<TokenReservation> q = null;
+        int i;
         if (tk.isByPlace())
         {
-            q = emTransac.createQuery(
-                    "SELECT q from TokenReservation q where q.tokenId = :tokenId AND q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = FALSE AND q.localRenew = FALSE",
-                    TokenReservation.class);
-            q.setParameter("tokenId", tk.getId().toString());
-            q.setParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
-            q.setParameter("placeId", p.getId().toString());
+            i = conn.createQuery("SELECT COUNT(1) from TokenReservation q where q.tokenId = :tokenId AND "
+                    + "q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = :pending AND q.localRenew = :localRenew").
+                    addParameter("tokenId", tk.getId()).
+                    addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
+                    addParameter("placeId", p.getId()).
+                    addParameter("pending", false).
+                    addParameter("localRenew", false).
+                    executeScalar(Integer.class);
         }
         else
         {
-            q = emTransac.createQuery("SELECT q from TokenReservation q where q.tokenId = ?1 AND q.renewedOn > ?2 AND q.pending = FALSE AND q.localRenew = FALSE",
-                    TokenReservation.class);
-            q.setParameter(1, tk.getId().toString());
-            q.setParameter(2, DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate());
+            i = conn.createQuery("SELECT COUNT(1) from TokenReservation q where q.tokenId = :tokenId AND "
+                    + "q.renewedOn > :ro AND q.pending = :pending AND q.localRenew = :localRenew").
+                    addParameter("tokenId", tk.getId()).
+                    addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
+                    addParameter("pending", false).
+                    addParameter("localRenew", false).
+                    executeScalar(Integer.class);
         }
-        List<TokenReservation> res = q.getResultList();
 
-        if (res.size() >= tk.getCount())
+        if (i >= tk.getCount())
         {
             // No available token
-            log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(), res.size()));
+            log.warn(String.format("A token was requested but there are none available. (max is %s, allocated is %s)", tk.getCount(), i));
 
             // Store the request if not done already
             if (existing == null)
@@ -368,20 +384,21 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 trs.setLocalRenew(false);
                 // PENDING means not given yet
                 trs.setPending(true);
-                trs.setPlaceId(p.getId().toString());
+                trs.setPlaceId(p.getId());
                 trs.setRenewedOn(null);
-                trs.setRequestedOn(requestedOn.toDate());
-                trs.setStateId(s.getId().toString());
-                trs.setTokenId(tk.getId().toString());
+                trs.setRequestedOn(requestedOn);
+                trs.setStateId(s.getId());
+                trs.setTokenId(tk.getId());
                 trs.setPipelineJobId(pipelineJobId);
-                trs.setApplicationId(a.getId().toString());
+                trs.setApplicationId(a.getId());
                 trs.setRequestedBy(requestingNodeId);
 
-                emTransac.persist(trs);
+                trs.insertOrUpdate(conn);
             }
             else
             {
-                existing.setRenewedOn(new Date());
+                existing.setRenewedOn(DateTime.now());
+                existing.insertOrUpdate(conn);
             }
 
             // Don't send an answer to the caller.
@@ -389,32 +406,33 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         else
         {
             // Available token
-            log.debug(String.format("A token was requested and one can be issued (%s taken out of %s)", res.size(), tk.getCount()));
+            log.debug(String.format("A token was requested and one can be issued (%s taken out of %s)", i, tk.getCount()));
 
-            TokenRequest answer = null;
+            TokenRequest answer;
             if (existing == null)
             {
                 TokenReservation trs = new TokenReservation();
-                trs.setGrantedOn(new Date());
+                trs.setGrantedOn(DateTime.now());
                 trs.setLocalRenew(false);
                 trs.setPending(false);
-                trs.setPlaceId(p.getId().toString());
+                trs.setPlaceId(p.getId());
                 trs.setRenewedOn(trs.getGrantedOn());
-                trs.setRequestedOn(requestedOn.toDate());
-                trs.setStateId(s.getId().toString());
-                trs.setTokenId(tk.getId().toString());
+                trs.setRequestedOn(requestedOn);
+                trs.setStateId(s.getId());
+                trs.setTokenId(tk.getId());
                 trs.setPipelineJobId(pipelineJobId);
-                trs.setApplicationId(a.getId().toString());
+                trs.setApplicationId(a.getId());
                 trs.setRequestedBy(requestingNodeId);
 
-                emTransac.persist(trs);
+                trs.insertOrUpdate(conn);
                 answer = trs.getAgreeRequest();
             }
             else
             {
                 existing.setPending(false);
-                existing.setGrantedOn(new Date());
+                existing.setGrantedOn(DateTime.now());
                 existing.setRenewedOn(existing.getGrantedOn());
+                existing.insertOrUpdate(conn);
                 answer = existing.getAgreeRequest();
             }
 
@@ -430,7 +448,6 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             {
                 log.error(e.getMessage(), e);
                 jmsRollback();
-                return;
             }
         }
     }

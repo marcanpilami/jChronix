@@ -29,7 +29,6 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
@@ -127,7 +126,7 @@ public class SenderHelpers
         List<State> clientStates = s.getClientStates();
 
         // All client physical nodes
-        List<ExecutionNode> clientPN = new ArrayList<ExecutionNode>();
+        List<ExecutionNode> clientPN = new ArrayList<>();
         for (State st : clientStates)
         {
             for (ExecutionNode en : st.getRunsOnPhysicalNodes())
@@ -236,7 +235,7 @@ public class SenderHelpers
         JmsSendData d = new JmsSendData(ctx);
 
         // In case of misconfiguration, we may have double nodes.
-        ArrayList<String> sent = new ArrayList<String>();
+        ArrayList<String> sent = new ArrayList<>();
 
         for (ExecutionNode n : ctx.getNetwork().getNodesList())
         {
@@ -386,18 +385,27 @@ public class SenderHelpers
         d.close();
     }
 
-    public static void runStateInsidePlan(State s, ChronixContext ctx, EntityManager em) throws JMSException
+    // Test method only
+    public static void runStateInsidePlan(State s, ChronixContext ctx) throws JMSException
+    {
+        try (org.sql2o.Connection conn = ctx.getTransacDataSource().open())
+        {
+            runStateInsidePlan(s, ctx, conn);
+        }
+    }
+
+    public static void runStateInsidePlan(State s, ChronixContext ctx, org.sql2o.Connection conn) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        s.runInsidePlan(em, d.jmsProducer, d.jmsSession);
+        s.runInsidePlan(conn, d.jmsProducer, d.jmsSession);
         d.jmsSession.commit();
         d.close();
     }
 
-    public static void runStateInsidePlan(State s, Place p, ChronixContext ctx, EntityManager em) throws JMSException
+    public static void runStateInsidePlan(State s, Place p, ChronixContext ctx, org.sql2o.Connection conn) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        s.runInsidePlan(p, em, d.jmsProducer, d.jmsSession);
+        s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession);
         d.jmsSession.commit();
         d.close();
     }
@@ -410,8 +418,8 @@ public class SenderHelpers
     {
         // Send the updated CP to other execution nodes that may need it.
         List<State> statesUsingCalendar = ca.getUsedInStates();
-        List<ExecutionNode> enUsingCalendar = new ArrayList<ExecutionNode>();
-        ExecutionNode tmp = null;
+        List<ExecutionNode> enUsingCalendar = new ArrayList<>();
+        ExecutionNode tmp;
         for (State s : statesUsingCalendar)
         {
             for (Place p : s.getRunsOn().getPlaces())
@@ -460,9 +468,9 @@ public class SenderHelpers
         d.close();
     }
 
-    public static void sendCalendarPointerShift(EntityManager em, Integer shiftNext, Integer shiftCurrent, State s, Place p, ChronixContext ctx) throws JMSException
+    public static void sendCalendarPointerShift(org.sql2o.Connection conn, Integer shiftNext, Integer shiftCurrent, State s, Place p, ChronixContext ctx) throws JMSException
     {
-        CalendarPointer cp = s.getCurrentCalendarPointer(em, p);
+        CalendarPointer cp = s.getCurrentCalendarPointer(conn, p);
         CalendarDay next = s.getCalendar().getOccurrenceShiftedBy(cp.getNextRunOccurrenceCd(ctx), shiftNext);
         CalendarDay current = s.getCalendar().getOccurrenceShiftedBy(cp.getLastEndedOccurrenceCd(ctx), shiftCurrent);
         cp.setNextRunOccurrenceCd(next);
@@ -481,26 +489,31 @@ public class SenderHelpers
 
     public static void sendCalendarPointerShift(Integer shiftNext, Integer shiftCurrent, State s, ChronixContext ctx) throws JMSException
     {
-        EntityManager em = ctx.getTransacEM();
-        for (Place p : s.getRunsOn().getPlaces())
+        try (org.sql2o.Connection conn = ctx.getTransacDataSource().open())
         {
-            sendCalendarPointerShift(em, shiftNext, shiftCurrent, s, p, ctx);
+            for (Place p : s.getRunsOn().getPlaces())
+            {
+                sendCalendarPointerShift(conn, shiftNext, shiftCurrent, s, p, ctx);
+            }
         }
     }
 
     public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, ChronixContext ctx) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        SenderHelpers.sendCalendarPointerShift(shift, updatedCalendar, ctx.getTransacEM(), ctx, d.jmsSession, d.jmsProducer, true);
+        try (org.sql2o.Connection conn = ctx.getTransacDataSource().open())
+        {
+            SenderHelpers.sendCalendarPointerShift(shift, updatedCalendar, conn, ctx, d.jmsSession, d.jmsProducer, true);
+        }
         d.close();
     }
 
-    public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, EntityManager em, ChronixContext ctx, Session jmsSession, MessageProducer jmsProducer,
+    public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, org.sql2o.Connection conn, ChronixContext ctx, Session jmsSession, MessageProducer jmsProducer,
             boolean commit) throws JMSException
     {
-        CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(em);
+        CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(conn);
 
-        CalendarDay oldCd = updatedCalendar.getCurrentOccurrence(em);
+        CalendarDay oldCd = updatedCalendar.getCurrentOccurrence(conn);
         CalendarDay refCd = updatedCalendar.getOccurrenceShiftedBy(oldCd, shift - 1);
 
         CalendarDay newCd = updatedCalendar.getOccurrenceAfter(refCd);
@@ -516,7 +529,7 @@ public class SenderHelpers
 
     // /////////////////////////////////////////////////////////////////////////
     // restart orders
-    public static void sendOrderRestartAfterFailure(String pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
+    public static void sendOrderRestartAfterFailure(UUID pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
 
         Order o = new Order();
@@ -539,7 +552,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderRestartAfterFailure(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException
+    public static void sendOrderRestartAfterFailure(UUID pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
         sendOrderRestartAfterFailure(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
@@ -547,9 +560,8 @@ public class SenderHelpers
         d.close();
     }
 
-    public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
+    public static void sendOrderForceOk(UUID pipelineJobId, ExecutionNode en, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
-
         Order o = new Order();
         o.type = OrderType.FORCEOK;
         o.data = pipelineJobId;
@@ -570,11 +582,11 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderForceOk(String appId, String pipelineJobId, String execNodeId, ChronixContext ctx) throws ChronixException
+    public static void sendOrderForceOk(UUID appId, UUID pipelineJobId, UUID execNodeId, ChronixContext ctx) throws ChronixException
     {
         try
         {
-            ExecutionNode en = ctx.getNetwork().getNode(UUID.fromString(execNodeId));
+            ExecutionNode en = ctx.getNetwork().getNode(execNodeId);
             sendOrderForceOk(pipelineJobId, en, ctx);
         }
         catch (Exception e)
@@ -583,7 +595,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderForceOk(String pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException
+    public static void sendOrderForceOk(UUID pipelineJobId, ExecutionNode en, ChronixContext ctx) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
         sendOrderForceOk(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);

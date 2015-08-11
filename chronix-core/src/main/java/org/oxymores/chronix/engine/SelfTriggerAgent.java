@@ -28,8 +28,6 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -45,11 +43,9 @@ class SelfTriggerAgent extends Thread
     protected Semaphore loop;
     protected boolean run = true;
     protected List<ActiveNodeBase> nodes;
-    protected EntityManager em;
     protected ChronixContext ctx;
     protected MessageProducer producerEvents;
     protected Session jmsSession;
-    protected EntityTransaction jpaTransaction;
     protected Semaphore triggering;
     protected DateTime nextLoopVirtualTime;
 
@@ -87,11 +83,9 @@ class SelfTriggerAgent extends Thread
 
         // Save pointers
         this.loop = new Semaphore(0);
-        this.em = ctx.getTransacEM();
         this.ctx = ctx;
         this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
         this.producerEvents = jmsSession.createProducer(null);
-        this.jpaTransaction = this.em.getTransaction();
         this.triggering = new Semaphore(1);
         this.nextLoopVirtualTime = startTime;
 
@@ -166,36 +160,37 @@ class SelfTriggerAgent extends Thread
             this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
             // Loop through all the self triggered nodes and get their next loop virtual time
-            jpaTransaction.begin();
-            DateTime tmp = null;
-            for (ActiveNodeBase n : this.nodes)
+            try (org.sql2o.Connection conn = this.ctx.getTransacDataSource().beginTransaction())
             {
+                DateTime tmp = null;
+                for (ActiveNodeBase n : this.nodes)
+                {
+                    try
+                    {
+                        tmp = n.selfTrigger(producerEvents, jmsSession, ctx, conn, loopVirtualTime);
+                    }
+                    catch (Exception e)
+                    {
+                        log.error("Error triggering clocks and the like", e);
+                    }
+                    if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
+                    {
+                        this.nextLoopVirtualTime = tmp;
+                    }
+                }
+
+                // Commit
                 try
                 {
-                    tmp = n.selfTrigger(producerEvents, jmsSession, ctx, em, loopVirtualTime);
+                    jmsSession.commit();
                 }
-                catch (Exception e)
+                catch (JMSException e)
                 {
-                    log.error("Error triggering clocks and the like", e);
+                    log.error("Oups", e);
+                    return;
                 }
-                if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
-                {
-                    this.nextLoopVirtualTime = tmp;
-                }
+                conn.commit();
             }
-
-            // Commit
-            try
-            {
-                jmsSession.commit();
-            }
-            catch (JMSException e)
-            {
-                log.error("Oups", e);
-                return;
-            }
-            jpaTransaction.commit();
-
             this.triggering.release();
 
             msToWait = getNextLoopTime();

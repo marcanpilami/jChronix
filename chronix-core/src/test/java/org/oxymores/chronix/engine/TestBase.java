@@ -69,7 +69,7 @@ public class TestBase
     protected ChronixEngine addRunner(String database_path, String name, String host, int port)
     {
         // Unit names don't really matter here - runners don't use them.
-        ChronixEngine e = new ChronixEngine(database_path, name, "TransacUnitXXX", "HistoryUnitXXX", true);
+        ChronixEngine e = new ChronixEngine(database_path, name, true);
         e.setRunnerPort(port);
         e.setRunnerHost(host);
         engines.put(name, e);
@@ -78,12 +78,7 @@ public class TestBase
 
     protected ChronixEngine addEngine(String database_path, String name)
     {
-        return addEngine(database_path, name, "TransacUnit", "HistoryUnit");
-    }
-
-    protected ChronixEngine addEngine(String database_path, String name, String transacUnitName, String histUnitName)
-    {
-        ChronixEngine e = new ChronixEngine(database_path, name, transacUnitName, histUnitName);
+        ChronixEngine e = new ChronixEngine(database_path, name);
         engines.put(name, e);
         return e;
     }

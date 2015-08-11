@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,34 +17,70 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.ManyToOne;
+import java.util.UUID;
+import javax.validation.constraints.NotNull;
+import org.sql2o.Connection;
 
-import org.apache.openjpa.persistence.InverseLogical;
-
-@Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class EventConsumption extends TranscientBase
+public class EventConsumption
 {
     private static final long serialVersionUID = 4960077419503476652L;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @InverseLogical("consumptions")
-    private Event event;
+    @NotNull
+    private UUID eventID;
 
-    public Event getEvent()
+    @NotNull
+    private UUID stateID;
+
+    @NotNull
+    private UUID placeID;
+
+    @NotNull
+    private UUID appID;
+
+    public UUID getEventID()
     {
-        return event;
+        return eventID;
     }
 
-    public void setEvent(Event event)
+    public void setEventID(UUID eventID)
     {
-        this.event = event;
+        this.eventID = eventID;
+    }
+
+    public UUID getStateID()
+    {
+        return stateID;
+    }
+
+    public void setStateID(UUID stateID)
+    {
+        this.stateID = stateID;
+    }
+
+    public UUID getPlaceID()
+    {
+        return placeID;
+    }
+
+    public void setPlaceID(UUID placeID)
+    {
+        this.placeID = placeID;
+    }
+
+    public UUID getAppID()
+    {
+        return appID;
+    }
+
+    public void setAppID(UUID appID)
+    {
+        this.appID = appID;
+    }
+
+    public void insert(Connection conn)
+    {
+        conn.createQuery("INSERT INTO EventConsumption(appID, eventID, placeID, stateID) VALUES(:appID, :eventID, :placeID, :stateID)").bind(this).executeUpdate();
     }
 }

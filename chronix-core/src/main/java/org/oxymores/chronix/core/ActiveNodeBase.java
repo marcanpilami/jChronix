@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,18 +17,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -37,17 +32,18 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.RunnerManager;
 import org.oxymores.chronix.engine.data.EventAnalysisResult;
 import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 import org.oxymores.chronix.exceptions.ChronixRunException;
+import org.sql2o.Connection;
 
 public class ActiveNodeBase extends ConfigurableBase
 {
     private static final long serialVersionUID = 2317281646089939267L;
-    private static Logger log = Logger.getLogger(ActiveNodeBase.class);
+    private static final Logger log = Logger.getLogger(ActiveNodeBase.class);
 
     @NotNull
     @Size(min = 1, max = 255)
@@ -87,20 +83,18 @@ public class ActiveNodeBase extends ConfigurableBase
 
     // Helper function (could be overloaded) returning something intelligible
     // designating the element that is run by this source
-    public String getCommandName(PipelineJob pj, Runner sender, ChronixContext ctx)
+    public String getCommandName(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
     {
         return null;
     }
 
     // stupid get/set
     // ////////////////////////////////////////////////////////////////////////////
-
     // ////////////////////////////////////////////////////////////////////////////
     // Relationship traversing
-
     public List<State> getClientStates()
     {
-        ArrayList<State> res = new ArrayList<State>();
+        ArrayList<State> res = new ArrayList<>();
         for (State s : this.application.getStates())
         {
             if (s.represents == this)
@@ -113,26 +107,24 @@ public class ActiveNodeBase extends ConfigurableBase
 
     // Relationship traversing
     // ////////////////////////////////////////////////////////////////////////////
-
     // ////////////////////////////////////////////////////////////////////////////
     // Event analysis
-
     // Do the given events allow for a transition originating from a state
     // representing this source?
-    public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, EntityManager em)
+    public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, Connection conn)
     {
         PlaceAnalysisResult res = new PlaceAnalysisResult(p);
         res.res = false;
 
         for (Event e : events)
         {
-            if (!e.getPlaceID().equals(p.id.toString()))
+            if (!e.getPlaceID().equals(p.id))
             {
                 // Only accept events from the analyzed place
                 continue;
             }
 
-            if (!e.getStateID().equals(tr.stateFrom.id.toString()))
+            if (!e.getStateID().equals(tr.stateFrom.id))
             {
                 // Only accept events from the analyzed state
                 continue;
@@ -151,7 +143,7 @@ public class ActiveNodeBase extends ConfigurableBase
             {
                 continue;
             }
-            if (tr.guard4 != null && !tr.guard4.equals(e.getConditionData4U()))
+            if (tr.guard4 != null && !tr.guard4.equals(e.getConditionData4()))
             {
                 continue;
             }
@@ -172,18 +164,17 @@ public class ActiveNodeBase extends ConfigurableBase
                 }
                 else
                 {
-                    if (e.getCalendarOccurrenceID() == null || "".equals(e.getCalendarOccurrenceID()))
+                    if (e.getCalendarOccurrenceID() == null)
                     {
                         continue;
                     }
 
                     try
                     {
-                        if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId()))
+                        if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId()))
                         {
-                            CalendarDay cd1 = tr.stateTo.getCalendar().getDay(UUID.fromString(e.getCalendarOccurrenceID()));
-                            CalendarDay cd2 = tr.stateTo.getCalendar().getDay(
-                                    UUID.fromString(tr.stateTo.getCurrentCalendarPointer(em, p).getNextRunOccurrenceId()));
+                            CalendarDay cd1 = tr.stateTo.getCalendar().getDay(e.getCalendarOccurrenceID());
+                            CalendarDay cd2 = tr.stateTo.getCalendar().getDay(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId());
                             log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)",
                                     cd1.seq, cd2.seq));
                             continue;
@@ -209,24 +200,24 @@ public class ActiveNodeBase extends ConfigurableBase
         return res;
     }
 
-    public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, EntityManager em, MessageProducer pjProducer, Session session,
+    public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
             ChronixContext ctx)
     {
         EventAnalysisResult res = new EventAnalysisResult(s);
 
         // Get session events
-        TypedQuery<Event> q = em.createQuery("SELECT e FROM Event e WHERE e.level0Id = ?1 AND e.level1Id = ?2", Event.class);
-        q.setParameter(1, evt.getLevel0IdU().toString()); // $The unique ID associated to a chain run instance$
-        q.setParameter(2, evt.getLevel1IdU().toString()); // $The chain ID$
-        List<Event> sessionEvents2 = q.getResultList();
+        List<Event> sessionEvents2 = conn.createQuery("SELECT e.* FROM Event e WHERE e.level0Id = :level0Id AND e.level1Id = :level1Id")
+                .addParameter("level0Id", evt.getLevel0Id()) // $The unique ID associated to a chain run instance$
+                .addParameter("level1Id", evt.getLevel1Id()) // $The chain ID$
+                .executeAndFetch(Event.class);
 
         // Remove consumed events (first filter: those which are completely consumed)
-        List<Event> sessionEvents = new ArrayList<Event>();
+        List<Event> sessionEvents = new ArrayList<>();
         for (Event e : sessionEvents2)
         {
             for (Place p : s.runsOn.places)
             {
-                if (!e.wasConsumedOnPlace(p, s) && !sessionEvents.contains(e))
+                if (!sessionEvents.contains(e) && !e.wasConsumedOnPlace(p, s, conn))
                 {
                     sessionEvents.add(e);
                 }
@@ -238,6 +229,7 @@ public class ActiveNodeBase extends ConfigurableBase
         {
             sessionEvents.add(evt);
         }
+        log.debug("There are " + sessionEvents.size() + " events not consumed to be considered for analysis");
 
         // Check every incoming transition: are they allowed?
         for (Transition tr : s.getTrReceivedHere())
@@ -245,7 +237,7 @@ public class ActiveNodeBase extends ConfigurableBase
             log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(),
                     s.chain.getName(), sessionEvents.size()));
 
-            TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents, em);
+            TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents, conn);
 
             if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND)
             {
@@ -265,7 +257,7 @@ public class ActiveNodeBase extends ConfigurableBase
         // Check calendar
         for (Place p : places.toArray(new Place[0]))
         {
-            if (!s.canRunAccordingToCalendarOnPlace(em, p))
+            if (!s.canRunAccordingToCalendarOnPlace(conn, p))
             {
                 places.remove(p);
             }
@@ -277,15 +269,15 @@ public class ActiveNodeBase extends ConfigurableBase
         if (!places.isEmpty())
         {
             log.debug(String
-                    .format("State (%s - chain %s) is triggered by the event on %s of its places! Analysis has consumed %s events on these places.",
+                    .format("State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
                             s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
 
-            s.consumeEvents(res.consumedEvents, places, em);
+            s.consumeEvents(res.consumedEvents, places, conn);
             for (Place p : places)
             {
                 if (p.node.getHost() == s.application.getLocalNode())
                 {
-                    s.runFromEngine(p, em, pjProducer, session, evt);
+                    s.runFromEngine(p, conn, pjProducer, session, evt);
                 }
             }
             return res;
@@ -298,15 +290,13 @@ public class ActiveNodeBase extends ConfigurableBase
 
     //
     // ////////////////////////////////////////////////////////////////////////////
-
     // ////////////////////////////////////////////////////////////////////////////
     // Methods called before and after run
-
     // Run - phase 1
     // Responsible for parameters resolution.
     // Default implementation resolves all parameters. Should usually be called
     // by overloads.
-    public void prepareRun(PipelineJob pj, Runner sender, ChronixContext ctx)
+    public void prepareRun(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
     {
         for (Parameter p : this.parameters)
         {
@@ -315,7 +305,7 @@ public class ActiveNodeBase extends ConfigurableBase
     }
 
     // ?
-    public void endOfRun(PipelineJob pj, Runner sender, ChronixContext ctx, EntityManager em)
+    public void endOfRun(PipelineJob pj, RunnerManager sender, ChronixContext ctx, Connection conn)
     {
         log.info("end of run");
     }
@@ -324,13 +314,12 @@ public class ActiveNodeBase extends ConfigurableBase
     // Supposed to do local operations only.
     // Used by active nodes which influence the scheduling itself rather than run a payload.
     // Not called within an open JPA transaction - if you open one, close it!
-    public void internalRun(EntityManager em, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
     {
         // Do nothing by default.
-        return;
     }
 
-    public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em, DateTime present)
+    public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, Connection conn, DateTime present)
             throws ChronixRunException
     {
         throw new NotImplementedException();
@@ -343,20 +332,18 @@ public class ActiveNodeBase extends ConfigurableBase
         rr.conditionData2 = null;
         rr.conditionData3 = null;
         rr.conditionData4 = null;
-        rr.end = new Date();
+        rr.end = DateTime.now();
         rr.logStart = "Job forced OK";
         rr.fullerLog = rr.logStart;
-        rr.start = new Date();
+        rr.start = rr.end;
 
         return rr;
     }
 
     //
     // ////////////////////////////////////////////////////////////////////////////
-
     // ////////////////////////////////////////////////////////////////////////////
     // Flags (engine and runner)
-
     // How should the runner agent run this source? (shell command, sql through
     // JDBC, ...)
     public String getActivityMethod()

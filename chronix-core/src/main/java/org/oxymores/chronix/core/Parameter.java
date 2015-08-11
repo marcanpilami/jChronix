@@ -27,7 +27,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.Runner;
+import org.oxymores.chronix.engine.RunnerManager;
 
 public class Parameter extends ApplicationObject
 {
@@ -111,7 +111,7 @@ public class Parameter extends ApplicationObject
         }
     }
 
-    public void resolveValue(ChronixContext ctx, Runner sender, PipelineJob pj)
+    public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         try
         {

@@ -19,7 +19,6 @@
  */
 package org.oxymores.chronix.engine;
 
-import java.util.Date;
 import java.util.UUID;
 
 import javax.jms.Destination;
@@ -30,6 +29,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -44,16 +44,17 @@ import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.helpers.Order;
 import org.oxymores.chronix.engine.helpers.OrderType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.sql2o.Connection;
 
 class OrderListener extends BaseListener
 {
-    private static Logger log = Logger.getLogger(OrderListener.class);
+    private static final Logger log = Logger.getLogger(OrderListener.class);
 
     private MessageProducer jmsProducer;
 
     void startListening(Broker broker) throws JMSException
     {
-        this.init(broker, true, true);
+        this.init(broker);
         log.debug(String.format("Initializing OrderListener"));
 
         // Register current object as a listener on ORDER queue
@@ -131,7 +132,11 @@ class OrderListener extends BaseListener
     private void orderRestart(Order order)
     {
         // Find the PipelineJob
-        PipelineJob pj = emTransac.find(PipelineJob.class, (String) order.data);
+        PipelineJob pj;
+        try (Connection conn = this.ctx.getTransacDataSource().open())
+        {
+            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data).executeAndFetchFirst(PipelineJob.class);
+        }
 
         // Put the pipeline job inside the local pipeline
         try
@@ -151,7 +156,13 @@ class OrderListener extends BaseListener
     private void orderForceOk(Order order)
     {
         // Find the PipelineJob
-        PipelineJob pj = emTransac.find(PipelineJob.class, (String) order.data);
+        PipelineJob pj;
+        try (Connection conn = this.ctx.getTransacDataSource().open())
+        {
+            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data).executeAndFetchFirst(PipelineJob.class);
+            pj.getEnvValues(conn);
+        }
+
         if (pj != null && pj.getStatus().equals(Constants.JI_STATUS_DONE))
         {
             try
@@ -162,17 +173,21 @@ class OrderListener extends BaseListener
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
 
                 // Update history & PJ
-                trTransac.begin();
-                trHistory.begin();
-                pj.setStatus(Constants.JI_STATUS_OVERRIDEN);
-                RunLog rl = emHistory.find(RunLog.class, (String) order.data);
-                if (rl != null)
+                try (Connection connHist = this.ctx.getHistoryDataSource().beginTransaction();
+                        Connection connTransac = this.ctx.getTransacDataSource().beginTransaction())
                 {
-                    rl.setLastKnownStatus(Constants.JI_STATUS_OVERRIDEN);
-                    rl.setLastLocallyModified(new Date());
+                    pj.setStatus(Constants.JI_STATUS_OVERRIDEN);
+                    pj.insertOrUpdate(connTransac);
+
+                    RunLog rl = connHist.createQuery("SELECT * FROM History WHERE id=:id").addParameter("id", order.data)
+                            .executeAndFetchFirst(RunLog.class);
+                    if (rl != null)
+                    {
+                        rl.setLastKnownStatus(Constants.JI_STATUS_OVERRIDEN);
+                        rl.setLastLocallyModified(DateTime.now());
+                        rl.insertOrUpdate(connHist);
+                    }
                 }
-                trTransac.commit();
-                trHistory.commit();
             }
             catch (Exception e)
             {
@@ -236,11 +251,11 @@ class OrderListener extends BaseListener
             if (d != null && s.getCalendar() != null)
             {
                 evt.setCalendar(s.getCalendar());
-                evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId().toString());
+                evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId());
             }
             evt.setConditionData1(0);
-            evt.setLevel1IdU(new UUID(0, 1));
-            evt.setLevel0IdU(s.getChain().getId());
+            evt.setLevel1Id(new UUID(0, 1));
+            evt.setLevel0Id(s.getChain().getId());
             evt.setState(s);
 
             for (Place p : s.getRunsOn().getPlaces())

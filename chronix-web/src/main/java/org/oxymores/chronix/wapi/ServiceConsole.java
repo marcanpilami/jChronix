@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,6 +25,8 @@ import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.sql2o.Connection;
+import org.sql2o.Query;
 
 @Path("/live")
 public class ServiceConsole
@@ -57,8 +57,8 @@ public class ServiceConsole
             q.setMarkedForRunBefore(DateTime.now().plusDays(1).toDate());
         }
 
-        EntityManager em = ctx.getHistoryEM();
-        try
+        // TODO: direct to DTO attempt!
+        try (Connection conn = ctx.getHistoryDataSource().open())
         {
             String sort = "";
             if (q.getSorts().size() > 0)
@@ -71,30 +71,25 @@ public class ServiceConsole
                 sort = sort.substring(0, sort.length() - 1);
             }
 
-            TypedQuery<RunLog> l = em.createQuery("SELECT r FROM RunLog r WHERE r.markedForUnAt >= ?1 AND r.markedForUnAt <= ?2 " + sort, RunLog.class);
-            l.setParameter(1, q.getMarkedForRunAfter());
-            l.setParameter(2, q.getMarkedForRunBefore());
+            Query qu = conn.createQuery("SELECT * FROM RunLog r WHERE r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
+                    + sort).addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
 
             if (q.getStartLine() != null)
             {
-                l.setFirstResult(q.getStartLine());
+                q.setStartLine(q.getStartLine());
             }
             if (q.getPageSize() != null)
             {
-                l.setMaxResults(q.getPageSize());
+                q.setPageSize(q.getPageSize());
             }
 
             List<DTORunLog> res = new ArrayList<>();
-            for (RunLog rl : l.getResultList())
+            for (RunLog rl : qu.executeAndFetch(RunLog.class))
             {
                 res.add(CoreToDto.getDTORunLog(rl));
             }
             q.setRes(res);
-            q.setTotalLogs((long) em.createQuery("SELECT COUNT(l) FROM RunLog l").getSingleResult());
-        }
-        finally
-        {
-            em.close();
+            q.setTotalLogs((long) conn.createQuery("SELECT COUNT(l) FROM RunLog l").executeScalar(Long.class));
         }
 
         log.debug("End of call to getLog - returning " + q.getRes().size() + " logs out of a total of " + q.getTotalLogs());
@@ -107,27 +102,17 @@ public class ServiceConsole
     public List<DTORunLog> getLog()
     {
         log.debug("Service getLog was called");
-        EntityManager em = null;
         List<DTORunLog> res = null;
 
-        try
+        try (Connection conn = ctx.getHistoryDataSource().open())
         {
-            em = ctx.getHistoryEM();
-
-            TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r ORDER BY r.enteredPipeAt", RunLog.class);
             res = new ArrayList<>();
-
-            for (RunLog rl : q.getResultList())
+            for (RunLog rl : conn.createQuery("SELECT * FROM RunLog r ORDER BY r.enteredPipeAt").executeAndFetch(RunLog.class))
             {
                 res.add(CoreToDto.getDTORunLog(rl));
             }
             log.debug("End of call to getLog - returning " + res.size());
         }
-        finally
-        {
-            em.close();
-        }
-
         return res;
     }
 
@@ -137,11 +122,14 @@ public class ServiceConsole
     public String getShortLog(@PathParam("id") UUID id)
     {
         log.debug("Service getShortLog was called for ID " + id.toString());
-        EntityManager em = ctx.getHistoryEM();
-        RunLog rl = em.find(RunLog.class, id);
-        em.close();
+        String res;
 
-        if (rl == null)
+        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        {
+            res = conn.createQuery("SELECT shortLog FROM RunLog WHERE id=:id").addParameter("id", id).executeScalar(String.class);
+        }
+
+        if (res == null)
         {
             log.debug("Service getShortLog has ended without finding the log");
             return "notfound";
@@ -149,29 +137,8 @@ public class ServiceConsole
         else
         {
             log.debug("Service getShortLog has ended - the log was found");
-            return rl.getShortLog().substring(Math.min(rl.getShortLog().length(), 2), rl.getShortLog().length());
+            return res;
         }
-    }
-
-    @GET
-    @Path("/logssince/{a}")
-    public List<DTORunLog> getLogSince(@PathParam("a") Date since)
-    {
-        log.debug("Service getLogSince was called");
-        EntityManager em = ctx.getHistoryEM();
-        TypedQuery<RunLog> q = em.createQuery("SELECT r FROM RunLog r WHERE r.lastLocallyModified > ?1 ORDER BY r.enteredPipeAt",
-                RunLog.class);
-        q.setParameter(1, since);
-        ArrayList<DTORunLog> res = new ArrayList<>();
-
-        for (RunLog rl : q.getResultList())
-        {
-            res.add(CoreToDto.getDTORunLog(rl));
-        }
-
-        em.close();
-        log.debug("End of call to getLogSince - returning " + res.size());
-        return res;
     }
 
     @GET
@@ -180,11 +147,9 @@ public class ServiceConsole
     public ResOrder orderForceOK(@PathParam("launchId") String launchId)
     {
         log.debug("Service orderForceOK was called");
-        try
+        try (Connection conn = ctx.getHistoryDataSource().open())
         {
-            EntityManager em = ctx.getHistoryEM();
-            RunLog rl = em.find(RunLog.class, launchId);
-            em.close();
+            RunLog rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
             SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), ctx);
         }
         catch (ChronixException e)
@@ -201,9 +166,11 @@ public class ServiceConsole
     @Produces("text/plain; charset=utf-8")
     public File getLogFile(@PathParam("launchId") String launchId)
     {
-        EntityManager em = ctx.getHistoryEM();
-        RunLog rl = em.find(RunLog.class, launchId);
-        em.close();
+        RunLog rl;
+        try (Connection conn = ctx.getHistoryDataSource().open())
+        {
+            rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
+        }
 
         File f = new File(rl.getLogPath());
         return f;
@@ -235,10 +202,11 @@ public class ServiceConsole
     public ResOrder orderLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
     {
         log.debug("Service orderLaunchOutOfPlan was called");
-        EntityManager em = ctx.getHistoryEM();
-        RunLog rl = em.find(RunLog.class, launchId);
-        em.close();
-        return orderLaunchOutOfPlan(UUID.fromString(rl.getApplicationId()), UUID.fromString(rl.getStateId()),
-                UUID.fromString(rl.getPlaceId()));
+        RunLog rl;
+        try (Connection conn = ctx.getHistoryDataSource().open())
+        {
+            rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
+        }
+        return orderLaunchOutOfPlan(rl.getApplicationId(), rl.getStateId(), rl.getPlaceId());
     }
 }

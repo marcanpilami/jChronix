@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,52 +17,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
+import javax.validation.constraints.Size;
+import org.joda.time.DateTime;
 
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.sql2o.Connection;
 
-@Entity
 public class Event extends TranscientBase
 {
     private static final long serialVersionUID = 2488490723929455210L;
 
-    private Date bestBefore;
+    private DateTime bestBefore;
 
     private boolean localOnly, analysed;
 
     private Integer conditionData1;
 
-    @Column(length = 50)
+    @Size(min = 1, max = 50)
     private String conditionData2, conditionData3;
 
-    @Column(length = UUID_LENGTH)
-    private String conditionData4;
+    private UUID conditionData4;
 
-    @Column(length = UUID_LENGTH)
-    private String level0Id, level1Id, level2Id, level3Id;
-
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<EventConsumption> consumptions = new ArrayList<EventConsumption>();
-
-    public Date getBestBefore()
+    public DateTime getBestBefore()
     {
         return bestBefore;
     }
 
-    public void setBestBefore(Date bestBefore)
+    public void setBestBefore(DateTime bestBefore)
     {
         this.bestBefore = bestBefore;
     }
@@ -117,141 +102,46 @@ public class Event extends TranscientBase
         this.conditionData3 = conditionData3;
     }
 
-    public UUID getConditionData4U()
-    {
-        return UUID.fromString(conditionData4);
-    }
-
-    public void setConditionData4U(UUID conditionData4)
-    {
-        this.conditionData4 = conditionData4.toString();
-    }
-
-    protected String getConditionData4()
+    public UUID getConditionData4()
     {
         return conditionData4;
     }
 
-    protected void setConditionData4(String conditionData4)
+    protected void setConditionData4(UUID conditionData4)
     {
         this.conditionData4 = conditionData4;
     }
 
-    public UUID getLevel0IdU()
+    public Boolean wasConsumedOnPlace(Place p, State s, Connection conn)
     {
-        if (level0Id == null)
+        int i = conn.createQuery("SELECT COUNT(1) FROM EVENTCONSUMPTION WHERE eventId=:eventId AND stateId=:stateId AND placeId=:placeId")
+                .addParameter("eventId", this.id).addParameter("stateId", s.getId()).addParameter("placeId", p.getId()).executeScalar(Integer.class);
+        return i > 0;
+    }
+
+    public void insertOrUpdate(Connection conn)
+    {
+        // NOTE: we may want to do it the barbarian way: try insert and if key exception do update...
+        long nb = conn.createQuery("SELECT COUNT(1) FROM Event WHERE id=:id").addParameter("id", this.id).executeScalar(Long.class);
+
+        if (nb > 0)
         {
-            return null;
+            conn.createQuery("UPDATE Event SET analysed = :analysed, bestBefore=:bestBefore, conditionData1 = :conditionData1, "
+                    + "conditionData2 = :conditionData2, conditionData3 = :conditionData3, conditionData4 = :conditionData4, "
+                    + "localOnly = :localOnly WHERE id=:id").bind(this).executeUpdate();
         }
-        return UUID.fromString(level0Id);
-    }
-
-    public void setLevel0IdU(UUID level0Id)
-    {
-        this.level0Id = level0Id.toString();
-    }
-
-    protected String getLevel0Id()
-    {
-        return level0Id;
-    }
-
-    protected void setLevel0Id(String level0Id)
-    {
-        this.level0Id = level0Id;
-    }
-
-    public UUID getLevel1IdU()
-    {
-        if (level1Id == null)
+        else
         {
-            return null;
+            conn.createQuery("INSERT INTO Event(id, analysed, bestBefore, conditionData1, conditionData2, conditionData3,"
+                    + "conditionData4, localOnly, activeId, appId, calendarID, calendarOccurrenceID, createdAt,"
+                    + "ignoreCalendarUpdating, level0Id, level1Id, level2Id, level3Id, outsideChainLaunch, placeId,"
+                    + "simulationID, stateID, virtualTime) "
+                    + "VALUES(:id, :analysed, :bestBefore, :conditionData1, :conditionData2, :conditionData3,"
+                    + ":conditionData4, :localOnly, :activeID, :appID, :calendarID, :calendarOccurrenceID, :createdAt,"
+                    + ":ignoreCalendarUpdating, :level0Id, :level1Id, :level2Id, :level3Id, :outsideChainLaunch, :placeID,"
+                    + ":simulationID, :stateID, :virtualTime)").bind(this).executeUpdate();
         }
-        return UUID.fromString(level1Id);
-    }
 
-    public void setLevel1IdU(UUID level1Id)
-    {
-        this.level1Id = level1Id.toString();
-    }
-
-    protected String getLevel1Id()
-    {
-        return level1Id;
-    }
-
-    protected void setLevel1Id(String level1Id)
-    {
-        this.level1Id = level1Id;
-    }
-
-    public UUID getLevel2IdU()
-    {
-        if (level2Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level2Id);
-    }
-
-    public void setLevel2IdU(UUID level2Id)
-    {
-        this.level2Id = level2Id.toString();
-    }
-
-    protected String getLevel2Id()
-    {
-        return level2Id;
-    }
-
-    protected void setLevel2Id(String level2Id)
-    {
-        this.level2Id = level2Id;
-    }
-
-    public UUID getLevel3IdU()
-    {
-        if (level3Id == null)
-        {
-            return null;
-        }
-        return UUID.fromString(level3Id);
-    }
-
-    public void setLevel3IdU(UUID level3Id)
-    {
-        this.level3Id = level3Id.toString();
-    }
-
-    protected String getLevel3Id()
-    {
-        return level3Id;
-    }
-
-    protected void setLevel3Id(String level3Id)
-    {
-        this.level3Id = level3Id;
-    }
-
-    public Boolean wasConsumedOnPlace(Place p, State s)
-    {
-        for (EventConsumption ec : this.consumptions)
-        {
-            if (ec.stateID.equals(s.getId().toString()) && ec.placeID.equals(p.getId().toString()))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public List<EventConsumption> getConsumptions()
-    {
-        return consumptions;
-    }
-
-    public void setConsumptions(List<EventConsumption> consumptions)
-    {
-        this.consumptions = consumptions;
+        updateEnvValues(conn);
     }
 }

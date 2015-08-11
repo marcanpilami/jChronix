@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import javax.jms.JMSException;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -15,6 +14,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.sql2o.Connection;
 
 public class ChronixEngineSim extends ChronixEngine
 {
@@ -32,7 +32,7 @@ public class ChronixEngineSim extends ChronixEngine
 
     public ChronixEngineSim(String configurationDirectoryPath, UUID appID, DateTime start, DateTime end)
     {
-        super(configurationDirectoryPath, "raccoon:9999", "TransacUnitSim", "HistoryUnitSim", false, 0);
+        super(configurationDirectoryPath, "raccoon:9999", false, 0);
         this.appToSimulateId = appID;
         this.start = start;
         this.end = end;
@@ -42,12 +42,12 @@ public class ChronixEngineSim extends ChronixEngine
     @Override
     protected void startEngine(boolean blocking)
     {
+        MDC.put("node", "simu");
         log.info(String.format("(%s) simulation engine starting between %s and %s", this.dbPath, this.start, this.end));
         try
         {
             // Context
-            this.ctx = new ChronixContext("simu", this.dbPath, this.transacUnitName, this.historyUnitName, false, null, null);
-            this.ctx.setSimulator();
+            this.ctx = new ChronixContext("simu", this.dbPath, true, null, null);
 
             // This is a simulation: we are only interested in a single application
             for (Application ap : this.ctx.getApplications())
@@ -107,8 +107,11 @@ public class ChronixEngineSim extends ChronixEngine
         {
         }
         log.info("Simulation has ended. Returning results");
+        MDC.remove("node");
 
-        EntityManager em = this.ctx.getHistoryEM();
-        return em.createQuery("SELECT h from RunLog h", RunLog.class).getResultList();
+        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        {
+            return conn.createQuery("SELECT * from RunLog h").executeAndFetch(RunLog.class);
+        }
     }
 }

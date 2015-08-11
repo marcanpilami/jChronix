@@ -49,7 +49,7 @@ public class ChronixEngine extends Thread
 
     protected ChronixContext ctx;
     protected String dbPath;
-    protected String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+    protected String historyDbPath, transacDbPath;
     protected String localNodeName;
 
     protected Broker broker;
@@ -63,31 +63,24 @@ public class ChronixEngine extends Thread
     // Construction
     public ChronixEngine(String dbPath, String nodeName)
     {
-        this(dbPath, nodeName, "TransacUnit", "HistoryUnit");
+        this(dbPath, nodeName, false, 1);
     }
 
-    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName)
+    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode)
     {
-        this(dbPath, nodeName, transacUnitName, historyUnitName, false, 1);
+        this(dbPath, nodeName, runnerMode, 1);
     }
 
-    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode)
+    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner)
     {
-        this(dbPath, nodeName, transacUnitName, historyUnitName, runnerMode, 1);
+        this(dbPath, nodeName, runnerMode, nbRunner, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"));
     }
 
-    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode, int nbRunner)
-    {
-        this(dbPath, nodeName, transacUnitName, historyUnitName, runnerMode, nbRunner, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"));
-    }
-
-    public ChronixEngine(String dbPath, String nodeName, String transacUnitName, String historyUnitName, boolean runnerMode, int nbRunner, String historyDBPath,
+    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner, String historyDBPath,
             String transacDbPath)
     {
         this.dbPath = dbPath;
         this.runnerMode = runnerMode;
-        this.transacUnitName = transacUnitName;
-        this.historyUnitName = historyUnitName;
         this.localNodeName = nodeName;
         this.nbRunner = nbRunner;
         this.historyDbPath = historyDBPath;
@@ -123,7 +116,9 @@ public class ChronixEngine extends Thread
         if (!runnerMode)
         {
             preContextLoad();
-            this.ctx = new ChronixContext(this.localNodeName, this.dbPath, this.transacUnitName, this.historyUnitName, false, this.historyDbPath, this.transacDbPath);
+            this.ctx = new ChronixContext(this.localNodeName, this.dbPath, false, this.historyDbPath, this.transacDbPath);
+            this.ctx.getHistoryDataSource(); // Force DB init to get errors at once
+            this.ctx.getTransacDataSource();
             postContextLoad();
         }
 
@@ -135,7 +130,7 @@ public class ChronixEngine extends Thread
             e.setDns(this.runnerHost);
             e.setqPort(this.runnerPort);
             e.setName(this.localNodeName);
-            this.ctx = new ChronixContext("runner", this.dbPath, null, null, false, null, null);
+            this.ctx = new ChronixContext("runner", this.dbPath, false, null, null);
             this.ctx.setLocalNode(e);
         }
 

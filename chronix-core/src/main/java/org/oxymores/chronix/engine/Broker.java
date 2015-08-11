@@ -64,7 +64,7 @@ class Broker
     private List<RunnerAgent> thrsRA;
     private EventListener thrEL;
     private Pipeline thrPL;
-    private Runner thrRU;
+    private RunnerManager thrRU;
     private LogListener thrLL;
     private TranscientListener thrTL;
     private OrderListener thrOL;
@@ -100,7 +100,6 @@ class Broker
 
         // Basic configuration
         broker.setBrokerName(brokerName);
-        broker.setPersistent(true);
         broker.setDataDirectory(ctx.getContextRoot() + File.separator + "activemq-data");
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(purge);
@@ -229,7 +228,7 @@ class Broker
 
         if (startRunner && this.thrRU == null)
         {
-            this.thrRU = new Runner();
+            this.thrRU = new RunnerManager();
             this.thrRU.startListening(this);
         }
 

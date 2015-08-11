@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.sql.Date;
@@ -25,9 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -35,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.sql2o.Connection;
 
 public class Calendar extends NamedApplicationObject
 {
@@ -67,7 +64,6 @@ public class Calendar extends NamedApplicationObject
 
     // ///////////////////////////////////////////////////////////////
     // Stupid get/set
-
     public boolean isManualSequence()
     {
         return manualSequence;
@@ -125,10 +121,8 @@ public class Calendar extends NamedApplicationObject
 
     //
     // ///////////////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////////////
     // Setters on relationships
-
     // Only called from State.addSequence
     void s_addStateUsing(State s)
     {
@@ -174,8 +168,12 @@ public class Calendar extends NamedApplicationObject
     public CalendarDay getOccurrence(String sequenceValue)
     {
         for (CalendarDay cd : this.days)
+        {
             if (cd.seq.equals(sequenceValue))
+            {
                 return cd;
+            }
+        }
         return null;
     }
 
@@ -184,7 +182,9 @@ public class Calendar extends NamedApplicationObject
         for (CalendarDay cd : this.days)
         {
             if (cd.id.equals(id))
+            {
                 return cd;
+            }
         }
         return null;
     }
@@ -201,24 +201,19 @@ public class Calendar extends NamedApplicationObject
 
     //
     // ///////////////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////////////
     // Operational data
-
-    public CalendarPointer getCurrentOccurrencePointer(EntityManager em)
+    public CalendarPointer getCurrentOccurrencePointer(Connection conn)
     {
-        // Calendar current occurrence pointers have no states and places: they
-        // are only related to the calendar itself.
-        Query q = em.createQuery("SELECT p FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = ?1");
-        q.setParameter(1, this.id.toString());
-        CalendarPointer cp = (CalendarPointer) q.getSingleResult();
-        em.refresh(cp);
-        return cp;
+        // Calendar current occurrence pointers have no states and places: they are only related to the calendar itself.
+        return conn.createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = :calendarID").
+                addParameter("calendarID", this.id.toString()).executeAndFetchFirst(CalendarPointer.class);
     }
 
-    public CalendarDay getCurrentOccurrence(EntityManager em)
+    public CalendarDay getCurrentOccurrence(Connection conn)
     {
-        return this.getDay(this.getCurrentOccurrencePointer(em).getLastEndedOkOccurrenceUuid());
+        CalendarPointer currentPointer = this.getCurrentOccurrencePointer(conn);
+        return currentPointer == null ? null : this.getDay(this.getCurrentOccurrencePointer(conn).getLastEndedOkOccurrenceUuid());
     }
 
     public CalendarDay getOccurrenceAfter(CalendarDay d)
@@ -247,23 +242,21 @@ public class Calendar extends NamedApplicationObject
     }
 
     // Called within an open transaction. Won't be committed here.
-    public void createPointers(EntityManager em)
+    public void createPointers(Connection conn)
     {
         // Get existing pointers
-        try
+        if (getCurrentOccurrence(conn) != null)
         {
-            getCurrentOccurrence(em);
             return;
-        }
-        catch (NoResultException e)
-        {
         }
 
         int minShift = 0;
         for (State s : usedInStates)
         {
             if (s.calendarShift < minShift)
+            {
                 minShift = s.calendarShift;
+            }
         }
         minShift--;
 
@@ -281,28 +274,25 @@ public class Calendar extends NamedApplicationObject
         tmp.setPlace(null);
         tmp.setState(null);
 
-        em.persist(tmp);
-
+        tmp.insertOrUpdate(conn);
         // Commit is done by the calling method
     }
 
     //
     // ///////////////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////////////
     // Don't go overboard...
-
-    public boolean warnNotEnoughOccurrencesLeft(EntityManager em)
+    public boolean warnNotEnoughOccurrencesLeft(Connection conn)
     {
-        CalendarDay cd = this.getCurrentOccurrence(em);
+        CalendarDay cd = this.getCurrentOccurrence(conn);
         int onow = this.days.indexOf(cd);
 
         return onow + this.alertThreshold >= this.days.size();
     }
 
-    public boolean errorNotEnoughOccurrencesLeft(EntityManager em)
+    public boolean errorNotEnoughOccurrencesLeft(Connection conn)
     {
-        CalendarDay cd = this.getCurrentOccurrence(em);
+        CalendarDay cd = this.getCurrentOccurrence(conn);
         int onow = this.days.indexOf(cd);
 
         return onow + this.alertThreshold / 2 >= this.days.size();
@@ -310,7 +300,6 @@ public class Calendar extends NamedApplicationObject
 
     //
     // ///////////////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////////////
     // Stragglers
     public class StragglerIssue
@@ -319,16 +308,16 @@ public class Calendar extends NamedApplicationObject
         public Place p;
     }
 
-    public List<StragglerIssue> getStragglers(EntityManager em)
+    public List<StragglerIssue> getStragglers(Connection conn)
     {
-        List<StragglerIssue> issues = new ArrayList<StragglerIssue>();
+        List<StragglerIssue> issues = new ArrayList<>();
         StragglerIssue tmp = null;
 
         for (State s : this.usedInStates)
         {
             for (Place p : s.getRunsOn().getPlaces())
             {
-                if (s.isLate(em, p))
+                if (s.isLate(conn, p))
                 {
                     tmp = new StragglerIssue();
                     tmp.p = p;
@@ -340,22 +329,21 @@ public class Calendar extends NamedApplicationObject
         return issues;
     }
 
-    public void processStragglers(EntityManager em)
+    public void processStragglers(Connection conn)
     {
         log.debug(String.format("Processing stragglers on calendar %s", this.name));
-        CalendarDay d = this.getCurrentOccurrence(em);
-        for (StragglerIssue i : getStragglers(em))
+        CalendarDay d = this.getCurrentOccurrence(conn);
+        for (StragglerIssue i : getStragglers(conn))
         {
             log.warn(String
                     .format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
-                            i.s.represents.name, i.p.name, i.s.chain.name, i.s.getCurrentCalendarOccurrence(em, i.p).seq, d.seq,
+                            i.s.represents.name, i.p.name, i.s.chain.name, i.s.getCurrentCalendarOccurrence(conn, i.p).seq, d.seq,
                             i.s.calendarShift));
         }
     }
 
     //
     // ///////////////////////////////////////////////////////////////
-
     public ArrayList<CalendarDay> getDays()
     {
         return days;

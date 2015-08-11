@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,21 +17,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
+import org.joda.time.DateTime;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
@@ -39,8 +32,8 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.sql2o.Connection;
 
-@Entity
 public class TranscientBase implements Serializable
 {
     private static final long serialVersionUID = 8976655465578L;
@@ -50,47 +43,35 @@ public class TranscientBase implements Serializable
     protected static final int LOG_LENGTH = 10000;
     protected static final String DATE_FORMAT = "dd/MM HH:mm:ss";
 
-    @Id
-    @Column(length = UUID_LENGTH)
-    protected String id;
+    @NotNull
+    protected UUID id;
 
-    @Column(length = UUID_LENGTH)
-    protected String stateID;
+    @NotNull
+    protected UUID stateID, activeID, placeID, appID;
 
-    @Column(length = UUID_LENGTH)
-    protected String activeID;
+    protected UUID calendarID, calendarOccurrenceID;
 
-    @Column(length = UUID_LENGTH)
-    protected String placeID;
-
-    @Column(length = UUID_LENGTH)
-    protected String appID;
-
-    @Column(length = UUID_LENGTH)
-    protected String calendarOccurrenceID;
-
-    @Column(length = UUID_LENGTH)
-    protected String calendarID;
-
-    @Column(length = UUID_LENGTH)
-    protected String simulationID;
+    @NotNull
+    protected UUID simulationID;
 
     protected Boolean outsideChainLaunch = false;
 
     protected Boolean ignoreCalendarUpdating = false;
 
-    protected Date createdAt;
+    @NotNull
+    protected DateTime createdAt;
 
-    protected Date virtualTime;
+    protected DateTime virtualTime;
 
-    @OneToMany(fetch = FetchType.EAGER, targetEntity = EnvironmentValue.class, cascade = { CascadeType.ALL, CascadeType.REMOVE })
-    protected List<EnvironmentValue> envParams;
+    protected UUID level0Id, level1Id, level2Id, level3Id;
+
+    /** Simple cache for environment variables associated to this item **/
+    protected List<EnvironmentValue> envValues;
 
     public TranscientBase()
     {
-        id = UUID.randomUUID().toString();
-        createdAt = new Date();
-        envParams = new ArrayList<EnvironmentValue>();
+        id = UUID.randomUUID();
+        createdAt = DateTime.now();
     }
 
     @Override
@@ -106,54 +87,46 @@ public class TranscientBase implements Serializable
     @Override
     public int hashCode()
     {
-        return UUID.fromString(this.id).hashCode();
+        return this.id.hashCode();
     }
 
     // //////////////////////////////////////////////
     // Calendar & co
-    public String getCalendarID()
+    public UUID getCalendarID()
     {
         return calendarID;
     }
 
-    public void setCalendarID(String id)
+    public void setCalendarID(UUID id)
     {
         this.calendarID = id;
     }
 
     public Calendar getCalendar(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getCalendar(UUID.fromString(this.calendarID));
+        return this.getApplication(ctx).getCalendar(this.calendarID);
     }
 
     public void setCalendar(Calendar c)
     {
-        if (c == null)
-        {
-            this.calendarID = null;
-        }
-        else
-        {
-            this.calendarID = c.getId().toString();
-        }
+        this.calendarID = c.getId();
     }
 
-    public String getCalendarOccurrenceID()
+    public UUID getCalendarOccurrenceID()
     {
         return calendarOccurrenceID;
     }
 
-    public void setCalendarOccurrenceID(String calendarOccurrenceID)
+    public void setCalendarOccurrenceID(UUID calendarOccurrenceID)
     {
         this.calendarOccurrenceID = calendarOccurrenceID;
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // State
-    protected void setStateID(String stateID)
+    protected void setStateID(UUID stateID)
     {
         this.stateID = stateID;
     }
@@ -162,7 +135,7 @@ public class TranscientBase implements Serializable
     {
         if (state != null)
         {
-            this.stateID = state.getId().toString();
+            this.stateID = state.getId();
             this.setActive(state.getRepresents());
             this.setApplication(state.getApplication());
         }
@@ -174,55 +147,48 @@ public class TranscientBase implements Serializable
 
     public State getState(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getState(UUID.fromString(this.stateID));
+        return this.getApplication(ctx).getState(this.stateID);
     }
 
-    public String getStateID()
+    public UUID getStateID()
     {
         return this.stateID;
     }
 
-    public UUID getStateIDU()
-    {
-        return UUID.fromString(this.stateID);
-    }
-
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Active node
-    public String getActiveID()
+    public UUID getActiveID()
     {
         return activeID;
     }
 
-    protected void setActiveID(String activeID)
+    protected void setActiveID(UUID activeID)
     {
         this.activeID = activeID;
     }
 
     private void setActive(ActiveNodeBase active)
     {
-        this.activeID = active.getId().toString();
+        this.activeID = active.getId();
     }
 
     public ActiveNodeBase getActive(ChronixContext ctx)
     {
-        return this.getApplication(ctx).getActiveNode(UUID.fromString(this.activeID));
+        return this.getApplication(ctx).getActiveNode(this.activeID);
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Network
-    public String getPlaceID()
+    public UUID getPlaceID()
     {
         return placeID;
     }
 
-    protected void setPlaceID(String placeID)
+    protected void setPlaceID(UUID placeID)
     {
         this.placeID = placeID;
     }
@@ -231,7 +197,7 @@ public class TranscientBase implements Serializable
     {
         if (place != null)
         {
-            this.placeID = place.getId().toString();
+            this.placeID = place.getId();
         }
         else
         {
@@ -241,20 +207,19 @@ public class TranscientBase implements Serializable
 
     public Place getPlace(ChronixContext ctx)
     {
-        return ctx.getNetwork().getPlace(UUID.fromString(this.placeID));
+        return ctx.getNetwork().getPlace(this.placeID);
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Misc.
-    public String getAppID()
+    public UUID getAppID()
     {
         return appID;
     }
 
-    public void setAppID(String appID)
+    public void setAppID(UUID appID)
     {
         this.appID = appID;
     }
@@ -268,7 +233,7 @@ public class TranscientBase implements Serializable
     {
         if (application != null)
         {
-            this.appID = application.getId().toString();
+            this.appID = application.getId();
         }
         else
         {
@@ -276,44 +241,47 @@ public class TranscientBase implements Serializable
         }
     }
 
-    public Date getCreatedAt()
+    public DateTime getCreatedAt()
     {
         return createdAt;
     }
 
-    protected void setCreatedAt(Date created)
+    protected void setCreatedAt(DateTime created)
     {
         this.createdAt = created;
     }
 
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public UUID getIdU()
-    {
-        return UUID.fromString(this.id);
-    }
-
-    protected void setId(String id)
+    protected void setId(UUID id)
     {
         this.id = id;
     }
 
-    public List<EnvironmentValue> getEnvParams()
+    public List<EnvironmentValue> getEnvValues(Connection conn)
     {
-        return envParams;
+        if (this.envValues == null)
+        {
+            this.envValues = conn.createQuery("SELECT * FROM EnvironmentValue WHERE TransientId=:id").
+                    addParameter("id", this.id).executeAndFetch(EnvironmentValue.class);
+        }
+        return envValues;
     }
 
-    protected void setEnvParams(List<EnvironmentValue> values)
+    /** Does not persist the value - only stores it in local cache
+     * @param key
+     * @param value **/
+    public void addEnvValueToCache(String key, String value)
     {
-        this.envParams = values;
-    }
-
-    public void addValue(String key, String value)
-    {
-        this.envParams.add(new EnvironmentValue(key, value));
+        if (this.envValues == null)
+        {
+            this.envValues = new ArrayList<>();
+        }
+        EnvironmentValue tmp = new EnvironmentValue(key, value, this);
+        this.envValues.add(tmp);
     }
 
     public Boolean getOutsideChain()
@@ -336,26 +304,77 @@ public class TranscientBase implements Serializable
         this.ignoreCalendarUpdating = ignoreCalendarUpdating;
     }
 
-    public String getSimulationID()
+    public UUID getSimulationID()
     {
         return simulationID;
     }
 
-    public void setSimulationID(String simulationID)
+    public void setSimulationID(UUID simulationID)
     {
         this.simulationID = simulationID;
     }
 
+    public UUID getLevel0Id()
+    {
+        return level0Id;
+    }
+
+    public void setLevel0Id(UUID level0Id)
+    {
+        this.level0Id = level0Id;
+    }
+
+    public UUID getLevel1Id()
+    {
+        return level1Id;
+    }
+
+    public void setLevel1Id(UUID level1Id)
+    {
+        this.level1Id = level1Id;
+    }
+
+    public UUID getLevel2Id()
+    {
+        return level2Id;
+    }
+
+    public void setLevel2Id(UUID level2Id)
+    {
+        this.level2Id = level2Id;
+    }
+
+    public UUID getLevel3Id()
+    {
+        return level3Id;
+    }
+
+    public void setLevel3Id(UUID level3Id)
+    {
+        this.level3Id = level3Id;
+    }
+
     //
     // //////////////////////////////////////////////
-
-    public Date getVirtualTime()
+    public DateTime getVirtualTime()
     {
         return virtualTime;
     }
 
-    public void setVirtualTime(Date virtualTime)
+    public void setVirtualTime(DateTime virtualTime)
     {
         this.virtualTime = virtualTime;
+    }
+
+    public void updateEnvValues(Connection conn)
+    {
+        if (this.envValues != null && this.envValues.size() > 0)
+        {
+            conn.createQuery("DELETE FROM EnvironmentValue WHERE transientid = :id").addParameter("id", this.id).executeUpdate();
+            for (EnvironmentValue ev : this.envValues)
+            {
+                ev.insert(conn);
+            }
+        }
     }
 }

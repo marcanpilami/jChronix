@@ -3,7 +3,6 @@ package org.oxymores.chronix.engine;
 import java.util.List;
 
 import javax.jms.JMSException;
-import javax.persistence.TypedQuery;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,8 +19,6 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.core.transactional.CalendarPointer;
-import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.CalendarBuilder;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -38,7 +35,7 @@ public class TestMultiNode extends TestBase
     public void before() throws Exception
     {
         e1 = addEngine(db1, "e1");
-        e2 = addEngine(db2, "e2", "TransacUnit2", "HistoryUnit2");
+        e2 = addEngine(db2, "e2");
         e3 = addRunner(db3, "e3", "localhost", 1804);
 
         // Create a test application and save it inside context
@@ -185,9 +182,8 @@ public class TestMultiNode extends TestBase
             Assert.fail("No application in remote context after reception");
         }
         Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
-
-        TypedQuery<CalendarPointer> q2 = e1.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
-        Assert.assertEquals(2, q2.getResultList().size());
+        LogHelpers.testCalendarPointerCount(e1.ctx, 2);
+        LogHelpers.testCalendarPointerCount(e2.ctx, 2);
 
         log.debug("****SHIFT CALENDAR********************************************************************");
         // Shift the state by 1 so that it cannot start (well, shouldn't)
@@ -201,15 +197,14 @@ public class TestMultiNode extends TestBase
             e4.printStackTrace();
             Assert.fail(e4.getMessage());
         }
-        Assert.assertEquals(2, q2.getResultList().size());
-        TypedQuery<CalendarPointer> q3 = e2.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
-        Assert.assertEquals(2, q3.getResultList().size());
+        LogHelpers.testCalendarPointerCount(e1.ctx, 2);
+        LogHelpers.testCalendarPointerCount(e2.ctx, 2);
 
         // Run the first chain - should be blocked after starting State
         log.debug("****ORDER START FIRST CHAIN***********************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -224,7 +219,7 @@ public class TestMultiNode extends TestBase
         log.debug("****ORDER START SECOND CHAIN**********************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -236,11 +231,8 @@ public class TestMultiNode extends TestBase
         Assert.assertEquals(6, res.size());
 
         // Has purge worked?
-        TypedQuery<Event> q4 = e2.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
-        Assert.assertEquals(0, q4.getResultList().size());
-
-        TypedQuery<Event> q5 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
-        Assert.assertEquals(0, q5.getResultList().size());
+        LogHelpers.testEventCount(e2.ctx, 0);
+        LogHelpers.testEventCount(e1.ctx, 0);
     }
 
     @Test
@@ -305,8 +297,7 @@ public class TestMultiNode extends TestBase
         }
         Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
 
-        TypedQuery<CalendarPointer> q2 = e1.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
-        Assert.assertEquals(2, q2.getResultList().size());
+        LogHelpers.testCalendarPointerCount(e1.ctx, 2);
 
         log.debug("****SHIFT CALENDAR********************************************************************");
         // Shift the state by 1 so that it cannot start (well, shouldn't)
@@ -320,15 +311,14 @@ public class TestMultiNode extends TestBase
             e4.printStackTrace();
             Assert.fail(e4.getMessage());
         }
-        Assert.assertEquals(2, q2.getResultList().size());
-        TypedQuery<CalendarPointer> q3 = e2.ctx.getTransacEM().createQuery("SELECT cp FROM CalendarPointer cp", CalendarPointer.class);
-        Assert.assertEquals(2, q3.getResultList().size());
+        LogHelpers.testCalendarPointerCount(e1.ctx, 2);
+        LogHelpers.testCalendarPointerCount(e2.ctx, 2);
 
         // Run the first chain - should be blocked after the AND
         log.debug("****ORDER START FIRST CHAIN***********************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -343,7 +333,7 @@ public class TestMultiNode extends TestBase
         log.debug("****ORDER START SECOND CHAIN**********************************************************");
         try
         {
-            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx, e1.ctx.getTransacEM());
+            SenderHelpers.runStateInsidePlan(c2.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -355,10 +345,7 @@ public class TestMultiNode extends TestBase
         Assert.assertEquals(10, res.size());
 
         // Has purge worked?
-        TypedQuery<Event> q4 = e2.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
-        Assert.assertEquals(0, q4.getResultList().size());
-
-        TypedQuery<Event> q5 = e1.ctx.getTransacEM().createQuery("SELECT e FROM Event e", Event.class);
-        Assert.assertEquals(0, q5.getResultList().size());
+        LogHelpers.testEventCount(e1.ctx, 0);
+        LogHelpers.testEventCount(e2.ctx, 0);
     }
 }

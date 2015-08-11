@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.List;
 
 import javax.jms.JMSException;
-import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,12 +64,11 @@ public class TestHostedNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Run the chain
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -102,12 +100,11 @@ public class TestHostedNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Run the chain
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {
@@ -138,12 +135,11 @@ public class TestHostedNode extends TestBase
 
         addApplicationToDb(db1, a);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Run the chain
         try
         {
-            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx, em);
+            SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.ctx);
         }
         catch (JMSException e3)
         {

@@ -2,8 +2,6 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,10 +48,9 @@ public class TestChain extends TestBase
         // GO
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         log.debug("****PASSING RUN***************************************************************");
-        SenderHelpers.runStateInsidePlan(sp, firstEngine().ctx, em);
+        SenderHelpers.runStateInsidePlan(sp, firstEngine().ctx);
 
         List<RunLog> res = LogHelpers.waitForHistoryCount(firstEngine().ctx, 4);
         Assert.assertEquals(4, res.size());
@@ -62,7 +59,7 @@ public class TestChain extends TestBase
         DateTime end0 = new DateTime(rl0.getStoppedRunningAt());
         DateTime end3 = new DateTime(rl3.getStoppedRunningAt());
 
-        Assert.assertEquals(rl0.getActiveNodeName(), "simple chain");
+        Assert.assertEquals("simple chain", rl0.getActiveNodeName());
         Assert.assertTrue(end0.isAfter(end3) || end0.isEqual(end3));
     }
 
@@ -111,11 +108,10 @@ public class TestChain extends TestBase
         // GO
         addApplicationToDb(db1, a1);
         startEngines();
-        EntityManager em = e1.ctx.getTransacEM();
 
         // Start chain
         log.debug("****PASSING RUN***************************************************************");
-        SenderHelpers.runStateInsidePlan(sp1, e1.ctx, em);
+        SenderHelpers.runStateInsidePlan(sp1, e1.ctx);
 
         List<RunLog> res = LogHelpers.waitForHistoryCount(e1.ctx, 17);
         Assert.assertEquals(17, res.size());

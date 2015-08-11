@@ -24,14 +24,9 @@ import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -39,22 +34,27 @@ import javax.validation.ValidatorFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.ClockTick;
-import org.oxymores.chronix.core.transactional.TokenReservation;
-import org.oxymores.chronix.core.transactional.TranscientBase;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
-import java.sql.Connection;
-import java.sql.Statement;
-import javax.sql.DataSource;
-import org.apache.openjpa.conf.OpenJPAConfiguration;
-import org.apache.openjpa.persistence.OpenJPAEntityManagerFactory;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.lang.StringUtils;
+import org.hsqldb.jdbc.JDBCPool;
+import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.core.transactional.TokenReservation;
+import org.oxymores.chronix.engine.helpers.DbUpgrader;
+import org.oxymores.chronix.engine.helpers.UUIDQuirk;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.sql2o.Connection;
+import org.sql2o.Query;
+import org.sql2o.Sql2o;
 
 public final class ChronixContext
 {
@@ -62,13 +62,13 @@ public final class ChronixContext
     private static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     private static final XStream xmlUtility = new XStream(new StaxDriver());
 
-    // JPA factories
-    private EntityManagerFactory historyEmf, transacEmf;
+    // Persistence roots/datasources
+    private Sql2o historyDS, transacDS;
 
     // Data needed to load the applications
     private final DateTime loaded;
     private final File configurationDirectory;
-    private final String transacUnitName, historyUnitName, historyDbPath, transacDbPath;
+    private final String historyDbPath, transacDbPath, historyDbUrl, transacDbUrl;
 
     // Network
     private Network network;
@@ -94,25 +94,33 @@ public final class ChronixContext
      *
      * @param localNodeName
      * @param appConfDirectory
-     * @param transacUnitName
-     * @param historyUnitName
      * @param simulation
      * @param historyDBPath
      * @param transacDbPath
      */
-    public ChronixContext(String localNodeName, String appConfDirectory, String transacUnitName, String historyUnitName, boolean simulation, String historyDBPath, String transacDbPath)
+    public ChronixContext(String localNodeName, String appConfDirectory, boolean simulation, String historyDBPath, String transacDbPath)
     {
         this.loaded = DateTime.now();
         this.localNodeName = localNodeName;
         this.configurationDirectory = new File(FilenameUtils.normalize(appConfDirectory));
         this.applicationsById = new HashMap<>();
         this.applicationsByName = new HashMap<>();
-        this.historyUnitName = historyUnitName;
-        this.transacUnitName = transacUnitName;
         this.historyDbPath = historyDBPath;
         this.transacDbPath = transacDbPath;
         this.setSimulation(simulation);
-        if (transacUnitName == null)
+
+        if (simulation)
+        {
+            this.historyDbUrl = "jdbc:hsqldb:mem:" + UUID.randomUUID();
+            this.transacDbUrl = "jdbc:hsqldb:mem:" + UUID.randomUUID();
+        }
+        else
+        {
+            this.historyDbUrl = "jdbc:hsqldb:file:" + this.historyDbPath;
+            this.transacDbUrl = "jdbc:hsqldb:file:" + this.transacDbPath;
+        }
+
+        if (historyDBPath == null && !simulation)
         {
             // Runner without metabase - don't load anything
             return;
@@ -173,33 +181,31 @@ public final class ChronixContext
         // ///////////////////
         if (this.applicationsById.values().size() > 0)
         {
-            EntityManager em = this.getTransacEM();
-            EntityTransaction tr = em.getTransaction();
-            tr.begin();
-            for (Application a : this.applicationsById.values())
+            try (Connection conn = this.getTransacDataSource().beginTransaction())
             {
-                a.isFromCurrentFile(true);
-                for (Calendar c : a.calendars.values())
-                {
-                    c.createPointers(em);
-                }
-                for (PlaceGroup g : a.getGroupsList())
-                {
-                    g.map_places(this.network);
-                }
-            }
-            tr.commit();
 
-            tr.begin();
-            for (Application a : this.applicationsById.values())
-            {
-                for (State s : a.getStates())
+                for (Application a : this.applicationsById.values())
                 {
-                    s.createPointers(em);
+                    a.isFromCurrentFile(true);
+                    for (Calendar c : a.calendars.values())
+                    {
+                        c.createPointers(conn);
+                    }
+                    for (PlaceGroup g : a.getGroupsList())
+                    {
+                        g.map_places(this.network);
+                    }
                 }
+
+                for (Application a : this.applicationsById.values())
+                {
+                    for (State s : a.getStates())
+                    {
+                        s.createPointers(conn);
+                    }
+                }
+                conn.commit();
             }
-            tr.commit();
-            em.close();
         }
 
         // TODO: cleanup event data (elements they reference may have been removed)
@@ -445,96 +451,135 @@ public final class ChronixContext
     // Will make the transactional data inside the database consistent with the application definition
     public void cleanTransanc()
     {
-        EntityManager em = this.getTransacEM();
-        em.getTransaction().begin();
-
-        // Remove elements from deleted applications
-        for (String appId : em.createQuery("SELECT DISTINCT tb.appID FROM TranscientBase tb", String.class).getResultList())
+        try (Connection c = this.getTransacDataSource().beginTransaction())
         {
-            if (appId != null && this.getApplication(appId) != null)
+            // Remove elements from deleted applications
+            List<String> quotedIds = new ArrayList<>(); // Hack because no list support in JDBC
+            for (UUID u : this.applicationsById.keySet())
             {
-                continue;
+                quotedIds.add("'" + u.toString() + "'");
             }
-            em.createQuery("DELETE FROM TranscientBase tb WHERE tb.appID = :a").setParameter("a", appId).executeUpdate();
-            em.createQuery("DELETE FROM ClockTick ct WHERE ct.appId = :a").setParameter("a", appId).executeUpdate();
-            em.createQuery("DELETE FROM TokenReservation tr WHERE tr.applicationId = :a").setParameter("a", appId).executeUpdate();
-        }
+            String appIds = this.applicationsById.size() > 0 ? StringUtils.join(quotedIds, ",") : "'z'";
+            log.error("DELETE FROM Event tb WHERE tb.appID NOT IN (" + appIds + ")");
 
-        // For each application, purge...
-        for (Application a : this.applicationsByName.values())
-        {
-            // TB must have a State, a Place, a Source. Purging TB implies purging EV.
-            for (TranscientBase tb : em.createQuery("SELECT tb FROM TranscientBase tb WHERE tb.appID=:a", TranscientBase.class).setParameter("a", a.getId().toString())
-                    .getResultList())
+            c.createQuery("DELETE FROM Event tb WHERE tb.appID NOT IN (" + appIds + ")").executeUpdate();
+            c.createQuery("DELETE FROM PipeLineJob tb WHERE tb.appID NOT IN (" + appIds + ")").executeUpdate();
+            c.createQuery("DELETE FROM ClockTick ct WHERE ct.appID NOT IN (" + appIds + ")").executeUpdate();
+            c.createQuery("DELETE FROM TokenReservation tr WHERE tr.applicationId NOT IN (" + appIds + ")").executeUpdate();
+
+            // Remove wrong transient elements
+            c.createQuery("DELETE FROM CalendarPointer WHERE CalendarID IS NULL").executeUpdate();
+            c.createQuery("DELETE FROM Event WHERE stateID IS NULL OR placeID IS NULL OR ActiveID IS NULL").executeUpdate();
+            c.createQuery("DELETE FROM PipelineJob WHERE stateID IS NULL OR placeID IS NULL OR ActiveID IS NULL").executeUpdate();
+
+            // For each still existing application, do purge transient elements related to removed elements
+            for (Application a : this.applicationsByName.values())
             {
-                if (tb instanceof CalendarPointer)
+                // EVENTS
+                Query q1 = c.createQuery("DELETE FROM Event WHERE id=:id");
+                Query q2 = c.createQuery("DELETE FROM ENVIRONMENTVALUE WHERE transientid=:id");
+                Query q3 = c.createQuery("DELETE FROM EVENTCONSUMPTION WHERE eventid=:id");
+                int i1 = 0;
+                for (Event e : c.createQuery("SELECT * FROM Event WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(Event.class))
+                {
+                    if (e.getState(this) == null || e.getPlace(this) == null || e.getActive(this) == null)
+                    {
+                        q1.addParameter("id", e.getId()).addToBatch();
+                        q2.addParameter("id", e.getId()).addToBatch();
+                        q3.addParameter("id", e.getId()).addToBatch();
+                        i1++;
+                    }
+                }
+                if (i1 > 0)
+                {
+                    q1.executeBatch();
+                    q2.executeBatch();
+                    q3.executeBatch();
+                }
+
+                // PJ
+                q1 = c.createQuery("DELETE FROM PipelineJob WHERE id=:id");
+                i1 = 0;
+                for (PipelineJob e : c.createQuery("SELECT * FROM PipelineJob WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(PipelineJob.class))
+                {
+                    if (e.getState(this) == null || e.getPlace(this) == null || e.getActive(this) == null)
+                    {
+                        q1.addParameter("id", e.getId()).addToBatch();
+                        q2.addParameter("id", e.getId()).addToBatch();
+                        i1++;
+                    }
+                }
+                if (i1 > 0)
+                {
+                    q1.executeBatch();
+                    q2.executeBatch();
+                }
+
+                // CALENDARPOINTER
+                q1 = c.createQuery("DELETE FROM CALENDARPOINTER WHERE id=:id");
+                i1 = 0;
+                for (CalendarPointer tb : c.createQuery("SELECT * FROM CalendarPointer WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(CalendarPointer.class))
                 {
                     // CalendarPointer are special: there is one without Place & State per Calendar (the calendar main pointer)
+                    tb.getCalendar(this);
+                    if (tb.getStateID() != null || tb.getPlaceID() != null)
+                    {
+                        if (tb.getStateID() == null || tb.getPlaceID() == null)
+                        {
+                            q1.addParameter("id", tb.getId()).addToBatch();
+                        }
+                    }
+                }
+                if (i1 > 0)
+                {
+                    q1.executeBatch();
+                }
+
+                // CT must have a clock
+                q1 = c.createQuery("DELETE FROM ClockTick WHERE id=:id");
+                i1 = 0;
+                for (ClockTick ct : c.createQuery("SELECT * FROM ClockTick ct").executeAndFetch(ClockTick.class))
+                {
                     try
                     {
-                        tb.getCalendar(this);
-                        if (tb.getStateID() != null || tb.getPlaceID() != null || tb.getActiveID() != null)
-                        {
-                            if (tb.getState(this) == null || tb.getPlace(this) == null)
-                            {
-                                em.remove(tb);
-                            }
-                        }
+                        ct.getClock(this);
                     }
                     catch (Exception e)
                     {
-                        em.remove(tb);
+                        q1.addParameter("id", ct.getId()).addToBatch();
+                        i1++;
                     }
                 }
-                else
+                if (i1 > 0)
                 {
-                    // General case
+                    q1.executeBatch();
+                }
+
+                // TR must have Place, State, Token
+                q1 = c.createQuery("DELETE FROM TokenReservation WHERE id=:id");
+                i1 = 0;
+                for (TokenReservation tr : c.createQuery("SELECT * FROM TokenReservation WHERE APPLICATIONID=:a").addParameter("a", a.getId()).executeAndFetch(TokenReservation.class))
+                {
                     try
                     {
-                        if (tb.getState(this) == null || tb.getPlace(this) == null || tb.getActive(this) == null)
-                        {
-                            em.remove(tb);
-                        }
+                        tr.getState(this);
+                        tr.getPlace(this);
+                        tr.getToken(this);
                     }
                     catch (Exception e)
                     {
-                        em.remove(tb);
+                        q1.addParameter("id", tr.getId()).addToBatch();
+                        i1++;
                     }
                 }
-            }
-
-            // CT must have a clock
-            for (ClockTick ct : em.createQuery("SELECT ct FROM ClockTick ct WHERE ct.appId=:a", ClockTick.class).setParameter("a", a.getId().toString()).getResultList())
-            {
-                try
+                if (i1 > 0)
                 {
-                    ct.getClock(this);
-                }
-                catch (Exception e)
-                {
-                    em.remove(ct);
+                    q1.executeBatch();
                 }
             }
 
-            // TR must have Place, State, Token
-            for (TokenReservation tr : em.createQuery("SELECT tr FROM TokenReservation tr WHERE tr.applicationId=:a", TokenReservation.class)
-                    .setParameter("a", a.getId().toString()).getResultList())
-            {
-                try
-                {
-                    tr.getState(this);
-                    tr.getPlace(this);
-                    tr.getToken(this);
-                }
-                catch (Exception e)
-                {
-                    em.remove(tr);
-                }
-            }
+            c.commit();
         }
-
-        em.getTransaction().commit();
-        em.close();
     }
 
     public Network getNetwork()
@@ -542,44 +587,32 @@ public final class ChronixContext
         return network;
     }
 
-    private EntityManagerFactory getTransacEMF()
+    public Sql2o getTransacDataSource()
     {
-        if (transacEmf != null)
+        if (transacDS != null)
         {
-            return transacEmf;
+            return transacDS;
         }
-        Properties p = new Properties();
-        if (this.transacDbPath != null)
-        {
-            p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.transacDbPath);
-        }
-        transacEmf = Persistence.createEntityManagerFactory(this.transacUnitName, p);
-        return transacEmf;
+        log.info("Opening database at " + this.transacDbUrl);
+        JDBCPool ds = new JDBCPool(10);
+        ds.setUrl(this.transacDbUrl);
+        transacDS = new Sql2o(ds, new UUIDQuirk());
+        DbUpgrader.upgradeDb(transacDS, DbUpgrader.DbType.TP, DbUpgrader.DbEngine.HSQLDB);
+        return transacDS;
     }
 
-    private EntityManagerFactory getHistoryEMF()
+    public Sql2o getHistoryDataSource()
     {
-        if (historyEmf != null)
+        if (historyDS != null)
         {
-            return historyEmf;
+            return historyDS;
         }
-        Properties p = new Properties();
-        if (this.historyDbPath != null)
-        {
-            p.put("openjpa.ConnectionURL", "jdbc:hsqldb:file:" + this.historyDbPath);
-        }
-        historyEmf = Persistence.createEntityManagerFactory(this.historyUnitName, p);
-        return historyEmf;
-    }
-
-    public EntityManager getTransacEM()
-    {
-        return this.getTransacEMF().createEntityManager();
-    }
-
-    public EntityManager getHistoryEM()
-    {
-        return this.getHistoryEMF().createEntityManager();
+        log.info("Opening database at " + this.historyDbUrl);
+        JDBCPool ds = new JDBCPool(10);
+        ds.setUrl(this.historyDbUrl);
+        historyDS = new Sql2o(ds, new UUIDQuirk());
+        DbUpgrader.upgradeDb(historyDS, DbUpgrader.DbType.HIST, DbUpgrader.DbEngine.HSQLDB);
+        return historyDS;
     }
 
     public void removeApplicationFromCache(UUID appID)
@@ -662,45 +695,47 @@ public final class ChronixContext
 
     public void close()
     {
-        if (this.historyEmf != null)
+        if (this.historyDS != null)
         {
-            try
+            try (Connection conn = this.historyDS.open())
             {
-                OpenJPAEntityManagerFactory kemf = OpenJPAPersistence.cast(historyEmf);
-                OpenJPAConfiguration conf = kemf.getConfiguration();
-                DataSource dataSource = (DataSource) conf.getConnectionFactory();
-                Connection conn = dataSource.getConnection();
-                Statement st = conn.createStatement();
-                st.execute("SHUTDOWN");
-                conn.close();
+                conn.createQuery("SHUTDOWN").executeUpdate();
                 log.debug("History database closed");
             }
             catch (Exception e)
             {
                 log.warn("Could not close history database on context destruction", e);
             }
-            getHistoryEMF().close();
-            historyEmf = null;
-        }
-        if (this.transacEmf != null)
-        {
             try
             {
-                OpenJPAEntityManagerFactory kemf = OpenJPAPersistence.cast(transacEmf);
-                OpenJPAConfiguration conf = kemf.getConfiguration();
-                DataSource dataSource = (DataSource) conf.getConnectionFactory();
-                Connection conn = dataSource.getConnection();
-                Statement st = conn.createStatement();
-                st.execute("SHUTDOWN");
-                conn.close();
+                ((JDBCPool) this.historyDS.getDataSource()).close(0);
+                this.historyDS = null;
+            }
+            catch (SQLException ex)
+            {
+                log.warn("Could not clean JDBC object related to the history database, even if the database itself was shut down", ex);
+            }
+        }
+        if (this.transacDS != null)
+        {
+            try (Connection conn = this.transacDS.open())
+            {
+                conn.createQuery("SHUTDOWN").executeUpdate();
                 log.debug("Transac database closed");
             }
             catch (Exception e)
             {
                 log.warn("Could not close transac database on context destruction", e);
             }
-            getTransacEMF().close();
-            transacEmf = null;
+            try
+            {
+                ((JDBCPool) this.transacDS.getDataSource()).close(0);
+                this.transacDS = null;
+            }
+            catch (SQLException ex)
+            {
+                log.warn("Could not clean JDBC object related to the transac database, even if the database itself was shut down", ex);
+            }
         }
     }
 

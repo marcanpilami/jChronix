@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.active;
 
 import java.text.ParseException;
@@ -28,8 +27,6 @@ import java.util.UUID;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.validation.Valid;
 
 import net.fortuna.ical4j.model.DateTime;
@@ -54,11 +51,12 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixRunException;
+import org.sql2o.Connection;
 
 public class Clock extends ActiveNodeBase
 {
     private static final long serialVersionUID = -5203055591135192345L;
-    private static Logger log = Logger.getLogger(Clock.class);
+    private static final Logger log = Logger.getLogger(Clock.class);
     private static final String LOG_DATE_FORMAT = "dd/MM/YYYY hh:mm:ss";
 
     org.joda.time.DateTime created;
@@ -80,8 +78,8 @@ public class Clock extends ActiveNodeBase
     // Constructor
     public Clock()
     {
-        rulesADD = new ArrayList<ClockRRule>();
-        rulesEXC = new ArrayList<ClockRRule>();
+        rulesADD = new ArrayList<>();
+        rulesEXC = new ArrayList<>();
         created = org.joda.time.DateTime.now();
         created = created.minusMillis(created.getMillisOfSecond());
         created = created.minusSeconds(created.getSecondOfMinute());
@@ -106,7 +104,6 @@ public class Clock extends ActiveNodeBase
 
     //
     // /////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////
     // iCal stuff
     private VEvent getEvent() throws ParseException
@@ -143,7 +140,6 @@ public class Clock extends ActiveNodeBase
 
     //
     // /////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////
     // Stupid GET/SET
     public int getDURATION()
@@ -173,7 +169,6 @@ public class Clock extends ActiveNodeBase
 
     // stupid GET/SET
     // /////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////
     // Relationships ADD/REMOVE
     public void addRRuleADD(ClockRRule rule)
@@ -210,7 +205,6 @@ public class Clock extends ActiveNodeBase
 
     //
     // /////////////////////////////////////////////////////////////////////
-
     // /////////////////////////////////////////////////////////////////////
     // Scheduling engine methods
     @Override
@@ -226,7 +220,7 @@ public class Clock extends ActiveNodeBase
     }
 
     @Override
-    public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, EntityManager em,
+    public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, Connection conn,
             org.joda.time.DateTime present) throws ChronixRunException // NOSONAR
     {
         // Check if the engine logical time ("present") is consistent with the world's real time ("now") (for warnings only)
@@ -240,7 +234,7 @@ public class Clock extends ActiveNodeBase
         // We only work with the logical time
         now = present;
         getHelperPj();
-        pj.setVirtualTime(present.toDate());
+        pj.setVirtualTime(present);
         org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.duration);
 
         if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear())
@@ -258,7 +252,7 @@ public class Clock extends ActiveNodeBase
         }
 
         // Select the occurrences that should be active
-        ArrayList<org.joda.time.DateTime> theory = new ArrayList<org.joda.time.DateTime>();
+        ArrayList<org.joda.time.DateTime> theory = new ArrayList<>();
         for (Object p : occurrenceCache)
         {
             org.joda.time.DateTime from = new org.joda.time.DateTime(((Period) p).getStart());
@@ -273,9 +267,8 @@ public class Clock extends ActiveNodeBase
         log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString(LOG_DATE_FORMAT)));
 
         // Select the ones that are active
-        TypedQuery<ClockTick> q = em.createQuery("SELECT t FROM ClockTick t WHERE t.tickTime >= ?1 ORDER BY t.tickTime", ClockTick.class);
-        q.setParameter(1, nowminusgrace.toDate());
-        List<ClockTick> real = q.getResultList();
+        List<ClockTick> real = conn.createQuery("SELECT t.* FROM ClockTick t WHERE t.tickTime >= :laterThan ORDER BY t.tickTime")
+                .addParameter("laterThan", nowminusgrace.toDate()).executeAndFetch(ClockTick.class);
         log.debug(String.format("There are %s clock ticks that really are active", real.size()));
 
         // Select the ones that will have to be created
@@ -284,7 +277,6 @@ public class Clock extends ActiveNodeBase
 
         // //////////////////////////
         // Create events
-
         // Get all states that use this clock
         List<State> states = this.getClientStates();
 
@@ -294,13 +286,13 @@ public class Clock extends ActiveNodeBase
             for (State s : states)
             {
                 pj.setState(s);
-                pj.setLevel1IdU(new UUID(0, 1));
+                pj.setLevel1Id(new UUID(0, 1));
                 // UUID 0,1 is a convention for "plan run" instead of "chain run".
 
                 for (Place p : s.getRunsOn().getPlaces())
                 {
                     pj.setPlace(p);
-                    pj.setLevel0IdU(s.getChain().getId());
+                    pj.setLevel0Id(s.getChain().getId());
                     Event e = pj.createEvent();
 
                     // Send the event
@@ -318,22 +310,18 @@ public class Clock extends ActiveNodeBase
 
                     // Mark the tick as done
                     ClockTick ct = new ClockTick();
-                    ct.setAppId(this.application.getId().toString());
-                    ct.setClockId(this.id.toString());
-                    ct.setTickTime(dt.toDate());
-                    em.persist(ct);
+                    ct.setAppId(this.application.getId());
+                    ct.setClockId(this.id);
+                    ct.setTickTime(dt);
+                    ct.insert(conn);
                 }
             }
         }
 
         // Purge the past ticks
-        q = em.createQuery("SELECT t FROM ClockTick t WHERE t.tickTime < ?1 ORDER BY t.tickTime", ClockTick.class);
-        q.setParameter(1, nowminusgrace.toDate());
-        real = q.getResultList();
-        for (ClockTick ct : real)
-        {
-            em.remove(ct);
-        }
+        conn.createQuery("DELETE FROM ClockTick t WHERE t.tickTime < :before").
+                addParameter("before", nowminusgrace.toDate()).executeUpdate();
+        //TODO: check we don't need to filter purge by clock ??????
 
         // Get the next time the method should be called and return it
         org.joda.time.DateTime res = now.plusDays(1).minusMillis(now.getMillisOfDay());

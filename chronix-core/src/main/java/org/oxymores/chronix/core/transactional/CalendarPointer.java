@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,40 +17,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.transactional;
 
+import java.io.Serializable;
 import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.Calendar;
 
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.State;
+import org.sql2o.Connection;
 
-@Entity
-public class CalendarPointer extends TranscientBase
+public class CalendarPointer implements Serializable
 {
     private static final long serialVersionUID = 6905957323594389673L;
 
+    @NotNull
+    protected UUID id, stateID, placeID, appID, calendarID;
+
     // Updated at end of run
-    @Column(length = UUID_LENGTH)
-    private String lastEndedOkOccurrenceId;
+    private UUID lastEndedOkOccurrenceId;
 
     // Updated before run
-    @Column(length = UUID_LENGTH)
-    private String lastStartedOccurrenceId;
+    private UUID lastStartedOccurrenceId;
 
     // Updated after run
-    @Column(length = UUID_LENGTH)
-    private String lastEndedOccurrenceId;
-
-    @Column(length = UUID_LENGTH)
-    private String nextRunOccurrenceId;
+    private UUID lastEndedOccurrenceId;
+    private UUID nextRunOccurrenceId;
 
     private Boolean latestFailed = false;
 
     private Boolean running = false;
+
+    public CalendarPointer()
+    {
+        this.id = UUID.randomUUID();
+    }
 
     // //////////////////////////////////////////////
     // Helper fields
@@ -75,159 +80,186 @@ public class CalendarPointer extends TranscientBase
     }
 
     // Only for transient listener!
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }
 
+    public UUID getId()
+    {
+        return this.id;
+    }
+
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Last day it ended correctly
-    public String getLastEndedOkOccurrenceId()
+    public UUID getLastEndedOkOccurrenceId()
     {
         return lastEndedOkOccurrenceId;
     }
 
     public UUID getLastEndedOkOccurrenceUuid()
     {
-        return UUID.fromString(lastEndedOkOccurrenceId);
+        return lastEndedOkOccurrenceId;
     }
 
-    public void setLastEndedOkOccurrenceId(String dayId)
+    public void setLastEndedOkOccurrenceId(UUID dayId)
     {
         this.lastEndedOkOccurrenceId = dayId;
     }
 
     public CalendarDay getLastEndedOkOccurrenceCd(ChronixContext ctx)
     {
-        return this.getCalendar(ctx).getDay(UUID.fromString(this.lastEndedOkOccurrenceId));
+        return this.getCalendar(ctx).getDay(this.lastEndedOkOccurrenceId);
     }
 
     public void setLastEndedOkOccurrenceCd(CalendarDay day)
     {
-        if (day == null)
-        {
-            this.lastEndedOkOccurrenceId = null;
-        }
-        else
-        {
-            this.lastEndedOkOccurrenceId = day.getId().toString();
-        }
+        this.lastEndedOkOccurrenceId = day.getId();
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Last day it was started
-    public String getLastStartedOccurrenceId()
+    public UUID getLastStartedOccurrenceId()
     {
         return lastStartedOccurrenceId;
     }
 
-    public UUID getLastStartedOccurrenceUuid()
-    {
-        return UUID.fromString(lastStartedOccurrenceId);
-    }
-
-    public void setLastStartedOccurrenceId(String dayId)
+    public void setLastStartedOccurrenceId(UUID dayId)
     {
         this.lastStartedOccurrenceId = dayId;
     }
 
     public CalendarDay getLastStartedOccurrenceCd(ChronixContext ctx)
     {
-        return this.getCalendar(ctx).getDay(UUID.fromString(this.lastStartedOccurrenceId));
+        return this.getCalendar(ctx).getDay(this.lastStartedOccurrenceId);
     }
 
     public void setLastStartedOccurrenceCd(CalendarDay day)
     {
-        if (day == null)
-        {
-            this.lastStartedOccurrenceId = null;
-        }
-        else
-        {
-            this.lastStartedOccurrenceId = day.getId().toString();
-        }
+        this.lastStartedOccurrenceId = day.getId();
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Last day it finished (possibly incorrectly)
-    public String getLastEndedOccurrenceId()
+    public UUID getLastEndedOccurrenceId()
     {
         return lastEndedOccurrenceId;
     }
 
     public UUID getLastEndedOccurrenceUuid()
     {
-        return UUID.fromString(lastEndedOccurrenceId);
+        return lastEndedOccurrenceId;
     }
 
-    public void setLastEndedOccurrenceId(String dayId)
+    public void setLastEndedOccurrenceId(UUID dayId)
     {
         this.lastEndedOccurrenceId = dayId;
     }
 
     public CalendarDay getLastEndedOccurrenceCd(ChronixContext ctx)
     {
-        return this.getCalendar(ctx).getDay(UUID.fromString(this.lastEndedOccurrenceId));
+        return this.getCalendar(ctx).getDay(this.lastEndedOccurrenceId);
     }
 
     public void setLastEndedOccurrenceCd(CalendarDay day)
     {
-        if (day == null)
-        {
-            this.lastEndedOccurrenceId = null;
-        }
-        else
-        {
-            this.lastEndedOccurrenceId = day.getId().toString();
-        }
+        this.lastEndedOccurrenceId = day.getId();
     }
 
     //
     // //////////////////////////////////////////////
-
     // //////////////////////////////////////////////
     // Next time it will run, it will be...
-    public String getNextRunOccurrenceId()
+    public UUID getNextRunOccurrenceId()
     {
         return nextRunOccurrenceId;
     }
 
-    public UUID getNextRunOccurrenceUuid()
-    {
-        return UUID.fromString(nextRunOccurrenceId);
-    }
-
-    public void setNextRunOccurrenceId(String dayId)
+    public void setNextRunOccurrenceId(UUID dayId)
     {
         this.nextRunOccurrenceId = dayId;
     }
 
     public CalendarDay getNextRunOccurrenceCd(ChronixContext ctx)
     {
-        return this.getCalendar(ctx).getDay(UUID.fromString(this.nextRunOccurrenceId));
+        return this.getCalendar(ctx).getDay(this.nextRunOccurrenceId);
     }
 
     public void setNextRunOccurrenceCd(CalendarDay day)
     {
-        if (day == null)
-        {
-            this.nextRunOccurrenceId = null;
-        }
-        else
-        {
-            this.nextRunOccurrenceId = day.getId().toString();
-        }
+        this.nextRunOccurrenceId = day.getId();
+    }
+
+    public Calendar getCalendar(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getCalendar(this.calendarID);
+    }
+
+    public UUID getCalendarID()
+    {
+        return this.calendarID;
+    }
+
+    public Application getApplication(ChronixContext ctx)
+    {
+        return ctx.getApplication(this.appID);
+    }
+
+    public void setApplication(Application a)
+    {
+        this.appID = a == null ? null : a.getId();
+    }
+
+    public void setCalendar(Calendar a)
+    {
+        this.calendarID = a == null ? null : a.getId();
+    }
+
+    public void setPlace(Place p)
+    {
+        this.placeID = p == null ? null : p.getId();
+    }
+
+    public void setState(State s)
+    {
+        this.stateID = s == null ? null : s.getId();
+    }
+
+    public UUID getPlaceID()
+    {
+        return this.placeID;
+    }
+
+    public UUID getStateID()
+    {
+        return this.stateID;
+    }
+
+    public State getState(ChronixContext ctx)
+    {
+        return this.getApplication(ctx).getState(this.stateID);
     }
     //
     // //////////////////////////////////////////////
 
+    public void insertOrUpdate(Connection conn)
+    {
+        int i = conn.createQuery("UPDATE CalendarPointer SET lastEndedOkOccurrenceId=:lastEndedOkOccurrenceId, "
+                + "lastStartedOccurrenceId=:lastStartedOccurrenceId, nextRunOccurrenceId=:nextRunOccurrenceId, "
+                + "lastEndedOccurrenceId=:lastEndedOccurrenceId, latestFailed=:latestFailed, running=:running "
+                + "WHERE id=:id").bind(this).executeUpdate().getResult();
+        if (i == 0)
+        {
+            conn.createQuery("INSERT INTO CalendarPointer(ID, STATEID, PLACEID, APPID, CALENDARID, lastEndedOkOccurrenceId, "
+                    + "lastStartedOccurrenceId, lastEndedOccurrenceId, latestFailed, running, nextRunOccurrenceId) VALUES ("
+                    + ":id, :stateID, :placeID, :appID, :calendarID, :lastEndedOkOccurrenceId, :lastStartedOccurrenceId, :lastEndedOccurrenceId,"
+                    + ":latestFailed, :running, :nextRunOccurrenceId)").bind(this).executeUpdate();
+        }
+    }
 }

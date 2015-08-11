@@ -1013,10 +1013,10 @@ public class CoreToDto
     public static DTORunLog getDTORunLog(RunLog rl)
     {
         DTORunLog res = new DTORunLog();
-        res.setId(rl.getId());
+        res.setId(rl.getId().toString());
         res.setActiveNodeName(rl.getActiveNodeName());
         res.setApplicationName(rl.getApplicationName());
-        res.setBeganRunningAt(rl.getBeganRunningAt());
+        res.setBeganRunningAt(rl.getBeganRunningAt().toDate());
         res.setCalendarName(rl.getCalendarName());
         res.setCalendarOccurrence(rl.getCalendarOccurrence());
         res.setChainLev1Name(rl.getChainLev1Name());
@@ -1024,15 +1024,15 @@ public class CoreToDto
         res.setDataIn(rl.getDataIn());
         res.setDataOut(rl.getDataOut());
         res.setDns(rl.getDns());
-        res.setEnteredPipeAt(rl.getEnteredPipeAt());
+        res.setEnteredPipeAt(rl.getEnteredPipeAt().toDate());
         res.setExecutionNodeName(rl.getExecutionNodeName());
         res.setLastKnownStatus(rl.getLastKnownStatus());
-        res.setMarkedForRunAt(rl.getMarkedForUnAt());
+        res.setMarkedForRunAt(rl.getMarkedForUnAt().toDate());
         res.setOsAccount(rl.getOsAccount());
         res.setPlaceName(rl.getPlaceName());
         res.setResultCode(rl.getResultCode());
         res.setSequence(rl.getSequence());
-        res.setStoppedRunningAt(rl.getStoppedRunningAt());
+        res.setStoppedRunningAt(rl.getStoppedRunningAt().toDate());
         res.setWhatWasRun(rl.getWhatWasRun());
 
         return res;
