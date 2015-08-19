@@ -19,8 +19,6 @@
  */
 package org.oxymores.chronix.wapi;
 
-import org.oxymores.chronix.internalapi.IServiceClient;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
 

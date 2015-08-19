@@ -60,7 +60,6 @@ import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
-import org.oxymores.chronix.internalapi.IServiceClient;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
@@ -68,7 +67,7 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
  * Handles all the metadata related services. Both JSON (default) and XML.
  */
 @Path("/meta")
-public class ServiceClient implements IServiceClient
+public class ServiceClient
 {
 
     private static final Logger log = Logger.getLogger(ServiceClient.class);
@@ -79,7 +78,6 @@ public class ServiceClient implements IServiceClient
         this.ctx = ctx;
     }
 
-    @Override
     @GET
     @Path("ping")
     @Produces("text/plain")
@@ -89,7 +87,6 @@ public class ServiceClient implements IServiceClient
         return "houba hop";
     }
 
-    @Override
     @GET
     @Path("app/name/{appname}")
     @Produces(
@@ -134,7 +131,6 @@ public class ServiceClient implements IServiceClient
         }
     }
 
-    @Override
     @GET
     @Path("app/first")
     @Produces(
@@ -154,7 +150,6 @@ public class ServiceClient implements IServiceClient
         }
     }
 
-    @Override
     @GET
     @Path("app/id/{appid}")
     @Produces(
@@ -171,7 +166,6 @@ public class ServiceClient implements IServiceClient
         return d;
     }
 
-    @Override
     @POST
     @Path("app")
     @Produces(
@@ -203,7 +197,6 @@ public class ServiceClient implements IServiceClient
         log.debug("End of stageApplication call.");
     }
 
-    @Override
     @POST
     @Path("app/id/{uuid}/send")
     @Produces(
@@ -226,7 +219,6 @@ public class ServiceClient implements IServiceClient
         log.debug("End of storeApplication call.");
     }
 
-    @Override
     public void resetStage()
     {
         // TODO Auto-generated method stub
@@ -234,7 +226,6 @@ public class ServiceClient implements IServiceClient
         log.debug("End of resetStage call.");
     }
 
-    @Override
     @POST
     @Path("rrule/test")
     @Produces(
@@ -270,7 +261,6 @@ public class ServiceClient implements IServiceClient
         return res;
     }
 
-    @Override
     @GET
     @Path("app")
     @Produces(
@@ -293,7 +283,6 @@ public class ServiceClient implements IServiceClient
         return res;
     }
 
-    @Override
     @POST
     @Path("app/new/{name}/{description}")
     @Produces(
@@ -380,7 +369,6 @@ public class ServiceClient implements IServiceClient
         }
     }
 
-    @Override
     @POST
     @Path("app/test")
     @Produces(

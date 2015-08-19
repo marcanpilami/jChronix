@@ -79,7 +79,6 @@
     <modules>
         <module>chronix-doc</module>
         <module>chronix-core</module>
-        <module>chronix-interfaces</module>
         <module>chronix-web</module>
         <module>chronix-launcher</module>
         <module>chronix-cli</module>
