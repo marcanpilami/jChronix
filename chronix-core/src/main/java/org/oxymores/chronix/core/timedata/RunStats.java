@@ -23,15 +23,16 @@ import java.io.Serializable;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class RunStats implements Serializable
 {
     private static final long serialVersionUID = -3318147581838188039L;
-    private static final Logger log = Logger.getLogger(RunStats.class);
+    private static final Logger log = LoggerFactory.getLogger(RunStats.class);
     private static final int UUID_LENGTH = 36;
 
     @NotNull

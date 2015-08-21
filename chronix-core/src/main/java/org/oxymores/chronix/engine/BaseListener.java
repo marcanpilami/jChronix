@@ -13,12 +13,13 @@ import javax.jms.Queue;
 import javax.jms.Session;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
+import org.slf4j.LoggerFactory;
 
 class BaseListener implements MessageListener
 {
-    private static final Logger log = Logger.getLogger(BaseListener.class);
+    private static final Logger log = LoggerFactory.getLogger(BaseListener.class);
 
     protected ChronixContext ctx;
     protected Broker broker;

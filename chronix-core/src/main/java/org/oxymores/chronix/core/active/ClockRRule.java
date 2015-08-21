@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.active;
 
 import java.text.ParseException;
@@ -29,13 +28,14 @@ import javax.validation.constraints.Size;
 
 import net.fortuna.ical4j.model.Recur;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.NamedApplicationObject;
+import org.slf4j.LoggerFactory;
 
 public class ClockRRule extends NamedApplicationObject
 {
     private static final long serialVersionUID = 1092625083715354537L;
-    private static Logger log = Logger.getLogger(ClockRRule.class);
+    private static Logger log = LoggerFactory.getLogger(ClockRRule.class);
 
     String period = "DAILY";
     Integer interval = 1;
@@ -99,7 +99,6 @@ public class ClockRRule extends NamedApplicationObject
 
     // iCal functions
     // ///////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////
     // Not so stupid GET/SET
     public void setPeriod(String period)
@@ -123,10 +122,8 @@ public class ClockRRule extends NamedApplicationObject
 
     // Not so stupid GET/SET
     // ///////////////////////////////////////////////////////
-
     // ///////////////////////////////////////////////////////
     // Stupid GET/SET
-
     public Integer getINTERVAL()
     {
         return interval;

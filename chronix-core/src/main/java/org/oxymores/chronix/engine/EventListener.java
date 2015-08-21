@@ -28,19 +28,20 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.transactional.Event;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 
 class EventListener extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(EventListener.class);
+    private static final Logger log = LoggerFactory.getLogger(EventListener.class);
 
     private MessageProducer producerPJ;
 

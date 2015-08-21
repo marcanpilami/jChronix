@@ -24,7 +24,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.validation.constraints.NotNull;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
@@ -32,12 +32,13 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class NextOccurrence extends ActiveNodeBase
 {
     private static final long serialVersionUID = -2717237089393749264L;
-    private static final Logger log = Logger.getLogger(NextOccurrence.class);
+    private static final Logger log = LoggerFactory.getLogger(NextOccurrence.class);
 
     @NotNull
     Calendar updatedCalendar;

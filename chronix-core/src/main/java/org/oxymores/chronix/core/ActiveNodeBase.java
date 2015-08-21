@@ -28,7 +28,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -38,12 +37,14 @@ import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 import org.oxymores.chronix.exceptions.ChronixRunException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class ActiveNodeBase extends ConfigurableBase
 {
     private static final long serialVersionUID = 2317281646089939267L;
-    private static final Logger log = Logger.getLogger(ActiveNodeBase.class);
+    private static final Logger log = LoggerFactory.getLogger(ActiveNodeBase.class);
 
     @NotNull
     @Size(min = 1, max = 255)

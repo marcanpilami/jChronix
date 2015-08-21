@@ -31,7 +31,7 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -41,11 +41,12 @@ import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 class TokenDistributionCenter extends BaseListener implements Runnable
 {
-    private static final Logger log = Logger.getLogger(TokenDistributionCenter.class);
+    private static final Logger log = LoggerFactory.getLogger(TokenDistributionCenter.class);
 
     private MessageProducer jmsProducer;
 

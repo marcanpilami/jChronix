@@ -2,8 +2,9 @@ package org.oxymores.chronix.engine.helpers;
 
 import java.io.File;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
@@ -11,7 +12,7 @@ import org.sql2o.Connection;
  */
 public final class ContextHelper
 {
-    private static final Logger log = Logger.getLogger(ContextHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(ContextHelper.class);
 
     private ContextHelper()
     {

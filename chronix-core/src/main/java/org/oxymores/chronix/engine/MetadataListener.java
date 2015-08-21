@@ -23,14 +23,15 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
+import org.slf4j.LoggerFactory;
 
 class MetadataListener extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(MetadataListener.class);
+    private static final Logger log = LoggerFactory.getLogger(MetadataListener.class);
     private ChronixEngine engine;
 
     void startListening(Broker b, ChronixEngine engine) throws JMSException

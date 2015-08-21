@@ -15,10 +15,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
@@ -28,7 +29,7 @@ import org.sql2o.Connection;
  */
 class LogListener extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(LogListener.class);
+    private static final Logger log = LoggerFactory.getLogger(LogListener.class);
 
     void startListening(Broker b) throws JMSException
     {

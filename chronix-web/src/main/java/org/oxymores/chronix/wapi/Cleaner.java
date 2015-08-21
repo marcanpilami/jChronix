@@ -3,7 +3,8 @@ package org.oxymores.chronix.wapi;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  Small helper to close context at the destruction of the servlet context.
@@ -15,12 +16,12 @@ import org.apache.log4j.Logger;
 @WebListener
 public class Cleaner implements ServletContextListener
 {
-    private static final Logger log = Logger.getLogger(Cleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(Cleaner.class);
 
     @Override
     public void contextInitialized(ServletContextEvent sce)
     {
-        log.info("Chronix REST application servlet context is loading");
+        log.debug("Servlet context is loading");
     }
 
     @Override

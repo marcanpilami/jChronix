@@ -11,7 +11,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import java.util.Random;
 import javax.ws.rs.ApplicationPath;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -26,6 +26,8 @@ import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  *
@@ -34,11 +36,12 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 @ApplicationPath("ws")
 public class RestApplication extends ResourceConfig
 {
-    private static final Logger log = Logger.getLogger(RestApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(RestApplication.class);
     public static ChronixContext ctx;
 
     public RestApplication(@Context ServletContext context)
     {
+        MDC.put("node", "webservice");
         log.info("Creating a new Chronix WS application");
 
         String dbPath = context.getInitParameter("db_path");
@@ -78,7 +81,7 @@ public class RestApplication extends ResourceConfig
             }
             catch (ChronixPlanStorageException ex)
             {
-                log.fatal("", ex);
+                log.error("", ex);
                 return;
             }
         }
@@ -90,7 +93,7 @@ public class RestApplication extends ResourceConfig
         }
         catch (Exception e)
         {
-            log.fatal("", e);
+            log.error("", e);
             return;
         }
 

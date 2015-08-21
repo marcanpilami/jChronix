@@ -31,7 +31,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
@@ -48,6 +48,7 @@ import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.slf4j.LoggerFactory;
 
 /**
  * All JMS Message sending is done here.<br>
@@ -55,7 +56,7 @@ import org.oxymores.chronix.exceptions.ChronixException;
  */
 public class SenderHelpers
 {
-    private static Logger log = Logger.getLogger(SenderHelpers.class);
+    private static Logger log = LoggerFactory.getLogger(SenderHelpers.class);
 
     private SenderHelpers()
     {
@@ -646,7 +647,7 @@ public class SenderHelpers
     // Tokens
     public static void sendTokenRequest(TokenRequest tr, ChronixContext ctx, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
-        String qName = "";
+        String qName;
         Application a = ctx.getApplication(tr.applicationID);
         Place p = ctx.getNetwork().getPlace(tr.placeID);
         if (tr.local)

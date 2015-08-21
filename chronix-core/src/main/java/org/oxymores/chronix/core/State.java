@@ -30,7 +30,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
@@ -40,11 +40,12 @@ import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class State extends ConfigurableBase
 {
-    private static final Logger log = Logger.getLogger(State.class);
+    private static final Logger log = LoggerFactory.getLogger(State.class);
     private static final long serialVersionUID = -2640644872229489081L;
 
     // /////////////////////////////////////////////////////////////////////////////////
@@ -748,8 +749,7 @@ public class State extends ConfigurableBase
         // But actually, nothing has to be done to enforce it as it comes from either the scheduler itself or the user.
         // No further than the calendar itself
         CalendarDay baseLimit = this.calendar.getCurrentOccurrence(conn);
-        log.debug(baseLimit);
-        log.debug(nextRunOccurrence);
+
         log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s", baseLimit.seq, this.calendarShift,
                 nextRunOccurrence.seq));
         CalendarDay shiftedLimit = this.calendar.getOccurrenceShiftedBy(baseLimit, this.calendarShift);

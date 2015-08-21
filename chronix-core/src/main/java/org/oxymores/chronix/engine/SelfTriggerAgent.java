@@ -29,16 +29,17 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
+import org.slf4j.LoggerFactory;
 
 class SelfTriggerAgent extends Thread
 {
-    private static final Logger log = Logger.getLogger(SelfTriggerAgent.class);
+    private static final Logger log = LoggerFactory.getLogger(SelfTriggerAgent.class);
 
     protected Semaphore loop;
     protected boolean run = true;

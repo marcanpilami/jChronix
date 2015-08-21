@@ -6,20 +6,21 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.slf4j.LoggerFactory;
 
 /**
  * Unit test for simple App.
  */
 public class AppTest
 {
-    private static final Logger log = Logger.getLogger(AppTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AppTest.class);
     private static Validator validator;
 
     @BeforeClass

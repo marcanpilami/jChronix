@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,10 +15,11 @@ import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.slf4j.LoggerFactory;
 
 public class TestBase
 {
-    protected static Logger log = Logger.getLogger(TestBase.class);
+    protected static Logger log = LoggerFactory.getLogger(TestBase.class);
 
     @Rule
     public TestName testName = new TestName();

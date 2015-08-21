@@ -9,8 +9,11 @@ import java.io.File;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.plus.webapp.PlusConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.Configuration;
+import org.eclipse.jetty.webapp.FragmentConfiguration;
+import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
@@ -28,7 +31,7 @@ public class JettyContainer
 
         server = new Server(port);
 
-        // There are two places where the web service might be: inside ./www (nominal) or ../web-service/target/chronix-web-* (tests)
+        // There are two places where the web service might be: inside ./www (nominal) or ../chronix-web/target/chronix-web-* (tests)
         File f = new File("./www");
         if (!f.canRead())
         {
@@ -53,10 +56,10 @@ public class JettyContainer
         ctx.setInitParameter("db_path", dbPath);
         ctx.setInitParameter("local_node_id", localNodeId);
         ctx.setLogUrlOnStart(true);
-
+        ctx.setParentLoaderPriority(true);
         ctx.setConfigurations(new Configuration[]
         {
-            new WebInfConfiguration(), new WebXmlConfiguration(), new AnnotationConfiguration()
+            new WebInfConfiguration(), new WebXmlConfiguration(), new MetaInfConfiguration(), new FragmentConfiguration(), new AnnotationConfiguration()
         });
         server.setHandler(ctx);
 

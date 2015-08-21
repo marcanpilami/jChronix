@@ -13,16 +13,17 @@ package org.oxymores.chronix.engine;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 class LogHelpers
 {
-    private static final Logger log = Logger.getLogger(LogHelpers.class);
+    private static final Logger log = LoggerFactory.getLogger(LogHelpers.class);
 
     public static List<RunLog> displayAllHistory(ChronixContext ctx)
     {

@@ -23,8 +23,7 @@ import java.io.File;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -34,6 +33,8 @@ import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
 import org.oxymores.chronix.planbuilder.OperationsApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * A Chronix Node. Can be either engine + runner or simply runner.
@@ -41,7 +42,7 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
  */
 public class ChronixEngine extends Thread
 {
-    private static Logger log = Logger.getLogger(ChronixEngine.class);
+    private static Logger log = LoggerFactory.getLogger(ChronixEngine.class);
 
     private boolean runnerMode;
     private int runnerPort, feederPort;
@@ -184,7 +185,7 @@ public class ChronixEngine extends Thread
             }
             catch (Exception e)
             {
-                log.fatal("The engine has failed to start", e);
+                log.error("The engine has failed to start", e);
                 this.run = false;
                 this.stop.release();
                 return;

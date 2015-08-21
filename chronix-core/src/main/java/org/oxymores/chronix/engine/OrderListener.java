@@ -28,7 +28,7 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
@@ -44,11 +44,12 @@ import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.helpers.Order;
 import org.oxymores.chronix.engine.helpers.OrderType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 class OrderListener extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(OrderListener.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderListener.class);
 
     private MessageProducer jmsProducer;
 

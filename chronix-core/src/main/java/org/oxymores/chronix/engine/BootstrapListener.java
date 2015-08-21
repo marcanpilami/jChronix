@@ -22,8 +22,6 @@ package org.oxymores.chronix.engine;
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -40,6 +38,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  This class is only called when an engine starts without a network file file and is part of a network.
@@ -48,7 +48,7 @@ import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
  */
 public class BootstrapListener implements MessageListener
 {
-    private final static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(BootstrapListener.class);
+    private final static Logger log = LoggerFactory.getLogger(BootstrapListener.class);
 
     private final File confDir;
     private final String localNodeName;
@@ -119,7 +119,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException | InterruptedException ex)
         {
-            log.fatal("Could not fetch network definition from console", ex);
+            log.error("Could not fetch network definition from console", ex);
             return false;
         }
 
@@ -150,7 +150,7 @@ public class BootstrapListener implements MessageListener
             Object o = omsg.getObject();
             if (!(o instanceof Network))
             {
-                log.fatal("Received an answer but of the wrong type - engine cannot start");
+                log.error("Received an answer but of the wrong type - engine cannot start");
                 jmsCommit();
                 stop();
             }
@@ -164,7 +164,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException | ChronixPlanStorageException ex)
         {
-            log.error(ex);
+            log.error("Generic error when receiving bootstrap message", ex);
         }
     }
 

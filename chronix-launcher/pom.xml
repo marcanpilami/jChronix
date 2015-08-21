@@ -83,11 +83,19 @@
             <version>${jetty.version}</version>
         </dependency>
 
-        <!-- As the WS is copied raw without its libs, we also need this -->
+        <!-- We use the log4j implementation in the standard launcher -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- We embed all dependencies from the web app -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>chronix-web</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
 
         <!-- Test only -->

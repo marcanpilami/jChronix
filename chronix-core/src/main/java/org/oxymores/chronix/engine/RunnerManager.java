@@ -37,7 +37,7 @@ import javax.jms.TextMessage;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
@@ -56,6 +56,7 @@ import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
@@ -64,7 +65,7 @@ import org.sql2o.Connection;
  */
 public class RunnerManager extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(RunnerManager.class);
+    private static final Logger log = LoggerFactory.getLogger(RunnerManager.class);
 
     private Destination destEndJob;
     private String logDbPath;

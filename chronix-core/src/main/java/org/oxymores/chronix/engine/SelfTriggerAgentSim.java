@@ -25,13 +25,14 @@ import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class SelfTriggerAgentSim extends SelfTriggerAgent
 {
-    private static final Logger log = Logger.getLogger(SelfTriggerAgentSim.class);
+    private static final Logger log = LoggerFactory.getLogger(SelfTriggerAgentSim.class);
     protected DateTime beginTime, endTime;
 
     @Override

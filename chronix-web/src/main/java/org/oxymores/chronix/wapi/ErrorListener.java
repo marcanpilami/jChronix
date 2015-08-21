@@ -1,10 +1,11 @@
 package org.oxymores.chronix.wapi;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
+import org.slf4j.LoggerFactory;
 
 /**
  Sometimes Jersey/Moxy errors are not sent to the log... This listener exists
@@ -12,7 +13,7 @@ import org.glassfish.jersey.server.monitoring.RequestEventListener;
  */
 public class ErrorListener implements ApplicationEventListener
 {
-    private static final Logger log = Logger.getLogger(ErrorListener.class);
+    private static final Logger log = LoggerFactory.getLogger(ErrorListener.class);
 
     @Override
     public void onEvent(ApplicationEvent event)

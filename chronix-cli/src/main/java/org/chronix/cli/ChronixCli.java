@@ -5,36 +5,49 @@ import java.util.List;
 
 import javax.jms.JMSException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.LoggerFactory;
 
 /**
  * Hello world!
- * 
+ *
  */
 public class ChronixCli
 {
-    private static Logger log = Logger.getLogger(ChronixCli.class);
+    private static Logger log = LoggerFactory.getLogger(ChronixCli.class);
 
     public static void main(String[] args)
     {
         new ChronixCli().doMain(args);
     }
 
-    @Option(name = "-n", aliases = { "--name", "--eventsource" }, usage = "for sending events from this source", required = true)
+    @Option(name = "-n", aliases =
+    {
+        "--name", "--eventsource"
+    }, usage = "for sending events from this source", required = true)
     private String source;
 
-    @Option(name = "-p", aliases = { "--port" }, usage = "port of the Chronix server to connect to. Default is 1789. ", required = false)
+    @Option(name = "-p", aliases =
+    {
+        "--port"
+    }, usage = "port of the Chronix server to connect to. Default is 1789. ", required = false)
     private Integer port = 1789;
 
-    @Option(name = "-s", aliases = { "--server", "--broker" }, usage = "Chronix server to connect to. Default is localhost", required = false)
+    @Option(name = "-s", aliases =
+    {
+        "--server", "--broker"
+    }, usage = "Chronix server to connect to. Default is localhost", required = false)
     private String server = "localhost";
 
-    @Option(name = "-d", aliases = { "--data", "--eventdata" }, usage = "data associated to the event", required = false)
+    @Option(name = "-d", aliases =
+    {
+        "--data", "--eventdata"
+    }, usage = "data associated to the event", required = false)
     private String filepath = "";
 
     @Argument

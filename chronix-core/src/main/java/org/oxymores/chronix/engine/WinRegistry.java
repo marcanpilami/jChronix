@@ -7,12 +7,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.prefs.Preferences;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.slf4j.LoggerFactory;
 
 public final class WinRegistry
 {
-    private static Logger log = Logger.getLogger(WinRegistry.class);
+    private static Logger log = LoggerFactory.getLogger(WinRegistry.class);
 
     public static final int HKEY_CURRENT_USER = 0x80000001;
     public static final int HKEY_LOCAL_MACHINE = 0x80000002;
@@ -39,25 +40,55 @@ public final class WinRegistry
     {
         try
         {
-            regOpenKey = userClass.getDeclaredMethod("WindowsRegOpenKey", new Class[] { int.class, byte[].class, int.class });
+            regOpenKey = userClass.getDeclaredMethod("WindowsRegOpenKey", new Class[]
+            {
+                int.class, byte[].class, int.class
+            });
             regOpenKey.setAccessible(true);
-            regCloseKey = userClass.getDeclaredMethod("WindowsRegCloseKey", new Class[] { int.class });
+            regCloseKey = userClass.getDeclaredMethod("WindowsRegCloseKey", new Class[]
+            {
+                int.class
+            });
             regCloseKey.setAccessible(true);
-            regQueryValueEx = userClass.getDeclaredMethod("WindowsRegQueryValueEx", new Class[] { int.class, byte[].class });
+            regQueryValueEx = userClass.getDeclaredMethod("WindowsRegQueryValueEx", new Class[]
+            {
+                int.class, byte[].class
+            });
             regQueryValueEx.setAccessible(true);
-            regEnumValue = userClass.getDeclaredMethod("WindowsRegEnumValue", new Class[] { int.class, int.class, int.class });
+            regEnumValue = userClass.getDeclaredMethod("WindowsRegEnumValue", new Class[]
+            {
+                int.class, int.class, int.class
+            });
             regEnumValue.setAccessible(true);
-            regQueryInfoKey = userClass.getDeclaredMethod("WindowsRegQueryInfoKey1", new Class[] { int.class });
+            regQueryInfoKey = userClass.getDeclaredMethod("WindowsRegQueryInfoKey1", new Class[]
+            {
+                int.class
+            });
             regQueryInfoKey.setAccessible(true);
-            regEnumKeyEx = userClass.getDeclaredMethod("WindowsRegEnumKeyEx", new Class[] { int.class, int.class, int.class });
+            regEnumKeyEx = userClass.getDeclaredMethod("WindowsRegEnumKeyEx", new Class[]
+            {
+                int.class, int.class, int.class
+            });
             regEnumKeyEx.setAccessible(true);
-            regCreateKeyEx = userClass.getDeclaredMethod("WindowsRegCreateKeyEx", new Class[] { int.class, byte[].class });
+            regCreateKeyEx = userClass.getDeclaredMethod("WindowsRegCreateKeyEx", new Class[]
+            {
+                int.class, byte[].class
+            });
             regCreateKeyEx.setAccessible(true);
-            regSetValueEx = userClass.getDeclaredMethod("WindowsRegSetValueEx", new Class[] { int.class, byte[].class, byte[].class });
+            regSetValueEx = userClass.getDeclaredMethod("WindowsRegSetValueEx", new Class[]
+            {
+                int.class, byte[].class, byte[].class
+            });
             regSetValueEx.setAccessible(true);
-            regDeleteValue = userClass.getDeclaredMethod("WindowsRegDeleteValue", new Class[] { int.class, byte[].class });
+            regDeleteValue = userClass.getDeclaredMethod("WindowsRegDeleteValue", new Class[]
+            {
+                int.class, byte[].class
+            });
             regDeleteValue.setAccessible(true);
-            regDeleteKey = userClass.getDeclaredMethod("WindowsRegDeleteKey", new Class[] { int.class, byte[].class });
+            regDeleteKey = userClass.getDeclaredMethod("WindowsRegDeleteKey", new Class[]
+            {
+                int.class, byte[].class
+            });
             regDeleteKey.setAccessible(true);
         }
         catch (RuntimeException e)
@@ -77,7 +108,7 @@ public final class WinRegistry
 
     /**
      * Read a value from key and value name
-     * 
+     *
      * @param hkey
      *            HKEY_CURRENT_USER/HKEY_LOCAL_MACHINE
      * @param key
@@ -104,18 +135,26 @@ public final class WinRegistry
     }
 
     // =====================
-
     private static String readString(Preferences root, Integer hkey, String key, String value) throws ChronixException
     {
         try
         {
-            int[] handles = (int[]) regOpenKey.invoke(root, new Object[] { hkey, toCstr(key), KEY_READ });
+            int[] handles = (int[]) regOpenKey.invoke(root, new Object[]
+            {
+                hkey, toCstr(key), KEY_READ
+            });
             if (handles[1] != REG_SUCCESS)
             {
                 return null;
             }
-            byte[] valb = (byte[]) regQueryValueEx.invoke(root, new Object[] { handles[0], toCstr(value) });
-            regCloseKey.invoke(root, new Object[] { handles[0] });
+            byte[] valb = (byte[]) regQueryValueEx.invoke(root, new Object[]
+            {
+                handles[0], toCstr(value)
+            });
+            regCloseKey.invoke(root, new Object[]
+            {
+                handles[0]
+            });
             return valb != null ? new String(valb).trim() : null;
         }
         catch (Exception e)

@@ -419,7 +419,7 @@ public class TestParallelism extends TestBase
         RunLog failedLog = null;
         for (RunLog rl : res)
         {
-            log.debug(rl.getStateId());
+            log.debug("{}", rl.getStateId());
             if (rl.getPlaceName().startsWith("P21") && rl.getStateId().equals(s1.getId()))
             {
                 failedLog = rl;

@@ -39,7 +39,7 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.RRule;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
 import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -51,12 +51,13 @@ import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixRunException;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class Clock extends ActiveNodeBase
 {
     private static final long serialVersionUID = -5203055591135192345L;
-    private static final Logger log = Logger.getLogger(Clock.class);
+    private static final Logger log = LoggerFactory.getLogger(Clock.class);
     private static final String LOG_DATE_FORMAT = "dd/MM/YYYY hh:mm:ss";
 
     org.joda.time.DateTime created;

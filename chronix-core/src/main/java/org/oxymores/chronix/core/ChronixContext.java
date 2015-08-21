@@ -32,7 +32,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.transactional.ClockTick;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
@@ -52,13 +52,14 @@ import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.helpers.DbUpgrader;
 import org.oxymores.chronix.engine.helpers.UUIDQuirk;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
 public final class ChronixContext
 {
-    private static final Logger log = Logger.getLogger(ChronixContext.class);
+    private static final Logger log = LoggerFactory.getLogger(ChronixContext.class);
     private static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     private static final XStream xmlUtility = new XStream(new StaxDriver());
 
@@ -460,7 +461,6 @@ public final class ChronixContext
                 quotedIds.add("'" + u.toString() + "'");
             }
             String appIds = this.applicationsById.size() > 0 ? StringUtils.join(quotedIds, ",") : "'z'";
-            log.error("DELETE FROM Event tb WHERE tb.appID NOT IN (" + appIds + ")");
 
             c.createQuery("DELETE FROM Event tb WHERE tb.appID NOT IN (" + appIds + ")").executeUpdate();
             c.createQuery("DELETE FROM PipeLineJob tb WHERE tb.appID NOT IN (" + appIds + ")").executeUpdate();

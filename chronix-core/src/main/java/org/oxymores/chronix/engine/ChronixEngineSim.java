@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.jms.JMSException;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -14,11 +12,14 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.sql2o.Connection;
 
 public class ChronixEngineSim extends ChronixEngine
 {
-    private static final Logger log = Logger.getLogger(ChronixEngineSim.class);
+    private static final Logger log = LoggerFactory.getLogger(ChronixEngineSim.class);
 
     private final UUID appToSimulateId;
     private final DateTime start, end;

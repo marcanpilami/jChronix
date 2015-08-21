@@ -29,17 +29,18 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 class TranscientListener extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(TranscientListener.class);
+    private static final Logger log = LoggerFactory.getLogger(TranscientListener.class);
 
     private MessageProducer producerEvent;
 

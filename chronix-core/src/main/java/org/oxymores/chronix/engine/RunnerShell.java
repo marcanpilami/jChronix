@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.engine;
 
 import java.io.BufferedReader;
@@ -39,9 +38,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.RunResult;
+import org.slf4j.LoggerFactory;
 
 public final class RunnerShell
 {
@@ -51,7 +51,7 @@ public final class RunnerShell
     }
 
     // RunnerAgent logger, yes.
-    private static Logger log = Logger.getLogger(RunnerAgent.class);
+    private static Logger log = LoggerFactory.getLogger(RunnerAgent.class);
     private static String POWERSHELL_CMD = "powershell.exe", CMD_CMD = "cmd.exe";
 
     public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)

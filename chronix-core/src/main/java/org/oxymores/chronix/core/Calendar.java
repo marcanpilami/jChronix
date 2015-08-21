@@ -27,15 +27,16 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class Calendar extends NamedApplicationObject
 {
-    private static Logger log = Logger.getLogger(Calendar.class);
+    private static Logger log = LoggerFactory.getLogger(Calendar.class);
     private static final long serialVersionUID = 7332812989443095188L;
 
     protected boolean manualSequence = false;

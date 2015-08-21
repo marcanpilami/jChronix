@@ -78,7 +78,7 @@ public class TestSingleNode extends TestBase
             List<CalendarPointer> q2 = conn.createQuery("SELECT * FROM CalendarPointer r").executeAndFetch(CalendarPointer.class);
             for (CalendarPointer c : q2)
             {
-                log.debug(c.getRunning());
+                log.debug("{}", c.getRunning());
             }
 
             int nbEvents = conn.createQuery("SELECT COUNT(1) FROM Event e").executeScalar(Integer.class);

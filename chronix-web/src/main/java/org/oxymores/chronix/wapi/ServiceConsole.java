@@ -14,7 +14,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -25,13 +25,14 @@ import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 
 @Path("/live")
 public class ServiceConsole
 {
-    private static Logger log = Logger.getLogger(ServiceConsole.class);
+    private static Logger log = LoggerFactory.getLogger(ServiceConsole.class);
 
     private ChronixContext ctx = null;
 

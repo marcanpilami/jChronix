@@ -60,6 +60,7 @@ public class TestLaunch
         if (rs != null || rs2 == null)
         {
             Assert.assertEquals(200, rs.getStatusLine().getStatusCode());
+            Assert.assertEquals(200, rs2.getStatusLine().getStatusCode());
         }
     }
 }

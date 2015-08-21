@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Place extends NetworkObject
 {
     private static final long serialVersionUID = 4736385443687921653L;
-    private static Logger log = Logger.getLogger(Place.class);
+    private static Logger log = LoggerFactory.getLogger(Place.class);
 
     protected String property1, property2, property3, property4;
     private List<UUID> memberOfIds = new ArrayList<>();

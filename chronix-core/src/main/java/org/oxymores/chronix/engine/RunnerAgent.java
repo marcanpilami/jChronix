@@ -32,16 +32,17 @@ import javax.jms.ObjectMessage;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.RunResult;
+import org.slf4j.LoggerFactory;
 
 class RunnerAgent extends BaseListener
 {
-    private static final Logger log = Logger.getLogger(RunnerAgent.class);
+    private static final Logger log = LoggerFactory.getLogger(RunnerAgent.class);
 
     private static final DateTimeFormatter JODA_LOG_FORMATTER = DateTimeFormat.forPattern("dd/MM HH:mm:ss");
     private static final DateTimeFormatter JODA_DIR_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd");
@@ -114,7 +115,7 @@ class RunnerAgent extends BaseListener
             String logFileDateDir = FilenameUtils.concat(this.logDbPath, start.toString(JODA_DIR_FORMATTER));
             if (!(new File(logFileDateDir)).exists() && !(new File(logFileDateDir)).mkdir())
             {
-                log.fatal("Could not create log directory, failing engine");
+                log.error("Could not create log directory, failing engine");
                 this.broker.stop();
                 jmsRollback();
                 return;

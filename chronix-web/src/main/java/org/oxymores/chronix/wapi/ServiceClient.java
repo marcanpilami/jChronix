@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -62,6 +62,7 @@ import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles all the metadata related services. Both JSON (default) and XML.
@@ -70,7 +71,7 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 public class ServiceClient
 {
 
-    private static final Logger log = Logger.getLogger(ServiceClient.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceClient.class);
     private final ChronixContext ctx;
 
     public ServiceClient(ChronixContext ctx)
@@ -364,7 +365,7 @@ public class ServiceClient
         catch (ChronixPlanStorageException e1)
         {
             // DEBUG code, so no need for pretty exc handling
-            log.error(e1);
+            log.error("{}", e1);
             System.exit(1);
         }
     }

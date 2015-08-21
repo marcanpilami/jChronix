@@ -35,19 +35,20 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.LoggerFactory;
 
 /*
  * Queue name: cf constants
  */
 class Broker
 {
-    private static Logger log = Logger.getLogger(Broker.class);
+    private static Logger log = LoggerFactory.getLogger(Broker.class);
 
     // JMS
     private String brokerName, url;

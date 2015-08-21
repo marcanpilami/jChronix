@@ -24,18 +24,19 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.data.RunResult;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class ChainEnd extends ActiveNodeBase
 {
-    private static final Logger log = Logger.getLogger(ChainEnd.class);
+    private static final Logger log = LoggerFactory.getLogger(ChainEnd.class);
     private static final long serialVersionUID = 4129809921422152571L;
 
     public ChainEnd()

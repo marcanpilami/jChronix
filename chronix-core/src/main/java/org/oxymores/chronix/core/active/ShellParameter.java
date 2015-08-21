@@ -21,18 +21,19 @@ package org.oxymores.chronix.core.active;
 
 import javax.jms.JMSException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.RunnerManager;
 import org.oxymores.chronix.engine.data.RunDescription;
+import org.slf4j.LoggerFactory;
 
 public class ShellParameter extends Parameter
 {
     private static final long serialVersionUID = 7528888158440570804L;
-    private static final Logger log = Logger.getLogger(ShellParameter.class);
+    private static final Logger log = LoggerFactory.getLogger(ShellParameter.class);
 
     @Override
     public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)

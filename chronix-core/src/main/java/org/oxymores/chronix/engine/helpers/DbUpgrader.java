@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.SQLException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.hsqldb.cmdline.SqlFile;
 import org.hsqldb.cmdline.SqlToolError;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
@@ -22,7 +23,7 @@ import org.sql2o.Sql2o;
  */
 public class DbUpgrader
 {
-    private static final Logger log = Logger.getLogger(DbUpgrader.class);
+    private static final Logger log = LoggerFactory.getLogger(DbUpgrader.class);
 
     public enum DbType
     {
@@ -40,7 +41,7 @@ public class DbUpgrader
         try (Connection conn = fact.open())
         {
             db_version = conn.createQuery("SELECT MAX(ID) FROM VERSION").executeScalar(Integer.class);
-            log.debug(String.format("Database is in version", db_version));
+            log.debug("Database is in version {}", db_version);
         }
         catch (Exception e)
         {
@@ -61,7 +62,7 @@ public class DbUpgrader
         }
         catch (IOException ex)
         {
-            log.fatal("Could not open SQL file", ex);
+            log.error("Could not open SQL file", ex);
             throw new ChronixInitializationException("", ex);
         }
 
@@ -72,7 +73,7 @@ public class DbUpgrader
         }
         catch (SqlToolError | SQLException ex)
         {
-            log.fatal("Could not run SQL script file", ex);
+            log.error("Could not run SQL script file", ex);
             throw new ChronixInitializationException("", ex);
         }
 
