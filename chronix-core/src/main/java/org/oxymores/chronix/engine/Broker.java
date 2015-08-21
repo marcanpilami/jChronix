@@ -109,6 +109,7 @@ class Broker
         broker.setRestartAllowed(false);
         broker.setSupportFailOver(false);
         broker.setStartAsync(false);
+        broker.setUseShutdownHook(false);
 
         // System resources
         MemoryUsage mu = new MemoryUsage();

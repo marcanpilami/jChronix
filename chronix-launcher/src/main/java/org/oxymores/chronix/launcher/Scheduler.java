@@ -50,7 +50,14 @@ public class Scheduler
      */
     static void stop(String[] args)
     {
-        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        try
+        {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
+        catch (IllegalStateException e)
+        {
+            // Do nothing - we simply cannot remove the hook when we are already stopping.
+        }
         if (handler != null)
         {
             handler.stopEngine();
@@ -208,7 +215,7 @@ public class Scheduler
         e.waitForInitEnd();
 
         // Jetty
-        c = new JettyContainer(dbPath, e.getContext().getLocalNode().getId().toString(), e.getContext().getLocalNode().getWsPort());
+        c = new JettyContainer(e.getContext());
 
         // Save the engine in order to be able to stop it later
         handler = e;

@@ -9,7 +9,8 @@ import java.io.File;
 import java.util.UUID;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
-import java.util.Random;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.ws.rs.ApplicationPath;
 import org.slf4j.Logger;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -34,24 +35,24 @@ import org.slf4j.MDC;
  * @author Marc-Antoine
  */
 @ApplicationPath("ws")
-public class RestApplication extends ResourceConfig
+public class RestApplication extends ResourceConfig implements ServletContextListener
 {
     private static final Logger log = LoggerFactory.getLogger(RestApplication.class);
-    public static ChronixContext ctx;
+    private ChronixContext ctx;
+    private boolean closeOnExit = false;
 
     public RestApplication(@Context ServletContext context)
     {
         MDC.put("node", "webservice");
         log.info("Creating a new Chronix WS application");
 
-        String dbPath = context.getInitParameter("db_path");
-        String localNodeId = context.getInitParameter("local_node_id");
-
-        if (dbPath == null || localNodeId == null)
+        Object o = context.getAttribute("context");
+        if (o == null)
         {
             // This happens during tests on a standard web server (a chronix engine would set the init params)
             // So create test data inside a test db.
-            dbPath = "C:\\TEMP\\db1";
+            String dbPath = "C:\\TEMP\\db1";
+            closeOnExit = true;
             try
             {
                 Network n = new Network();
@@ -77,57 +78,47 @@ public class RestApplication extends ResourceConfig
                 Application a1 = DemoApplication.getNewDemoApplication();
                 ChronixContext.saveApplicationAndMakeCurrent(a1, new File(dbPath));
 
-                localNodeId = en1.getId().toString();
+                String localNodeId = en1.getId().toString();
+
+                ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+                ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
+
+                try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
+                {
+                    RunLog l1 = new RunLog();
+                    l1.setActiveNodeId(UUID.randomUUID());
+                    l1.setApplicationId(UUID.randomUUID());
+                    l1.setChainId(UUID.randomUUID());
+                    l1.setChainLaunchId(UUID.randomUUID());
+                    l1.setExecutionNodeId(UUID.randomUUID());
+                    l1.setId(UUID.randomUUID());
+                    l1.setPlaceId(UUID.randomUUID());
+                    l1.setActiveNodeName("nodename");
+                    l1.setApplicationName("appli");
+                    l1.setBeganRunningAt(DateTime.now());
+                    l1.setChainName("chain");
+                    l1.setDns("localhost");
+                    l1.setEnteredPipeAt(DateTime.now());
+                    l1.setExecutionNodeName("nodename");
+                    l1.setLastKnownStatus("OK");
+                    l1.setLogPath("/ii/oo");
+                    l1.setWhatWasRun("cmd1");
+                    l1.setResultCode(0);
+                    l1.setMarkedForUnAt(DateTime.now());
+
+                    l1.insertOrUpdate(conn);
+                    conn.commit();
+                }
             }
             catch (ChronixPlanStorageException ex)
             {
-                log.error("", ex);
+                log.error("Failed to create test data", ex);
                 return;
             }
         }
-
-        try
+        else
         {
-            ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
-            ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
-        }
-        catch (Exception e)
-        {
-            log.error("", e);
-            return;
-        }
-
-        try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
-        {
-            RunLog l1 = new RunLog();
-            l1.setActiveNodeId(UUID.randomUUID());
-            l1.setApplicationId(UUID.randomUUID());
-            l1.setChainId(UUID.randomUUID());
-            l1.setChainLaunchId(UUID.randomUUID());
-            l1.setExecutionNodeId(UUID.randomUUID());
-            Random gen = new Random(DateTime.now().getMillis());
-            l1.setId(UUID.randomUUID());
-            l1.setPlaceId(UUID.randomUUID());
-            l1.setActiveNodeName("nodename");
-            l1.setApplicationName("appli");
-            l1.setBeganRunningAt(DateTime.now());
-            l1.setChainName("chain");
-            l1.setDns("localhost");
-            l1.setEnteredPipeAt(DateTime.now());
-            l1.setExecutionNodeName("nodename");
-            l1.setLastKnownStatus("OK");
-            l1.setLogPath("/ii/oo");
-            l1.setWhatWasRun("cmd1");
-            l1.setResultCode(0);
-            l1.setMarkedForUnAt(DateTime.now());
-
-            l1.insertOrUpdate(conn);
-            conn.commit();
-        }
-        catch (Exception e)
-        {
-            log.error("", e);
-            return;
+            ctx = (ChronixContext) o;
         }
 
         this.property(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
@@ -136,5 +127,22 @@ public class RestApplication extends ResourceConfig
         this.register(new ServiceClient(ctx));
         this.register(new ServiceConsole(ctx));
         this.register(ErrorListener.class);
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce)
+    {
+        log.debug("Servlet context is loading");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce)
+    {
+        log.info("Servlet context is closing");
+        if (closeOnExit && this.ctx != null)
+        {
+            this.ctx.close();
+            this.ctx = null;
+        }
     }
 }

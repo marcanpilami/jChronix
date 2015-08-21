@@ -9,14 +9,12 @@ import java.io.File;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.plus.webapp.PlusConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.Configuration;
-import org.eclipse.jetty.webapp.FragmentConfiguration;
-import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
+import org.oxymores.chronix.core.ChronixContext;
 
 public class JettyContainer
 {
@@ -24,12 +22,12 @@ public class JettyContainer
 
     private Server server;
 
-    public JettyContainer(String dbPath, String localNodeId, int port)
+    public JettyContainer(ChronixContext chrCtx)
     {
-        log.info("Starting web server on port " + port);
+        log.info("Starting web server on port " + chrCtx.getLocalNode().getWsPort());
         log.info("The web server will use plain HTTP for all communications (no SSL)");
 
-        server = new Server(port);
+        server = new Server(chrCtx.getLocalNode().getWsPort());
 
         // There are two places where the web service might be: inside ./www (nominal) or ../chronix-web/target/chronix-web-* (tests)
         File f = new File("./www");
@@ -53,14 +51,14 @@ public class JettyContainer
 
         log.info("Web server will load application at " + f.getAbsolutePath());
         WebAppContext ctx = new WebAppContext(f.getAbsolutePath(), "/");
-        ctx.setInitParameter("db_path", dbPath);
-        ctx.setInitParameter("local_node_id", localNodeId);
         ctx.setLogUrlOnStart(true);
         ctx.setParentLoaderPriority(true);
         ctx.setConfigurations(new Configuration[]
         {
-            new WebInfConfiguration(), new WebXmlConfiguration(), new MetaInfConfiguration(), new FragmentConfiguration(), new AnnotationConfiguration()
+            new WebInfConfiguration(), new WebXmlConfiguration(), new AnnotationConfiguration()
         });
+        ctx.setAttribute("context", chrCtx);
+        ctx.setDisplayName("Chronix Web Application");
         server.setHandler(ctx);
 
         try
