@@ -11,7 +11,7 @@ function initApp(uuid)
     var groups = false;
     var save = false;
 
-    $.getJSON("ws/meta/app/id/" + uuid).done(function (data)
+    $.getJSON("ws/meta/app/" + uuid).done(function (data)
     {
         app = data;
 

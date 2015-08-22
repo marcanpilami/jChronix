@@ -20,6 +20,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import org.joda.time.DateTime;
 
 import org.oxymores.chronix.core.active.And;
 import org.oxymores.chronix.core.active.ChainEnd;
@@ -39,6 +40,7 @@ public class Application extends ChronixObject
     @Size(min = 1, max = 255)
     protected String description;
     protected int version = 0;
+    private DateTime latestSave = DateTime.now();
 
     @Valid
     protected Map<UUID, PlaceGroup> groups = new HashMap<>();
@@ -380,5 +382,15 @@ public class Application extends ChronixObject
     public void isFromCurrentFile(boolean b)
     {
         this.fromCurrentFile = b;
+    }
+
+    public DateTime getLatestSave()
+    {
+        return latestSave;
+    }
+
+    public void setLatestSave(DateTime latestSave)
+    {
+        this.latestSave = latestSave;
     }
 }

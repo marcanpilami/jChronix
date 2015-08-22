@@ -5,6 +5,7 @@ function initAppChoice()
     {
         return;
     }
+    $('#ac-table').empty();
 
     $.getJSON("ws/meta/app").done(function (data)
     {
@@ -22,7 +23,9 @@ function initAppChoice()
                 //{data: 'id', title: 'ID'},
                 {data: 'name', title: 'Name'},
                 {data: 'description', title: 'Description'},
-                {data: 'version', title: 'Version', readOnly: true}
+                {data: 'version', title: 'Version', readOnly: true},
+                {data: 'draft', title: 'Existing draft', readOnly: true},
+                {data: 'latestSave', title: 'Latest save on', readOnly: true, type: 'date', dateFormat: 'MM/DD/YYYY', correctFormat: true}
             ]
         });
 

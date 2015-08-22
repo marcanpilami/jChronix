@@ -90,16 +90,6 @@ public class ServiceClient
     }
 
     @GET
-    @Path("app/name/{appname}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DTOApplication getApplication(@PathParam("appname") String name)
-    {
-        log.debug(String.format("getApplication service was called for app name %s", name));
-        String id = ctx.getApplicationByName(name).getId().toString();
-        return getApplicationById(id);
-    }
-
-    @GET
     @Path("network")
     @Produces(MediaType.APPLICATION_JSON)
     public DTONetwork getNetwork()
@@ -135,7 +125,7 @@ public class ServiceClient
         log.debug(String.format("getFirstApplication service was called"));
         if (ctx.getApplications().size() > 0)
         {
-            return getApplicationById(ctx.getApplications().iterator().next().getId().toString());
+            return getApplication(ctx.getApplications().iterator().next().getId().toString());
         }
         else
         {
@@ -144,12 +134,12 @@ public class ServiceClient
     }
 
     @GET
-    @Path("app/id/{appid}")
+    @Path("app/{appid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DTOApplication getApplicationById(@PathParam("appid") String id)
+    public DTOApplication getApplication(@PathParam("appid") String id)
     {
         log.debug(String.format("getApplication service was called for app id %s", id));
-        Application a = ctx.getApplication(id);
+        Application a = ctx.getStagedApplication(UUID.fromString(id));
 
         DTOApplication d = CoreToDto.getApplication(a);
         log.debug("End of getApplication call. Returning an application.");
@@ -165,10 +155,10 @@ public class ServiceClient
 
         // Read application
         Application a = DtoToCore.getApplication(app);
-
+        a.isFromCurrentFile(false);
         try
         {
-            ChronixContext.stageApplication(a, new File(ctx.getContextRoot()));
+            ctx.stageApplication(a);
         }
         catch (ChronixPlanStorageException e)
         {
@@ -204,7 +194,7 @@ public class ServiceClient
     public void resetStage(DTOApplication app)
     {
         log.debug("resetStage service was called");
-        ChronixContext.unstageApplication(DtoToCore.getApplication(app), new File(ctx.getContextRoot()));
+        ctx.unstageApplication(DtoToCore.getApplication(app));
         log.debug("End of resetStage call.");
     }
 
@@ -248,13 +238,15 @@ public class ServiceClient
         log.debug("getAllApplications service was called");
         ArrayList<DTOApplicationShort> res = new ArrayList<>();
 
-        for (Application a : this.ctx.getApplications())
+        for (Application a : this.ctx.getStagedApplications())
         {
             DTOApplicationShort t = new DTOApplicationShort();
             t.setDescription(a.getDescription());
             t.setId(a.getId().toString());
             t.setName(a.getName());
             t.setVersion(a.getVersion());
+            t.setDraft(!a.isFromCurrentFile());
+            t.setLatestSave(a.getLatestSave().toDate());
             res.add(t);
         }
         return res;

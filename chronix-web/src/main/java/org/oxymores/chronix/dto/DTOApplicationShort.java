@@ -1,9 +1,13 @@
 package org.oxymores.chronix.dto;
 
+import java.util.Date;
+
 public class DTOApplicationShort
 {
     private String id, name, description;
     private int version;
+    private boolean draft = false;
+    private Date latestSave;
 
     public String getId()
     {
@@ -43,5 +47,25 @@ public class DTOApplicationShort
     public void setVersion(int v)
     {
         this.version = v;
+    }
+
+    public boolean isDraft()
+    {
+        return draft;
+    }
+
+    public void setDraft(boolean draft)
+    {
+        this.draft = draft;
+    }
+
+    public Date getLatestSave()
+    {
+        return latestSave;
+    }
+
+    public void setLatestSave(Date latestSave)
+    {
+        this.latestSave = latestSave;
     }
 }

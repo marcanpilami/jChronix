@@ -37,7 +37,9 @@ function initSave(app)
     tab.find("button[name=stage]").click(function ()
     {
         var a = prepareApp(app);
-        $.postJSON("ws/meta/app", a, null, function (jqXHR, errorType, exc)
+        $.postJSON("ws/meta/app", a, function () {
+            apps_short = null;
+        }, function (jqXHR, errorType, exc)
         {
             alert("an error occured while staging the application: " + errorType);
         });
@@ -54,6 +56,7 @@ function initSave(app)
                 alert("Cannot activate an invalid application. Correct the errors then retry.");
                 return;
             }
+            apps_short = null;
 
             $.postJSON("ws/meta/liveapp", a, null, function (jqXHR, errorType, exc)
             {
@@ -68,6 +71,7 @@ function initSave(app)
         $.postJSON("ws/meta/xappunstage", a,
                 function ()
                 {
+                    apps_short = null;
                     var apptab = $("#tabs > ul > li#tabhead-" + app.id);
                     var appdiv = $("#tabs > div#tab-" + app.id);
                     var allappstab = $("#tabs > ul > li#appstab");

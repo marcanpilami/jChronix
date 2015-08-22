@@ -344,11 +344,6 @@ public class CoreToDto
         res.setId(g.getId().toString());
         res.setName(g.getName());
 
-        for (Place p : g.getPlaces())
-        {
-            res.addPlace(p.getId());
-        }
-
         return res;
     }
 

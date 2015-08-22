@@ -75,7 +75,7 @@ public final class ChronixContext
     private Network network;
 
     // Loaded applications
-    private final Map<UUID, Application> applicationsById;
+    private final Map<UUID, Application> applicationsById, stagedApplicationsById;
     private final Map<String, Application> applicationsByName;
 
     // Local node identification
@@ -105,6 +105,7 @@ public final class ChronixContext
         this.localNodeName = localNodeName;
         this.configurationDirectory = new File(FilenameUtils.normalize(appConfDirectory));
         this.applicationsById = new HashMap<>();
+        this.stagedApplicationsById = new HashMap<>();
         this.applicationsByName = new HashMap<>();
         this.historyDbPath = historyDBPath;
         this.transacDbPath = transacDbPath;
@@ -146,7 +147,8 @@ public final class ChronixContext
 
         // List files in directory - and therefore applications
         File[] fileList = this.configurationDirectory.listFiles();
-        HashMap<String, File[]> toLoad = new HashMap<>();
+        HashMap<String, File> toLoad = new HashMap<>();
+        HashMap<String, File> toLoadWorking = new HashMap<>();
 
         for (File f : fileList)
         {
@@ -158,9 +160,17 @@ public final class ChronixContext
                 String id = fileName.split("_")[2];
                 if (!toLoad.containsKey(id))
                 {
-                    toLoad.put(id, new File[2]);
+                    toLoad.put(id, f);
                 }
-                toLoad.get(id)[0] = f;
+            }
+
+            if (fileName.startsWith("app_") && fileName.endsWith(".crn") && fileName.contains("WORKING") && fileName.contains("data"))
+            {
+                String id = fileName.split("_")[2];
+                if (!toLoadWorking.containsKey(id))
+                {
+                    toLoadWorking.put(id, f);
+                }
             }
         }
 
@@ -172,9 +182,17 @@ public final class ChronixContext
         // ///////////////////
         // Load apps
         // ///////////////////
-        for (File[] ss : toLoad.values())
+        for (File ss : toLoad.values())
         {
-            this.loadApplication(ss[0], this.simulateExternalPayloads);
+            Application app = this.loadApplication(ss, this.simulateExternalPayloads);
+            applicationsById.put(app.getId(), app);
+            applicationsByName.put(app.getName(), app);
+        }
+        for (File ss : toLoadWorking.values())
+        {
+            Application app = this.loadApplication(ss, this.simulateExternalPayloads);
+            app.isFromCurrentFile(false);
+            stagedApplicationsById.put(app.getId(), app);
         }
 
         // ///////////////////
@@ -184,7 +202,6 @@ public final class ChronixContext
         {
             try (Connection conn = this.getTransacDataSource().beginTransaction())
             {
-
                 for (Application a : this.applicationsById.values())
                 {
                     a.isFromCurrentFile(true);
@@ -209,7 +226,6 @@ public final class ChronixContext
             }
         }
 
-        // TODO: cleanup event data (elements they reference may have been removed)
         // TODO: validate apps
     }
 
@@ -268,10 +284,6 @@ public final class ChronixContext
         //}
         // Set the context so as to enable network access through the application
         res.setContext(this);
-
-        // TODO: Should NOT be here
-        applicationsById.put(res.getId(), res);
-        applicationsByName.put(res.getName(), res);
 
         return res;
     }
@@ -370,11 +382,18 @@ public final class ChronixContext
         }
     }
 
-    public static void stageApplication(Application a, File dir) throws ChronixPlanStorageException
+    public void stageApplication(Application a)
+    {
+        ChronixContext.stageApplication(a, configurationDirectory);
+        this.stagedApplicationsById.put(a.getId(), a);
+    }
+
+    private static void stageApplication(Application a, File dir) throws ChronixPlanStorageException
     {
         log.info(String.format("Staging application %s to draft file inside metabase %s", a.getName(), dir));
         String destPath = getWorkingPath(a.getId(), dir);
-
+        a.setLatestSave(DateTime.now());
+        
         try (FileOutputStream fos = new FileOutputStream(destPath))
         {
             xmlUtility.toXML(a, fos);
@@ -385,7 +404,13 @@ public final class ChronixContext
         }
     }
 
-    public static void unstageApplication(Application a, File dir)
+    public void unstageApplication(Application a)
+    {
+        unstageApplication(a, configurationDirectory);
+        this.stagedApplicationsById.remove(a.getId());
+    }
+
+    private static void unstageApplication(Application a, File dir)
     {
         String destPath = getWorkingPath(a.getId(), dir);
         File dest = new File(destPath);
@@ -440,12 +465,11 @@ public final class ChronixContext
 
     public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
     {
-        log.info(String.format("Deleting inside database %s the active file for application %s", this.configurationDirectory, a.getName()));
+        log.info(String.format("Deleting inside database %s the file for application %s", this.configurationDirectory, a.getName()));
         String currentDataFilePath = getActivePath(a.id, this.configurationDirectory);
 
         File f = new File(currentDataFilePath);
         f.delete();
-        this.removeApplicationFromCache(a.getId());
     }
 
     // Will make the transactional data inside the database consistent with the application definition
@@ -661,6 +685,11 @@ public final class ChronixContext
         return this.applicationsById.get(id);
     }
 
+    public Application getStagedApplication(UUID id)
+    {
+        return this.stagedApplicationsById.containsKey(id) ? this.stagedApplicationsById.get(id) : this.getApplication(id);
+    }
+
     public Application getApplication(String id)
     {
         return this.getApplication(UUID.fromString(id));
@@ -674,6 +703,14 @@ public final class ChronixContext
     public Collection<Application> getApplications()
     {
         return this.applicationsById.values();
+    }
+
+    public Collection<Application> getStagedApplications()
+    {
+        Map<UUID, Application> res = new HashMap<>();
+        res.putAll(this.applicationsById);
+        res.putAll(this.stagedApplicationsById);
+        return res.values();
     }
 
     public String getContextRoot()
