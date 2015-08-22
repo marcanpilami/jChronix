@@ -4,13 +4,15 @@ var tabs;
 var network;
 var apps_short;
 var apps = new Object();
-var panel_phynode, panel_places;
+var panel_phynode, panel_places, panel_deployment;
 
 $(
         function ()
         {
+            refreshAppList();
             panel_phynode = new PanelPhyNode();
             panel_places = new PanelPlace();
+            panel_deployment = new PanelDeployment();
             tabs = $('#tabs').tabs({
                 //active: 0,
                 heightStyle: 'fill',
@@ -52,6 +54,10 @@ function initEnvironment()
                 if (i.indexOf("place") === 0)
                 {
                     panel_places.initPanel();
+                }
+                if (i.indexOf("deploy") === 0)
+                {
+                    panel_deployment.initPanel();
                 }
             }
         });
@@ -180,6 +186,11 @@ function item2name(item)
     return item.name;
 }
 
+function nameMatcher(term, text, option)
+{
+    return option.name.toUpperCase().indexOf(term.toUpperCase()) >= 0;
+}
+
 function removeIfNoName(collection)
 {
     var toRemove = [];
@@ -193,5 +204,13 @@ function removeIfNoName(collection)
     $.each(toRemove, function ()
     {
         collection.splice(collection.indexOf(this), 1);
+    });
+}
+
+function refreshAppList()
+{
+    $.getJSON("ws/meta/app").done(function (data)
+    {
+        apps_short = data;
     });
 }

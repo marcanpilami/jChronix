@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class Place extends NetworkObject
 {
     private static final long serialVersionUID = 4736385443687921653L;
-    private static Logger log = LoggerFactory.getLogger(Place.class);
+    private static final Logger log = LoggerFactory.getLogger(Place.class);
 
     protected String property1, property2, property3, property4;
     private List<UUID> memberOfIds = new ArrayList<>();
@@ -89,11 +89,8 @@ public class Place extends NetworkObject
 
     public void setNode(ExecutionNode node)
     {
-        if (this.node == null || !this.node.equals(node))
-        {
-            this.node = node;
-            node.addHostedPlace(this);
-        }
+        this.node = node;
+        node.addHostedPlace(this);
     }
 
     public List<UUID> getMemberOfIds()

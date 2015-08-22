@@ -17,6 +17,7 @@
         <script src="js/app.js"></script>
         <script src="js/network.js"></script>
         <script src="js/places.js"></script>
+        <script src="js/deployment.js"></script>
         <script src="js/domain.js"></script>
         <script src="js/chain.js"></script>
         <script src="js/seq.js"></script>
@@ -53,6 +54,7 @@
                         <ul>
                             <li><a href="#phynodes">Network <span class="fa fa-cog"></span></a></li>
                             <li><a href="#places">Logical Network <span class="fa fa-cogs"></span></a></li>
+                            <li><a href="#deploy">App deployment <span class="fa fa-wrench"></span></a></li>
                             <li><a href="#saveenvt">Validate & save <span class="fa fa-floppy-o"></span></a></li>
                         </ul>
 
@@ -94,6 +96,25 @@
                                 </thead>
                                 <tbody>
 
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id='deploy'>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>Application to deploy</td>
+                                        <td><div id='deploy-apps' style="width: 300px;"></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Group to map to environment places</td>
+                                        <td><div id='deploy-groups' style="width: 300px;"></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Places inside the group</td>
+                                        <td><div id='deploy-places' style="min-width: 300px;"></div></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

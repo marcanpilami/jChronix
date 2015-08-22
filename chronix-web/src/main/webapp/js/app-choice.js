@@ -1,10 +1,6 @@
 
 function initAppChoice()
 {
-    if (apps_short)
-    {
-        return;
-    }
     $('#ac-table').empty();
 
     $.getJSON("ws/meta/app").done(function (data)

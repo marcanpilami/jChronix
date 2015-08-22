@@ -48,7 +48,7 @@ public class DtoToCore
         a.setDescription(d.getDescription());
         a.setname(d.getName());
         a.setVersion(d.getVersion());
-        
+
         Or or = new Or();
         or.setId(UUID.fromString(d.getOrId()));
         or.setName("OR");
@@ -315,6 +315,10 @@ public class DtoToCore
         r.setProperty2(d.getProp2());
         r.setProperty3(d.getProp3());
         r.setProperty4(d.getProp4());
+        for (String s : d.getMemberOf())
+        {
+            r.getMemberOfIds().add(UUID.fromString(s));
+        }
         return r;
     }
 

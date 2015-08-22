@@ -23,6 +23,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Network;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.DemoApplication;
@@ -73,10 +74,16 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                 Place p2 = PlanBuilder.buildPlace(n, "second node", en2);
                 Place p3 = PlanBuilder.buildPlace(n, "hosted node by second node", en3);
 
-                ChronixContext.saveNetwork(n, new File(dbPath));
-
                 Application a1 = DemoApplication.getNewDemoApplication();
+
+                a1.getGroup("group all").addPlace(p1);
+                a1.getGroup("group all").addPlace(p2);
+                a1.getGroup("group all").addPlace(p3);
+                a1.getGroup("group 2").addPlace(p1);
+                a1.getGroup("group 3").addPlace(p2);
+
                 ChronixContext.saveApplication(a1, new File(dbPath));
+                ChronixContext.saveNetwork(n, new File(dbPath));
 
                 String localNodeId = en1.getId().toString();
 

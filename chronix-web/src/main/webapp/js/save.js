@@ -56,9 +56,10 @@ function initSave(app)
                 alert("Cannot activate an invalid application. Correct the errors then retry.");
                 return;
             }
-            apps_short = null;
 
-            $.postJSON("ws/meta/liveapp", a, null, function (jqXHR, errorType, exc)
+            $.postJSON("ws/meta/liveapp", a, function () {
+                apps_short = null;
+            }, function (jqXHR, errorType, exc)
             {
                 alert("an error occured while storing and sending the application: " + errorType);
             });
