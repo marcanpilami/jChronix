@@ -16,6 +16,7 @@
  */
 package org.oxymores.chronix.wapi;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -81,7 +82,7 @@ public class ServiceClient
 
     @GET
     @Path("ping")
-    @Produces("text/plain")
+    @Produces(MediaType.TEXT_PLAIN)
     public String sayHello()
     {
         log.debug("Ping service was called");
@@ -90,10 +91,7 @@ public class ServiceClient
 
     @GET
     @Path("app/name/{appname}")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public DTOApplication getApplication(@PathParam("appname") String name)
     {
         log.debug(String.format("getApplication service was called for app name %s", name));
@@ -103,10 +101,7 @@ public class ServiceClient
 
     @GET
     @Path("network")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public DTONetwork getNetwork()
     {
         log.debug("getNetwork was called");
@@ -115,7 +110,7 @@ public class ServiceClient
 
     @POST
     @Path("network")
-    @Consumes("application/json")
+    @Consumes(MediaType.APPLICATION_JSON)
     public void storeNetwork(DTONetwork n)
     {
         log.debug("storeNetwork was called");
@@ -134,10 +129,7 @@ public class ServiceClient
 
     @GET
     @Path("app/first")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public DTOApplication getFirstApplication()
     {
         log.debug(String.format("getFirstApplication service was called"));
@@ -153,10 +145,7 @@ public class ServiceClient
 
     @GET
     @Path("app/id/{appid}")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public DTOApplication getApplicationById(@PathParam("appid") String id)
     {
         log.debug(String.format("getApplication service was called for app id %s", id));
@@ -169,14 +158,7 @@ public class ServiceClient
 
     @POST
     @Path("app")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
-    @Consumes(
-            {
-                "application/json", "application/xml"
-            })
+    @Consumes(MediaType.APPLICATION_JSON)
     public void stageApplication(DTOApplication app)
     {
         log.debug("stageApplication service was called");
@@ -184,12 +166,9 @@ public class ServiceClient
         // Read application
         Application a = DtoToCore.getApplication(app);
 
-        // Put the working copy in the local cache (no impact on engine, different cache)
-        this.ctx.addApplicationToCache(a);
-
         try
         {
-            ctx.saveApplication(a);
+            ChronixContext.stageApplication(a, new File(ctx.getContextRoot()));
         }
         catch (ChronixPlanStorageException e)
         {
@@ -199,40 +178,39 @@ public class ServiceClient
     }
 
     @POST
-    @Path("app/id/{uuid}/send")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
-    public void storeApplication(@PathParam("uuid") String uuid)
+    @Path("liveapp")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void storeApplication(DTOApplication app)
     {
         log.debug("storeApplication service was called");
-
+        app.setVersion(app.getVersion() + 1);
+        Application a = DtoToCore.getApplication(app);
         try
         {
-            SenderHelpers.sendApplicationToAllClients(this.ctx.getApplication(uuid), ctx);
+            SenderHelpers.sendApplicationToAllClients(a, ctx);
         }
         catch (JMSException e)
         {
             log.error("Could not send the application to its clients", e);
         }
-
+        // Do not remove the working file... otherwise we would have sync issues (ops above are asynchronous).
+        stageApplication(app); // Store it with new version number and possible changes.
         log.debug("End of storeApplication call.");
     }
 
-    public void resetStage()
+    @POST
+    @Path("xappunstage")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void resetStage(DTOApplication app)
     {
-        // TODO Auto-generated method stub
         log.debug("resetStage service was called");
+        ChronixContext.unstageApplication(DtoToCore.getApplication(app), new File(ctx.getContextRoot()));
         log.debug("End of resetStage call.");
     }
 
     @POST
     @Path("rrule/test")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public DTOResultClock getNextRRuleOccurrences(DTORRule rule)
     {
@@ -264,10 +242,7 @@ public class ServiceClient
 
     @GET
     @Path("app")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public List<DTOApplicationShort> getAllApplications()
     {
         log.debug("getAllApplications service was called");
@@ -279,6 +254,7 @@ public class ServiceClient
             t.setDescription(a.getDescription());
             t.setId(a.getId().toString());
             t.setName(a.getName());
+            t.setVersion(a.getVersion());
             res.add(t);
         }
         return res;
@@ -286,10 +262,7 @@ public class ServiceClient
 
     @POST
     @Path("app/new/{name}/{description}")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public DTOApplication createApplication(@PathParam("name") String name, @PathParam("description") String description)
     {
         // Check if no app of this name
@@ -312,10 +285,7 @@ public class ServiceClient
 
     @POST
     @Path("app/newdemo")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     public void createTestApplication()
     {
         Application a = DemoApplication.getNewDemoApplication();
@@ -360,7 +330,6 @@ public class ServiceClient
         try
         {
             ctx.saveApplication(a);
-            ctx.setWorkingAsCurrent(a);
         }
         catch (ChronixPlanStorageException e1)
         {
@@ -372,10 +341,7 @@ public class ServiceClient
 
     @POST
     @Path("app/test")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public List<DTOValidationError> validateApp(DTOApplication app)
     {
@@ -401,10 +367,7 @@ public class ServiceClient
 
     @POST
     @Path("network/test")
-    @Produces(
-            {
-                "application/json", "application/xml"
-            })
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public List<DTOValidationError> validateNetwork(DTONetwork nn)
     {

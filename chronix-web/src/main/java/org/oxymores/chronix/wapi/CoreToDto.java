@@ -69,6 +69,7 @@ public class CoreToDto
         res.setExternals(new ArrayList<DTOExternal>());
         res.setCalendars(new ArrayList<DTOCalendar>());
         res.setCalnexts(new ArrayList<DTONextOccurrence>());
+        res.setVersion(a.getVersion());
 
         // Unique elements
         for (ConfigurableBase nb : a.getActiveElements().values())

@@ -3,6 +3,7 @@ package org.oxymores.chronix.dto;
 public class DTOApplicationShort
 {
     private String id, name, description;
+    private int version;
 
     public String getId()
     {
@@ -32,5 +33,15 @@ public class DTOApplicationShort
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public int getVersion()
+    {
+        return this.version;
+    }
+
+    public void setVersion(int v)
+    {
+        this.version = v;
     }
 }

@@ -235,23 +235,6 @@ public class ChronixEngine extends Thread
         log.info("The scheduler has stopped");
     }
 
-    /**
-     * Wait for a reboot to occur & end. If no reboot happens, this function blocks for ever, so it's a little dangerous.
-     * It is cumulative: must be called for each reboot.
-     */
-    public void waitForRebootEndXX()
-    {
-        try
-        {
-            this.engineStops.acquire();
-        }
-        catch (InterruptedException e)
-        {
-            log.warn("Interruption while waiting for engine to reboot");
-        }
-        waitForInitEnd();
-    }
-
     public void waitForInitEnd()
     {
         try
@@ -310,11 +293,11 @@ public class ChronixEngine extends Thread
 
                 // Create OPERATIONS application
                 Application a = OperationsApplication.getNewApplication(n.getPlace("local"));
-                ChronixContext.saveApplicationAndMakeCurrent(a, new File(this.dbPath));
+                ChronixContext.saveApplication(a, new File(this.dbPath));
 
                 // Create CHRONIX_MAINTENANCE application
                 a = MaintenanceApplication.getNewApplication(n.getPlace("local"));
-                ChronixContext.saveApplicationAndMakeCurrent(a, new File(this.dbPath));
+                ChronixContext.saveApplication(a, new File(this.dbPath));
             }
             catch (ChronixPlanStorageException e)
             {

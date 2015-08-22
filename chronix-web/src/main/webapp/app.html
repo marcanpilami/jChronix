@@ -50,112 +50,116 @@
                                         <input id='descr-chain-IDIDID' name="description" type="text" class="text ui-widget-content ui-corner-all">
                                     </div>
                                     <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-                                    </fieldset>
-                                    </form>
-                                    <span class="fa fa-comment-o" title="rename" style="right: 25px; position: absolute;"></span>
-                                    <span class="fa fa-trash-o" title="remove" style="right: 7px; position: absolute;"></span>
-                                    <div class='app-chain-IDIDID-planchoice' style="width: 100%;"></div>
-                                    <div>
-                                        <button name="addchain">new chain</button>
-                                        <button name="addplan">new plan</button>
-                                    </div>
                                 </div>
-                                <div class='block'>
-                                    <div id='app-IDIDID-palette-shell' style='width: 100%;'></div>
-                                    <button name="shell">add selected command >></button>
-                                </div>
-                                <div class='block'>
-                                    <div id='app-IDIDID-palette-chain' style='width: 100%;'></div>
-                                    <button name="chain">add selected chain >></button>
-                                </div>
-                                <div class='block'>
-                                    <div id='app-IDIDID-palette-clock' style='width: 100%;'></div>
-                                    <button name="clock">add selected clock >></button>
-                                </div>
-                                <div class='block'>
-                                    <div id='app-IDIDID-palette-external' style='width: 100%;'></div>
-                                    <button name="external">add selected external >></button>
-                                </div>
-                                <div class='block'>
-                                    <div id='app-IDIDID-palette-calnext' style='width: 100%;'></div>
-                                    <button name="calnext">add selected tick >></button>
-                                </div>
-                                <div class='block'>
-                                    <button name="and">add AND >></button>
-                                    <button name="or">add OR >></button>
-                                </div>
+                            </fieldset>
+                        </form>
+                        <span class="fa fa-comment-o" title="rename" style="right: 25px; position: absolute;"></span>
+                        <span class="fa fa-trash-o" title="remove" style="right: 7px; position: absolute;"></span>
+                        <div class='app-chain-IDIDID-planchoice' style="width: 100%;"></div>
+                        <div>
+                            <button name="addchain">new chain</button>
+                            <button name="addplan">new plan</button>
+                        </div>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-shell' style='width: 100%;'></div>
+                        <button name="shell">add selected command >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-chain' style='width: 100%;'></div>
+                        <button name="chain">add selected chain >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-clock' style='width: 100%;'></div>
+                        <button name="clock">add selected clock >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-external' style='width: 100%;'></div>
+                        <button name="external">add selected external >></button>
+                    </div>
+                    <div class='block'>
+                        <div id='app-IDIDID-palette-calnext' style='width: 100%;'></div>
+                        <button name="calnext">add selected tick >></button>
+                    </div>
+                    <div class='block'>
+                        <button name="and">add AND >></button>
+                        <button name="or">add OR >></button>
+                    </div>
 
-                                <ul class='menu trmenu' style="bottom: 0px; position: absolute; width: 200px; z-index: 60;">
-                                    <li class='c-remove'>
-                                        <span class="fa fa-trash-o"></span> Delete
-                                    </li>
-                                    <li class='c-calaware'>
-                                        <span class="fa fa-calendar"></span> Toggle calendar awareness
-                                    </li>
-                                    <li>
-                                        <span class="fa fa-filter"></span> Return code
-                                    </li>
-                                </ul>
-                                <input type="number" style="width: 60px; bottom: 0px; right: 5px; position: absolute; z-index: 61;">
+                    <ul class='menu trmenu' style="bottom: 0px; position: absolute; width: 200px; z-index: 60;">
+                        <li class='c-remove'>
+                            <span class="fa fa-trash-o"></span> Delete
+                        </li>
+                        <li class='c-calaware'>
+                            <span class="fa fa-calendar"></span> Toggle calendar awareness
+                        </li>
+                        <li>
+                            <span class="fa fa-filter"></span> Return code
+                        </li>
+                    </ul>
+                    <input type="number" style="width: 60px; bottom: 0px; right: 5px; position: absolute; z-index: 61;">
 
-                                <ul class='menu statemenu' style="bottom: 0px; position: absolute; width: 200px;">
-                                    <li class='c-remove'>
-                                        <span class="fa fa-trash-o"></span> Delete
-                                    </li>
-                                    <li class='c-groups'>
-                                        <span class="fa fa-server"></span> Change where it runs
-                                        <ul></ul>
-                                    </li>
-                                    <li class='c-para'>
-                                        <span class="fa fa-expand"></span> Toggle Parallelism
-                                    </li>
-                                    <li class='c-cals'><span class="fa fa-calendar"></span> Change Calendar
-                                        <ul></ul>
-                                    </li>
-                                    <li class='c-calshifts'>
-                                        <span class="fa fa-plus"></span> Calendar shift
-                                        <ul class='calshift'>
-                                            <li>-5</li>
-                                            <li>-4</li>
-                                            <li>-3</li>
-                                            <li>-2</li>
-                                            <li>-1</li>
-                                            <li>+0</li>
-                                            <li>+1</li>
-                                            <li>+2</li>
-                                            <li>+3</li>
-                                            <li>+4</li>
-                                            <li>+5</li>
-                                        </ul>
-                                    </li>
-                                </ul>
+                    <ul class='menu statemenu' style="bottom: 0px; position: absolute; width: 200px;">
+                        <li class='c-remove'>
+                            <span class="fa fa-trash-o"></span> Delete
+                        </li>
+                        <li class='c-groups'>
+                            <span class="fa fa-server"></span> Change where it runs
+                            <ul></ul>
+                        </li>
+                        <li class='c-para'>
+                            <span class="fa fa-expand"></span> Toggle Parallelism
+                        </li>
+                        <li class='c-cals'><span class="fa fa-calendar"></span> Change Calendar
+                            <ul></ul>
+                        </li>
+                        <li class='c-calshifts'>
+                            <span class="fa fa-plus"></span> Calendar shift
+                            <ul class='calshift'>
+                                <li>-5</li>
+                                <li>-4</li>
+                                <li>-3</li>
+                                <li>-2</li>
+                                <li>-1</li>
+                                <li>+0</li>
+                                <li>+1</li>
+                                <li>+2</li>
+                                <li>+3</li>
+                                <li>+4</li>
+                                <li>+5</li>
+                            </ul>
+                        </li>
+                    </ul>
 
-                                </div>
+                </div>
 
-                                <div class='drawingPanel' id='app-IDIDID-chain' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
-                                </div>
-                                </div>
+                <div class='drawingPanel' id='app-IDIDID-chain' style="height: 100%; width: calc(100% - 200px); position: absolute; left: 200px; top: 0px;"></div>
+            </div>
+        </div>
 
-                                <div id="app-group-IDIDID">
-                                    <div></div>
-                                </div>
+        <div id="app-group-IDIDID">
+            <div></div>
+        </div>
 
-                                <div id="app-save-IDIDID">
-                                    <button name="test">Validate application</button>
-                                    <table class="errortable">
-                                        <thead>
-                                            <tr>
-                                                <th>item type</th>
-                                                <th>error message</th>
-                                                <th>error field</th>
-                                                <th>item identification</th>
-                                                <th>erroneous value</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+        <div id="app-save-IDIDID">
+            <button name="test">Validate application</button>
+            <button name="stage">Save application draft</button>
+            <button  name="activate">Save and activate</button>
+            <button  name="unstage">Discard draft</button>
+            <table class="errortable">
+                <thead>
+                    <tr>
+                        <th>item type</th>
+                        <th>error message</th>
+                        <th>error field</th>
+                        <th>item identification</th>
+                        <th>erroneous value</th>
+                    </tr>
+                </thead>
+                <tbody>
 
-                                        </tbody>
-                                    </table>
-                                </div>
-                                </div>
-                                </div>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

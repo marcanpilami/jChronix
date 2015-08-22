@@ -76,7 +76,7 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                 ChronixContext.saveNetwork(n, new File(dbPath));
 
                 Application a1 = DemoApplication.getNewDemoApplication();
-                ChronixContext.saveApplicationAndMakeCurrent(a1, new File(dbPath));
+                ChronixContext.saveApplication(a1, new File(dbPath));
 
                 String localNodeId = en1.getId().toString();
 

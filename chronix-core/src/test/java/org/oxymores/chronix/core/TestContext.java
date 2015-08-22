@@ -32,7 +32,7 @@ public class TestContext
     public void saveAndLoadApp() throws ChronixPlanStorageException
     {
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
-        ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
+        ChronixContext.saveApplication(a1, ctx);
 
         ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         Application a = context.getApplicationByName("Demo");
@@ -45,7 +45,7 @@ public class TestContext
     public void versioning() throws Exception
     {
         Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
-        ChronixContext.saveApplicationAndMakeCurrent(a1, ctx);
+        ChronixContext.saveApplication(a1, ctx);
 
         ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         Application a = context.getApplicationByName("Demo");
@@ -56,7 +56,7 @@ public class TestContext
         // Modify a field => version should go up.
         a.setDescription("pppp");
         context.saveApplication(a);
-        context.setWorkingAsCurrent(a);
+
         // Reload application to simulate engine restart...
         context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         a = context.getApplicationByName("Demo");
@@ -68,7 +68,6 @@ public class TestContext
         context.saveApplication(a);
         a.setDescription("gggg");
         context.saveApplication(a);
-        context.setWorkingAsCurrent(a);
         context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
         a = context.getApplicationByName("Demo");
         Assert.assertEquals("gggg", a.getDescription());

@@ -132,7 +132,7 @@ public class TestBase
         try
         {
             ChronixContext.saveNetwork(n, new File(database_path));
-            ChronixContext.saveApplicationAndMakeCurrent(a, new File(database_path));
+            ChronixContext.saveApplication(a, new File(database_path));
         }
         catch (ChronixPlanStorageException e)
         {
@@ -154,7 +154,6 @@ public class TestBase
         try
         {
             e.ctx.saveApplication(a);
-            e.ctx.setWorkingAsCurrent(a);
             e.queueReloadConfiguration();
             e.waitForInitEnd();
         }

@@ -202,10 +202,10 @@ public class Scheduler
             ChronixContext.saveNetwork(n, dbFile);
 
             Application a = OperationsApplication.getNewApplication(n.getPlace(nodeName));
-            ChronixContext.saveApplicationAndMakeCurrent(a, dbFile);
+            ChronixContext.saveApplication(a, dbFile);
 
             a = MaintenanceApplication.getNewApplication(n.getPlace(nodeName));
-            ChronixContext.saveApplicationAndMakeCurrent(a, dbFile);
+            ChronixContext.saveApplication(a, dbFile);
 
             e.setLocalNodeName(nodeName);
             log.info("Node name: " + nodeName);

@@ -106,18 +106,6 @@ class MetadataListener extends BaseListener
                         e1);
                 jmsCommit();
             }
-
-            try
-            {
-                log.debug("Setting the new app version as the active version");
-                ctx.setWorkingAsCurrent(a);
-            }
-            catch (Exception e1)
-            {
-                log.error(
-                        "An application was correctly received and saved to disk. However, it could not be activated, which requires a file to be copied. Check log and try again sending the application (or activate it manually.)",
-                        e1);
-            }
         }
 
         // Network

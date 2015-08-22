@@ -9,6 +9,7 @@ public class DTOApplication
     private String description;
     private String id;
     private boolean active = true;
+    private int version = 0;
 
     private List<DTOPlaceGroup> groups;
     private List<DTOParameter> parameters;
@@ -213,5 +214,15 @@ public class DTOApplication
     public void setPlans(List<DTOChain> plans)
     {
         this.plans = plans;
+    }
+
+    public int getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(int version)
+    {
+        this.version = version;
     }
 }

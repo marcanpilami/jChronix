@@ -21,7 +21,8 @@ function initAppChoice()
             columns: [
                 //{data: 'id', title: 'ID'},
                 {data: 'name', title: 'Name'},
-                {data: 'description', title: 'Description'}
+                {data: 'description', title: 'Description'},
+                {data: 'version', title: 'Version', readOnly: true}
             ]
         });
 

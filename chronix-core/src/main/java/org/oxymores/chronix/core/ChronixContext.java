@@ -316,43 +316,85 @@ public final class ChronixContext
     ///////////////////////////////////////////////////////////////////////////
     // Save
     ///////////////////////////////////////////////////////////////////////////
-    public void saveApplication(String name) throws ChronixPlanStorageException
-    {
-        saveApplication(this.applicationsByName.get(name));
-    }
-
-    public void saveApplication(UUID id) throws ChronixPlanStorageException
-    {
-        saveApplication(this.applicationsById.get(id));
-    }
-
     public void saveApplication(Application a) throws ChronixPlanStorageException
     {
         saveApplication(a, this.configurationDirectory);
     }
 
+    /**
+     Save the given application to the metabase.
+     If the application is already in the metabase, the current version is archived.
+     If the application was created from an existing application, the version is incremented before saving.
+     @param a
+     @param dir
+     @throws ChronixPlanStorageException
+     */
     public static void saveApplication(Application a, File dir) throws ChronixPlanStorageException
     {
-        log.info(String.format("Saving application %s to temp file inside database %s", a.getName(), dir));
+        log.info(String.format("Saving application %s to file inside metabase %s", a.getName(), dir));
+
+        String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + a.getVersion() + "_.crn";
+        File nextArchiveDataFile = new File(nextArchiveDataFilePath);
+        String currentDataFilePath = getActivePath(a.id, dir);
+        File currentData = new File(currentDataFilePath);
+        String destPath = getActivePath(a.getId(), dir);
+
+        if (currentData.exists())
+        {
+            log.info("Current state of application {} will be archived before switching as version {}", a.getName(), a.getVersion());
+            if (nextArchiveDataFile.exists())
+            {
+                log.warn("The version being saved has already been archived once. It won't be re-archived.");
+                currentData.delete();
+            }
+            else if (!currentData.renameTo(nextArchiveDataFile))
+            {
+                throw new ChronixPlanStorageException("Could not archive current WORKING file", null);
+            }
+        }
+
         if (a.isFromCurrentFile())
         {
             a.setVersion(a.getVersion() + 1);
             a.isFromCurrentFile(false);
         }
-        try (FileOutputStream fos = new FileOutputStream(getWorkingPath(a.getId(), dir)))
+        log.info("Application {} will be saved as version {} inside file {}", a.getName(), a.getVersion(), destPath);
+
+        try (FileOutputStream fos = new FileOutputStream(destPath))
         {
             xmlUtility.toXML(a, fos);
         }
         catch (Exception e)
         {
-            throw new ChronixPlanStorageException("Could not save application to temp file", e);
+            throw new ChronixPlanStorageException("Could not save application to file", e);
         }
     }
 
-    public static void saveApplicationAndMakeCurrent(Application a, File dir) throws ChronixPlanStorageException
+    public static void stageApplication(Application a, File dir) throws ChronixPlanStorageException
     {
-        saveApplication(a, dir);
-        setWorkingAsCurrent(a, dir);
+        log.info(String.format("Staging application %s to draft file inside metabase %s", a.getName(), dir));
+        String destPath = getWorkingPath(a.getId(), dir);
+
+        try (FileOutputStream fos = new FileOutputStream(destPath))
+        {
+            xmlUtility.toXML(a, fos);
+        }
+        catch (Exception e)
+        {
+            throw new ChronixPlanStorageException("Could not save application to file", e);
+        }
+    }
+
+    public static void unstageApplication(Application a, File dir)
+    {
+        String destPath = getWorkingPath(a.getId(), dir);
+        File dest = new File(destPath);
+
+        if (dest.exists() && !dest.delete())
+        {
+            log.info("Removing staging file {} for application {}", destPath, a.getName());
+            throw new ChronixPlanStorageException("Could not remove staging file " + destPath, null);
+        }
     }
 
     public void saveNetwork(Network n) throws ChronixPlanStorageException
@@ -394,49 +436,6 @@ public final class ChronixContext
     protected void preSaveWorkingApp(Application a)
     {
         // TODO: check the app is valid
-    }
-
-    // Does NOT refresh caches. Restart the engine for that !
-    public void setWorkingAsCurrent(Application a) throws ChronixPlanStorageException
-    {
-        setWorkingAsCurrent(a, this.configurationDirectory);
-    }
-
-    public static void setWorkingAsCurrent(Application a, File dir) throws ChronixPlanStorageException
-    {
-        log.info(String.format("Promoting temp file for application %s as the active file inside database %s", a.getName(), dir));
-        String workingDataFilePath = getWorkingPath(a.id, dir);
-        String currentDataFilePath = getActivePath(a.id, dir);
-
-        File workingData = new File(workingDataFilePath);
-        if (!workingData.exists())
-        {
-            throw new ChronixPlanStorageException("Work file does not exist. You sure 'bout that? You seem to have made no changes!", null);
-        }
-        File currentData = new File(currentDataFilePath);
-
-        log.info(String.format("Current state of application %s will be saved before switching as version %s", a.getName(), a.getVersion()));
-        String nextArchiveDataFilePath = dir.getAbsolutePath() + "/app_data_" + a.getId() + "_" + a.getVersion() + "_.crn";
-        File nextArchiveDataFile = new File(nextArchiveDataFilePath);
-
-        // Move CURRENT to the new archive version
-        if (nextArchiveDataFile.exists())
-        {
-            log.warn("The version being activated has already been archived once.");
-            currentData.delete();
-        }
-        else if (currentData.exists() && !currentData.renameTo(nextArchiveDataFile))
-        {
-            throw new ChronixPlanStorageException("Could not archive current WORKING file", null);
-        }
-
-        // Move WORKING as the new CURRENT
-        log.debug(String.format("New path will be %s", currentDataFilePath));
-        if (!workingData.renameTo(new File(currentDataFilePath)))
-        {
-            throw new ChronixPlanStorageException("Could not copy current WORKING file as CURRENT file", null);
-        }
-        a.isFromCurrentFile(true);
     }
 
     public void deleteCurrentApplication(Application a) throws ChronixPlanStorageException
