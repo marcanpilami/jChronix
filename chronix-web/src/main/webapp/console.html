@@ -8,16 +8,39 @@
         <script src="lib/jquery-2.1.4.min.js"></script>
         <script src="lib/jqui/jquery-ui.min.js"></script>
         <script src="lib/datatables/1.10.7/js/jquery.dataTables.min.js"></script>
+        <script src="lib/select2/v3.5.2/select2.min.js"></script>
         <script src="js/console.js"></script>
 
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.structure.min.css">
         <link rel="stylesheet" type="text/css" href="lib/jqui/jquery-ui.theme.min.css">
         <link rel="stylesheet" type="text/css" href="lib/datatables/1.10.7/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" type="text/css" href="lib/select2/v3.5.2/select2.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
     </head>
     <body>
         <div>TODO write content</div>
+
+        <div id="dialog-newlaunch" title="New launch">
+            <p class="validateTips">All form fields are required.</p>
+
+            <form>
+                <fieldset>
+                    <label for="application">Application</label>
+                    <div id='application'></div>
+                    <label for="chain">Plan or chain</label>
+                    <div id='application'></div>
+                    <label for="state">Item to launch</label>
+                    <div id='state'></div>
+                    <label for="place">On places</label>
+                    <div id='place'></div>
+
+                    <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                    <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                </fieldset>
+            </form>
+        </div>
+
         <table id='history'></table>
     </body>
 </html>

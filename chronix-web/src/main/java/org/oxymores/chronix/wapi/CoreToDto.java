@@ -1028,7 +1028,7 @@ public class CoreToDto
         res.setPlaceName(rl.getPlaceName());
         res.setResultCode(rl.getResultCode());
         res.setSequence(rl.getSequence());
-        res.setStoppedRunningAt(rl.getStoppedRunningAt().toDate());
+        res.setStoppedRunningAt(rl.getStoppedRunningAt() == null ? null : rl.getStoppedRunningAt().toDate());
         res.setWhatWasRun(rl.getWhatWasRun());
 
         return res;

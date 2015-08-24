@@ -46,8 +46,38 @@ $(document).ready(function ()
                     });
         }
     });
+
+    var s2 = $("#application").select2({
+        data: [],
+        formatSelection: item2name,
+        formatResult: item2name,
+        matcher: nameMatcher
+    });
+
+    var dialog = $("#dialog-newlaunch").dialog({
+        autoOpen: false,
+        height: 300,
+        width: 350,
+        modal: true,
+        buttons: {
+            "Launch": oopLaunch,
+            Cancel: function () {
+                dialog.dialog("close");
+            }
+        },
+        close: function () {
+            form[ 0 ].reset();
+            allFields.removeClass("ui-state-error");
+        }
+    });
+
+    dialog.dialog("open");
 });
 
+function oopLaunch()
+{
+
+}
 
 $.postJSON = function (url, data, callback, errorcallback) {
     return jQuery.ajax({
@@ -63,3 +93,13 @@ $.postJSON = function (url, data, callback, errorcallback) {
         'error': errorcallback
     });
 };
+
+function item2name(item)
+{
+    return item.name;
+}
+
+function nameMatcher(term, text, option)
+{
+    return option.name.toUpperCase().indexOf(term.toUpperCase()) >= 0;
+}

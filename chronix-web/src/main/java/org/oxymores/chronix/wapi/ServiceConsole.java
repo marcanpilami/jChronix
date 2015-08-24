@@ -2,7 +2,6 @@ package org.oxymores.chronix.wapi;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +31,7 @@ import org.sql2o.Query;
 @Path("/live")
 public class ServiceConsole
 {
-    private static Logger log = LoggerFactory.getLogger(ServiceConsole.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceConsole.class);
 
     private ChronixContext ctx = null;
 
@@ -90,31 +89,11 @@ public class ServiceConsole
                 res.add(CoreToDto.getDTORunLog(rl));
             }
             q.setRes(res);
-            q.setTotalLogs((long) conn.createQuery("SELECT COUNT(l) FROM RunLog l").executeScalar(Long.class));
+            q.setTotalLogs((long) conn.createQuery("SELECT COUNT(1) FROM RunLog").executeScalar(Long.class));
         }
 
         log.debug("End of call to getLog - returning " + q.getRes().size() + " logs out of a total of " + q.getTotalLogs());
         return q;
-    }
-
-    @GET
-    @Path("log")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<DTORunLog> getLog()
-    {
-        log.debug("Service getLog was called");
-        List<DTORunLog> res = null;
-
-        try (Connection conn = ctx.getHistoryDataSource().open())
-        {
-            res = new ArrayList<>();
-            for (RunLog rl : conn.createQuery("SELECT * FROM RunLog r ORDER BY r.enteredPipeAt").executeAndFetch(RunLog.class))
-            {
-                res.add(CoreToDto.getDTORunLog(rl));
-            }
-            log.debug("End of call to getLog - returning " + res.size());
-        }
-        return res;
     }
 
     @GET
