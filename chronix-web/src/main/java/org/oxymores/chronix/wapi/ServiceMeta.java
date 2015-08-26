@@ -16,7 +16,6 @@
  */
 package org.oxymores.chronix.wapi;
 
-import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -66,16 +65,16 @@ import org.oxymores.chronix.planbuilder.PlanBuilder;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles all the metadata related services. Both JSON (default) and XML.
+ * Handles all the metadata related services. JSON only.
  */
 @Path("/meta")
-public class ServiceClient
+public class ServiceMeta
 {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceClient.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceMeta.class);
     private final ChronixContext ctx;
 
-    public ServiceClient(ChronixContext ctx)
+    public ServiceMeta(ChronixContext ctx)
     {
         this.ctx = ctx;
     }

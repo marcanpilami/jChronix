@@ -131,7 +131,7 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
         this.property(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
         this.property(UnmarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
 
-        this.register(new ServiceClient(ctx));
+        this.register(new ServiceMeta(ctx));
         this.register(new ServiceConsole(ctx));
         this.register(ErrorListener.class);
     }
