@@ -17,8 +17,8 @@ function initAppChoice()
             multiSelect: false,
             columns: [
                 //{data: 'id', title: 'ID'},
-                {data: 'name', title: 'Name'},
-                {data: 'description', title: 'Description'},
+                {data: 'name', title: 'Name', readOnly: true},
+                {data: 'description', title: 'Description', readOnly: true},
                 {data: 'version', title: 'Version', readOnly: true},
                 {data: 'draft', title: 'Existing draft', readOnly: true},
                 {data: 'latestSave', title: 'Latest save on', readOnly: true, type: 'date', dateFormat: 'MM/DD/YYYY', correctFormat: true}

@@ -76,6 +76,21 @@ function initApp(uuid)
 
             // Open first tab
             initCommand(app);
+
+            // Name and descr
+            $("#name-" + app.id).val(app.name);
+            $("#description-" + app.id).val(app.description);
+            $("#name-" + app.id).change(function ()
+            {
+                app.name = $(this).val();
+                $("a[href=#tab-" + app.id + "]").text(app.name);
+                $("div#tabs").tabs("refresh");
+            });
+            $("#description-" + app.id).change(function ()
+            {
+                app.description = $(this).val();
+            });
+
         });
     });
 }
