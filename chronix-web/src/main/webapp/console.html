@@ -21,23 +21,31 @@
     <body>
         <div>TODO write content</div>
 
-        <div id="dialog-newlaunch" title="New launch">
+        <div id="dialog-newlaunch" title="New launch" style="min-width: 500px; min-height: 300px;" >
             <p class="validateTips">All form fields are required.</p>
 
             <form>
-                <fieldset>
-                    <label for="application">Application</label>
-                    <div id='application'></div>
-                    <label for="chain">Plan or chain</label>
-                    <div id='application'></div>
-                    <label for="state">Item to launch</label>
-                    <div id='state'></div>
-                    <label for="place">On places</label>
-                    <div id='place'></div>
+                <table>
+                    <tr>
+                        <td><label for="application">Application</label></td>
+                        <td><div style="min-width: 15em;" id='application'></div></td>
+                    </tr>
+                    <tr>
+                        <td><label for="chain">Plan or chain</label></td>
+                        <td><div style="min-width: 15em;" id='chain'></div></td>
+                    </tr>
+                    <tr>
+                        <td><label for="state">Item to launch</label></td>
+                        <td><div style="min-width: 15em;" id='state'></div></td>
+                    </tr>
+                    <tr>
+                        <td><label for="place">On places</label></td>
+                        <td><div style="min-width: 15em;" id='place'></div></td>
+                    </tr>
 
                     <!-- Allow form submission with keyboard without duplicating the dialog button -->
                     <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-                </fieldset>
+                </table>
             </form>
         </div>
 
