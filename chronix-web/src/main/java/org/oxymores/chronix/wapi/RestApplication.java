@@ -56,65 +56,68 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
             closeOnExit = true;
             try
             {
-                Network n = new Network();
-                ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
-                en1.setX(100);
-                en1.setY(100);
-                ExecutionNode en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
-                en2.setX(200);
-                en2.setY(200);
-                ExecutionNode en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
-                en3.setX(300);
-                en3.setY(300);
-                en1.setConsole(true);
-                en1.connectTo(en2, NodeConnectionMethod.TCP);
-                en2.connectTo(en3, NodeConnectionMethod.RCTRL);
-
-                Place p1 = PlanBuilder.buildPlace(n, "master node", en1);
-                Place p2 = PlanBuilder.buildPlace(n, "second node", en2);
-                Place p3 = PlanBuilder.buildPlace(n, "hosted node by second node", en3);
-
-                Application a1 = DemoApplication.getNewDemoApplication();
-
-                a1.getGroup("group all").addPlace(p1);
-                a1.getGroup("group all").addPlace(p2);
-                a1.getGroup("group all").addPlace(p3);
-                a1.getGroup("group 2").addPlace(p1);
-                a1.getGroup("group 3").addPlace(p2);
-
-                ChronixContext.saveApplication(a1, new File(dbPath));
-                ChronixContext.saveNetwork(n, new File(dbPath));
-
-                String localNodeId = en1.getId().toString();
-
-                ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
-                ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
-
-                try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
+                if (!ChronixContext.hasNetworkFile(dbPath))
                 {
-                    RunLog l1 = new RunLog();
-                    l1.setActiveNodeId(UUID.randomUUID());
-                    l1.setApplicationId(UUID.randomUUID());
-                    l1.setChainId(UUID.randomUUID());
-                    l1.setChainLaunchId(UUID.randomUUID());
-                    l1.setExecutionNodeId(UUID.randomUUID());
-                    l1.setId(UUID.randomUUID());
-                    l1.setPlaceId(UUID.randomUUID());
-                    l1.setActiveNodeName("nodename");
-                    l1.setApplicationName("appli");
-                    l1.setBeganRunningAt(DateTime.now());
-                    l1.setChainName("chain");
-                    l1.setDns("localhost");
-                    l1.setEnteredPipeAt(DateTime.now());
-                    l1.setExecutionNodeName("nodename");
-                    l1.setLastKnownStatus("OK");
-                    l1.setLogPath("/ii/oo");
-                    l1.setWhatWasRun("cmd1");
-                    l1.setResultCode(0);
-                    l1.setMarkedForUnAt(DateTime.now());
+                    Network n = new Network();
+                    ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
+                    en1.setX(100);
+                    en1.setY(100);
+                    ExecutionNode en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
+                    en2.setX(200);
+                    en2.setY(200);
+                    ExecutionNode en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
+                    en3.setX(300);
+                    en3.setY(300);
+                    en1.setConsole(true);
+                    en1.connectTo(en2, NodeConnectionMethod.TCP);
+                    en2.connectTo(en3, NodeConnectionMethod.RCTRL);
 
-                    l1.insertOrUpdate(conn);
-                    conn.commit();
+                    Place p1 = PlanBuilder.buildPlace(n, "master node", en1);
+                    Place p2 = PlanBuilder.buildPlace(n, "second node", en2);
+                    Place p3 = PlanBuilder.buildPlace(n, "hosted node by second node", en3);
+
+                    Application a1 = DemoApplication.getNewDemoApplication();
+
+                    a1.getGroup("group all").addPlace(p1);
+                    a1.getGroup("group all").addPlace(p2);
+                    a1.getGroup("group all").addPlace(p3);
+                    a1.getGroup("group 2").addPlace(p1);
+                    a1.getGroup("group 3").addPlace(p2);
+
+                    ChronixContext.saveApplication(a1, new File(dbPath));
+                    ChronixContext.saveNetwork(n, new File(dbPath));
+
+                    String localNodeId = en1.getId().toString();
+
+                    ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+                    ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
+
+                    try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
+                    {
+                        RunLog l1 = new RunLog();
+                        l1.setActiveNodeId(UUID.randomUUID());
+                        l1.setApplicationId(UUID.randomUUID());
+                        l1.setChainId(UUID.randomUUID());
+                        l1.setChainLaunchId(UUID.randomUUID());
+                        l1.setExecutionNodeId(UUID.randomUUID());
+                        l1.setId(UUID.randomUUID());
+                        l1.setPlaceId(UUID.randomUUID());
+                        l1.setActiveNodeName("nodename");
+                        l1.setApplicationName("appli");
+                        l1.setBeganRunningAt(DateTime.now());
+                        l1.setChainName("chain");
+                        l1.setDns("localhost");
+                        l1.setEnteredPipeAt(DateTime.now());
+                        l1.setExecutionNodeName("nodename");
+                        l1.setLastKnownStatus("OK");
+                        l1.setLogPath("/ii/oo");
+                        l1.setWhatWasRun("cmd1");
+                        l1.setResultCode(0);
+                        l1.setMarkedForUnAt(DateTime.now());
+
+                        l1.insertOrUpdate(conn);
+                        conn.commit();
+                    }
                 }
             }
             catch (ChronixPlanStorageException ex)
