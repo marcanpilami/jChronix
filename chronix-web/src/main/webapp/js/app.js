@@ -1,9 +1,9 @@
 /* global uuid */
 
-function initApp(uuid)
+function initApp(appObject)
 {
-    var app;
-    var content = $("#tab-" + uuid + " > div");
+    var app = appObject;
+    var content = $("#tab-" + app.id + " > div");
     var chainPanel = null;
     var seqPanel = null;
     var clockPanel = null;
@@ -11,87 +11,82 @@ function initApp(uuid)
     var groups = false;
     var save = false;
 
-    $.getJSON("ws/meta/app/" + uuid).done(function (data)
+    content.load("app.html", function ()
     {
-        app = data;
+        // Replace ids
+        content.html(content[0].innerHTML.replace(/IDIDID/g, app.id));
 
-        content.load("app.html", function ()
-        {
-            // Replace ids
-            content.html(content[0].innerHTML.replace(/IDIDID/g, uuid));
-
-            // Setup
-            content.find(".tabs").tabs({
-                activate: function (e, ui)
+        // Setup
+        content.find(".tabs").tabs({
+            activate: function (e, ui)
+            {
+                var i = ui.newPanel[0].id;
+                if (i.indexOf("app-chain") === 0)
                 {
-                    var i = ui.newPanel[0].id;
-                    if (i.indexOf("app-chain") === 0)
+                    chainPanel.initPanel();
+                }
+                if (i.indexOf("app-command") === 0)
+                {
+                    //initCommand(app); // Only init once!
+                }
+                if (i.indexOf("app-external") === 0)
+                {
+                    if (!external)
                     {
-                        chainPanel.initPanel();
+                        initExternal(app); // only init once simple panels
+                        external = true;
                     }
-                    if (i.indexOf("app-command") === 0)
+                }
+                if (i.indexOf("app-seq") === 0)
+                {
+                    seqPanel.initPanel();
+                }
+                if (i.indexOf("app-clock") === 0)
+                {
+                    clockPanel.initPanel();
+                }
+                if (i.indexOf("app-group") === 0)
+                {
+                    if (!groups)
                     {
-                        //initCommand(app); // Only init once!
+                        initGroup(app);
+                        groups = true;
                     }
-                    if (i.indexOf("app-external") === 0)
+                }
+                if (i.indexOf("app-save") === 0)
+                {
+                    if (!save)
                     {
-                        if (!external)
-                        {
-                            initExternal(app); // only init once simple panels
-                            external = true;
-                        }
+                        initSave(app); // only init once simple panels
+                        save = true;
                     }
-                    if (i.indexOf("app-seq") === 0)
-                    {
-                        seqPanel.initPanel();
-                    }
-                    if (i.indexOf("app-clock") === 0)
-                    {
-                        clockPanel.initPanel();
-                    }
-                    if (i.indexOf("app-group") === 0)
-                    {
-                        if (!groups)
-                        {
-                            initGroup(app);
-                            groups = true;
-                        }
-                    }
-                    if (i.indexOf("app-save") === 0)
-                    {
-                        if (!save)
-                        {
-                            initSave(app); // only init once simple panels
-                            save = true;
-                        }
-                    }
-                },
-                disabled: [5]
-            });
-
-            // Inits requiring both tabs + app data
-            chainPanel = new PanelChain(app);
-            seqPanel = new PanelRec(app);
-            clockPanel = new PanelClock(app);
-
-            // Open first tab
-            initCommand(app);
-
-            // Name and descr
-            $("#name-" + app.id).val(app.name);
-            $("#description-" + app.id).val(app.description);
-            $("#name-" + app.id).change(function ()
-            {
-                app.name = $(this).val();
-                $("a[href=#tab-" + app.id + "]").text(app.name);
-                $("div#tabs").tabs("refresh");
-            });
-            $("#description-" + app.id).change(function ()
-            {
-                app.description = $(this).val();
-            });
-
+                }
+            },
+            disabled: [5]
         });
+
+        // Inits requiring both tabs + app data
+        chainPanel = new PanelChain(app);
+        seqPanel = new PanelRec(app);
+        clockPanel = new PanelClock(app);
+
+        // Open first tab
+        initCommand(app);
+
+        // Name and descr
+        $("#name-" + app.id).val(app.name);
+        $("#description-" + app.id).val(app.description);
+        $("#name-" + app.id).change(function ()
+        {
+            app.name = $(this).val();
+            $("a[href=#tab-" + app.id + "]").text(app.name);
+            $("div#tabs").tabs("refresh");
+        });
+        $("#description-" + app.id).change(function ()
+        {
+            app.description = $(this).val();
+        });
+
     });
 }
 

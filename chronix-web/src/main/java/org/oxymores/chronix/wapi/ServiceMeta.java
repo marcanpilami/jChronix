@@ -117,22 +117,6 @@ public class ServiceMeta
     }
 
     @GET
-    @Path("app/first")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DTOApplication getFirstApplication()
-    {
-        log.debug(String.format("getFirstApplication service was called"));
-        if (ctx.getApplications().size() > 0)
-        {
-            return getApplication(ctx.getApplications().iterator().next().getId().toString());
-        }
-        else
-        {
-            return createApplication("first application", "created automatically");
-        }
-    }
-
-    @GET
     @Path("app/{appid}")
     @Produces(MediaType.APPLICATION_JSON)
     public DTOApplication getApplication(@PathParam("appid") String id)
@@ -251,20 +235,13 @@ public class ServiceMeta
         return res;
     }
 
-    @POST
-    @Path("app/new/{name}/{description}")
+    @GET
+    @Path("newapp")
     @Produces(MediaType.APPLICATION_JSON)
-    public DTOApplication createApplication(@PathParam("name") String name, @PathParam("description") String description)
+    public DTOApplication createApplication()
     {
-        // Check if no app of this name
-        Application e = this.ctx.getApplicationByName(name);
-        if (e != null)
-        {
-            name = name + "-" + UUID.randomUUID().hashCode();
-        }
-
-        // Create app
-        Application a = PlanBuilder.buildApplication(name, description);
+        // Create app (leave incorrect description to force user to set it before saving the app)
+        Application a = PlanBuilder.buildApplication("new app", "");
         a.createStarterGroups(this.ctx.getNetwork());
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
         ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);

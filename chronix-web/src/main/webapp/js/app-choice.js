@@ -30,23 +30,45 @@ function initAppChoice()
             var a = appstab.getSourceDataAtRow($(this).text() - 1);
             openAppTab(a);
         });
+
+        $("#ac-new").off();
+        $("#ac-new").click(function ()
+        {
+            $.getJSON("ws/meta/newapp").done(function (data)
+            {
+                openAppTab(data);
+            });
+        });
     });
 }
 
 function openAppTab(a)
 {
-    var exists = $("#tabs > ul > li[id=tabhead-" + a.id);
+    var id = a.id;
+    var exists = $("#tabs > ul > li[id=tabhead-" + id);
     if (exists.length > 0)
     {
         $("#tabs").tabs("option", "active", exists.index());
     }
     else
     {
-        var t = "<li id='tabhead-" + a.id + "' ><a href='#tab-" + a.id + "'>" + a.name + "</a></li>";
+        var t = "<li id='tabhead-" + id + "' ><a href='#tab-" + id + "'>" + a.name + "</a></li>";
         $(t).appendTo($("#tabs > ul"));
-        $("<div id='tab-" + a.id + "'><div></div></div>").appendTo($("#tabs"));
+        $("<div id='tab-" + id + "'><div></div></div>").appendTo($("#tabs"));
         $("div#tabs").tabs("refresh");
         $("div#tabs").tabs("option", "active", $("#tabhead-" + a.id).index());
-        initApp(a.id);
+
+        // If needed fetch the full application
+        if (a.chains)
+        {
+            initApp(a);
+        }
+        else
+        {
+            $.getJSON("ws/meta/app/" + id).done(function (data)
+            {
+                initApp(data);
+            });
+        }
     }
 }
