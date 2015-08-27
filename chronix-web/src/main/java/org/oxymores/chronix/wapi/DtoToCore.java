@@ -112,6 +112,10 @@ public class DtoToCore
         {
             a.addActiveElement(getChain(e, a, d));
         }
+        for (DTOChain e : d.getPlans())
+        {
+            a.addActiveElement(getChain(e, a, d));
+        }
 
         return a;
     }
