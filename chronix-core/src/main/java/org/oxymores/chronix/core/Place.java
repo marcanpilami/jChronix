@@ -110,4 +110,12 @@ public class Place extends NetworkObject
             this.memberOfIds.add(g.getId());
         }
     }
+
+    public void addGroupMembership(UUID groupId)
+    {
+        if (!this.memberOfIds.contains(groupId))
+        {
+            this.memberOfIds.add(groupId);
+        }
+    }
 }

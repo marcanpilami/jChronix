@@ -317,7 +317,7 @@ public class DtoToCore
         r.setProperty4(d.getProp4());
         for (String s : d.getMemberOf())
         {
-            r.getMemberOfIds().add(UUID.fromString(s));
+            r.addGroupMembership(UUID.fromString(s));
         }
         return r;
     }
