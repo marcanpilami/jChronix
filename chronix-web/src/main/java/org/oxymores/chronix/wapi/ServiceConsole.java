@@ -162,6 +162,7 @@ public class ServiceConsole
     public ResOrder orderLaunchOutOfPlan(@PathParam("appId") UUID appId, @PathParam("stateId") UUID stateId,
             @PathParam("placeId") UUID placeId)
     {
+        log.info("Calling orderLaunchOutOfPlan - with full params");
         try
         {
             Application a = ctx.getApplication(appId);
@@ -171,6 +172,7 @@ public class ServiceConsole
         }
         catch (Exception e)
         {
+            log.warn("could not create an OOPL", e);
             return new ResOrder("LaunchOutOfPlan", false, e.getMessage());
         }
         return new ResOrder("LaunchOutOfPlan", true, "The order was sent successfuly");
