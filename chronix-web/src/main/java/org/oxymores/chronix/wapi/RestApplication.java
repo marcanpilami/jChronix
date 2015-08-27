@@ -119,6 +119,11 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                         conn.commit();
                     }
                 }
+                else
+                {
+                    ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+                    ctx.setLocalNode(ctx.getNetwork().getNodesList().get(0));
+                }
             }
             catch (ChronixPlanStorageException ex)
             {
