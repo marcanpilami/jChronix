@@ -160,23 +160,30 @@ class SelfTriggerAgent extends Thread
             DateTime loopVirtualTime = this.nextLoopVirtualTime;
             this.nextLoopVirtualTime = now.plusDays(1).minusMillis(now.getMillisOfDay());
 
+            // Check if the engine logical time ("present") is consistent with the world's real time ("now") (for warnings only)
+            if ((now.compareTo(loopVirtualTime) >= 0 && (new Interval(loopVirtualTime, now)).toDurationMillis() > 1000)
+                    || (now.compareTo(loopVirtualTime) < 0 && (new Interval(now, loopVirtualTime)).toDurationMillis() > 1000))
+            {
+                log.warn("There is more than one second between internal time and system clock time - performance issue?");
+            }
+
             // Loop through all the self triggered nodes and get their next loop virtual time
             try (org.sql2o.Connection conn = this.ctx.getTransacDataSource().beginTransaction())
             {
-                DateTime tmp = null;
+                DateTime tmp;
                 for (ActiveNodeBase n : this.nodes)
                 {
                     try
                     {
                         tmp = n.selfTrigger(producerEvents, jmsSession, ctx, conn, loopVirtualTime);
+                        if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
+                        {
+                            this.nextLoopVirtualTime = tmp;
+                        }
                     }
                     catch (Exception e)
                     {
                         log.error("Error triggering clocks and the like", e);
-                    }
-                    if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
-                    {
-                        this.nextLoopVirtualTime = tmp;
                     }
                 }
 

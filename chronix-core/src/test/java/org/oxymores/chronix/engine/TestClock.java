@@ -17,7 +17,6 @@ import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
 public class TestClock extends TestBase
@@ -35,9 +34,9 @@ public class TestClock extends TestBase
     @Test
     public void testSimpleRec() throws ParseException
     {
-        Application a = DemoApplication.getNewDemoApplication("localhost", 1789);
-        Clock ck1 = a.getActiveElements(Clock.class).get(0);
-        ClockRRule rr1 = ck1.getRulesADD().get(0);
+        Application a = PlanBuilder.buildApplication("test", "test");
+        ClockRRule rr1 = PlanBuilder.buildRRuleWeekDays(a);
+        Clock ck1 = PlanBuilder.buildClock(a, "every workday", "test clock", rr1);
 
         DateTime start = new DateTime(2012, 7, 30, 0, 0); // a monday
         DateTime end = new DateTime(2012, 8, 5, 0, 0); // sunday

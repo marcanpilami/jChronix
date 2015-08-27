@@ -41,7 +41,6 @@ import net.fortuna.ical4j.model.property.RRule;
 
 import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
-import org.joda.time.Interval;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
@@ -72,7 +71,7 @@ public class Clock extends ActiveNodeBase
 
     // Helpers for engine methods
     private transient PeriodList occurrenceCache;
-    private transient org.joda.time.DateTime lastComputed;
+    private transient org.joda.time.DateTime nextCacheRefresh;
     private transient PipelineJob pj;
 
     // /////////////////////////////////////////////////////////////////////
@@ -130,11 +129,11 @@ public class Clock extends ActiveNodeBase
         DateTime from = new DateTime(start.toDate());
         DateTime to = new DateTime(end.toDate());
 
-        log.debug(String.format("Computing ocurrences from %s to %s.", from, to));
+        log.debug("Computing occurrences from {} to {} (event duration not taken into account).", from, to);
         VEvent evt = this.getEvent();
-        evt.getProperties().add(new DtStart(new DateTime(start.minusDays(1).toDate())));
+        evt.getProperties().add(new DtStart(new DateTime(start.minusSeconds(1).toDate())));
 
-        log.debug(String.format("Event start time is %s - creation is %s", evt.getStartDate(), evt.getCreated()));
+        log.debug("Event start time is {} - creation is {}", evt.getStartDate(), evt.getCreated());
         Period p = new Period(from, to);
         return evt.calculateRecurrenceSet(p);
     }
@@ -222,34 +221,25 @@ public class Clock extends ActiveNodeBase
 
     @Override
     public org.joda.time.DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, Connection conn,
-            org.joda.time.DateTime present) throws ChronixRunException // NOSONAR
+            org.joda.time.DateTime virtualTime) throws ChronixRunException
     {
-        // Check if the engine logical time ("present") is consistent with the world's real time ("now") (for warnings only)
-        org.joda.time.DateTime now = org.joda.time.DateTime.now();
-        if ((now.compareTo(present) >= 0 && (new Interval(present, now)).toDurationMillis() > 1000)
-                || (now.compareTo(present) < 0 && (new Interval(now, present)).toDurationMillis() > 1000))
-        {
-            log.warn("There is more than one second between internal time and clock time - performance issue? (discard if simulation)");
-        }
-
-        // We only work with the logical time
-        now = present;
         getHelperPj();
-        pj.setVirtualTime(present);
-        org.joda.time.DateTime nowminusgrace = now.minusMinutes(this.duration);
+        pj.setVirtualTime(virtualTime);
+        org.joda.time.DateTime nowminusgrace = virtualTime.minusMinutes(this.duration);
 
-        if (occurrenceCache == null || lastComputed == null || lastComputed.getDayOfYear() < now.getDayOfYear())
+        if (occurrenceCache == null || nextCacheRefresh == null || virtualTime.isAfter(nextCacheRefresh))
         {
             try
             {
-                occurrenceCache = this.getOccurrences(nowminusgrace, now.plusDays(1));
+                occurrenceCache = this.getOccurrences(nowminusgrace, virtualTime.plusHours(25));
+                nextCacheRefresh = virtualTime.plusHours(24); // One hour margin is tad big.
             }
             catch (ParseException e)
             {
                 log.error("Could not parse an iCal string. A clock has failed.", e);
                 throw new ChronixRunException("", e);
             }
-            log.debug(String.format("%s ocurrences were added to cache", occurrenceCache.size()));
+            log.debug(String.format("%s occurrences were added to cache", occurrenceCache.size()));
         }
 
         // Select the occurrences that should be active
@@ -259,13 +249,13 @@ public class Clock extends ActiveNodeBase
             org.joda.time.DateTime from = new org.joda.time.DateTime(((Period) p).getStart());
             org.joda.time.DateTime to = new org.joda.time.DateTime(((Period) p).getEnd());
 
-            if (from.compareTo(now) <= 0 && to.compareTo(now) >= 0)
+            if (from.compareTo(virtualTime) <= 0 && to.compareTo(virtualTime) >= 0)
             {
                 theory.add(from);
                 log.trace(from.toString(LOG_DATE_FORMAT) + " - " + to.toString(LOG_DATE_FORMAT));
             }
         }
-        log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), now.toString(LOG_DATE_FORMAT)));
+        log.debug(String.format("There are %s clock ticks that should be active at %s", theory.size(), virtualTime.toString(LOG_DATE_FORMAT)));
 
         // Select the ones that are active
         List<ClockTick> real = conn.createQuery("SELECT t.* FROM ClockTick t WHERE t.tickTime >= :laterThan ORDER BY t.tickTime")
@@ -325,11 +315,11 @@ public class Clock extends ActiveNodeBase
         //TODO: check we don't need to filter purge by clock ??????
 
         // Get the next time the method should be called and return it
-        org.joda.time.DateTime res = now.plusDays(1).minusMillis(now.getMillisOfDay());
+        org.joda.time.DateTime res = virtualTime.plusDays(1).minusMillis(virtualTime.getMillisOfDay());
         for (Object p : occurrenceCache)
         {
             org.joda.time.DateTime from = new org.joda.time.DateTime(((Period) p).getStart());
-            if (from.compareTo(now) > 0)
+            if (from.compareTo(virtualTime) > 0)
             {
                 res = new org.joda.time.DateTime(from.toDate());
                 break;
