@@ -650,7 +650,7 @@ public class State extends ConfigurableBase
         // Send it (commit is done by main engine later)
         try
         {
-            SenderHelpers.sendPipelineJobToRunner(pj, p.getNode().getHost(), pjProducer, session, false);
+            SenderHelpers.sendToPipeline(pj, p.getNode().getHost(), pjProducer, session, false);
         }
         catch (JMSException e1)
         {

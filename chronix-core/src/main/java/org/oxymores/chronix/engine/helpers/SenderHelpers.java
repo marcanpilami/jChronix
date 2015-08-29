@@ -345,19 +345,19 @@ public class SenderHelpers
     // /////////////////////////////////////////////////////////////////////////
     // PipelineJob
     // Should only be used by tests (poor performances)
-    public static void sendPipelineJobToRunner(PipelineJob pj, ExecutionNode target, ChronixContext ctx) throws JMSException
+    public static void sendToPipeline(PipelineJob pj, ExecutionNode target, ChronixContext ctx) throws JMSException
     {
         // Connect to a broker
         JmsSendData d = new JmsSendData(ctx);
 
         // Go
-        SenderHelpers.sendPipelineJobToRunner(pj, target, d.jmsProducer, d.jmsSession, true);
+        SenderHelpers.sendToPipeline(pj, target, d.jmsProducer, d.jmsSession, true);
 
         // Cleanup
         d.close();
     }
 
-    public static void sendPipelineJobToRunner(PipelineJob pj, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
+    public static void sendToPipeline(PipelineJob pj, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
     {
         String qName = String.format(Constants.Q_PJ, target.getHost().getBrokerName());
         log.info(String.format("A job will be sent to the runner over the wire on queue %s", qName));
