@@ -145,7 +145,7 @@ $(document).ready(function ()
             {
                 lateststate = $(this).select2('data');
                 var group = null;
-                var places = [];
+                var selectedPlaces = [];
                 $.each(latestapp.groups, function ()
                 {
                     if (this.id.toString() === lateststate.runsOnId)
@@ -160,11 +160,11 @@ $(document).ready(function ()
                     {
                         if (this.toString() === group.id)
                         {
-                            places.push(place);
+                            selectedPlaces.push(place);
                         }
                     });
                 });
-                console.debug(places);
+                console.debug(selectedPlaces);
 
                 s4 = $("#place").select2({
                     data: network.places,
@@ -173,20 +173,22 @@ $(document).ready(function ()
                     closeOnSelect: true,
                     multiple: true,
                     placeholder: "select the places to run the job on",
-                    allowClear: true,
                     initSelection: function (e, c) {
-                        c(places);
+                        c(selectedPlaces);
                     },
                     matcher: nameMatcher
                 });
+                s4.select2("val", selectedPlaces);
             });
         });
     });
 
     var dialog = $("#dialog-newlaunch").dialog({
         autoOpen: false,
-        height: 300,
-        width: 350,
+        maxWidth: 600,
+        maxHeight: 500,
+        width: 600,
+        height: 500,
         modal: true,
         buttons: {
             Launch: oopLaunch,
@@ -209,7 +211,7 @@ function oopLaunch()
     $.each(place_ids, function ()
     {
         var pid = this.toString();
-        var url = "ws/live/order/launch/outofplan/" + $("#application").select2("val") + "/" + $("#state").select2("val") + "/" + pid;
+        var url = "ws/live/order/launch/" + $("inside").is(':checked') + "/" + $("#application").select2("val") + "/" + $("#state").select2("val") + "/" + pid;
         $.getJSON(url, function (data)
         {
             console.debug(data);

@@ -157,10 +157,10 @@ public class ServiceConsole
     }
 
     @GET
-    @Path("/order/launch/outofplan/{appId}/{stateId}/{placeId}")
+    @Path("/order/launch/{insidePlan}/{appId}/{stateId}/{placeId}")
     @Produces("application/json")
-    public ResOrder orderLaunchOutOfPlan(@PathParam("appId") UUID appId, @PathParam("stateId") UUID stateId,
-            @PathParam("placeId") UUID placeId)
+    public ResOrder orderLaunch(@PathParam("appId") UUID appId, @PathParam("stateId") UUID stateId,
+            @PathParam("placeId") UUID placeId, @PathParam("insidePlan") Boolean insidePlan)
     {
         log.info("Calling orderLaunchOutOfPlan - with full params");
         try
@@ -168,7 +168,17 @@ public class ServiceConsole
             Application a = ctx.getApplication(appId);
             Place p = this.ctx.getNetwork().getPlace(placeId);
             State s = a.getState(stateId);
-            SenderHelpers.runStateAlone(s, p, ctx);
+            if (insidePlan)
+            {
+                try (Connection o = ctx.getTransacDataSource().beginTransaction())
+                {
+                    SenderHelpers.runStateInsidePlan(s, p, ctx, o);
+                }
+            }
+            else
+            {
+                SenderHelpers.runStateAlone(s, p, ctx);
+            }
         }
         catch (Exception e)
         {
@@ -181,14 +191,14 @@ public class ServiceConsole
     @GET
     @Path("/order/launch/outofplan/duplicatelaunch/{launchId}")
     @Produces("application/json")
-    public ResOrder orderLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
+    public ResOrder duplicateEndedLaunchOutOfPlan(@PathParam("launchId") UUID launchId)
     {
-        log.debug("Service orderLaunchOutOfPlan was called");
+        log.debug("Service duplicateEndedLaunchOutOfPlan was called");
         RunLog rl;
         try (Connection conn = ctx.getHistoryDataSource().open())
         {
             rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
         }
-        return orderLaunchOutOfPlan(rl.getApplicationId(), rl.getStateId(), rl.getPlaceId());
+        return orderLaunch(rl.getApplicationId(), rl.getStateId(), rl.getPlaceId(), false);
     }
 }
