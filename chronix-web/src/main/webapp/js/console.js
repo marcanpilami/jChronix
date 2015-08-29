@@ -1,3 +1,4 @@
+var dialog;
 
 $(document).ready(function ()
 {
@@ -183,7 +184,7 @@ $(document).ready(function ()
         });
     });
 
-    var dialog = $("#dialog-newlaunch").dialog({
+    dialog = $("#dialog-newlaunch").dialog({
         autoOpen: false,
         maxWidth: 600,
         maxHeight: 500,
@@ -200,9 +201,12 @@ $(document).ready(function ()
         {
         }
     });
-
-    dialog.dialog("open");
 });
+
+function openOOPL()
+{
+    dialog.dialog("open");
+}
 
 function oopLaunch()
 {

@@ -71,17 +71,18 @@ public class ServiceConsole
                 sort = sort.substring(0, sort.length() - 1);
             }
 
-            Query qu = conn.createQuery("SELECT * FROM RunLog r WHERE r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
-                    + sort).addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
-
-            if (q.getStartLine() != null)
-            {
-                q.setStartLine(q.getStartLine());
-            }
+            String pagination = "";
             if (q.getPageSize() != null)
             {
-                q.setPageSize(q.getPageSize());
+                pagination += " LIMIT " + q.getPageSize();
             }
+            if (q.getStartLine() != null)
+            {
+                pagination += " OFFSET " + q.getStartLine();
+            }
+
+            Query qu = conn.createQuery("SELECT * FROM RunLog r WHERE r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
+                    + sort + pagination).addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
 
             List<DTORunLog> res = new ArrayList<>();
             for (RunLog rl : qu.executeAndFetch(RunLog.class))
