@@ -180,7 +180,7 @@ class OrderListener extends BaseListener
                     pj.setStatus(Constants.JI_STATUS_OVERRIDEN);
                     pj.insertOrUpdate(connTransac);
 
-                    RunLog rl = connHist.createQuery("SELECT * FROM History WHERE id=:id").addParameter("id", order.data)
+                    RunLog rl = connHist.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", order.data)
                             .executeAndFetchFirst(RunLog.class);
                     if (rl != null)
                     {
@@ -259,7 +259,7 @@ class OrderListener extends BaseListener
             evt.setLevel0Id(s.getChain().getId());
             evt.setState(s);
             evt.setVirtualTime(DateTime.now());
-            
+
             for (Place p : s.getRunsOn().getPlaces())
             {
                 evt.setPlace(p);
