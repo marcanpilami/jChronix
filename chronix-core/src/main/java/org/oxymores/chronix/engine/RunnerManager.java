@@ -312,12 +312,12 @@ public class RunnerManager extends BaseListener
             RunResult res = new RunResult();
             res.returnCode = 0;
             res.id1 = j.getId();
-            res.end = DateTime.now();
+            res.end = j.getVirtualTime();
             res.start = res.end;
             res.outOfPlan = j.getOutOfPlan();
             try (Connection conn = this.ctx.getTransacDataSource().open())
             {
-                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession);
+                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession, j.getVirtualTime());
             }
             recvRR(res);
         }
@@ -328,7 +328,7 @@ public class RunnerManager extends BaseListener
                     j.getId(), toRun.getClass()));
             try (Connection conn = this.ctx.getTransacDataSource().open())
             {
-                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession);
+                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession, j.getVirtualTime());
             }
         }
         else if (!ctx.isSimulator() && j.isReady(ctx))
@@ -415,7 +415,7 @@ public class RunnerManager extends BaseListener
             if (!rr.outOfPlan)
             {
                 pj.getEnvValues(conn);
-                Event e = pj.createEvent(rr);
+                Event e = pj.createEvent(rr, rr.end);
                 SenderHelpers.sendEvent(e, producerEvents, jmsSession, ctx, true);
             }
 

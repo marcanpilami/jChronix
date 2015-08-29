@@ -31,6 +31,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
@@ -381,7 +382,7 @@ public class SenderHelpers
     public static void runStateInsidePlanWithoutCalendarUpdating(State s, Place p, ChronixContext ctx) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        s.runInsidePlanWithoutUpdatingCalendar(p, d.jmsProducer, d.jmsSession);
+        s.runInsidePlanWithoutUpdatingCalendar(p, d.jmsProducer, d.jmsSession, DateTime.now());
         d.jmsSession.commit();
         d.close();
     }
@@ -398,7 +399,7 @@ public class SenderHelpers
     public static void runStateInsidePlan(State s, ChronixContext ctx, org.sql2o.Connection conn) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        s.runInsidePlan(conn, d.jmsProducer, d.jmsSession);
+        s.runInsidePlan(conn, d.jmsProducer, d.jmsSession, null, null, DateTime.now());
         d.jmsSession.commit();
         d.close();
     }
@@ -406,7 +407,7 @@ public class SenderHelpers
     public static void runStateInsidePlan(State s, Place p, ChronixContext ctx, org.sql2o.Connection conn) throws JMSException
     {
         JmsSendData d = new JmsSendData(ctx);
-        s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession);
+        s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession, DateTime.now());
         d.jmsSession.commit();
         d.close();
     }

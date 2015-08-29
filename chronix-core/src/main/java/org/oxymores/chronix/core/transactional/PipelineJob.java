@@ -251,10 +251,10 @@ public class PipelineJob extends TranscientBase
     {
         RunResult rr = new RunResult();
         rr.returnCode = this.resultCode;
-        return createEvent(rr);
+        return createEvent(rr, this.virtualTime);
     }
 
-    public Event createEvent(RunResult rr)
+    public Event createEvent(RunResult rr, DateTime virtualTime)
     {
         Event e = new Event();
         e.setLocalOnly(false);
@@ -272,7 +272,7 @@ public class PipelineJob extends TranscientBase
         e.setAppID(this.appID);
         e.setActiveID(this.activeID);
         e.setCreatedAt(DateTime.now());
-        e.setVirtualTime(this.virtualTime);
+        e.setVirtualTime(virtualTime);
 
         // Report environment
         if (this.envValues != null)

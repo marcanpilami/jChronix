@@ -130,12 +130,12 @@ public class Chain extends ActiveNodeBase
     // ///////////////////////////////////////////////////////////////////
     // Run methods
     @Override
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession, DateTime virtualTime)
     {
         // Create a new run for the chain.
-        pj.setBeganRunningAt(new DateTime());
+        pj.setBeganRunningAt(virtualTime);
         State s = this.getStartState();
-        s.runInsidePlan(conn, jmsProducer, jmsSession, pj.getId(), null);
+        s.runInsidePlan(conn, jmsProducer, jmsSession, pj.getId(), null, virtualTime);
     }
 
     @Override

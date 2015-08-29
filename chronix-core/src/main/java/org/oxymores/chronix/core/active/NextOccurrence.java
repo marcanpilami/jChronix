@@ -23,6 +23,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.validation.constraints.NotNull;
+import org.joda.time.DateTime;
 
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -54,7 +55,7 @@ public class NextOccurrence extends ActiveNodeBase
     }
 
     @Override
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession, DateTime virtualTime)
     {
         log.debug(String.format("Calendar %s current occurrence will now be updated", updatedCalendar.getName()));
 

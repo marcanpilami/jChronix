@@ -471,38 +471,63 @@ public class State extends ConfigurableBase
 
     // /////////////////////////////////////////////////////////////////////////////////
     // Create and post PJ for run
+    /**
+     To be called to launch a state without any consequences whatsoever: it will not trigger the launch of other states, it will not
+     update calendars. Used to test launch a single state. Virtual time used is system current time.
+     @param p
+     @param pjProducer
+     @param session
+     */
     public void runAlone(Place p, MessageProducer pjProducer, Session session)
     {
-        run(p, pjProducer, session, null, false, true, true, this.chain.id, UUID.randomUUID(), null, null, null, null);
+        run(p, pjProducer, session, null, false, true, true, this.chain.id, UUID.randomUUID(), null, null, null, DateTime.now());
     }
 
-    public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session)
+    /**
+     To be called to launch a state at once that will normally trigger all what should happen after it, but without
+     updating calendars, i.e. without having any consequences on the normal scheduled plan. Mostly used to test launch a chain.<br/>
+     Will create a PipelineJob with:
+     <ul>
+     <li>No calendar pointer to update</li>
+     <li>inside plan, inside chain (level0 id = chain id)</li>
+     <li>with a new chain luanch ID (level1 id)</li>
+     <li>no env values</li>
+     </ul>
+     @param p the Place on which to run the state.
+     @param pjProducer a JMS MessageProducer that will send the newly created PiplelineJob
+     @param session a JMS session (used in conjunction with pjProducer)
+     @param virtualTime
+     */
+    public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session, DateTime virtualTime)
     {
-        run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null, null);
+        run(p, pjProducer, session, null, false, false, false, this.chain.id, UUID.randomUUID(), null, null, null, virtualTime);
     }
 
-    public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession)
+    /**
+     Runs a state on all its places. Will have full consequences, including updating calendars. So if called from outside the engine it may
+     very well botch the standard scheduled plan!
+     @param conn
+     @param pjProducer
+     @param jmsSession
+     @param level2Id
+     @param level3Id
+     @param virtualTime
+     */
+    public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id, DateTime virtualTime)
     {
         for (Place p : this.runsOn.places)
         {
-            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null);
+            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id, virtualTime);
         }
     }
 
-    public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id)
+    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, DateTime virtualTime)
     {
-        for (Place p : this.runsOn.places)
-        {
-            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id);
-        }
+        runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null, virtualTime);
     }
 
-    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession)
-    {
-        runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null);
-    }
-
-    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id)
+    private void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id, UUID level3Id,
+            DateTime virtualTime)
     {
         // Calendar update
         UUID calendarOccurrenceID = null;
@@ -512,10 +537,9 @@ public class State extends ConfigurableBase
             CalendarPointer cp = this.getCurrentCalendarPointer(conn, p);
             calendarOccurrenceID = cp.getNextRunOccurrenceId();
             cpToUpdate = this.getCurrentCalendarPointer(conn, p);
-
         }
 
-        run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate, null);
+        run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.chain.id, level1Id, level2Id, level3Id, cpToUpdate, virtualTime);
     }
 
     public void runFromEngine(Place p, Connection conn, MessageProducer pjProducer, Session session, Event e)
@@ -528,14 +552,13 @@ public class State extends ConfigurableBase
             CalendarPointer cp = this.getCurrentCalendarPointer(conn, p);
             calendarOccurrenceID = cp.getNextRunOccurrenceId();
             cpToUpdate = this.getCurrentCalendarPointer(conn, p);
-
         }
 
         run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0Id(), e.getLevel1Id(), e.getLevel2Id(), e.getLevel3Id(), cpToUpdate,
                 e.getVirtualTime(), e.getEnvValues(conn).toArray(new EnvironmentValue[0]));
     }
 
-    public void run(Place p, MessageProducer pjProducer, Session session, UUID calendarOccurrenceID, boolean updateCalendarPointer, boolean outOfPlan, boolean outOfChainLaunch,
+    private void run(Place p, MessageProducer pjProducer, Session session, UUID calendarOccurrenceID, boolean updateCalendarPointer, boolean outOfPlan, boolean outOfChainLaunch,
             UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id, CalendarPointer cpToUpdate, DateTime virtualTime, EnvironmentValue... params)
     {
         DateTime now = DateTime.now();

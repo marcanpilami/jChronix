@@ -170,7 +170,7 @@ class OrderListener extends BaseListener
             {
                 ActiveNodeBase a = pj.getActive(ctx);
                 RunResult rr = a.forceOK();
-                Event e = pj.createEvent(rr);
+                Event e = pj.createEvent(rr, pj.getVirtualTime());
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
 
                 // Update history & PJ
@@ -258,7 +258,8 @@ class OrderListener extends BaseListener
             evt.setLevel1Id(new UUID(0, 1));
             evt.setLevel0Id(s.getChain().getId());
             evt.setState(s);
-
+            evt.setVirtualTime(DateTime.now());
+            
             for (Place p : s.getRunsOn().getPlaces())
             {
                 evt.setPlace(p);

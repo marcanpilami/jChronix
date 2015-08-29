@@ -274,6 +274,7 @@ public class Clock extends ActiveNodeBase
         // Create events through the helper PJ
         for (org.joda.time.DateTime dt : toCreate)
         {
+            pj.setVirtualTime(virtualTime);
             for (State s : states)
             {
                 pj.setState(s);

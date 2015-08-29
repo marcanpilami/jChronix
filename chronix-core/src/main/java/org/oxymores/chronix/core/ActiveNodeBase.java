@@ -315,7 +315,7 @@ public class ActiveNodeBase extends ConfigurableBase
     // Supposed to do local operations only.
     // Used by active nodes which influence the scheduling itself rather than run a payload.
     // Not called within an open JPA transaction - if you open one, close it!
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession, DateTime virtualTime)
     {
         // Do nothing by default.
     }

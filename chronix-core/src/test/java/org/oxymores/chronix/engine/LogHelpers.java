@@ -67,7 +67,7 @@ class LogHelpers
 
             try (Connection conn = ctx.getHistoryDataSource().open())
             {
-                res = conn.createQuery("SELECT * FROM RunLog r WHERE r.lastKnownStatus = 'DONE' ORDER BY r.beganRunningAt").executeAndFetch(RunLog.class);
+                res = conn.createQuery("SELECT * FROM RunLog r WHERE r.lastKnownStatus = 'DONE' ORDER BY r.beganRunningAt, r.stoppedRunningAt DESC").executeAndFetch(RunLog.class);
             }
             nb = res.size();
         }

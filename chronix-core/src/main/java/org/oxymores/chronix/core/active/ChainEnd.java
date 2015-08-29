@@ -51,13 +51,13 @@ public class ChainEnd extends ActiveNodeBase
     }
 
     @Override
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession, DateTime virtualTime)
     {
         RunResult rr = new RunResult();
         rr.returnCode = 0;
         rr.logStart = this.name;
         rr.id1 = pj.getLevel2Id();
-        rr.end = DateTime.now();
+        rr.end = virtualTime;
 
         try
         {

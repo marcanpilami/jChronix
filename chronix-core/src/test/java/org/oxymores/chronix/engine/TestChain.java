@@ -52,12 +52,13 @@ public class TestChain extends TestBase
         log.debug("****PASSING RUN***************************************************************");
         SenderHelpers.runStateInsidePlan(sp, firstEngine().ctx);
 
-        List<RunLog> res = LogHelpers.waitForHistoryCount(firstEngine().ctx, 4);
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.getContext(), 4);
+        LogHelpers.displayAllHistory(e1.getContext());
         Assert.assertEquals(4, res.size());
         RunLog rl0 = res.get(0);
         RunLog rl3 = res.get(3);
-        DateTime end0 = new DateTime(rl0.getStoppedRunningAt());
-        DateTime end3 = new DateTime(rl3.getStoppedRunningAt());
+        DateTime end0 = rl0.getStoppedRunningAt();
+        DateTime end3 = rl3.getStoppedRunningAt();
 
         Assert.assertEquals("simple chain", rl0.getActiveNodeName());
         Assert.assertTrue(end0.isAfter(end3) || end0.isEqual(end3));
