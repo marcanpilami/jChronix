@@ -76,6 +76,8 @@ function initApp(appObject)
         // Name and descr
         $("#name-" + app.id).val(app.name);
         $("#description-" + app.id).val(app.description);
+        $("#commitcomment-" + app.id).val("");
+        app.latestVersionComment = "";
         $("#name-" + app.id).change(function ()
         {
             app.name = $(this).val();
@@ -86,7 +88,10 @@ function initApp(appObject)
         {
             app.description = $(this).val();
         });
-
+        $("#commitcomment-" + app.id).change(function ()
+        {
+            app.latestVersionComment = $(this).val();
+        });
     });
 }
 

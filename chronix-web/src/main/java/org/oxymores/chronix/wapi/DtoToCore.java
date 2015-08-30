@@ -47,7 +47,7 @@ public class DtoToCore
         a.setId(UUID.fromString(d.getId()));
         a.setDescription(d.getDescription());
         a.setname(d.getName());
-        a.setVersion(d.getVersion());
+        a.addVersion(d.getVersion(), d.getLatestVersionComment());
 
         Or or = new Or();
         or.setId(UUID.fromString(d.getOrId()));

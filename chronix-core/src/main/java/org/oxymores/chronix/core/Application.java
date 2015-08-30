@@ -11,6 +11,7 @@
  */
 package org.oxymores.chronix.core;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +40,6 @@ public class Application extends ChronixObject
     @NotNull
     @Size(min = 1, max = 255)
     protected String description;
-    protected int version = 0;
     private DateTime latestSave = DateTime.now();
 
     @Valid
@@ -55,8 +55,24 @@ public class Application extends ChronixObject
     @Valid
     protected Map<UUID, ActiveNodeBase> activeElements;
 
+    protected List<ApplicationVersion> versions;
+
     protected transient boolean fromCurrentFile = true;
     protected transient ChronixContext ctx;
+
+    protected class ApplicationVersion implements Serializable
+    {
+        ApplicationVersion()
+        {
+
+        }
+
+        private static final long serialVersionUID = 338399455626386055L;
+
+        int version = 0;
+        String versionComment = "";
+        DateTime created;
+    }
 
     public Application()
     {
@@ -66,6 +82,8 @@ public class Application extends ChronixObject
         this.calendars = new HashMap<UUID, Calendar>();
         this.rrules = new HashMap<UUID, ClockRRule>();
         this.tokens = new HashMap<UUID, Token>();
+        this.versions = new ArrayList<>();
+        this.addVersion(0, "creation");
 
         // Basic elements
         ActiveNodeBase tmp = new And();
@@ -366,12 +384,12 @@ public class Application extends ChronixObject
     // Versioning
     public int getVersion()
     {
-        return version;
+        return this.versions.get(this.versions.size() - 1).version;
     }
 
-    public void setVersion(int version)
+    public String getCommitComment()
     {
-        this.version = version;
+        return this.versions.get(this.versions.size() - 1).versionComment;
     }
 
     public boolean isFromCurrentFile()
@@ -392,5 +410,14 @@ public class Application extends ChronixObject
     public void setLatestSave(DateTime latestSave)
     {
         this.latestSave = latestSave;
+    }
+
+    public void addVersion(int version, String comment)
+    {
+        ApplicationVersion v = new ApplicationVersion();
+        v.created = DateTime.now();
+        v.version = version;
+        v.versionComment = comment;
+        this.versions.add(v);
     }
 }

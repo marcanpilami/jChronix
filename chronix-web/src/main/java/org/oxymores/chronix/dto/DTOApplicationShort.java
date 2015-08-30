@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class DTOApplicationShort
 {
-    private String id, name, description;
+    private String id, name, description, latestVersionComment;
     private int version;
     private boolean draft = false;
     private Date latestSave;
@@ -67,5 +67,15 @@ public class DTOApplicationShort
     public void setLatestSave(Date latestSave)
     {
         this.latestSave = latestSave;
+    }
+
+    public String getLatestVersionComment()
+    {
+        return latestVersionComment;
+    }
+
+    public void setLatestVersionComment(String latestVersionComment)
+    {
+        this.latestVersionComment = latestVersionComment;
     }
 }

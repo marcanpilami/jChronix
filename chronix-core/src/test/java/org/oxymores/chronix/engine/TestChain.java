@@ -146,11 +146,7 @@ public class TestChain extends TestBase
         List<RunLog> res = LogHelpers.waitForHistoryCount(e1.getContext(), 3);
         LogHelpers.displayAllHistory(e1.getContext());
         Assert.assertEquals(3, res.size());
-        RunLog rl1 = res.get(1);
-        log.debug(res.get(0).getShortLog());
-        log.debug(res.get(1).getShortLog());
-        log.debug(res.get(2).getShortLog());
 
-        Assert.assertEquals("was not run as it was marked as disabled", rl1.getShortLog());
+        Assert.assertEquals("was not run as it was marked as disabled", res.get(0).getShortLog() + res.get(1).getShortLog() + res.get(2).getShortLog());
     }
 }

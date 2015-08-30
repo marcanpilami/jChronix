@@ -40,39 +40,4 @@ public class TestContext
 
         context.close();
     }
-
-    @Test
-    public void versioning() throws Exception
-    {
-        Application a1 = org.oxymores.chronix.planbuilder.DemoApplication.getNewDemoApplication("marsu", 1234);
-        ChronixContext.saveApplication(a1, ctx);
-
-        ChronixContext context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
-        Application a = context.getApplicationByName("Demo");
-        Assert.assertEquals("test application auto created", a.getDescription());
-        Assert.assertEquals(1, a.getVersion());
-        Assert.assertTrue(a.isFromCurrentFile());
-
-        // Modify a field => version should go up.
-        a.setDescription("pppp");
-        context.saveApplication(a);
-
-        // Reload application to simulate engine restart...
-        context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
-        a = context.getApplicationByName("Demo");
-        Assert.assertEquals("pppp", a.getDescription());
-        Assert.assertEquals(2, a.getVersion());
-
-        // This time save twice => version should only go up by 1.
-        a.setDescription("gggg1");
-        context.saveApplication(a);
-        a.setDescription("gggg");
-        context.saveApplication(a);
-        context = new ChronixContext("local", ctx.getAbsolutePath(), false, "C:\\TEMP\\db1\\jpa1", "C:\\TEMP\\db1\\jpa2");
-        a = context.getApplicationByName("Demo");
-        Assert.assertEquals("gggg", a.getDescription());
-        Assert.assertEquals(3, a.getVersion());
-
-        context.close();
-    }
 }

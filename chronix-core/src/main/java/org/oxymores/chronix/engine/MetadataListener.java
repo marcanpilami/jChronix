@@ -96,7 +96,6 @@ class MetadataListener extends BaseListener
             try
             {
                 log.debug("Saving received app as the current working copy");
-                a.isFromCurrentFile(false);
                 ctx.saveApplication(a);
             }
             catch (Exception e1)

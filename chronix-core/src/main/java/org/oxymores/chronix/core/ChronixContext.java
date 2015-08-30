@@ -365,11 +365,6 @@ public final class ChronixContext
             }
         }
 
-        if (a.isFromCurrentFile())
-        {
-            a.setVersion(a.getVersion() + 1);
-            a.isFromCurrentFile(false);
-        }
         log.info("Application {} will be saved as version {} inside file {}", a.getName(), a.getVersion(), destPath);
 
         try (FileOutputStream fos = new FileOutputStream(destPath))

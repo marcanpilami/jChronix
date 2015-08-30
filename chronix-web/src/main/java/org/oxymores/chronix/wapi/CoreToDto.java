@@ -70,6 +70,7 @@ public class CoreToDto
         res.setCalendars(new ArrayList<DTOCalendar>());
         res.setCalnexts(new ArrayList<DTONextOccurrence>());
         res.setVersion(a.getVersion());
+        res.setLatestVersionComment(a.getCommitComment());
 
         // Unique elements
         for (ConfigurableBase nb : a.getActiveElements().values())
@@ -1031,7 +1032,7 @@ public class CoreToDto
         res.setStoppedRunningAt(rl.getStoppedRunningAt() == null ? null : rl.getStoppedRunningAt().toDate());
         res.setWhatWasRun(rl.getWhatWasRun());
         res.setChainLaunchId(rl.getChainLaunchId().toString());
-        
+
         return res;
     }
 

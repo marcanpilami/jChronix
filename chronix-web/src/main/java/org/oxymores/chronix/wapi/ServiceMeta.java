@@ -138,7 +138,6 @@ public class ServiceMeta
 
         // Read application
         Application a = DtoToCore.getApplication(app);
-        a.isFromCurrentFile(false);
         try
         {
             ctx.stageApplication(a);
@@ -228,6 +227,7 @@ public class ServiceMeta
             t.setId(a.getId().toString());
             t.setName(a.getName());
             t.setVersion(a.getVersion());
+            t.setLatestVersionComment(a.getCommitComment());
             t.setDraft(!a.isFromCurrentFile());
             t.setLatestSave(a.getLatestSave().toDate());
             res.add(t);

@@ -10,6 +10,7 @@ public class DTOApplication
     private String id;
     private boolean active = true;
     private int version = 0;
+    private String latestVersionComment = "";
 
     private List<DTOPlaceGroup> groups;
     private List<DTOParameter> parameters;
@@ -224,5 +225,15 @@ public class DTOApplication
     public void setVersion(int version)
     {
         this.version = version;
+    }
+
+    public String getLatestVersionComment()
+    {
+        return latestVersionComment;
+    }
+
+    public void setLatestVersionComment(String latestVersionComment)
+    {
+        this.latestVersionComment = latestVersionComment;
     }
 }

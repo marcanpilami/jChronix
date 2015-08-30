@@ -7,7 +7,7 @@ function initSave(app)
     tab.find("button[name=test]").click(function ()
     {
         // Clear error tables
-        tab.find("table > tbody").empty();
+        tab.find("table.errortable > tbody").empty();
 
         var a = prepareApp(app);
 
@@ -16,7 +16,7 @@ function initSave(app)
         {
             if (data.length === 0)
             {
-                $("<tr><td></td><td>No errors detected!</td><td></td><td></td><td></td></tr>").appendTo(tab.find("table > tbody"));
+                $("<tr><td></td><td>No errors detected!</td><td></td><td></td><td></td></tr>").appendTo(tab.find("table.errortable > tbody"));
             }
             else
             {
@@ -48,6 +48,12 @@ function initSave(app)
     tab.find("button[name=activate]").click(function ()
     {
         var a = prepareApp(app);
+
+        if (!a.latestVersionComment)
+        {
+            alert("a commit message is required");
+            return;
+        }
 
         $.postJSON("ws/meta/app/test", a, function (data)
         {
