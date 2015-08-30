@@ -22,7 +22,17 @@ $(document).ready(function ()
         ajax: getRunLogs,
         select: "single",
         //buttons: ['refresh', 'stop', 'new']
-        buttons: ["refresh", "copy", "excel", "getLogFile", "stopRunningJob", "openOOPL"]
+        buttons: ["refresh", "copy", "excel", "getLogFile", "stopRunningJob", "openOOPL"],
+        rowCallback: function (row, data, index) {
+            if (data.lastKnownStatus === "OK")
+            {
+                $(row).addClass("ok-row");
+            }
+            if (data.lastKnownStatus === "KO")
+            {
+                $(row).addClass("ko-row");
+            }
+        }
     });
 
 

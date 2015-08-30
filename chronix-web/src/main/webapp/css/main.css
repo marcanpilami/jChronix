@@ -258,3 +258,18 @@ td.current, td.highlight
 {
     margin-bottom: 5px;
 }
+
+table.dataTable tbody tr.ok-row
+{
+    background-color: #B2E0C2;
+}
+table.dataTable tbody tr.ko-row
+{
+    background-color: #FF8080;
+}
+
+
+table.dataTable tbody tr.selected
+{
+    background-color: #B0BED9;
+}
