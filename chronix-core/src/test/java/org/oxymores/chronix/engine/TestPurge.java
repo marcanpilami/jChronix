@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
@@ -27,13 +27,13 @@ public class TestPurge extends TestBase
         e1 = addEngine(db1, "e1");
 
         // Physical network
-        n = new Network();
+        n = new Environment();
         en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
         en1.setConsole(true);
 
         // Logical network
         p1 = PlanBuilder.buildPlace(n, "master node", en1);
-        storeNetwork(db1, n);
+        storeEnvironment(db1, n);
 
         // App
         a1 = PlanBuilder.buildApplication("Purge test, single node", "test");

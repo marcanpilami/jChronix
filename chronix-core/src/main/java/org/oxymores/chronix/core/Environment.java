@@ -13,7 +13,7 @@ import org.oxymores.chronix.core.validation.NetworkCheckPnUnicity;
 
 @NetworkCheckConsole
 @NetworkCheckPnUnicity
-public class Network extends ChronixObject
+public class Environment extends ChronixObject
 {
     private static final long serialVersionUID = -6797237891447380075L;
 
@@ -28,7 +28,7 @@ public class Network extends ChronixObject
     {
         if (!this.places.containsValue(place))
         {
-            place.setNetwork(this);
+            place.setEnvironment(this);
             this.places.put(place.id, place);
         }
     }
@@ -36,7 +36,7 @@ public class Network extends ChronixObject
     public void removePlace(Place place)
     {
         this.places.remove(place.id);
-        place.setNetwork(null);
+        place.setEnvironment(null);
     }
 
     public Map<UUID, Place> getPlaces()
@@ -85,7 +85,7 @@ public class Network extends ChronixObject
     {
         if (!this.nodes.containsValue(o))
         {
-            o.setNetwork(this);
+            o.setEnvironment(this);
             this.nodes.put(o.id, o);
         }
     }
@@ -93,7 +93,7 @@ public class Network extends ChronixObject
     public void removeNode(ExecutionNode o)
     {
         this.nodes.remove(o.id);
-        o.setNetwork(null);
+        o.setEnvironment(null);
     }
 
     public Map<UUID, ExecutionNode> getNodes()

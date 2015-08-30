@@ -45,7 +45,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
@@ -54,7 +54,7 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
-import org.oxymores.chronix.dto.DTONetwork;
+import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
@@ -89,30 +89,30 @@ public class ServiceMeta
     }
 
     @GET
-    @Path("network")
+    @Path("environment")
     @Produces(MediaType.APPLICATION_JSON)
-    public DTONetwork getNetwork()
+    public DTOEnvironment getEnvironment()
     {
-        log.debug("getNetwork was called");
-        return CoreToDto.getNetwork(ctx.getNetwork());
+        log.debug("getEnvironment was called");
+        return CoreToDto.getEnvironment(ctx.getEnvironment());
     }
 
     @POST
-    @Path("network")
+    @Path("environment")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void storeNetwork(DTONetwork n)
+    public void storeEnvironment(DTOEnvironment n)
     {
-        log.debug("storeNetwork was called");
+        log.debug("storeEnvironment was called");
         try
         {
-            Network network = DtoToCore.getNetwork(n);
-            ctx.saveNetwork(network);
-            ctx.setNetwork(network);
-            SenderHelpers.sendNetworkToAllNodes(network, ctx);
+            Environment env = DtoToCore.getEnvironment(n);
+            ctx.saveEnvironment(env);
+            ctx.setEnvironment(env);
+            SenderHelpers.sendEnvironmentToAllNodes(env, ctx);
         }
         catch (ChronixPlanStorageException | JMSException ex)
         {
-            log.error("Could not store network", ex);
+            log.error("Could not store environment", ex);
         }
     }
 
@@ -242,7 +242,7 @@ public class ServiceMeta
     {
         // Create app (leave incorrect description to force user to set it before saving the app)
         Application a = PlanBuilder.buildApplication("new app", "");
-        a.createStarterGroups(this.ctx.getNetwork());
+        a.createStarterGroups(this.ctx.getEnvironment());
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
         ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);
         PlanBuilder.buildClock(a, "once a week day", "day clock", r);
@@ -258,7 +258,7 @@ public class ServiceMeta
     {
         Application a = DemoApplication.getNewDemoApplication();
         a.setname("test app");
-        a.createStarterGroups(ctx.getNetwork());
+        a.createStarterGroups(ctx.getEnvironment());
         PlaceGroup pgLocal = a.getGroupsList().get(0);
         Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
@@ -334,12 +334,12 @@ public class ServiceMeta
     }
 
     @POST
-    @Path("network/test")
+    @Path("environment/test")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public List<DTOValidationError> validateNetwork(DTONetwork nn)
+    public List<DTOValidationError> validateEnvironment(DTOEnvironment nn)
     {
-        log.debug("validateNetwork service was called");
+        log.debug("validateEnvironment service was called");
         List<DTOValidationError> res = new ArrayList<>();
         DTOValidationError tmp;
 
@@ -352,7 +352,7 @@ public class ServiceMeta
         }
 
         // Read application
-        Network n = DtoToCore.getNetwork(nn);
+        Environment n = DtoToCore.getEnvironment(nn);
 
         // Validate & translate results for the GUI
         res = getErrors(ChronixContext.validate(n));

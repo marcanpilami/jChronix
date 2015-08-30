@@ -11,7 +11,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -42,7 +42,7 @@ public class TestMultiNode extends TestBase
         a1 = PlanBuilder.buildApplication("Multinode test", "test");
 
         // Physical network
-        n = new Network();
+        n = new Environment();
         en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
         en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
         en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
@@ -61,7 +61,7 @@ public class TestMultiNode extends TestBase
         pg3 = PlanBuilder.buildPlaceGroup(a1, "hosted node by second node", "third node", p3);
         pg4 = PlanBuilder.buildPlaceGroup(a1, "all nodes", "all nodes", p1, p2, p3);
 
-        storeNetwork(db1, n);
+        storeEnvironment(db1, n);
 
         // Chains and other stuff depends on the test
     }
@@ -69,7 +69,7 @@ public class TestMultiNode extends TestBase
     @Test
     public void testSend()
     {
-        storeNetwork(db2, n); // Avoid some restarts
+        storeEnvironment(db2, n); // Avoid some restarts
         addApplicationToDb(db1, a1);
         startEngines();
         try
@@ -93,7 +93,7 @@ public class TestMultiNode extends TestBase
             Assert.fail();
         }
 
-        Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
+        Assert.assertEquals(3, e2.ctx.getEnvironment().getPlaces().values().size());
         Assert.assertEquals(0, a2.getChains().size());
     }
 
@@ -120,7 +120,7 @@ public class TestMultiNode extends TestBase
             Assert.fail("No application in remote context after reception");
         }
 
-        Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
+        Assert.assertEquals(3, e2.ctx.getEnvironment().getPlaces().values().size());
         Assert.assertEquals(1, a2.getChains().size());
 
         // Run the chain
@@ -140,7 +140,7 @@ public class TestMultiNode extends TestBase
     @Test
     public void testCalendarTransmission()
     {
-        storeNetwork(db2, n); // Avoid some restarts
+        storeEnvironment(db2, n); // Avoid some restarts
 
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
@@ -181,7 +181,7 @@ public class TestMultiNode extends TestBase
         {
             Assert.fail("No application in remote context after reception");
         }
-        Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
+        Assert.assertEquals(3, e2.ctx.getEnvironment().getPlaces().values().size());
         LogHelpers.testCalendarPointerCount(e1.ctx, 2);
         LogHelpers.testCalendarPointerCount(e2.ctx, 2);
 
@@ -274,7 +274,7 @@ public class TestMultiNode extends TestBase
 
         log.debug("****SAVE CHAIN************************************************************************");
         addApplicationToDb(db1, a1);
-        storeNetwork(db2, n); // Avoid some restarts
+        storeEnvironment(db2, n); // Avoid some restarts
         startEngines();
 
         log.debug("****SEND CHAIN************************************************************************");
@@ -295,7 +295,7 @@ public class TestMultiNode extends TestBase
         {
             Assert.fail("No application in remote context after reception");
         }
-        Assert.assertEquals(3, e2.ctx.getNetwork().getPlaces().values().size());
+        Assert.assertEquals(3, e2.ctx.getEnvironment().getPlaces().values().size());
 
         LogHelpers.testCalendarPointerCount(e1.ctx, 2);
 

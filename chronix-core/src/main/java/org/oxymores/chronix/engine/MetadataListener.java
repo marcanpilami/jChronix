@@ -25,7 +25,7 @@ import javax.jms.ObjectMessage;
 
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ class MetadataListener extends BaseListener
         log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;
         Application a = null;
-        Network n = null;
+        Environment n = null;
         boolean restart = true;
         try
         {
@@ -67,7 +67,7 @@ class MetadataListener extends BaseListener
         try
         {
             Object o = omsg.getObject();
-            if (!(o instanceof Application) && !(o instanceof Network))
+            if (!(o instanceof Application) && !(o instanceof Environment))
             {
                 log.warn("An object was received on the metadata queue but was not an app or an environment specification! Ignored.");
                 jmsCommit();
@@ -80,7 +80,7 @@ class MetadataListener extends BaseListener
             }
             else
             {
-                n = (Network) o;
+                n = (Environment) o;
             }
         }
         catch (JMSException e)
@@ -108,12 +108,12 @@ class MetadataListener extends BaseListener
             }
         }
 
-        // Network
+        // Environment
         if (n != null)
         {
             try
             {
-                ctx.saveNetwork(n);
+                ctx.saveEnvironment(n);
             }
             catch (ChronixPlanStorageException ex)
             {

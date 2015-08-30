@@ -36,14 +36,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- This class is only called when an engine starts without a network file file and is part of a network.
- Its role is to fetch the network file from a known other engine.<br>
+ This class is only called when an engine starts without an environment file file and is part of a network.
+ Its role is to fetch the environment file from a known other engine.<br>
  As it is called before the broker is created, it is the only listener that directly connects to a remote broker.
  */
 public class BootstrapListener implements MessageListener
@@ -72,9 +72,9 @@ public class BootstrapListener implements MessageListener
         this.confDir = confDir;
     }
 
-    public boolean fetchNetwork()
+    public boolean fetchEnvironment()
     {
-        log.info("Will try to get network file from a known remote host at " + this.remoteHost + ":" + this.remotePort);
+        log.info("Will try to get environment file from a known remote host at " + this.remoteHost + ":" + this.remotePort);
         this.factory = new ActiveMQConnectionFactory("tcp://" + this.remoteHost + ":" + this.remotePort);
         try
         {
@@ -119,7 +119,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException | InterruptedException ex)
         {
-            log.error("Could not fetch network definition from console", ex);
+            log.error("Could not fetch environment definition from console", ex);
             return false;
         }
 
@@ -148,16 +148,16 @@ public class BootstrapListener implements MessageListener
             }
 
             Object o = omsg.getObject();
-            if (!(o instanceof Network))
+            if (!(o instanceof Environment))
             {
                 log.error("Received an answer but of the wrong type - engine cannot start");
                 jmsCommit();
                 stop();
             }
 
-            Network n = (Network) o;
-            log.info("network was received from remote node and will now be stored to disk");
-            ChronixContext.saveNetwork(n, confDir);
+            Environment n = (Environment) o;
+            log.info("environment was received from remote node and will now be stored to disk");
+            ChronixContext.saveEnvironment(n, confDir);
             jmsCommit();
             ok = true;
             stop();
@@ -178,7 +178,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException ex)
         {
-            log.warn("Could not close JMS connections after fetching the network file from console. Implies a possible resource leak.", ex);
+            log.warn("Could not close JMS connections after fetching the environment file from console. Implies a possible resource leak.", ex);
         }
         ended.release();
     }
@@ -191,7 +191,7 @@ public class BootstrapListener implements MessageListener
         }
         catch (InterruptedException ex)
         {
-            log.warn("Wait for network answer was interrupted", ex);
+            log.warn("Wait for environment answer was interrupted", ex);
         }
     }
 

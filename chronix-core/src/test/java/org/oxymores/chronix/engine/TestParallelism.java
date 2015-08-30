@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -41,7 +41,7 @@ public class TestParallelism extends TestBase
         a = PlanBuilder.buildApplication("Multinode test", "test");
 
         // Physical network
-        n = new Network();
+        n = new Environment();
         en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
         en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
         en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
@@ -72,8 +72,8 @@ public class TestParallelism extends TestBase
         groupnode2 = PlanBuilder.buildPlaceGroup(a, "all node 2 places", "", h21, h22);
         groupnode3 = PlanBuilder.buildPlaceGroup(a, "all node 3 places", "", h31, h32);
 
-        storeNetwork(db1, n);
-        storeNetwork(db2, n);
+        storeEnvironment(db1, n);
+        storeEnvironment(db2, n);
     }
 
     @Test

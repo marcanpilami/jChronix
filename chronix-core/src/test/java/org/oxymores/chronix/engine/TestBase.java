@@ -12,7 +12,7 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class TestBase
     public TestName testName = new TestName();
 
     protected Map<String, ChronixEngine> engines = new java.util.HashMap<>();
-    protected Network n;
+    protected Environment n;
 
     protected final String db1 = "C:\\TEMP\\db1";
     protected final String db2 = "C:\\TEMP\\db2";
@@ -38,7 +38,7 @@ public class TestBase
         cleanDirectory(db1);
         cleanDirectory(db2);
         cleanDirectory(db3);
-        this.addNetworkToDb(db1);
+        this.addEnvironmentToDb(db1);
     }
 
     @After
@@ -96,17 +96,17 @@ public class TestBase
         }
     }
 
-    protected void addNetworkToDb(String database_path)
+    protected void addEnvironmentToDb(String database_path)
     {
         n = PlanBuilder.buildLocalhostNetwork();
-        storeNetwork(database_path, n);
+        storeEnvironment(database_path, n);
     }
 
-    protected void storeNetwork(String database_path, Network n)
+    protected void storeEnvironment(String database_path, Environment n)
     {
         try
         {
-            ChronixContext.saveNetwork(n, new File(database_path));
+            ChronixContext.saveEnvironment(n, new File(database_path));
         }
         catch (ChronixPlanStorageException e)
         {
@@ -131,7 +131,7 @@ public class TestBase
     {
         try
         {
-            ChronixContext.saveNetwork(n, new File(database_path));
+            ChronixContext.saveEnvironment(n, new File(database_path));
             ChronixContext.saveApplication(a, new File(database_path));
         }
         catch (ChronixPlanStorageException e)

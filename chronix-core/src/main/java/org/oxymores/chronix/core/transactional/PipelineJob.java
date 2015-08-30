@@ -299,7 +299,7 @@ public class PipelineJob extends TranscientBase
     {
         RunLog rlog = new RunLog();
         Application a = ctx.getApplication(this.appID);
-        Place p = ctx.getNetwork().getPlace(this.placeID);
+        Place p = ctx.getEnvironment().getPlace(this.placeID);
         ActiveNodeBase act = this.getActive(ctx);
 
         rlog.setActiveNodeId(this.activeID);

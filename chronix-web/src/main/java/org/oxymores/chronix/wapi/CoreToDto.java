@@ -13,7 +13,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.NodeLink;
 import org.oxymores.chronix.core.Place;
@@ -37,7 +37,7 @@ import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOExecutionNode;
 import org.oxymores.chronix.dto.DTOExternal;
-import org.oxymores.chronix.dto.DTONetwork;
+import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTONextOccurrence;
 import org.oxymores.chronix.dto.DTOParameter;
 import org.oxymores.chronix.dto.DTOPlace;
@@ -1055,9 +1055,9 @@ public class CoreToDto
         return res;
     }
 
-    public static DTONetwork getNetwork(Network n)
+    public static DTOEnvironment getEnvironment(Environment n)
     {
-        DTONetwork res = new DTONetwork();
+        DTOEnvironment res = new DTOEnvironment();
 
         List<DTOPlace> places = new ArrayList<>();
         for (Place p : n.getPlacesList())

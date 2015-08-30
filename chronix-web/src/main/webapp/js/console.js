@@ -2,7 +2,7 @@ var dialog;
 
 $(document).ready(function ()
 {
-    var network = $.getJSON("ws/meta/network", function (data)
+    var network = $.getJSON("ws/meta/environment", function (data)
     {
         network = data;
     });

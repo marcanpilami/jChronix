@@ -175,7 +175,7 @@ public class ServiceConsole
         try
         {
             Application a = ctx.getApplication(appId);
-            Place p = this.ctx.getNetwork().getPlace(placeId);
+            Place p = this.ctx.getEnvironment().getPlace(placeId);
             State s = a.getState(stateId);
             if (insidePlan)
             {

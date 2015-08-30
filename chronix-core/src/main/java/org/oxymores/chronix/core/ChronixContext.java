@@ -71,8 +71,8 @@ public final class ChronixContext
     private final File configurationDirectory;
     private final String historyDbPath, transacDbPath, historyDbUrl, transacDbUrl;
 
-    // Network
-    private Network network;
+    // Environment
+    private Environment environment;
 
     // Loaded applications
     private final Map<UUID, Application> applicationsById, stagedApplicationsById;
@@ -175,9 +175,9 @@ public final class ChronixContext
         }
 
         // ///////////////////
-        // Load network
+        // Load environment
         // ///////////////////
-        this.network = this.loadNetwork();
+        this.environment = this.loadEnvironment();
 
         // ///////////////////
         // Load apps
@@ -211,7 +211,7 @@ public final class ChronixContext
                     }
                     for (PlaceGroup g : a.getGroupsList())
                     {
-                        g.map_places(this.network);
+                        g.map_places(this.environment);
                     }
                 }
 
@@ -237,7 +237,7 @@ public final class ChronixContext
         return validatorFactory.getValidator().validate(a);
     }
 
-    public static Set<ConstraintViolation<Network>> validate(Network n)
+    public static Set<ConstraintViolation<Environment>> validate(Environment n)
     {
         return validatorFactory.getValidator().validate(n);
     }
@@ -277,52 +277,52 @@ public final class ChronixContext
         }
 
         // TODO: Don't load applications that are not active on the local node
-        //if (CollectionUtils.intersection(this.network.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
+        //if (CollectionUtils.intersection(this.environment.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
         //{
         // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
         // return null;
         //}
-        // Set the context so as to enable network access through the application
+        // Set the context so as to enable environment access through the application
         res.setContext(this);
 
         return res;
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Network loading
+    // Environment loading
     ///////////////////////////////////////////////////////////////////////////
-    public static boolean hasNetworkFile(String configurationDirectory)
+    public static boolean hasEnvironmentFile(String configurationDirectory)
     {
-        File f = new File(getNetworkPath(new File(configurationDirectory)));
+        File f = new File(getEnvironmentPath(new File(configurationDirectory)));
         return f.isFile();
     }
 
-    public Network loadNetwork() throws ChronixPlanStorageException
+    public Environment loadEnvironment() throws ChronixPlanStorageException
     {
-        File f = new File(getNetworkPath(this.configurationDirectory));
-        log.info(String.format("Loading network from file %s", f.getAbsolutePath()));
-        Network res = null;
+        File f = new File(getEnvironmentPath(this.configurationDirectory));
+        log.info(String.format("Loading environment from file %s", f.getAbsolutePath()));
+        Environment res = null;
 
-        if (!hasNetworkFile(this.configurationDirectory.getAbsolutePath()))
+        if (!hasEnvironmentFile(this.configurationDirectory.getAbsolutePath()))
         {
-            throw new ChronixPlanStorageException("Network file " + f.getAbsolutePath() + " does not exist", null);
+            throw new ChronixPlanStorageException("Environment file " + f.getAbsolutePath() + " does not exist", null);
         }
 
         try
         {
-            res = (Network) xmlUtility.fromXML(f);
+            res = (Environment) xmlUtility.fromXML(f);
         }
         catch (XStreamException e)
         {
-            throw new ChronixPlanStorageException("Could not load network file " + f, e);
+            throw new ChronixPlanStorageException("Could not load environment file " + f, e);
         }
 
         return res;
     }
 
-    public void setNetwork(Network n)
+    public void setEnvironment(Environment n)
     {
-        this.network = n;
+        this.environment = n;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -393,7 +393,7 @@ public final class ChronixContext
         log.info(String.format("Staging application %s to draft file inside metabase %s", a.getName(), dir));
         String destPath = getWorkingPath(a.getId(), dir);
         a.setLatestSave(DateTime.now());
-        
+
         try (FileOutputStream fos = new FileOutputStream(destPath))
         {
             xmlUtility.toXML(a, fos);
@@ -422,21 +422,21 @@ public final class ChronixContext
         }
     }
 
-    public void saveNetwork(Network n) throws ChronixPlanStorageException
+    public void saveEnvironment(Environment n) throws ChronixPlanStorageException
     {
-        saveNetwork(n, this.configurationDirectory);
+        saveEnvironment(n, this.configurationDirectory);
     }
 
-    public static void saveNetwork(Network n, File dir) throws ChronixPlanStorageException
+    public static void saveEnvironment(Environment n, File dir) throws ChronixPlanStorageException
     {
-        log.info(String.format("Saving network to file inside database %s", dir));
-        try (FileOutputStream fos = new FileOutputStream(getNetworkPath(dir)))
+        log.info(String.format("Saving environment to file inside database %s", dir));
+        try (FileOutputStream fos = new FileOutputStream(getEnvironmentPath(dir)))
         {
             xmlUtility.toXML(n, fos);
         }
         catch (Exception e)
         {
-            throw new ChronixPlanStorageException("Could not save network to file", e);
+            throw new ChronixPlanStorageException("Could not save environment to file", e);
         }
     }
 
@@ -453,9 +453,9 @@ public final class ChronixContext
         return FilenameUtils.concat(dir.getAbsolutePath(), "app_data_" + appId + "_CURRENT_.crn");
     }
 
-    protected static String getNetworkPath(File dir)
+    protected static String getEnvironmentPath(File dir)
     {
-        return FilenameUtils.concat(dir.getAbsolutePath(), "network_data_CURRENT_.crn");
+        return FilenameUtils.concat(dir.getAbsolutePath(), "environment_data_CURRENT_.crn");
     }
 
     protected void preSaveWorkingApp(Application a)
@@ -605,9 +605,9 @@ public final class ChronixContext
         }
     }
 
-    public Network getNetwork()
+    public Environment getEnvironment()
     {
-        return network;
+        return environment;
     }
 
     public Sql2o getTransacDataSource()
@@ -647,7 +647,7 @@ public final class ChronixContext
 
     public boolean hasLocalConsole()
     {
-        ExecutionNode console = this.network.getConsoleNode();
+        ExecutionNode console = this.environment.getConsoleNode();
         return localNodeName.equals(console.getName());
     }
 
@@ -655,7 +655,7 @@ public final class ChronixContext
     {
         if (localNode == null)
         {
-            this.localNode = this.network.getNode(this.localNodeName);
+            this.localNode = this.environment.getNode(this.localNodeName);
         }
         return this.localNode;
     }

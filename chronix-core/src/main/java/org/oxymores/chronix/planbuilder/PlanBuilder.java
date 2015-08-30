@@ -30,7 +30,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -116,7 +116,7 @@ public final class PlanBuilder
         return c1;
     }
 
-    public static ExecutionNode buildExecutionNode(Network a, String name, int port)
+    public static ExecutionNode buildExecutionNode(Environment a, String name, int port)
     {
         String hostname;
         try
@@ -130,12 +130,12 @@ public final class PlanBuilder
         return buildExecutionNode(a, name, hostname, port);
     }
 
-    public static ExecutionNode buildExecutionNode(Network a, String name, String dns, int port)
+    public static ExecutionNode buildExecutionNode(Environment a, String name, String dns, int port)
     {
         return buildExecutionNode(a, name, dns, port, 100, 100);
     }
 
-    public static ExecutionNode buildExecutionNode(Network a, String name, String dns, int port, int x, int y)
+    public static ExecutionNode buildExecutionNode(Environment a, String name, String dns, int port, int x, int y)
     {
         ExecutionNode n1 = new ExecutionNode();
         n1.setName(name);
@@ -149,7 +149,7 @@ public final class PlanBuilder
         return n1;
     }
 
-    public static Place buildPlace(Network a, String name, ExecutionNode en)
+    public static Place buildPlace(Environment a, String name, ExecutionNode en)
     {
         Place p1 = new Place();
         p1.setName(name);
@@ -174,12 +174,12 @@ public final class PlanBuilder
         return pg1;
     }
 
-    public static Network buildLocalDnsNetwork()
+    public static Environment buildLocalDnsNetwork()
     {
         return buildLocalDnsNetwork(1789);
     }
 
-    public static Network buildLocalDnsNetwork(int port)
+    public static Environment buildLocalDnsNetwork(int port)
     {
         // Execution node (the local sever)
         String hostname;
@@ -195,15 +195,15 @@ public final class PlanBuilder
         return buildLocalNetwork(1789, hostname);
     }
 
-    public static Network buildLocalhostNetwork()
+    public static Environment buildLocalhostNetwork()
     {
         return buildLocalNetwork(1789, "localhost");
     }
 
-    public static Network buildLocalNetwork(int port, String linterface)
+    public static Environment buildLocalNetwork(int port, String linterface)
     {
         // A single node with a corresponding Place
-        Network n = new Network();
+        Environment n = new Environment();
 
         // Execution node (the local sever)
         ExecutionNode n1 = buildExecutionNode(n, "local", linterface, port);

@@ -22,12 +22,12 @@ package org.oxymores.chronix.core;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public class NetworkObject extends ChronixObject
+public class EnvironmentObject extends ChronixObject
 {
     private static final long serialVersionUID = -926121848083888054L;
 
-    @NotNull(message = "a network object must be inside a network")
-    protected Network network;
+    @NotNull(message = "an environment object must be inside an Environment")
+    protected Environment environment;
 
     @NotNull
     @Size(min = 1, max = 50)
@@ -43,13 +43,13 @@ public class NetworkObject extends ChronixObject
         this.name = name;
     }
 
-    public Network getNetwork()
+    public Environment getEnvironment()
     {
-        return network;
+        return environment;
     }
 
-    public void setNetwork(Network network)
+    public void setEnvironment(Environment environment)
     {
-        this.network = network;
+        this.environment = environment;
     }
 }

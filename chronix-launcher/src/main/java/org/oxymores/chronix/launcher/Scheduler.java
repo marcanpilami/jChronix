@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
@@ -178,7 +178,7 @@ public class Scheduler
 
             log.info("Node name: " + nodeName);
         }
-        else if (mode.equals("SCHEDULER") && ChronixContext.hasNetworkFile(dbPath))
+        else if (mode.equals("SCHEDULER") && ChronixContext.hasEnvironmentFile(dbPath))
         {
             // Either a single or a network node - if it has a network file (copied manually, from a previous boot, ...) don't touch the metabase.
             if (nodeName == null)
@@ -194,12 +194,12 @@ public class Scheduler
             // No network data, no mean to get it - consider this is the first node in the network (= a single node)
             // A single node with a corresponding Place
             nodeName = hostname;
-            Network n = new Network();
+            Environment n = new Environment();
             ExecutionNode n1 = buildExecutionNode(n, nodeName, bootstrapDns, bootstrapQPort);
             n1.setWsPort(bootstrapWSPort);
             n1.setConsole(true);
             buildPlace(n, nodeName, n1);
-            ChronixContext.saveNetwork(n, dbFile);
+            ChronixContext.saveEnvironment(n, dbFile);
 
             Application a = OperationsApplication.getNewApplication(n.getPlace(nodeName));
             ChronixContext.saveApplication(a, dbFile);

@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Place extends NetworkObject
+public class Place extends EnvironmentObject
 {
     private static final long serialVersionUID = 4736385443687921653L;
     private static final Logger log = LoggerFactory.getLogger(Place.class);

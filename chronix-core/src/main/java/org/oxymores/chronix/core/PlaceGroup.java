@@ -45,7 +45,7 @@ public class PlaceGroup extends NamedApplicationObject
         this.places.add(p);
     }
 
-    void map_places(Network n)
+    void map_places(Environment n)
     {
         if (this.places == null)
         {

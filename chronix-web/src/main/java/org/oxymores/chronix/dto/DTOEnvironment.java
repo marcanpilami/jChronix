@@ -2,7 +2,7 @@ package org.oxymores.chronix.dto;
 
 import java.util.List;
 
-public class DTONetwork
+public class DTOEnvironment
 {
     private List<DTOPlace> places;
     private List<DTOExecutionNode> nodes;

@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
@@ -103,13 +103,13 @@ public class ChronixEngine extends Thread
     {
         log.info(String.format("Engine %s starting on database %s", this.localNodeName, this.dbPath));
 
-        // Remote nodes must fetch the network on startup if not already present
-        if (!runnerMode && feederHost != null && !ChronixContext.hasNetworkFile(this.dbPath))
+        // Remote nodes must fetch the environment on startup if not already present
+        if (!runnerMode && feederHost != null && !ChronixContext.hasEnvironmentFile(this.dbPath))
         {
             BootstrapListener bl = new BootstrapListener(new File(this.dbPath), localNodeName, feederHost, feederPort);
-            if (!bl.fetchNetwork())
+            if (!bl.fetchEnvironment())
             {
-                throw new ChronixInitializationException("Could not fetch network from remote node. Will not be able to start. See errors above for details.");
+                throw new ChronixInitializationException("Could not fetch environment from remote node. Will not be able to start. See errors above for details.");
             }
         }
 
@@ -283,13 +283,13 @@ public class ChronixEngine extends Thread
     protected void preContextLoad()
     {
         // First start? (only create apps if first start on a console)
-        if (!this.runnerMode && !ChronixContext.hasNetworkFile(this.dbPath))
+        if (!this.runnerMode && !ChronixContext.hasEnvironmentFile(this.dbPath))
         {
             try
             {
-                // Create a default network
-                Network n = PlanBuilder.buildLocalDnsNetwork();
-                ChronixContext.saveNetwork(n, new File(this.dbPath));
+                // Create a default environment
+                Environment n = PlanBuilder.buildLocalDnsNetwork();
+                ChronixContext.saveEnvironment(n, new File(this.dbPath));
 
                 // Create OPERATIONS application
                 Application a = OperationsApplication.getNewApplication(n.getPlace("local"));

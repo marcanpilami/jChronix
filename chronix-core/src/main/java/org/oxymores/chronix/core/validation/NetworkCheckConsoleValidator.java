@@ -4,9 +4,9 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 
-public class NetworkCheckConsoleValidator implements ConstraintValidator<NetworkCheckConsole, Network>
+public class NetworkCheckConsoleValidator implements ConstraintValidator<NetworkCheckConsole, Environment>
 {
 
     @Override
@@ -14,7 +14,7 @@ public class NetworkCheckConsoleValidator implements ConstraintValidator<Network
     {}
 
     @Override
-    public boolean isValid(Network a, ConstraintValidatorContext context)
+    public boolean isValid(Environment a, ConstraintValidatorContext context)
     {
         if (a == null)
         {

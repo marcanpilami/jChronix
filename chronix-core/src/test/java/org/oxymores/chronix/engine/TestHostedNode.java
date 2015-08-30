@@ -12,7 +12,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
@@ -32,7 +32,7 @@ public class TestHostedNode extends TestBase
         a = PlanBuilder.buildApplication("test application", "");
 
         // Physical network
-        n = new Network();
+        n = new Environment();
         ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "local", "localhost", 1789);
         ExecutionNode en2 = PlanBuilder.buildExecutionNode(n, "hosted", "localhost", 1804);
         en1.connectTo(en2, NodeConnectionMethod.RCTRL);
@@ -46,7 +46,7 @@ public class TestHostedNode extends TestBase
         PlanBuilder.buildPlaceGroup(a, "all nodes", "all nodes", p1, p2);
 
         // Chains and other stuff are created by the tests themselves
-        ChronixContext.saveNetwork(n, new File(db1));
+        ChronixContext.saveEnvironment(n, new File(db1));
 
         e1 = addEngine(db1, "local");
         addRunner(db2, "hosted", "localhost", 1804);

@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.DemoApplication;
@@ -73,13 +73,13 @@ public class TestStart extends TestBase
         ChronixEngine e2 = addEngine(db2, "remote");
 
         Application a = PlanBuilder.buildApplication("test", "description");
-        n = new Network();
+        n = new Environment();
         ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "local", 1789);
         ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "remote", 1400);
         n1.connectTo(n2, NodeConnectionMethod.TCP);
 
-        storeNetwork(db1, n);
-        storeNetwork(db2, n);
+        storeEnvironment(db1, n);
+        storeEnvironment(db2, n);
         addApplicationToDb(db1, a);
         addApplicationToDb(db2, a);
         startEngines();

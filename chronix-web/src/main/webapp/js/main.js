@@ -39,7 +39,7 @@ function initEnvironment()
         return;
     }
 
-    $.getJSON("ws/meta/network").done(function (data)
+    $.getJSON("ws/meta/environment").done(function (data)
     {
         network = data;
         tabs.find("#tabsenvt").tabs({
@@ -76,7 +76,7 @@ function initEnvironment()
         removeIfNoName(n.places);
         removeIfNoName(n.nodes);
 
-        $.postJSON("ws/meta/network", n, null, function (jqXHR, errorType, exc) {
+        $.postJSON("ws/meta/environment", n, null, function (jqXHR, errorType, exc) {
             alert(errorType);
         });
     });
@@ -95,7 +95,7 @@ function initEnvironment()
         removeIfNoName(n.places);
         removeIfNoName(n.nodes);
 
-        $.postJSON("ws/meta/network/test", n, function (data)
+        $.postJSON("ws/meta/environment/test", n, function (data)
         {
             if (data.length === 0)
             {

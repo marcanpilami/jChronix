@@ -33,7 +33,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.External;
@@ -279,7 +279,7 @@ class OrderListener extends BaseListener
     private void orderSendMeta(String nodeName, Destination replyTo, String corelId)
     {
         // Does the node really exist?
-        Network n = this.ctx.getNetwork();
+        Environment n = this.ctx.getEnvironment();
         ExecutionNode en = n.getNode(nodeName);
         if (en == null)
         {
@@ -298,7 +298,7 @@ class OrderListener extends BaseListener
             }
         }
 
-        // Enqueue all applications using the standard queues and send network in the answer queue
+        // Enqueue all applications using the standard queues and send environment in the answer queue
         try
         {
             int nbApps = this.ctx.getApplications().size();
@@ -309,7 +309,7 @@ class OrderListener extends BaseListener
                 SenderHelpers.sendApplication(a, en, jmsProducer, jmsSession, false, nbSent != nbApps);
             }
 
-            log.info(String.format("The network will be sent to node %s", nodeName));
+            log.info(String.format("The environment will be sent to node %s", nodeName));
             ObjectMessage m = jmsSession.createObjectMessage(n);
             m.setJMSCorrelationID(corelId);
             jmsProducer.send(replyTo, m);

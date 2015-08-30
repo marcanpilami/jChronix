@@ -91,9 +91,9 @@ public class Application extends ChronixObject
     }
 
     /**
-     * Will create one PlaceGroup per Place present in the Network. Only adds. Name used is the name of the place.
+     * Will create one PlaceGroup per Place present in the Environment. Only adds. Name used is the name of the place.
      */
-    public void createStarterGroups(Network n)
+    public void createStarterGroups(Environment n)
     {
         PlaceGroup pg = null;
         for (Place p : n.getPlacesList())

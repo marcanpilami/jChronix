@@ -24,8 +24,8 @@ public class TestContext
         catch (IOException e)
         {
         }
-        Network n = PlanBuilder.buildLocalDnsNetwork();
-        ChronixContext.saveNetwork(n, ctx);
+        Environment n = PlanBuilder.buildLocalDnsNetwork();
+        ChronixContext.saveEnvironment(n, ctx);
     }
 
     @Test

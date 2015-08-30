@@ -126,9 +126,9 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         Token tk = a.getToken(request.tokenID);
-        Place p = ctx.getNetwork().getPlace(request.placeID);
+        Place p = ctx.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
-        ExecutionNode en = ctx.getNetwork().getNode(request.requestingNodeID);
+        ExecutionNode en = ctx.getEnvironment().getNode(request.requestingNodeID);
 
         log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s", request.type, tk.getName(), p.getName(),
                 s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
@@ -284,8 +284,8 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 {
                     Application aa = ctx.getApplication(tr.getApplicationId());
                     org.oxymores.chronix.core.State ss = aa.getState(tr.getStateId());
-                    Place pp = ctx.getNetwork().getPlace(tr.getPlaceId());
-                    ExecutionNode enn = ctx.getNetwork().getNode(tr.getRequestedBy());
+                    Place pp = ctx.getEnvironment().getPlace(tr.getPlaceId());
+                    ExecutionNode enn = ctx.getEnvironment().getNode(tr.getRequestedBy());
                     log.warn(String.format(
                             "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
                             pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
@@ -326,7 +326,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Get data
         Application a = ctx.getApplication(request.applicationID);
         Token tk = a.getToken(request.tokenID);
-        Place p = ctx.getNetwork().getPlace(request.placeID);
+        Place p = ctx.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
 
         // Process
@@ -338,7 +338,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Get data
         Application a = ctx.getApplication(tr.getApplicationId());
         Token tk = a.getToken(tr.getTokenId());
-        Place p = ctx.getNetwork().getPlace(tr.getPlaceId());
+        Place p = ctx.getEnvironment().getPlace(tr.getPlaceId());
         org.oxymores.chronix.core.State s = a.getState(tr.getStateId());
 
         // Process

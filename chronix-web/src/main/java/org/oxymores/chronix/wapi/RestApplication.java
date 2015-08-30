@@ -20,7 +20,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -56,9 +56,9 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
             closeOnExit = true;
             try
             {
-                if (!ChronixContext.hasNetworkFile(dbPath))
+                if (!ChronixContext.hasEnvironmentFile(dbPath))
                 {
-                    Network n = new Network();
+                    Environment n = new Environment();
                     ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
                     en1.setX(100);
                     en1.setY(100);
@@ -85,18 +85,18 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                     a1.getGroup("group 3").addPlace(p2);
 
                     ChronixContext.saveApplication(a1, new File(dbPath));
-                    ChronixContext.saveNetwork(n, new File(dbPath));
+                    ChronixContext.saveEnvironment(n, new File(dbPath));
 
                     String localNodeId = en1.getId().toString();
 
                     ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
-                    ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
+                    ctx.setLocalNode(ctx.getEnvironment().getNode(UUID.fromString(localNodeId)));
 
                 }
                 else
                 {
                     ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
-                    ctx.setLocalNode(ctx.getNetwork().getNodesList().get(0));
+                    ctx.setLocalNode(ctx.getEnvironment().getNodesList().get(0));
                 }
 
                 try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())

@@ -28,7 +28,7 @@ import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
 
 @ExecutionNodeIsolation
-public class ExecutionNode extends NetworkObject
+public class ExecutionNode extends EnvironmentObject
 {
     private static final long serialVersionUID = 2115315700815310189L;
 

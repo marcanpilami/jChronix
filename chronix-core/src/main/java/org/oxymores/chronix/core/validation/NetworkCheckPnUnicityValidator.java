@@ -7,16 +7,16 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 
-public class NetworkCheckPnUnicityValidator implements ConstraintValidator<NetworkCheckPnUnicity, Network>
+public class NetworkCheckPnUnicityValidator implements ConstraintValidator<NetworkCheckPnUnicity, Environment>
 {
     @Override
     public void initialize(NetworkCheckPnUnicity constraintAnnotation)
     {}
 
     @Override
-    public boolean isValid(Network value, ConstraintValidatorContext context)
+    public boolean isValid(Environment value, ConstraintValidatorContext context)
     {
         List<String> existing = new ArrayList<String>();
 

@@ -41,7 +41,7 @@ public class TestLaunch
             Assert.fail("could not fetch");
         }
 
-        rq = new HttpGet("http://localhost:1790/ws/meta/network");
+        rq = new HttpGet("http://localhost:1790/ws/meta/environment");
         HttpResponse rs2 = null;
         try
         {

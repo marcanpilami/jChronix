@@ -65,10 +65,10 @@ public class ChronixEngineSim extends ChronixEngine
             simulationNode.setqPort(9999);
             simulationNode.setConsole(true);
             simulationNode.setName("simu");
-            this.ctx.getNetwork().addNode(simulationNode);
+            this.ctx.getEnvironment().addNode(simulationNode);
             ctx.setLocalNodeName(simulationNode.getName());
 
-            for (Place p : this.ctx.getNetwork().getPlaces().values())
+            for (Place p : this.ctx.getEnvironment().getPlaces().values())
             {
                 p.setNode(simulationNode);
             }

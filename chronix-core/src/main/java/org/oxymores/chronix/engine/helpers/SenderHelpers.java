@@ -38,7 +38,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -182,7 +182,7 @@ public class SenderHelpers
         ObjectMessage m = jmsSession.createObjectMessage(rl);
         jmsProducer.send(destination, m);
 
-        ExecutionNode console = ctx.getNetwork().getConsoleNode();
+        ExecutionNode console = ctx.getEnvironment().getConsoleNode();
         if (console != null && !console.equals(self))
         {
             qName = String.format(Constants.Q_LOG, console.getBrokerName());
@@ -239,7 +239,7 @@ public class SenderHelpers
         // In case of misconfiguration, we may have double nodes.
         ArrayList<String> sent = new ArrayList<>();
 
-        for (ExecutionNode n : ctx.getNetwork().getNodesList())
+        for (ExecutionNode n : ctx.getEnvironment().getNodesList())
         {
             if (n.isHosted() || sent.contains(n.getBrokerName()))
             {
@@ -258,8 +258,8 @@ public class SenderHelpers
     // Application
     // /////////////////////////////////////////////////////////////////////////
     // /////////////////////////////////////////////////////////////////////////
-    // Network
-    public static void sendNetwork(Network n, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
+    // Environment
+    public static void sendEnvironment(Environment n, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
     {
         String qName = String.format(Constants.Q_META, target.getBrokerName());
         log.info(String.format("An environment specification will be sent over the wire on queue %s", qName));
@@ -274,7 +274,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendNetworkToAllNodes(Network n, ChronixContext ctx) throws JMSException
+    public static void sendEnvironmentToAllNodes(Environment n, ChronixContext ctx) throws JMSException
     {
         // Connect to the local broker
         JmsSendData d = new JmsSendData(ctx);
@@ -282,7 +282,7 @@ public class SenderHelpers
         // In case of misconfiguration, we may have double nodes.
         ArrayList<String> sent = new ArrayList<>();
 
-        for (ExecutionNode en : ctx.getNetwork().getNodesList())
+        for (ExecutionNode en : ctx.getEnvironment().getNodesList())
         {
             if (en.isHosted() || sent.contains(en.getBrokerName()))
             {
@@ -290,7 +290,7 @@ public class SenderHelpers
             }
 
             // Go
-            SenderHelpers.sendNetwork(n, en, d.jmsProducer, d.jmsSession, false);
+            SenderHelpers.sendEnvironment(n, en, d.jmsProducer, d.jmsSession, false);
             sent.add(en.getBrokerName());
         }
 
@@ -299,7 +299,7 @@ public class SenderHelpers
         d.close();
     }
 
-    // Network
+    // Environment
     // /////////////////////////////////////////////////////////////////////////
     // /////////////////////////////////////////////////////////////////////////
     // Send command to a runner agent directly (total shun of the engine)
@@ -435,7 +435,7 @@ public class SenderHelpers
         }
 
         // Add console to the list (needed for central calendar administration)
-        ExecutionNode console = ctx.getNetwork().getConsoleNode();
+        ExecutionNode console = ctx.getEnvironment().getConsoleNode();
         if (console != null && !enUsingCalendar.contains(console))
         {
             enUsingCalendar.add(console);
@@ -588,7 +588,7 @@ public class SenderHelpers
     {
         try
         {
-            ExecutionNode en = ctx.getNetwork().getNode(execNodeId);
+            ExecutionNode en = ctx.getEnvironment().getNode(execNodeId);
             sendOrderForceOk(pipelineJobId, en, ctx);
         }
         catch (Exception e)
@@ -650,7 +650,7 @@ public class SenderHelpers
     {
         String qName;
         Application a = ctx.getApplication(tr.applicationID);
-        Place p = ctx.getNetwork().getPlace(tr.placeID);
+        Place p = ctx.getEnvironment().getPlace(tr.placeID);
         if (tr.local)
         {
             qName = String.format(Constants.Q_TOKEN, a.getLocalNode().getBrokerName());

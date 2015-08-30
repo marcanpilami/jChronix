@@ -182,7 +182,7 @@ public class TranscientBase implements Serializable
     //
     // //////////////////////////////////////////////
     // //////////////////////////////////////////////
-    // Network
+    // Environment
     public UUID getPlaceID()
     {
         return placeID;
@@ -207,7 +207,7 @@ public class TranscientBase implements Serializable
 
     public Place getPlace(ChronixContext ctx)
     {
-        return ctx.getNetwork().getPlace(this.placeID);
+        return ctx.getEnvironment().getPlace(this.placeID);
     }
 
     //

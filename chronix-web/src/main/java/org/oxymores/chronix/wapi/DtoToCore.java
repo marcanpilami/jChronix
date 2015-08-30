@@ -8,7 +8,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Network;
+import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -30,7 +30,7 @@ import org.oxymores.chronix.dto.DTOChain;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOExecutionNode;
 import org.oxymores.chronix.dto.DTOExternal;
-import org.oxymores.chronix.dto.DTONetwork;
+import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTONextOccurrence;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
@@ -291,9 +291,9 @@ public class DtoToCore
     /**
      * Pass 2: add connections between nodes. All nodes must exist when this method is called.
      * @param d the DTO object describing the node to connect.
-     * @param n the Network that the new connections should be added to.
+     * @param n the Environment that the new connections should be added to.
      */
-    public static void setExecutionNodeNetwork(DTOExecutionNode d, Network n)
+    public static void setExecutionNodeNetwork(DTOExecutionNode d, Environment n)
     {
         ExecutionNode from = n.getNode(UUID.fromString(d.getId()));
 
@@ -309,7 +309,7 @@ public class DtoToCore
         }
     }
 
-    public static Place getPlace(DTOPlace d, Network n)
+    public static Place getPlace(DTOPlace d, Environment n)
     {
         Place r = new Place();
         r.setId(UUID.fromString(d.getId()));
@@ -1042,9 +1042,9 @@ public class DtoToCore
         return res;
     }
 
-    public static Network getNetwork(DTONetwork d)
+    public static Environment getEnvironment(DTOEnvironment d)
     {
-        Network n = new Network();
+        Environment n = new Environment();
 
         for (DTOExecutionNode e : d.getNodes())
         {
