@@ -8,6 +8,7 @@ $(document).ready(function ()
     });
 
     $('#history').DataTable({
+        dom: 'Bfrtip',
         columns: [
             {data: 'id', title: 'id', orderable: false},
             {data: 'activeNodeName', title: 'Item'},
@@ -19,7 +20,9 @@ $(document).ready(function ()
         order: [[1, "asc"]],
         serverSide: true,
         ajax: getRunLogs,
-        select: "single"
+        select: "single",
+        //buttons: ['refresh', 'stop', 'new']
+        buttons: ["refresh", "copy", "excel", "getLogFile", "stopRunningJob", "openOOPL"]
     });
 
 
@@ -134,7 +137,6 @@ $(document).ready(function ()
                         }
                     });
                 });
-                console.debug(selectedPlaces);
 
                 s4 = $("#place").select2({
                     data: network.places,
@@ -172,15 +174,10 @@ $(document).ready(function ()
     });
 });
 
-function openOOPL()
-{
-    dialog.dialog("open");
-}
 
 function oopLaunch()
 {
     var place_ids = $("#place").select2("val");
-    console.debug(place_ids);
     $.each(place_ids, function ()
     {
         var pid = this.toString();
@@ -227,9 +224,6 @@ function nameMatcher(term, text, option)
 
 function getRunLogs(data, callback, settings)
 {
-    console.debug(data);
-    console.debug(settings);
-
     var sorts = [];
     $.each(data.order, function ()
     {
@@ -258,3 +252,62 @@ function getRunLogs(data, callback, settings)
                 alert("could not fetch data");
             });
 }
+
+$.fn.dataTable.ext.buttons.refresh = {
+    text: 'Reload',
+    action: function (e, dt, node, config) {
+        dt.ajax.reload();
+    }
+};
+
+$.fn.dataTable.ext.buttons.openOOPL = {
+    text: 'New immediate additional launch',
+    action: function (e, dt, node, config)
+    {
+        dialog.dialog("open");
+    }
+};
+
+$.fn.dataTable.ext.buttons.getLogFile = {
+    text: 'Get log file',
+    action: function (e, dt, node, config)
+    {
+        alert('houba log');
+    },
+    init: function (dt, node, config)
+    {
+        var button = this;
+        dt.on("select.dt.DT deselect.dt.DT", function ()
+        {
+            var b = dt.rows({selected: !0}).flatten().length + dt.columns({selected: !0}).flatten().length + dt.cells({selected: !0}).flatten().length;
+            if (1 === b)
+            {
+                var row = dt.rows({selected: true}).data()[0];
+                button.enable(row.stoppedRunningAt !== null);
+            }
+        });
+        button.disable();
+    }
+};
+
+$.fn.dataTable.ext.buttons.stopRunningJob = {
+    text: 'Kill job',
+    action: function (e, dt, node, config)
+    {
+        alert('houba stop');
+    },
+    init: function (dt, node, config)
+    {
+        var button = this;
+        dt.on("select.dt.DT deselect.dt.DT", function ()
+        {
+            var b = dt.rows({selected: !0}).flatten().length + dt.columns({selected: !0}).flatten().length + dt.cells({selected: !0}).flatten().length;
+            if (1 === b)
+            {
+                var row = dt.rows({selected: true}).data()[0];
+                button.enable(row.lastKnownStatus === "RUNNING");
+            }
+        });
+        button.disable();
+    }
+};
