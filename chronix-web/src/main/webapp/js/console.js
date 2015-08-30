@@ -287,7 +287,8 @@ $.fn.dataTable.ext.buttons.getLogFile = {
     text: 'Get log file',
     action: function (e, dt, node, config)
     {
-        alert('houba log');
+        var row = dt.rows({selected: true}).data()[0];
+        window.location.href = "ws/live/logfile/" + row.id;
     },
     init: function (dt, node, config)
     {

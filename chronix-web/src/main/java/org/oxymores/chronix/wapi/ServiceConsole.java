@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -11,7 +12,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.io.FilenameUtils;
 
 import org.slf4j.Logger;
 import org.joda.time.DateTime;
@@ -34,6 +37,9 @@ public class ServiceConsole
     private static final Logger log = LoggerFactory.getLogger(ServiceConsole.class);
 
     private ChronixContext ctx = null;
+
+    private @Context
+    HttpServletResponse res;
 
     public ServiceConsole(ChronixContext ctx)
     {
@@ -147,13 +153,15 @@ public class ServiceConsole
     @Produces("text/plain; charset=utf-8")
     public File getLogFile(@PathParam("launchId") String launchId)
     {
-        RunLog rl;
+        String path;
         try (Connection conn = ctx.getHistoryDataSource().open())
         {
-            rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
+            path = conn.createQuery("SELECT logPath FROM RunLog WHERE id=:id").addParameter("id", launchId).executeScalar(String.class);
         }
 
-        File f = new File(rl.getLogPath());
+        log.debug("Log file was required at {}", path);
+        res.setHeader("Content-Disposition", "attachment; filename=" + FilenameUtils.getName(path));
+        File f = new File(path);
         return f;
     }
 

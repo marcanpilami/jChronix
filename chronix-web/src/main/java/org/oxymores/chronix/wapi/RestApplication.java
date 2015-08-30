@@ -123,8 +123,10 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                         l1.setWhatWasRun("cmd1");
                         l1.setResultCode(0);
                         l1.setMarkedForUnAt(DateTime.now());
+                        l1.setStoppedRunningAt(DateTime.now());
                         l1.setPlaceName("place name");
                         l1.setChainLaunchId(UUID.randomUUID());
+                        l1.setLogPath(dbPath + "/log.log");
 
                         l1.insertOrUpdate(conn);
                     }
