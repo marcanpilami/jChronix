@@ -18,39 +18,8 @@ $(document).ready(function ()
         ],
         order: [[1, "asc"]],
         serverSide: true,
-        ajax: function (data, callback, settings)
-        {
-            console.debug(data);
-            console.debug(settings);
-
-            var sorts = [];
-            $.each(data.order, function ()
-            {
-                sorts.push({col: data.columns[this.column].data, order: this.dir.toUpperCase()});
-            });
-
-            $.postJSON(
-                    'ws/live/log',
-                    {
-                        pageSize: data.length,
-                        startLine: data.start,
-                        sortby: sorts
-                    },
-            function (serverdata)
-            {
-                var res = {
-                    draw: data.draw,
-                    recordsTotal: serverdata.totalLogs,
-                    recordsFiltered: serverdata.totalLogs, // No filter for now
-                    data: serverdata.res
-                };
-                callback(res);
-            },
-                    function (error)
-                    {
-                        alert("could not fetch data");
-                    });
-        }
+        ajax: getRunLogs,
+        select: "single"
     });
 
 
@@ -254,4 +223,38 @@ function item2label(item)
 function nameMatcher(term, text, option)
 {
     return option.name.toUpperCase().indexOf(term.toUpperCase()) >= 0;
+}
+
+function getRunLogs(data, callback, settings)
+{
+    console.debug(data);
+    console.debug(settings);
+
+    var sorts = [];
+    $.each(data.order, function ()
+    {
+        sorts.push({col: data.columns[this.column].data, order: this.dir.toUpperCase()});
+    });
+
+    $.postJSON(
+            'ws/live/log',
+            {
+                pageSize: data.length,
+                startLine: data.start,
+                sortby: sorts
+            },
+    function (serverdata)
+    {
+        var res = {
+            draw: data.draw,
+            recordsTotal: serverdata.totalLogs,
+            recordsFiltered: serverdata.totalLogs, // No filter for now
+            data: serverdata.res
+        };
+        callback(res);
+    },
+            function (error)
+            {
+                alert("could not fetch data");
+            });
 }

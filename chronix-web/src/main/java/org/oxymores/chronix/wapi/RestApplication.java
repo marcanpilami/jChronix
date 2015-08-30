@@ -92,7 +92,16 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                     ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
                     ctx.setLocalNode(ctx.getNetwork().getNode(UUID.fromString(localNodeId)));
 
-                    try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
+                }
+                else
+                {
+                    ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
+                    ctx.setLocalNode(ctx.getNetwork().getNodesList().get(0));
+                }
+
+                try (org.sql2o.Connection conn = ctx.getHistoryDataSource().beginTransaction())
+                {
+                    for (int i = 0; i < 100; i++)
                     {
                         RunLog l1 = new RunLog();
                         l1.setActiveNodeId(UUID.randomUUID());
@@ -116,13 +125,8 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                         l1.setMarkedForUnAt(DateTime.now());
 
                         l1.insertOrUpdate(conn);
-                        conn.commit();
                     }
-                }
-                else
-                {
-                    ctx = new ChronixContext("simu", dbPath, true, dbPath + "\\hist.db", dbPath + "\\transac.db");
-                    ctx.setLocalNode(ctx.getNetwork().getNodesList().get(0));
+                    conn.commit();
                 }
             }
             catch (ChronixPlanStorageException ex)
