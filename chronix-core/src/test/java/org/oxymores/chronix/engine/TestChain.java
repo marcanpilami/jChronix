@@ -120,4 +120,37 @@ public class TestChain extends TestBase
 
         Assert.assertEquals("simple chain 1", rl0.getActiveNodeName());
     }
+
+    @Test
+    public void testDisabled() throws Exception
+    {
+        log.debug("****CREATE PLAN***********************************************************************");
+        PlaceGroup pg1 = a1.getGroup("master node");
+
+        // First stupid chain
+        Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echo a", "oo");
+        State s1 = PlanBuilder.buildState(c1, pg1, sc1);
+        s1.setEnabled(false);
+
+        c1.getStartState().connectTo(s1);
+        s1.connectTo(c1.getEndState());
+
+        // GO
+        addApplicationToDb(db1, a1);
+        startEngines();
+
+        log.debug("****PASSING RUN***************************************************************");
+        SenderHelpers.runStateInsidePlan(c1.getStartState(), e1.getContext());
+
+        List<RunLog> res = LogHelpers.waitForHistoryCount(e1.getContext(), 3);
+        LogHelpers.displayAllHistory(e1.getContext());
+        Assert.assertEquals(3, res.size());
+        RunLog rl1 = res.get(1);
+        log.debug(res.get(0).getShortLog());
+        log.debug(res.get(1).getShortLog());
+        log.debug(res.get(2).getShortLog());
+
+        Assert.assertEquals("was not run as it was marked as disabled", rl1.getShortLog());
+    }
 }

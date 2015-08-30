@@ -303,7 +303,13 @@ public class RunnerManager extends BaseListener
         }
         resolving.add(j);
 
-        if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload())
+        if (!toRun.isEnabled() || !s.isEnabled())
+        {
+            // Disabled => don't run it for real
+            log.debug("Job execution request of a disabled element. A return code of 0 is assumed.");
+            recvRR(j.getDisabledResult());
+        }
+        else if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload())
         {
             // No payload - direct to analysis and event throwing
             log.debug(String.format(

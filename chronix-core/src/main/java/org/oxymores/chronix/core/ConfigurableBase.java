@@ -32,6 +32,8 @@ public class ConfigurableBase extends ApplicationObject
     @NotNull
     protected ArrayList<EnvironmentParameter> envParams;
 
+    private boolean enabled = true;
+
     public ConfigurableBase()
     {
         super();
@@ -78,5 +80,15 @@ public class ConfigurableBase extends ApplicationObject
                 envParams.remove(p);
             }
         }
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
     }
 }

@@ -339,6 +339,20 @@ public class PipelineJob extends TranscientBase
         return rlog;
     }
 
+    public RunResult getDisabledResult()
+    {
+        RunResult res = new RunResult();
+        res.returnCode = 0;
+        res.id1 = this.id;
+        res.outOfPlan = this.outOfPlan;
+        res.logStart = "was not run as it was marked as disabled";
+
+        res.start = this.getVirtualTime();
+        res.end = this.getVirtualTime();
+
+        return res;
+    }
+
     public RunResult getSimulatedResult(Connection connTransac)
     {
         RunResult res = new RunResult();
