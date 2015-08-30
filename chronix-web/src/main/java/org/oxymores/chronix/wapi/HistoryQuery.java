@@ -31,10 +31,15 @@ public class HistoryQuery
     public static enum SortColumn
     {
         id("id"),
-        activeNodeName("activeNodeName"),
+        applicationName("applicationName"),
+        executionNodeName("executionNodeName"),
+        placeName("placeName"),
         chainName("chainName"),
+        activeNodeName("activeNodeName"),
         lastKnownStatus("lastKnownStatus"),
-        markedForRunAt("markedForUnAt");
+        markedForRunAt("markedForUnAt"),
+        stoppedRunningAt("stoppedRunningAt"),
+        chainLaunchId("chainLaunchId");
 
         private final String coreLogField;
 

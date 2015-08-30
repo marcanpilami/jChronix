@@ -10,8 +10,8 @@ public class DTORunLog
 {
     String id;
     String lastKnownStatus;
-    String calendarName;
-    String calendarOccurrence;
+    @XmlElement(nillable = true)
+    String calendarName, calendarOccurrence;
     String chainName;
     String chainLev1Name;
     String applicationName;
@@ -21,6 +21,7 @@ public class DTORunLog
     String dns;
     String osAccount;
     String whatWasRun;
+    String chainLaunchId;
     int resultCode;
 
     @XmlElement(nillable = true)
@@ -239,4 +240,13 @@ public class DTORunLog
         this.sequence = sequence;
     }
 
+    public String getChainLaunchId()
+    {
+        return this.chainLaunchId;
+    }
+
+    public void setChainLaunchId(String a)
+    {
+        this.chainLaunchId = a;
+    }
 }

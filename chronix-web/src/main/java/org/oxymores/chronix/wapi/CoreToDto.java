@@ -1030,7 +1030,8 @@ public class CoreToDto
         res.setSequence(rl.getSequence());
         res.setStoppedRunningAt(rl.getStoppedRunningAt() == null ? null : rl.getStoppedRunningAt().toDate());
         res.setWhatWasRun(rl.getWhatWasRun());
-
+        res.setChainLaunchId(rl.getChainLaunchId().toString());
+        
         return res;
     }
 

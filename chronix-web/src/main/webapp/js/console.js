@@ -10,25 +10,30 @@ $(document).ready(function ()
     $('#history').DataTable({
         dom: 'Bfrtip',
         columns: [
-            {data: 'id', title: 'id', orderable: false},
-            {data: 'activeNodeName', title: 'Item'},
-            {data: 'chainName', title: 'inside chain'},
-            {data: 'lastKnownStatus', title: 'status'},
-            {data: 'markedForRunAt', title: 'enqueued', type: 'date'}, // 2015-08-08T10:20:04.903+02:00
-            {data: 'stoppedRunningAt', title: 'ended', type: 'date', orderable: false}
+            //{data: 'id', title: 'id', orderable: false},
+            {data: 'applicationName', title: 'Application'},
+            {data: 'chainName', title: 'Inside chain'},
+            {data: 'activeNodeName', title: 'Item run'},
+            {data: 'placeName', title: 'Ran on place'},
+            {data: 'executionNodeName', title: 'Ran on node'},
+            {data: 'lastKnownStatus', title: 'Status', orderable: false},
+            {data: 'markedForRunAt', title: 'Enqueued', type: 'date', render: dateFormatter}, // 2015-08-08T10:20:04.903+02:00
+            {data: 'stoppedRunningAt', title: 'Ended', type: 'date', render: dateFormatter, orderable: false},
+            {data: 'calendarOccurrence', title: 'Occurrence', orderable: false},
+            {data: 'chainLaunchId', title: 'Chain launch ID', orderable: false, visible: false}
         ],
-        order: [[1, "asc"]],
+        order: [[6, "desc"]],
         serverSide: true,
         ajax: getRunLogs,
         select: "single",
         //buttons: ['refresh', 'stop', 'new']
         buttons: ["refresh", "copy", "excel", "getLogFile", "stopRunningJob", "openOOPL"],
         rowCallback: function (row, data, index) {
-            if (data.lastKnownStatus === "OK")
+            if (data.resultCode === 0)
             {
                 $(row).addClass("ok-row");
             }
-            if (data.lastKnownStatus === "KO")
+            if (data.resultCode !== 0)
             {
                 $(row).addClass("ko-row");
             }
@@ -264,7 +269,7 @@ function getRunLogs(data, callback, settings)
 }
 
 $.fn.dataTable.ext.buttons.refresh = {
-    text: 'Reload',
+    text: 'Refresh',
     action: function (e, dt, node, config) {
         dt.ajax.reload();
     }
@@ -321,3 +326,12 @@ $.fn.dataTable.ext.buttons.stopRunningJob = {
         button.disable();
     }
 };
+
+function dateFormatter(data, type, full)
+{
+    if (data)
+    {
+        return $.format.date(data, "dd/MM HH:mm:ss");
+    }
+    return "";
+}

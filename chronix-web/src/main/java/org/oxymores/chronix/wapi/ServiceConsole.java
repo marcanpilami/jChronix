@@ -81,7 +81,7 @@ public class ServiceConsole
                 pagination += " OFFSET " + q.getStartLine();
             }
 
-            Query qu = conn.createQuery("SELECT * FROM RunLog r WHERE r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
+            Query qu = conn.createQuery("SELECT * FROM RunLog r WHERE r.visible = 1 AND r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
                     + sort + pagination).addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
 
             List<DTORunLog> res = new ArrayList<>();
