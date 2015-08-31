@@ -21,6 +21,7 @@ package org.oxymores.chronix.core;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
@@ -81,6 +82,11 @@ public class ChronixObject implements Serializable
         this.envParams.add(new EnvironmentParameter(key, value));
     }
 
+    public void addInternalEnvVar(String key, String value)
+    {
+        this.envParams.add(new EnvironmentParameter(key, value, false));
+    }
+
     public void removeEnvVar(String key)
     {
         for (EnvironmentParameter p : envParams)
@@ -90,5 +96,10 @@ public class ChronixObject implements Serializable
                 envParams.remove(p);
             }
         }
+    }
+
+    public List<EnvironmentParameter> getEnvVars()
+    {
+        return this.envParams;
     }
 }

@@ -21,6 +21,7 @@ package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.JMSException;
@@ -596,20 +597,9 @@ public class State extends ApplicationObject
             pj.setKillAt(now.plusMinutes(this.killAfterMn));
         }
 
-        // Environment variables from the State itself
-        for (EnvironmentParameter ep : this.envParams)
+        // Environment variables from the plan definition & runtime
+        for (Map.Entry<String, String> ep : EnvironmentParameter.resolveRuntimeEnvironment(this, p, params).entrySet())
         {
-            pj.addEnvValueToCache(ep.key, ep.value);
-        }
-
-        // Environment variables passed from other jobs through the event (or manually set)
-        for (EnvironmentValue ep : params)
-        {
-            if (ep.getKey().startsWith("CHR_"))
-            {
-                // Don't propagate auto variables
-                continue;
-            }
             pj.addEnvValueToCache(ep.getKey(), ep.getValue());
         }
 
