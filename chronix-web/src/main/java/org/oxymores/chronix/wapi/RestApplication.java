@@ -23,8 +23,8 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
 import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.timedata.RunLog;
+import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -40,6 +40,7 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
 {
     private static final Logger log = LoggerFactory.getLogger(RestApplication.class);
     private ChronixContext ctx;
+    private ChronixEngine engine;
     private boolean closeOnExit = false;
 
     public RestApplication(@Context ServletContext context)
@@ -47,11 +48,13 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
         MDC.put("node", "webservice");
         log.info("Creating a new Chronix WS application");
 
-        Object o = context.getAttribute("context");
+        Object o = context.getAttribute("engine");
+
         if (o == null)
         {
             // This happens during tests on a standard web server (a chronix engine would set the init params)
             // So create test data inside a test db.
+            log.info("Web services are starting in test mode with debug data");
             String dbPath = "C:\\TEMP\\db1";
             closeOnExit = true;
             try
@@ -141,14 +144,14 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
         }
         else
         {
-            ctx = (ChronixContext) o;
+            engine = (ChronixEngine) o;
         }
 
         this.property(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
         this.property(UnmarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
 
-        this.register(new ServiceMeta(ctx));
-        this.register(new ServiceConsole(ctx));
+        this.register(new ServiceMeta(this));
+        this.register(new ServiceConsole(this));
         this.register(ErrorListener.class);
     }
 
@@ -166,6 +169,18 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
         {
             this.ctx.close();
             this.ctx = null;
+        }
+    }
+
+    ChronixContext getContext()
+    {
+        if (this.engine != null)
+        {
+            return this.engine.getContext();
+        }
+        else
+        {
+            return this.ctx;
         }
     }
 }

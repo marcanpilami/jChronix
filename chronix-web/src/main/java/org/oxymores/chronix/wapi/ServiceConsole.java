@@ -19,7 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -36,14 +35,14 @@ public class ServiceConsole
 {
     private static final Logger log = LoggerFactory.getLogger(ServiceConsole.class);
 
-    private ChronixContext ctx = null;
+    private RestApplication restApp;
 
     private @Context
-    HttpServletResponse res;
+    HttpServletResponse response;
 
-    public ServiceConsole(ChronixContext ctx)
+    ServiceConsole(RestApplication a)
     {
-        this.ctx = ctx;
+        this.restApp = a;
     }
 
     @POST
@@ -64,7 +63,7 @@ public class ServiceConsole
         }
 
         // TODO: direct to DTO attempt!
-        try (Connection conn = ctx.getHistoryDataSource().open())
+        try (Connection conn = restApp.getContext().getHistoryDataSource().open())
         {
             String sort = "";
             if (q.getSorts().size() > 0)
@@ -111,7 +110,7 @@ public class ServiceConsole
         log.debug("Service getShortLog was called for ID " + id.toString());
         String res;
 
-        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        try (Connection conn = this.restApp.getContext().getHistoryDataSource().open())
         {
             res = conn.createQuery("SELECT shortLog FROM RunLog WHERE id=:id").addParameter("id", id).executeScalar(String.class);
         }
@@ -134,10 +133,10 @@ public class ServiceConsole
     public ResOrder orderForceOK(@PathParam("launchId") String launchId)
     {
         log.debug("Service orderForceOK was called");
-        try (Connection conn = ctx.getHistoryDataSource().open())
+        try (Connection conn = restApp.getContext().getHistoryDataSource().open())
         {
             RunLog rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
-            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), ctx);
+            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), restApp.getContext());
         }
         catch (ChronixException e)
         {
@@ -154,13 +153,13 @@ public class ServiceConsole
     public File getLogFile(@PathParam("launchId") String launchId)
     {
         String path;
-        try (Connection conn = ctx.getHistoryDataSource().open())
+        try (Connection conn = restApp.getContext().getHistoryDataSource().open())
         {
             path = conn.createQuery("SELECT logPath FROM RunLog WHERE id=:id").addParameter("id", launchId).executeScalar(String.class);
         }
 
         log.debug("Log file was required at {}", path);
-        res.setHeader("Content-Disposition", "attachment; filename=" + FilenameUtils.getName(path));
+        response.setHeader("Content-Disposition", "attachment; filename=" + FilenameUtils.getName(path));
         File f = new File(path);
         return f;
     }
@@ -174,19 +173,19 @@ public class ServiceConsole
         log.info("Calling orderLaunchOutOfPlan - with full params");
         try
         {
-            Application a = ctx.getApplication(appId);
-            Place p = this.ctx.getEnvironment().getPlace(placeId);
+            Application a = restApp.getContext().getApplication(appId);
+            Place p = this.restApp.getContext().getEnvironment().getPlace(placeId);
             State s = a.getState(stateId);
             if (insidePlan)
             {
-                try (Connection o = ctx.getTransacDataSource().beginTransaction())
+                try (Connection o = restApp.getContext().getTransacDataSource().beginTransaction())
                 {
-                    SenderHelpers.runStateInsidePlan(s, p, ctx, o);
+                    SenderHelpers.runStateInsidePlan(s, p, restApp.getContext(), o);
                 }
             }
             else
             {
-                SenderHelpers.runStateAlone(s, p, ctx);
+                SenderHelpers.runStateAlone(s, p, restApp.getContext());
             }
         }
         catch (Exception e)
@@ -204,7 +203,7 @@ public class ServiceConsole
     {
         log.debug("Service duplicateEndedLaunchOutOfPlan was called");
         RunLog rl;
-        try (Connection conn = ctx.getHistoryDataSource().open())
+        try (Connection conn = restApp.getContext().getHistoryDataSource().open())
         {
             rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
         }

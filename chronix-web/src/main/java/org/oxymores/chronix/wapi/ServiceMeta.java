@@ -33,6 +33,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import net.fortuna.ical4j.model.Period;
@@ -72,11 +73,12 @@ public class ServiceMeta
 {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceMeta.class);
-    private final ChronixContext ctx;
 
-    public ServiceMeta(ChronixContext ctx)
+    private RestApplication restApp;
+
+    ServiceMeta(RestApplication a)
     {
-        this.ctx = ctx;
+        this.restApp = a;
     }
 
     @GET
@@ -94,7 +96,8 @@ public class ServiceMeta
     public DTOEnvironment getEnvironment()
     {
         log.debug("getEnvironment was called");
-        return CoreToDto.getEnvironment(ctx.getEnvironment());
+        log.info(restApp.toString());
+        return CoreToDto.getEnvironment(restApp.getContext().getEnvironment());
     }
 
     @POST
@@ -106,9 +109,9 @@ public class ServiceMeta
         try
         {
             Environment env = DtoToCore.getEnvironment(n);
-            ctx.saveEnvironment(env);
-            ctx.setEnvironment(env);
-            SenderHelpers.sendEnvironmentToAllNodes(env, ctx);
+            restApp.getContext().saveEnvironment(env);
+            restApp.getContext().setEnvironment(env);
+            SenderHelpers.sendEnvironmentToAllNodes(env, restApp.getContext());
         }
         catch (ChronixPlanStorageException | JMSException ex)
         {
@@ -122,7 +125,7 @@ public class ServiceMeta
     public DTOApplication getApplication(@PathParam("appid") String id)
     {
         log.debug(String.format("getApplication service was called for app id %s", id));
-        Application a = ctx.getStagedApplication(UUID.fromString(id));
+        Application a = restApp.getContext().getStagedApplication(UUID.fromString(id));
 
         DTOApplication d = CoreToDto.getApplication(a);
         log.debug("End of getApplication call. Returning an application.");
@@ -140,7 +143,7 @@ public class ServiceMeta
         Application a = DtoToCore.getApplication(app);
         try
         {
-            ctx.stageApplication(a);
+            restApp.getContext().stageApplication(a);
         }
         catch (ChronixPlanStorageException e)
         {
@@ -159,7 +162,7 @@ public class ServiceMeta
         Application a = DtoToCore.getApplication(app);
         try
         {
-            SenderHelpers.sendApplicationToAllClients(a, ctx);
+            SenderHelpers.sendApplicationToAllClients(a, restApp.getContext());
         }
         catch (JMSException e)
         {
@@ -176,7 +179,7 @@ public class ServiceMeta
     public void resetStage(DTOApplication app)
     {
         log.debug("resetStage service was called");
-        ctx.unstageApplication(DtoToCore.getApplication(app));
+        restApp.getContext().unstageApplication(DtoToCore.getApplication(app));
         log.debug("End of resetStage call.");
     }
 
@@ -220,7 +223,7 @@ public class ServiceMeta
         log.debug("getAllApplications service was called");
         ArrayList<DTOApplicationShort> res = new ArrayList<>();
 
-        for (Application a : this.ctx.getStagedApplications())
+        for (Application a : restApp.getContext().getStagedApplications())
         {
             DTOApplicationShort t = new DTOApplicationShort();
             t.setDescription(a.getDescription());
@@ -242,7 +245,7 @@ public class ServiceMeta
     {
         // Create app (leave incorrect description to force user to set it before saving the app)
         Application a = PlanBuilder.buildApplication("new app", "");
-        a.createStarterGroups(this.ctx.getEnvironment());
+        a.createStarterGroups(this.restApp.getContext().getEnvironment());
         PlanBuilder.buildShellCommand(a, "echo 'first command'", "first shell command", "a demo command that you can delete");
         ClockRRule r = PlanBuilder.buildRRuleWeekDays(a);
         PlanBuilder.buildClock(a, "once a week day", "day clock", r);
@@ -258,7 +261,7 @@ public class ServiceMeta
     {
         Application a = DemoApplication.getNewDemoApplication();
         a.setname("test app");
-        a.createStarterGroups(ctx.getEnvironment());
+        a.createStarterGroups(restApp.getContext().getEnvironment());
         PlaceGroup pgLocal = a.getGroupsList().get(0);
         Chain c = PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
 
@@ -297,7 +300,7 @@ public class ServiceMeta
 
         try
         {
-            ctx.saveApplication(a);
+            restApp.getContext().saveApplication(a);
         }
         catch (ChronixPlanStorageException e1)
         {

@@ -215,7 +215,7 @@ public class Scheduler
         e.waitForInitEnd();
 
         // Jetty
-        c = new JettyContainer(e.getContext());
+        c = new JettyContainer(e);
 
         // Save the engine in order to be able to stop it later
         handler = e;
