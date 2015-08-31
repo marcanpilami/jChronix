@@ -40,7 +40,7 @@ public class TestToken extends TestBase
     public void testAlone() throws Exception
     {
         // First stupid chain
-        Token tk1 = PlanBuilder.buildToken(a1, "my token");
+        Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description");
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
@@ -81,7 +81,7 @@ public class TestToken extends TestBase
     public void testAloneBlocking() throws Exception
     {
         // First stupid chain
-        Token tk1 = PlanBuilder.buildToken(a1, "my token", 0);
+        Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description", 0);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
@@ -114,7 +114,7 @@ public class TestToken extends TestBase
     @Test
     public void testTwoWithOne() throws Exception
     {
-        Token tk1 = PlanBuilder.buildToken(a1, "my token");
+        Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description");
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");
@@ -153,7 +153,7 @@ public class TestToken extends TestBase
     @Test
     public void testTwoWithOnePerPlace() throws Exception
     {
-        Token tk1 = PlanBuilder.buildToken(a1, "my token", 1, true);
+        Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description", 1, true);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
         ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");

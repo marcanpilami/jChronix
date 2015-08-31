@@ -354,23 +354,24 @@ public final class PlanBuilder
         return rr1;
     }
 
-    public static Token buildToken(Application a, String name)
+    public static Token buildToken(Application a, String name, String description)
     {
-        return buildToken(a, name, 1);
+        return buildToken(a, name, description, 1);
     }
 
-    public static Token buildToken(Application a, String name, int count)
+    public static Token buildToken(Application a, String name, String description, int count)
     {
-        return buildToken(a, name, count, false);
+        return buildToken(a, name, description, count, false);
     }
 
-    public static Token buildToken(Application a, String name, int count, boolean byPlace)
+    public static Token buildToken(Application a, String name, String description, int count, boolean byPlace)
     {
         Token t = new Token();
         t.setApplication(a);
         t.setByPlace(byPlace);
         t.setCount(count);
         t.setName(name);
+        t.setDescription(description);
         a.addToken(t);
 
         return t;
