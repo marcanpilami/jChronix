@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 import org.oxymores.chronix.core.validation.NetworkCheckConsole;
 import org.oxymores.chronix.core.validation.NetworkCheckPnUnicity;
@@ -16,6 +17,12 @@ import org.oxymores.chronix.core.validation.NetworkCheckPnUnicity;
 public class Environment extends ChronixObject
 {
     private static final long serialVersionUID = -6797237891447380075L;
+
+    static final int currentModelVersion = 1;
+    static final int compatibleUpToBackwards = 0;
+
+    @Min(0)
+    private int modelVersion = currentModelVersion;
 
     @Valid
     protected Map<UUID, ExecutionNode> nodes = new HashMap<>();
@@ -137,6 +144,16 @@ public class Environment extends ChronixObject
             }
         }
         return null;
+    }
+
+    public int getModelVersion()
+    {
+        return modelVersion;
+    }
+
+    public void setModelVersion(int modelVersion)
+    {
+        this.modelVersion = modelVersion;
     }
 
 }

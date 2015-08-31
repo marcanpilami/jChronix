@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
@@ -32,7 +33,12 @@ import org.oxymores.chronix.core.active.Or;
 public class Application extends ChronixObject
 {
     private static final long serialVersionUID = 338399439626386055L;
-    // private static Logger log = Logger.getLogger(Application.class);
+
+    static final int currentModelVersion = 1;
+    static final int compatibleUpToBackwards = 0;
+
+    @Min(0)
+    private int modelVersion = currentModelVersion;
 
     @NotNull
     @Size(min = 1, max = 50)
@@ -59,6 +65,16 @@ public class Application extends ChronixObject
 
     protected transient boolean fromCurrentFile = true;
     protected transient ChronixContext ctx;
+
+    public int getModelVersion()
+    {
+        return modelVersion;
+    }
+
+    public void setModelVersion(int modelVersion)
+    {
+        this.modelVersion = modelVersion;
+    }
 
     protected class ApplicationVersion implements Serializable
     {

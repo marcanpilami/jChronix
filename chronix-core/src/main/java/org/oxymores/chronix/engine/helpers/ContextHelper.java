@@ -1,14 +1,20 @@
 package org.oxymores.chronix.engine.helpers;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- Not used at all for now.
+ Some methods not used at all for now.
  */
 public final class ContextHelper
 {
@@ -54,6 +60,36 @@ public final class ContextHelper
         catch (Exception e)
         {
             log.warn("Purge has failed for a DB", e);
+        }
+    }
+
+    private static final Pattern versionPattern = Pattern.compile("<modelVersion>(\\d+)</modelVersion>");
+
+    public static int getFileVersion(File f)
+    {
+        LineIterator it = null;
+        try
+        {
+            it = FileUtils.lineIterator(f);
+            while (it.hasNext())
+            {
+                String line = it.nextLine();
+                Matcher m = versionPattern.matcher(line);
+                if (m.find())
+                {
+                    return Integer.parseInt(m.group(1));
+                }
+            }
+            throw new ChronixInitializationException("no version defined in file " + f.getAbsolutePath());
+        }
+        catch (IOException | NumberFormatException | ChronixInitializationException e)
+        {
+            log.error("could not extract file version from file", e);
+            throw new ChronixInitializationException("", e);
+        }
+        finally
+        {
+            LineIterator.closeQuietly(it);
         }
     }
 }

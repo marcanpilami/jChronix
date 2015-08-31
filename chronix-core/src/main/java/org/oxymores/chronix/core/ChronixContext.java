@@ -49,6 +49,7 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.core.transactional.TokenReservation;
+import org.oxymores.chronix.engine.helpers.ContextHelper;
 import org.oxymores.chronix.engine.helpers.DbUpgrader;
 import org.oxymores.chronix.engine.helpers.UUIDQuirk;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
@@ -266,6 +267,14 @@ public final class ChronixContext
         log.info(String.format("Loading an application from file %s", dataFile.getAbsolutePath()));
         Application res = null;
 
+        // Check the version
+        int modelVer = ContextHelper.getFileVersion(dataFile);
+        if (modelVer < Application.compatibleUpToBackwards || modelVer > Application.currentModelVersion)
+        {
+            throw new ChronixPlanStorageException("Cannot load an application using model version " + modelVer + ". Minimum is "
+                    + Application.compatibleUpToBackwards + " and maximum is " + Application.currentModelVersion);
+        }
+
         // Read the XML
         try
         {
@@ -303,11 +312,21 @@ public final class ChronixContext
         log.info(String.format("Loading environment from file %s", f.getAbsolutePath()));
         Environment res = null;
 
+        // File exists?
         if (!hasEnvironmentFile(this.configurationDirectory.getAbsolutePath()))
         {
             throw new ChronixPlanStorageException("Environment file " + f.getAbsolutePath() + " does not exist", null);
         }
 
+        // Check the version
+        int modelVer = ContextHelper.getFileVersion(f);
+        if (modelVer < Environment.compatibleUpToBackwards || modelVer > Environment.currentModelVersion)
+        {
+            throw new ChronixPlanStorageException("Cannot load an application using model version " + modelVer + ". Minimum is "
+                    + Environment.compatibleUpToBackwards + " and maximum is " + Environment.currentModelVersion);
+        }
+
+        // Load and map
         try
         {
             res = (Environment) xmlUtility.fromXML(f);
