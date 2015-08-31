@@ -43,7 +43,7 @@ import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-public class State extends ConfigurableBase
+public class State extends ApplicationObject
 {
     private static final Logger log = LoggerFactory.getLogger(State.class);
     private static final long serialVersionUID = -2640644872229489081L;

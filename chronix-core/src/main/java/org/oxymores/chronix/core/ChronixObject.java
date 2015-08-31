@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,14 +17,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ Base class for all metadata objects.<br>
+ Provides an UUID identifier, as well as an ordered list of key/value pairs to be used as environment variables.
+ */
 public class ChronixObject implements Serializable
 {
     private static final long serialVersionUID = 1106120751950998543L;
@@ -32,9 +36,13 @@ public class ChronixObject implements Serializable
     @NotNull
     protected UUID id;
 
+    @NotNull
+    protected ArrayList<EnvironmentParameter> envParams;
+
     public ChronixObject()
     {
         id = UUID.randomUUID();
+        envParams = new ArrayList<>();
     }
 
     public UUID getId()
@@ -66,5 +74,21 @@ public class ChronixObject implements Serializable
     public void setId(UUID id)
     {
         this.id = id;
+    }
+
+    public void addEnvVar(String key, String value)
+    {
+        this.envParams.add(new EnvironmentParameter(key, value));
+    }
+
+    public void removeEnvVar(String key)
+    {
+        for (EnvironmentParameter p : envParams)
+        {
+            if (p.key.equals(key))
+            {
+                envParams.remove(p);
+            }
+        }
     }
 }

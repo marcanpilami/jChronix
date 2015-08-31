@@ -185,7 +185,7 @@ public class Application extends ChronixObject
         }
     }
 
-    public void removeActiveElement(ConfigurableBase o)
+    public void removeActiveElement(ActiveNodeBase o)
     {
         this.activeElements.remove(o.id);
         o.setApplication(null);

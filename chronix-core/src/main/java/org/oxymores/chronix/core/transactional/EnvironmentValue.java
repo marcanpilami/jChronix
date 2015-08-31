@@ -36,7 +36,11 @@ public class EnvironmentValue implements Serializable
 
     @NotNull
     @Size(min = 1, max = 50)
-    private String key, value;
+    private String key;
+
+    @NotNull
+    @Size(min = 0, max = 255)
+    private String value;
 
     @NotNull
     private UUID transientID;

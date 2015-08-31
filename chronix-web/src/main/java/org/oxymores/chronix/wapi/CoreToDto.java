@@ -11,7 +11,6 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.NodeConnectionMethod;
@@ -73,7 +72,7 @@ public class CoreToDto
         res.setLatestVersionComment(a.getCommitComment());
 
         // Unique elements
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof ChainStart)
             {
@@ -81,7 +80,7 @@ public class CoreToDto
                 break;
             }
         }
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof ChainEnd)
             {
@@ -89,7 +88,7 @@ public class CoreToDto
                 break;
             }
         }
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof Or)
             {
@@ -97,7 +96,7 @@ public class CoreToDto
                 break;
             }
         }
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof And)
             {

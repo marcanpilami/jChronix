@@ -28,7 +28,6 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
-import org.oxymores.chronix.core.ConfigurableBase;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Parameter;
@@ -72,7 +71,7 @@ public final class PlanBuilder
 
         // Start & end retrieval
         ChainStart cs = null;
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof ChainStart)
             {
@@ -80,7 +79,7 @@ public final class PlanBuilder
             }
         }
         ChainEnd ce = null;
-        for (ConfigurableBase nb : a.getActiveElements().values())
+        for (ActiveNodeBase nb : a.getActiveElements().values())
         {
             if (nb instanceof ChainEnd)
             {

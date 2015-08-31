@@ -25,7 +25,6 @@ import java.util.List;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
@@ -41,45 +40,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-public class ActiveNodeBase extends ConfigurableBase
+public class ActiveNodeBase extends NamedApplicationObject
 {
     private static final long serialVersionUID = 2317281646089939267L;
     private static final Logger log = LoggerFactory.getLogger(ActiveNodeBase.class);
 
     @NotNull
-    @Size(min = 1, max = 255)
-    protected String description;
+    protected ArrayList<Parameter> parameters;
 
-    @NotNull
-    @Size(min = 1, max = 50)
-    protected String name;
+    public ActiveNodeBase()
+    {
+        super();
+        parameters = new ArrayList<>();
+    }
 
     @Override
     public String toString()
     {
         return String.format("%s (%s)", name, description);
-    }
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // Stupid get/set
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
     }
 
     // Helper function (could be overloaded) returning something intelligible
@@ -108,6 +86,33 @@ public class ActiveNodeBase extends ConfigurableBase
 
     // Relationship traversing
     // ////////////////////////////////////////////////////////////////////////////
+    // ////////////////////////////////////////////////////////////////////////////
+    // Parameter handling
+    public ArrayList<Parameter> getParameters()
+    {
+        return this.parameters;
+    }
+
+    public void addParameter(Parameter parameter)
+    {
+        if (!parameters.contains(parameter))
+        {
+            parameters.add(parameter);
+        }
+    }
+
+    public void addParameter(String key, String value, String description)
+    {
+        Parameter p = new Parameter();
+        p.setDescription(description);
+        p.setKey(key);
+        p.setValue(value);
+        this.application.addParameter(p);
+        addParameter(p);
+    }
+    // Parameter handling
+    // ////////////////////////////////////////////////////////////////////////////
+
     // ////////////////////////////////////////////////////////////////////////////
     // Event analysis
     // Do the given events allow for a transition originating from a state

@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,10 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
-
-import java.util.ArrayList;
 
 import javax.jms.JMSException;
 import javax.validation.constraints.NotNull;
@@ -28,9 +25,15 @@ import javax.validation.constraints.Size;
 
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ A base implementation (simple key/value pair) for parameters. Can be use directly or overloaded.
+ */
 public class Parameter extends ApplicationObject
 {
+    private static final Logger log = LoggerFactory.getLogger(Parameter.class);
     private static final long serialVersionUID = 8017529181151172909L;
 
     @NotNull
@@ -44,18 +47,6 @@ public class Parameter extends ApplicationObject
     @NotNull
     @Size(min = 1, max = 255)
     protected String description;
-
-    @NotNull
-    protected Boolean reusable = false;
-
-    @NotNull
-    protected ArrayList<ConfigurableBase> elements;
-
-    public Parameter()
-    {
-        super();
-        elements = new ArrayList<ConfigurableBase>();
-    }
 
     public String getKey()
     {
@@ -87,30 +78,6 @@ public class Parameter extends ApplicationObject
         this.description = description;
     }
 
-    public Boolean getReusable()
-    {
-        return reusable;
-    }
-
-    public void setReusable(Boolean reusable)
-    {
-        this.reusable = reusable;
-    }
-
-    public ArrayList<ConfigurableBase> getElements()
-    {
-        return elements;
-    }
-
-    public void addElement(ConfigurableBase element)
-    {
-        if (!elements.contains(element))
-        {
-            elements.add(element);
-            element.addParameter(this);
-        }
-    }
-
     public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         try
@@ -119,8 +86,7 @@ public class Parameter extends ApplicationObject
         }
         catch (JMSException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Could not send dynamic parameter value", e);
         }
     }
 }
