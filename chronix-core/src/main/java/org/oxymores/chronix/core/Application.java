@@ -93,11 +93,11 @@ public class Application extends ChronixObject
     public Application()
     {
         super();
-        this.activeElements = new HashMap<UUID, ActiveNodeBase>();
-        this.parameters = new HashMap<UUID, Parameter>();
-        this.calendars = new HashMap<UUID, Calendar>();
-        this.rrules = new HashMap<UUID, ClockRRule>();
-        this.tokens = new HashMap<UUID, Token>();
+        this.activeElements = new HashMap<>();
+        this.parameters = new HashMap<>();
+        this.calendars = new HashMap<>();
+        this.rrules = new HashMap<>();
+        this.tokens = new HashMap<>();
         this.versions = new ArrayList<>();
         this.addVersion(0, "creation");
 
@@ -126,10 +126,11 @@ public class Application extends ChronixObject
 
     /**
      * Will create one PlaceGroup per Place present in the Environment. Only adds. Name used is the name of the place.
+     * @param n
      */
     public void createStarterGroups(Environment n)
     {
-        PlaceGroup pg = null;
+        PlaceGroup pg;
         for (Place p : n.getPlacesList())
         {
             pg = this.getGroup(p.getName());
@@ -192,7 +193,7 @@ public class Application extends ChronixObject
         t.setApplication(null);
     }
 
-    public void addActiveElement(ActiveNodeBase o)
+    public final void addActiveElement(ActiveNodeBase o)
     {
         if (!this.activeElements.containsValue(o))
         {
@@ -229,7 +230,7 @@ public class Application extends ChronixObject
 
     public Map<UUID, ActiveNodeBase> getActiveElements()
     {
-        HashMap<UUID, ActiveNodeBase> res = new HashMap<UUID, ActiveNodeBase>();
+        HashMap<UUID, ActiveNodeBase> res = new HashMap<>();
         res.putAll(this.activeElements);
         return res;
     }
@@ -246,7 +247,7 @@ public class Application extends ChronixObject
 
     public List<Chain> getChains()
     {
-        ArrayList<Chain> res = new ArrayList<Chain>();
+        ArrayList<Chain> res = new ArrayList<>();
         for (ActiveNodeBase n : this.activeElements.values())
         {
             if (n instanceof Chain)
@@ -259,7 +260,7 @@ public class Application extends ChronixObject
 
     public List<State> getStates()
     {
-        ArrayList<State> res = new ArrayList<State>();
+        ArrayList<State> res = new ArrayList<>();
         for (Chain c : this.getChains())
         {
             res.addAll(c.getStates());
@@ -282,7 +283,7 @@ public class Application extends ChronixObject
     @SuppressWarnings("unchecked")
     public <T> List<T> getActiveElements(Class<T> tClass)
     {
-        ArrayList<T> res = new ArrayList<T>();
+        ArrayList<T> res = new ArrayList<>();
         for (ActiveNodeBase a : this.activeElements.values())
         {
             if (a.getClass().isAssignableFrom(tClass))
@@ -320,7 +321,7 @@ public class Application extends ChronixObject
 
     public List<ClockRRule> getRRulesList()
     {
-        return new ArrayList<ClockRRule>(this.rrules.values());
+        return new ArrayList<>(this.rrules.values());
     }
 
     public ExecutionNode getLocalNode()
@@ -330,7 +331,7 @@ public class Application extends ChronixObject
 
     public List<Calendar> getCalendars()
     {
-        return new ArrayList<Calendar>(this.calendars.values());
+        return new ArrayList<>(this.calendars.values());
     }
 
     /////////////////////////////
@@ -352,14 +353,14 @@ public class Application extends ChronixObject
 
     public Map<UUID, PlaceGroup> getGroups()
     {
-        HashMap<UUID, PlaceGroup> res = new HashMap<UUID, PlaceGroup>();
+        HashMap<UUID, PlaceGroup> res = new HashMap<>();
         res.putAll(this.groups);
         return res;
     }
 
     public List<PlaceGroup> getGroupsList()
     {
-        return new ArrayList<PlaceGroup>(this.groups.values());
+        return new ArrayList<>(this.groups.values());
     }
 
     public PlaceGroup getGroup(String name)
@@ -428,7 +429,7 @@ public class Application extends ChronixObject
         this.latestSave = latestSave;
     }
 
-    public void addVersion(int version, String comment)
+    public final void addVersion(int version, String comment)
     {
         ApplicationVersion v = new ApplicationVersion();
         v.created = DateTime.now();
