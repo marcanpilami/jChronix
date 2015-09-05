@@ -5,11 +5,13 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import net.fortuna.ical4j.model.Recur;
 
 import org.slf4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.ShellCommand;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -128,6 +130,25 @@ public class AppTest
         s2.connectTo(c.getEndState());
         s2.connectTo(s1); // Cycle!
 
+        Set<ConstraintViolation<Application>> v = validator.validate(a);
+        for (ConstraintViolation<Application> violation : v)
+        {
+            log.debug(violation.getLeafBean() + " - " + violation.getPropertyPath() + " - " + violation.getMessage());
+        }
+        Assert.assertEquals(1, v.size());
+    }
+
+    @Test
+    public void testRRuleValidation()
+    {
+        Application a = PlanBuilder.buildApplication("a", "a");
+        ClockRRule rr1 = new ClockRRule();
+        rr1.setName("Every 10 second only in january");
+        rr1.setDescription(rr1.getName());
+        rr1.setBYSECOND("00,10,20,30,40,50");
+        rr1.setBYMONTH("01");
+        rr1.setPeriod(Recur.MINUTELY);
+        a.addRRule(rr1);
         Set<ConstraintViolation<Application>> v = validator.validate(a);
         for (ConstraintViolation<Application> violation : v)
         {

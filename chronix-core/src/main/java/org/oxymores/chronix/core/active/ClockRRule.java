@@ -30,12 +30,14 @@ import net.fortuna.ical4j.model.Recur;
 
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.NamedApplicationObject;
+import org.oxymores.chronix.core.validation.RRuleCheckConsistency;
 import org.slf4j.LoggerFactory;
 
+@RRuleCheckConsistency
 public class ClockRRule extends NamedApplicationObject
 {
     private static final long serialVersionUID = 1092625083715354537L;
-    private static Logger log = LoggerFactory.getLogger(ClockRRule.class);
+    private static final Logger log = LoggerFactory.getLogger(ClockRRule.class);
 
     String period = "DAILY";
     Integer interval = 1;
