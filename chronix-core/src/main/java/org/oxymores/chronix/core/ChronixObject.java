@@ -40,10 +40,14 @@ public class ChronixObject implements Serializable
     @NotNull
     protected ArrayList<EnvironmentParameter> envParams;
 
+    @NotNull
+    private List<String> tags;
+
     public ChronixObject()
     {
         id = UUID.randomUUID();
         envParams = new ArrayList<>();
+        tags = new ArrayList<>();
     }
 
     public UUID getId()
@@ -101,5 +105,15 @@ public class ChronixObject implements Serializable
     public List<EnvironmentParameter> getEnvVars()
     {
         return this.envParams;
+    }
+
+    public List<String> getTags()
+    {
+        return tags;
+    }
+
+    public void setTags(List<String> tags)
+    {
+        this.tags = tags;
     }
 }
