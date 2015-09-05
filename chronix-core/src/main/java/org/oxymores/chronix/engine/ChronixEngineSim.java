@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
@@ -61,11 +62,13 @@ public class ChronixEngineSim extends ChronixEngine
 
             // This is a simulation: there is no network, only one simulation node.
             ExecutionNode simulationNode = new ExecutionNode();
-            simulationNode.setDns("raccoon");
-            simulationNode.setqPort(9999);
-            simulationNode.setConsole(true);
+            ExecutionNodeConnectionAmq conn = new ExecutionNodeConnectionAmq();
+            conn.setDns("raccoon");
+            conn.setqPort(9999);
+            simulationNode.addConnectionMethod(conn);
             simulationNode.setName("simu");
             this.ctx.getEnvironment().addNode(simulationNode);
+            this.ctx.getEnvironment().setConsole(simulationNode);
             ctx.setLocalNodeName(simulationNode.getName());
 
             for (Place p : this.ctx.getEnvironment().getPlaces().values())

@@ -27,7 +27,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
@@ -66,9 +66,9 @@ public final class DemoApplication
         // Physical network
         Environment n = new Environment();
         ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "first", brokerInterface, brokerPort, 100, 100);
-        n1.setConsole(true);
+        n.setConsole(n1);
         ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "second", brokerInterface, 1400, 200, 200);
-        n1.connectTo(n2, NodeConnectionMethod.TCP);
+        n1.connectTo(n2, ExecutionNodeConnectionAmq.class);
 
         // Logical network
         Place p1 = PlanBuilder.buildPlace(n, "place 1", n1);

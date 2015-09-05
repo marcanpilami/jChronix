@@ -28,6 +28,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
@@ -127,10 +128,12 @@ public class ChronixEngine extends Thread
         if (runnerMode)
         {
             ExecutionNode e = new ExecutionNode();
-            e.setConsole(false);
-            e.setDns(this.runnerHost);
-            e.setqPort(this.runnerPort);
+            ExecutionNodeConnectionAmq c = new ExecutionNodeConnectionAmq();
+
             e.setName(this.localNodeName);
+            c.setDns(this.runnerHost);
+            c.setqPort(this.runnerPort);
+            e.addConnectionMethod(c);
             this.ctx = new ChronixContext("runner", this.dbPath, false, null, null);
             this.ctx.setLocalNode(e);
         }
@@ -348,6 +351,7 @@ public class ChronixEngine extends Thread
 
     public void setFeeder(ExecutionNode en)
     {
-        this.setFeeder(en.getHost().getDns(), en.getqPort());
+        ExecutionNodeConnectionAmq conn = en.getComputingNode().getConnectionParameters(ExecutionNodeConnectionAmq.class).get(0);
+        this.setFeeder(conn.getDns(), conn.getqPort());
     }
 }

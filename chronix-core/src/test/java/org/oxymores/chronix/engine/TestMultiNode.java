@@ -12,7 +12,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
@@ -46,9 +46,10 @@ public class TestMultiNode extends TestBase
         en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
         en2 = PlanBuilder.buildExecutionNode(n, "e2", "localhost", 1400);
         en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
-        en1.setConsole(true);
-        en1.connectTo(en2, NodeConnectionMethod.TCP);
-        en2.connectTo(en3, NodeConnectionMethod.RCTRL);
+        n.setConsole(en1);
+        en1.connectTo(en2, ExecutionNodeConnectionAmq.class);
+        en2.connectTo(en3, ExecutionNodeConnectionAmq.class);
+        en3.setComputingNode(en2);
         e2.setFeeder(en1);
 
         // Logical network

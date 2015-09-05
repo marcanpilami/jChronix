@@ -281,7 +281,7 @@ public class ActiveNodeBase extends NamedApplicationObject
             s.consumeEvents(res.consumedEvents, places, conn);
             for (Place p : places)
             {
-                if (p.node.getHost() == s.application.getLocalNode())
+                if (p.node.getComputingNode() == s.application.getLocalNode())
                 {
                     s.runFromEngine(p, conn, pjProducer, session, evt);
                 }

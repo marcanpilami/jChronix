@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -76,7 +76,7 @@ public class TestStart extends TestBase
         n = new Environment();
         ExecutionNode n1 = PlanBuilder.buildExecutionNode(n, "local", 1789);
         ExecutionNode n2 = PlanBuilder.buildExecutionNode(n, "remote", 1400);
-        n1.connectTo(n2, NodeConnectionMethod.TCP);
+        n1.connectTo(n2, ExecutionNodeConnectionAmq.class);
 
         storeEnvironment(db1, n);
         storeEnvironment(db2, n);

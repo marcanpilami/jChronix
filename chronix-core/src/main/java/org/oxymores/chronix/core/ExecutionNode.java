@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,13 +17,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
-
+import java.util.List;
 import javax.validation.constraints.NotNull;
-
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
 
@@ -32,107 +30,169 @@ public class ExecutionNode extends EnvironmentObject
 {
     private static final long serialVersionUID = 2115315700815310189L;
 
-    protected NodeType type;
-    protected boolean console;
+    private Integer wsPort = 1790;
+    private Integer jmxRegistryPort = 1788;
+    private Integer jmxServerPort = 1789;
 
-    protected String sshKeyFilePath;
-    protected String sslKeyFilePath;
+    private List<ExecutionNodeConnection> connectsTo;
 
-    protected String dns, osusername, ospassword;
-    protected Integer qPort, wsPort, remoteExecPort, jmxPort;
-
-    protected ArrayList<NodeLink> canSendTo, canReceiveFrom;
-    protected ArrayList<Place> placesHosted;
+    private List<ExecutionNodeConnection> connectionParameters;
+    private List<Place> placesHosted; //TODO: still used?
+    private ExecutionNode computingNode = null;
 
     @NotNull
     @Range(min = 0, max = 100000)
-    protected Integer x, y;
+    private Integer x, y;
 
     public ExecutionNode()
     {
         super();
-        canSendTo = new ArrayList<NodeLink>();
-        canReceiveFrom = new ArrayList<NodeLink>();
-        placesHosted = new ArrayList<Place>();
-        jmxPort = 1788;
-        this.wsPort = 1790;
-        this.remoteExecPort = 1789;
+        connectsTo = new ArrayList<>();
+        placesHosted = new ArrayList<>();
+        connectionParameters = new ArrayList<>();
     }
 
-    @Override
-    public String toString()
+    public void addHostedPlace(Place place)
     {
-        return String.format("%s:%s (%s)", dns, qPort, console ? "console" : "not console");
+        if (!this.placesHosted.contains(place))
+        {
+            this.getPlacesHosted().add(place);
+            place.setNode(this);
+        }
     }
 
-    public NodeType getType()
+    public String getBrokerName()
     {
-        return type;
+        return this.name.toUpperCase();
     }
 
-    public void setType(NodeType type)
+    public Boolean isHosted()
     {
-        this.type = type;
+        return this.getComputingNode() == null;
     }
 
-    public String getSshKeyFilePath()
+    public ExecutionNode getComputingNode()
     {
-        return sshKeyFilePath;
+        return this.computingNode == null ? this : this.computingNode;
     }
 
-    public void setSshKeyFilePath(String sshKeyFilePath)
+    public <T> List<T> getConnectionParameters(Class<T> connectionType)
     {
-        this.sshKeyFilePath = sshKeyFilePath;
+        List<T> res = new ArrayList<>();
+        for (ExecutionNodeConnection c : this.getConnectionParameters())
+        {
+            if (c.getClass().isAssignableFrom(connectionType))
+            {
+                res.add((T) c);
+            }
+        }
+        return res;
     }
 
-    public String getSslKeyFilePath()
+    public <T> List<T> getConnectsTo(Class<T> connectionType)
     {
-        return sslKeyFilePath;
+        List<T> res = new ArrayList<>();
+        for (ExecutionNodeConnection c : this.getConnectsTo())
+        {
+            if (c.getClass().isAssignableFrom(connectionType))
+            {
+                res.add((T) c);
+            }
+        }
+        return res;
     }
 
-    public void setSslKeyFilePath(String sslKeyFilePath)
+    public <T> void connectTo(ExecutionNode target, Class<T> connectionType)
     {
-        this.sslKeyFilePath = sslKeyFilePath;
+        List<T> prms = target.getConnectionParameters(connectionType);
+        if (prms.size() != 1)
+        {
+            throw new IllegalArgumentException("using the short form of connect requires the target to have one and only one connection method of the given type");
+        }
+        this.getConnectsTo().add((ExecutionNodeConnection) prms.get(0));
     }
 
-    public String getDns()
+    public List<ExecutionNode> getCanReceiveFrom()
     {
-        return dns;
+        List<ExecutionNode> res = new ArrayList<>();
+        for (ExecutionNodeConnection local : this.connectionParameters)
+        {
+            for (ExecutionNode n : this.environment.getNodesList())
+            {
+                if (n == this)
+                {
+                    continue;
+                }
+                for (ExecutionNodeConnection conn : n.getConnectsTo())
+                {
+                    if (conn == local)
+                    {
+                        res.add(n);
+                    }
+                }
+            }
+        }
+        return res;
     }
 
-    public void setDns(String dns)
+    public void connectTo(ExecutionNodeConnection target)
     {
-        this.dns = dns;
+        this.getConnectsTo().add(target);
     }
 
-    public String getOsusername()
+    public void addConnectionMethod(ExecutionNodeConnection conn)
     {
-        return osusername;
+        this.connectionParameters.add(conn);
     }
 
-    public void setOsusername(String osusername)
+    public Integer getJmxRegistryPort()
     {
-        this.osusername = osusername;
+        return jmxRegistryPort;
     }
 
-    public String getOspassword()
+    public void setJmxRegistryPort(Integer jmxRegistryPort)
     {
-        return ospassword;
+        this.jmxRegistryPort = jmxRegistryPort;
     }
 
-    public void setOspassword(String ospassword)
+    public Integer getJmxServerPort()
     {
-        this.ospassword = ospassword;
+        return jmxServerPort;
     }
 
-    public Integer getqPort()
+    public void setJmxServerPort(Integer jmxServerPort)
     {
-        return qPort;
+        this.jmxServerPort = jmxServerPort;
     }
 
-    public void setqPort(Integer qPort)
+    public List<ExecutionNodeConnection> getConnectsTo()
     {
-        this.qPort = qPort;
+        return connectsTo;
+    }
+
+    public void setConnectsTo(List<ExecutionNodeConnection> connectsTo)
+    {
+        this.connectsTo = connectsTo;
+    }
+
+    public List<ExecutionNodeConnection> getConnectionParameters()
+    {
+        return connectionParameters;
+    }
+
+    public void setConnectionParameters(List<ExecutionNodeConnection> connectionParameters)
+    {
+        this.connectionParameters = connectionParameters;
+    }
+
+    public void setPlacesHosted(List<Place> placesHosted)
+    {
+        this.placesHosted = placesHosted;
+    }
+
+    public void setComputingNode(ExecutionNode computingNode)
+    {
+        this.computingNode = computingNode;
     }
 
     public Integer getWsPort()
@@ -145,57 +205,9 @@ public class ExecutionNode extends EnvironmentObject
         this.wsPort = wsPort;
     }
 
-    public Integer getJmxPort()
-    {
-        return this.jmxPort;
-    }
-
-    public void setJmxPort(Integer port)
-    {
-        this.jmxPort = port;
-    }
-
-    public Integer getRemoteExecPort()
-    {
-        return remoteExecPort;
-    }
-
-    public void setRemoteExecPort(Integer remoteExecPort)
-    {
-        this.remoteExecPort = remoteExecPort;
-    }
-
-    public ArrayList<NodeLink> getCanSendTo()
-    {
-        return canSendTo;
-    }
-
-    public ArrayList<NodeLink> getCanReceiveFrom()
-    {
-        return canReceiveFrom;
-    }
-
-    public ArrayList<Place> getPlacesHosted()
+    public List<Place> getPlacesHosted()
     {
         return placesHosted;
-    }
-
-    public void addCanSendTo(NodeLink nl)
-    {
-        if (!this.canSendTo.contains(nl))
-        {
-            this.canSendTo.add(nl);
-            nl.setNodeFrom(this);
-        }
-    }
-
-    public void addCanReceiveFrom(NodeLink nl)
-    {
-        if (!this.canReceiveFrom.contains(nl))
-        {
-            this.canReceiveFrom.add(nl);
-            nl.setNodeTo(this);
-        }
     }
 
     public Integer getX()
@@ -216,72 +228,5 @@ public class ExecutionNode extends EnvironmentObject
     public void setY(Integer y)
     {
         this.y = y;
-    }
-
-    public void addHostedPlace(Place place)
-    {
-        if (!this.placesHosted.contains(place))
-        {
-            this.placesHosted.add(place);
-            place.setNode(this);
-        }
-    }
-
-    public String getBrokerName()
-    {
-        return this.name.toUpperCase();
-    }
-
-    public String getBrokerUrl()
-    {
-        return (this.dns + ":" + this.qPort).toUpperCase();
-    }
-
-    public Boolean isHosted()
-    {
-        for (NodeLink nl : this.canReceiveFrom)
-        {
-            if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-                return true;
-        }
-        return false;
-    }
-
-    public ExecutionNode getHost()
-    {
-        for (NodeLink nl : this.canReceiveFrom)
-        {
-            if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-                return nl.nodeFrom;
-        }
-        return this;
-    }
-
-    public void connectTo(ExecutionNode target, NodeConnectionMethod method)
-    {
-        NodeLink l1 = new NodeLink();
-        l1.setMethod(method);
-        l1.setNodeFrom(this);
-        l1.setNodeTo(target);
-    }
-
-    public boolean isConsole()
-    {
-        return console;
-    }
-
-    public void setConsole(boolean console)
-    {
-        this.console = console;
-    }
-
-    public String getName()
-    {
-        return this.name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
     }
 }

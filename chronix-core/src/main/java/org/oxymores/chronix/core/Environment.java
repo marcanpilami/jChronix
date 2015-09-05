@@ -28,6 +28,7 @@ public class Environment extends ChronixObject
     protected Map<UUID, ExecutionNode> nodes = new HashMap<>();
     @Valid
     protected Map<UUID, Place> places = new HashMap<>();
+    private ExecutionNode console = null;
 
     ///////////////////////////
     // Places
@@ -136,14 +137,11 @@ public class Environment extends ChronixObject
     // Misc.
     public ExecutionNode getConsoleNode()
     {
-        for (ExecutionNode n : this.nodes.values())
+        if (this.console != null)
         {
-            if (n.isConsole())
-            {
-                return n;
-            }
+            return this.console;
         }
-        return null;
+        return this.nodes.values().iterator().next();
     }
 
     public int getModelVersion()
@@ -154,6 +152,17 @@ public class Environment extends ChronixObject
     public void setModelVersion(int modelVersion)
     {
         this.modelVersion = modelVersion;
+    }
+
+    /** Do NOT use is normal operations - use #getConsoleNode instead **/
+    public ExecutionNode getConsole()
+    {
+        return console;
+    }
+
+    public void setConsole(ExecutionNode console)
+    {
+        this.console = console;
     }
 
 }

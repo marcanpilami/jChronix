@@ -133,9 +133,9 @@ public class SenderHelpers
         {
             for (ExecutionNode en : st.getRunsOnPhysicalNodes())
             {
-                if (!clientPN.contains(en.getHost()))
+                if (!clientPN.contains(en.getComputingNode()))
                 {
-                    clientPN.add(en.getHost());
+                    clientPN.add(en.getComputingNode());
                 }
             }
         }
@@ -359,7 +359,7 @@ public class SenderHelpers
 
     public static void sendToPipeline(PipelineJob pj, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit) throws JMSException
     {
-        String qName = String.format(Constants.Q_PJ, target.getHost().getBrokerName());
+        String qName = String.format(Constants.Q_PJ, target.getComputingNode().getBrokerName());
         log.info(String.format("A job will be sent to the runner over the wire on queue %s", qName));
         Destination d = jmsSession.createQueue(qName);
         ObjectMessage om = jmsSession.createObjectMessage(pj);
@@ -426,7 +426,7 @@ public class SenderHelpers
         {
             for (Place p : s.getRunsOn().getPlaces())
             {
-                tmp = p.getNode().getHost();
+                tmp = p.getNode().getComputingNode();
                 if (!enUsingCalendar.contains(tmp))
                 {
                     enUsingCalendar.add(tmp);
@@ -542,7 +542,7 @@ public class SenderHelpers
         ObjectMessage m = jmsSession.createObjectMessage(o);
 
         // Send the message to every client execution node
-        String qName = String.format(Constants.Q_ORDER, en.getHost().getBrokerName());
+        String qName = String.format(Constants.Q_ORDER, en.getComputingNode().getBrokerName());
         log.info(String.format("A restart order will be sent on queue %s", qName));
         Destination destination = jmsSession.createQueue(qName);
         jmsProducer.send(destination, m);
@@ -572,7 +572,7 @@ public class SenderHelpers
         ObjectMessage m = jmsSession.createObjectMessage(o);
 
         // Send the message to every client execution node
-        String qName = String.format(Constants.Q_ORDER, en.getHost().getBrokerName());
+        String qName = String.format(Constants.Q_ORDER, en.getComputingNode().getBrokerName());
         log.info(String.format("A force OK order will be sent on queue %s", qName));
         Destination destination = jmsSession.createQueue(qName);
         jmsProducer.send(destination, m);
@@ -657,7 +657,7 @@ public class SenderHelpers
         }
         else
         {
-            qName = String.format(Constants.Q_TOKEN, p.getNode().getHost().getBrokerName());
+            qName = String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getBrokerName());
         }
 
         // Return queue

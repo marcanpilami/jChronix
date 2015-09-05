@@ -8,7 +8,7 @@ public class DTOExecutionNode
 {
     private String id, dns, osusername, ospassword, certFilePath, name;
     private boolean isConsole, isSimpleRunner;
-    private int qPort, wsPort, remoteExecPort, jmxPort, x, y;
+    private int qPort, wsPort, remoteExecPort, jmxServerPort, jmxRegistryPort, x, y;
     private List<String> toTCP = new ArrayList<>(), toRCTRL = new ArrayList<>();
     private List<String> places = new ArrayList<>();
 
@@ -119,16 +119,6 @@ public class DTOExecutionNode
         this.remoteExecPort = remoteExecPort;
     }
 
-    public int getJmxPort()
-    {
-        return jmxPort;
-    }
-
-    public void setJmxPort(int jmxPort)
-    {
-        this.jmxPort = jmxPort;
-    }
-
     public int getX()
     {
         return x;
@@ -197,5 +187,25 @@ public class DTOExecutionNode
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public int getJmxServerPort()
+    {
+        return jmxServerPort;
+    }
+
+    public void setJmxServerPort(int jmxServerPort)
+    {
+        this.jmxServerPort = jmxServerPort;
+    }
+
+    public int getJmxRegistryPort()
+    {
+        return jmxRegistryPort;
+    }
+
+    public void setJmxRegistryPort(int jmxRegistryPort)
+    {
+        this.jmxRegistryPort = jmxRegistryPort;
     }
 }

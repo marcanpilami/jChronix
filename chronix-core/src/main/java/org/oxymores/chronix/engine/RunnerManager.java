@@ -492,7 +492,7 @@ public class RunnerManager extends BaseListener
             tr.local = true;
             tr.placeID = pj.getPlaceID();
             tr.requestedAt = new DateTime();
-            tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
+            tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getComputingNode().getId();
             tr.stateID = pj.getStateID();
             tr.tokenID = tk.getId();
             tr.type = TokenRequestType.RELEASE;

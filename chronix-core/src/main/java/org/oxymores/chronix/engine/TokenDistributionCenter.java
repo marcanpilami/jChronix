@@ -256,7 +256,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qNameDest = String.format(Constants.Q_PJ, a.getLocalNode().getHost().getBrokerName());
+                String qNameDest = String.format(Constants.Q_PJ, a.getLocalNode().getComputingNode().getBrokerName());
                 Destination d = jmsSession.createQueue(qNameDest);
                 log.debug(String.format("A message will be sent to queue %s", qNameDest));
                 jmsProducer.send(d, response);
@@ -442,7 +442,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(answer);
-                Destination d = jmsSession.createQueue(String.format(Constants.Q_TOKEN, p.getNode().getHost().getBrokerName()));
+                Destination d = jmsSession.createQueue(String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getBrokerName()));
                 jmsProducer.send(d, response);
             }
             catch (JMSException e)

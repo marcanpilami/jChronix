@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -38,8 +39,8 @@ import org.apache.activemq.usage.TempUsage;
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.NodeConnectionMethod;
-import org.oxymores.chronix.core.NodeLink;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ class Broker
     private static Logger log = LoggerFactory.getLogger(Broker.class);
 
     // JMS
-    private String brokerName, url;
+    private String brokerName;
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private Connection connection;
@@ -91,9 +92,8 @@ class Broker
     {
         this.ctx = ctx;
         this.brokerName = ctx.getLocalNode().getBrokerName();
-        this.url = "vm://" + this.brokerName;
 
-        log.info(String.format("Starting configuration of a message broker listening on %s", url));
+        log.info(String.format("Starting configuration of a message broker listening on vm://%s", this.brokerName));
         this.thrsRA = new ArrayList<>();
 
         // Create broker service
@@ -130,14 +130,17 @@ class Broker
         // Add a listener
         if (tcp)
         {
-            try
+            for (ExecutionNodeConnectionAmq conn : this.ctx.getLocalNode().getConnectionParameters(ExecutionNodeConnectionAmq.class))
             {
-                TransportConnector tc = broker.addConnector("tcp://" + this.ctx.getLocalNode().getBrokerUrl());
-                tc.setDiscoveryUri(null);
-            }
-            catch (Exception e1)
-            {
-                throw new ChronixInitializationException("Could not create a JMS listener connector", e1);
+                try
+                {
+                    TransportConnector tc = broker.addConnector("tcp://" + conn.getDns() + ":" + conn.getqPort());
+                    tc.setDiscoveryUri(null);
+                }
+                catch (Exception e1)
+                {
+                    throw new ChronixInitializationException("Could not create a JMS listener connector", e1);
+                }
             }
         }
 
@@ -363,24 +366,23 @@ class Broker
         }
     }
 
-    void resetLinks() throws ChronixInitializationException
+    final void resetLinks() throws ChronixInitializationException
     {
         stopAllOutgoingLinks();
 
-        ArrayList<String> opened = new ArrayList<>();
+        ArrayList<UUID> opened = new ArrayList<>();
         for (Application a : this.ctx.getApplications())
         {
-            for (NodeLink nl : a.getLocalNode().getCanSendTo())
+            for (ExecutionNodeConnectionAmq conn : a.getLocalNode().getConnectsTo(ExecutionNodeConnectionAmq.class))
             {
-                // Only if TCP or RCTRL
                 // Only if not already opened
-                if (!(nl.getMethod().equals(NodeConnectionMethod.TCP) || nl.getMethod().equals(NodeConnectionMethod.RCTRL)) || opened.contains(nl.getNodeTo().getBrokerUrl()))
+                if (opened.contains(conn.getId()))
                 {
                     break;
                 }
-                opened.add(nl.getNodeTo().getBrokerUrl());
+                opened.add(conn.getId());
 
-                String url = "static:(tcp://" + nl.getNodeTo().getDns() + ":" + nl.getNodeTo().getqPort() + ")";
+                String url = "static:(tcp://" + conn.getDns() + ":" + conn.getqPort() + ")";
                 log.info(String.format("The broker will open a channel towards %s", url));
                 NetworkConnector tc;
                 try
@@ -401,12 +403,9 @@ class Broker
                 // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
             }
 
-            for (NodeLink nl : a.getLocalNode().getCanReceiveFrom())
+            for (ExecutionNode en : a.getLocalNode().getCanReceiveFrom())
             {
-                if (nl.getMethod().equals(NodeConnectionMethod.TCP))
-                {
-                    log.info(String.format("The broker should receive channels incoming from %s:%s", nl.getNodeFrom().getDns(), nl.getNodeFrom().getqPort()));
-                }
+                log.info(String.format("The broker should receive channels incoming from %s", en.getName()));
             }
         }
     }

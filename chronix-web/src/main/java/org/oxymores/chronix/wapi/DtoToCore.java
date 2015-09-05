@@ -9,7 +9,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
@@ -270,17 +270,14 @@ public class DtoToCore
     {
         ExecutionNode r = new ExecutionNode();
         r.setName(d.getName());
-        r.setConsole(d.isConsole());
-        r.setDns(d.getDns());
+        ExecutionNodeConnectionAmq conn = new ExecutionNodeConnectionAmq();
+        conn.setDns(d.getDns());
+        conn.setqPort(d.getqPort());
+        r.addConnectionMethod(conn);
         r.setId(UUID.fromString(d.getId()));
-        r.setJmxPort(d.getJmxPort());
-        r.setOspassword(d.getOspassword());
-        r.setOsusername(d.getOsusername());
-        r.setqPort(d.getqPort());
-        r.setRemoteExecPort(d.getRemoteExecPort());
-        // r.setSshKeyFilePath(d.get)
-        // r.setSslKeyFilePath(d.gets)
-        // r.setType(type);
+        r.setJmxRegistryPort(d.getJmxRegistryPort());
+        r.setJmxServerPort(d.getJmxServerPort());
+
         r.setWsPort(d.getWsPort());
         r.setX(d.getX());
         r.setY(d.getY());
@@ -291,21 +288,27 @@ public class DtoToCore
     /**
      * Pass 2: add connections between nodes. All nodes must exist when this method is called.
      * @param d the DTO object describing the node to connect.
-     * @param n the Environment that the new connections should be added to.
+     * @param e the Environment that the new connections should be added to.
      */
-    public static void setExecutionNodeNetwork(DTOExecutionNode d, Environment n)
+    public static void setExecutionNodeNetwork(DTOExecutionNode d, Environment e)
     {
-        ExecutionNode from = n.getNode(UUID.fromString(d.getId()));
+        ExecutionNode from = e.getNode(UUID.fromString(d.getId()));
+
+        if (d.isConsole())
+        {
+            e.setConsole(from);
+        }
 
         for (String s : d.getToTCP())
         {
-            ExecutionNode target = n.getNode(UUID.fromString(s));
-            from.connectTo(target, NodeConnectionMethod.TCP);
+            ExecutionNode target = e.getNode(UUID.fromString(s));
+            from.connectTo(target, ExecutionNodeConnectionAmq.class);
         }
         for (String s : d.getToRCTRL())
         {
-            ExecutionNode target = n.getNode(UUID.fromString(s));
-            from.connectTo(target, NodeConnectionMethod.RCTRL);
+            ExecutionNode target = e.getNode(UUID.fromString(s));
+            from.connectTo(target, ExecutionNodeConnectionAmq.class);
+            target.setComputingNode(from);
         }
     }
 

@@ -13,7 +13,7 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.ShellCommand;
@@ -35,7 +35,8 @@ public class TestHostedNode extends TestBase
         n = new Environment();
         ExecutionNode en1 = PlanBuilder.buildExecutionNode(n, "local", "localhost", 1789);
         ExecutionNode en2 = PlanBuilder.buildExecutionNode(n, "hosted", "localhost", 1804);
-        en1.connectTo(en2, NodeConnectionMethod.RCTRL);
+        en2.setComputingNode(en1);
+        en1.connectTo(en2, ExecutionNodeConnectionAmq.class);
 
         // Logical network
         Place p1 = PlanBuilder.buildPlace(n, "master node", en1);

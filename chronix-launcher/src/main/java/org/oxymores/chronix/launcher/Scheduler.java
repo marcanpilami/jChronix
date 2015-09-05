@@ -17,6 +17,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.planbuilder.MaintenanceApplication;
@@ -172,8 +173,10 @@ public class Scheduler
         {
             // This is a new node inside a network. It will init its metabase from a feeder node.
             ExecutionNode feeder = new ExecutionNode();
-            feeder.setDns(feederDns);
-            feeder.setqPort(feederPort);
+            ExecutionNodeConnectionAmq conn = new ExecutionNodeConnectionAmq();
+            conn.setDns(feederDns);
+            conn.setqPort(feederPort);
+            feeder.addConnectionMethod(conn);
             e.setFeeder(feeder);
 
             log.info("Node name: " + nodeName);
@@ -197,7 +200,7 @@ public class Scheduler
             Environment n = new Environment();
             ExecutionNode n1 = buildExecutionNode(n, nodeName, bootstrapDns, bootstrapQPort);
             n1.setWsPort(bootstrapWSPort);
-            n1.setConsole(true);
+            n.setConsole(n1);
             buildPlace(n, nodeName, n1);
             ChronixContext.saveEnvironment(n, dbFile);
 

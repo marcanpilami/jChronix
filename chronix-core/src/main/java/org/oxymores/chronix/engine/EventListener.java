@@ -187,7 +187,7 @@ class EventListener extends BaseListener
                     for (Place p : cs.getRunsOn().getPlaces())
                     {
                         // Don't purge if place is local & event no consumed on that place
-                        if (p.getNode().getHost() == e.getApplication(ctx).getLocalNode() && !e.wasConsumedOnPlace(p, cs, conn))
+                        if (p.getNode().getComputingNode() == e.getApplication(ctx).getLocalNode() && !e.wasConsumedOnPlace(p, cs, conn))
                         {
                             shouldPurge = false;
                             break;

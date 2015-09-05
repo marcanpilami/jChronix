@@ -62,7 +62,7 @@ class OrderListener extends BaseListener
         this.qName = String.format(Constants.Q_ORDER, brokerName);
         this.jmsProducer = this.jmsSession.createProducer(null);
         this.subscribeTo(qName);
-        if (broker.getCtx().getLocalNode().isConsole())
+        if (broker.getCtx().getLocalNode() == broker.getCtx().getEnvironment().getConsoleNode())
         {
             this.subscribeTo(Constants.Q_BOOTSTRAP);
         }

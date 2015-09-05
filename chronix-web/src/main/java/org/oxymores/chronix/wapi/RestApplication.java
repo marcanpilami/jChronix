@@ -21,7 +21,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.ChronixEngine;
@@ -71,9 +71,10 @@ public class RestApplication extends ResourceConfig implements ServletContextLis
                     ExecutionNode en3 = PlanBuilder.buildExecutionNode(n, "e3", "localhost", 1804);
                     en3.setX(300);
                     en3.setY(300);
-                    en1.setConsole(true);
-                    en1.connectTo(en2, NodeConnectionMethod.TCP);
-                    en2.connectTo(en3, NodeConnectionMethod.RCTRL);
+                    en3.setComputingNode(en2);
+                    n.setConsole(en1);
+                    en1.connectTo(en2, ExecutionNodeConnectionAmq.class);
+                    en2.connectTo(en3, ExecutionNodeConnectionAmq.class);
 
                     Place p1 = PlanBuilder.buildPlace(n, "master node", en1);
                     Place p2 = PlanBuilder.buildPlace(n, "second node", en2);

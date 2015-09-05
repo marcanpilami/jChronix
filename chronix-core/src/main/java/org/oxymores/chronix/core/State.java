@@ -433,9 +433,9 @@ public class State extends ApplicationObject
         {
             if (n.isHosted())
             {
-                if (!res.contains(n.getHost()))
+                if (!res.contains(n.getComputingNode()))
                 {
-                    res.add(n.getHost());
+                    res.add(n.getComputingNode());
                 }
             }
             else
@@ -640,7 +640,7 @@ public class State extends ApplicationObject
         // Send it (commit is done by main engine later)
         try
         {
-            SenderHelpers.sendToPipeline(pj, p.getNode().getHost(), pjProducer, session, false);
+            SenderHelpers.sendToPipeline(pj, p.getNode().getComputingNode(), pjProducer, session, false);
         }
         catch (JMSException e1)
         {

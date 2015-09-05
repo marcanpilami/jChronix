@@ -30,6 +30,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -138,9 +139,10 @@ public final class PlanBuilder
     {
         ExecutionNode n1 = new ExecutionNode();
         n1.setName(name);
-        n1.setDns(dns);
-        n1.setOspassword("");
-        n1.setqPort(port);
+        ExecutionNodeConnectionAmq conn = new ExecutionNodeConnectionAmq();
+        conn.setDns(dns);
+        conn.setqPort(port);
+        n1.addConnectionMethod(conn);
         n1.setX(x);
         n1.setY(y);
         a.addNode(n1);
@@ -206,7 +208,7 @@ public final class PlanBuilder
 
         // Execution node (the local sever)
         ExecutionNode n1 = buildExecutionNode(n, "local", linterface, port);
-        n1.setConsole(true);
+        n.setConsole(n1);
 
         // Place
         buildPlace(n, "local", n1);

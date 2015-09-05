@@ -311,7 +311,7 @@ class Pipeline extends BaseListener implements Runnable
                 tr.local = true;
                 tr.placeID = pj.getPlaceID();
                 tr.requestedAt = new DateTime();
-                tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getHost().getId();
+                tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getComputingNode().getId();
                 tr.stateID = pj.getStateID();
                 tr.tokenID = tk.getId();
                 tr.type = TokenRequestType.REQUEST;
@@ -353,7 +353,7 @@ class Pipeline extends BaseListener implements Runnable
         // Remove from queue
         waitingRun.remove(pj);
 
-        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctx).getNode().getHost().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctx).getNode().getComputingNode().getBrokerName());
         try
         {
             Destination d = jmsSession.createQueue(qName);

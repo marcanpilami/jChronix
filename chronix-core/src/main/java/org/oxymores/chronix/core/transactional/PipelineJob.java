@@ -313,7 +313,7 @@ public class PipelineJob extends TranscientBase
         rlog.setDns(rr.envtServer);
         rlog.setEnteredPipeAt(this.enteredPipeAt);
         rlog.setExecutionNodeId(p.getNode().getId());
-        rlog.setExecutionNodeName(p.getNode().getBrokerUrl());
+        rlog.setExecutionNodeName(p.getNode().getName());
         rlog.setId(this.id);
         rlog.setLastKnownStatus(this.status);
         rlog.setMarkedForUnAt(this.markedForRunAt);

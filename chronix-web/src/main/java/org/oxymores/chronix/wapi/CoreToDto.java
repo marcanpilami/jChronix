@@ -13,8 +13,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.NodeConnectionMethod;
-import org.oxymores.chronix.core.NodeLink;
+import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
@@ -285,30 +284,42 @@ public class CoreToDto
     {
         DTOExecutionNode res = new DTOExecutionNode();
         res.setId(en.getId().toString());
-        res.setCertFilePath(en.getSshKeyFilePath());
-        res.setDns(en.getDns());
-        res.setConsole(en.isConsole());
-        res.setJmxPort(en.getJmxPort());
-        res.setOspassword(en.getOspassword());
-        res.setOsusername(en.getOsusername());
-        res.setqPort(en.getqPort());
-        res.setRemoteExecPort(en.getRemoteExecPort());
+        res.setConsole(en.getEnvironment().getConsole() == en);
+        res.setJmxServerPort(en.getJmxServerPort());
+        res.setJmxRegistryPort(en.getJmxRegistryPort());
         res.setWsPort(en.getWsPort());
         res.setX(en.getX());
         res.setY(en.getY());
         res.setName(en.getName());
 
-        for (NodeLink nl : en.getCanSendTo())
+        // Simplified API - only one AMQ connection allowed.
+        for (ExecutionNodeConnectionAmq conn : en.getConnectionParameters(ExecutionNodeConnectionAmq.class))
         {
-            if (nl.getMethod() == NodeConnectionMethod.TCP)
+            res.setDns(conn.getDns());
+            res.setqPort(conn.getqPort());
+        }
+
+        for (ExecutionNode on : en.getEnvironment().getNodesList())
+        {
+            if (on.getComputingNode() == en)
             {
-                res.addToTcp(nl.getNodeTo().getId());
-            }
-            if (nl.getMethod() == NodeConnectionMethod.RCTRL)
-            {
-                res.addToRctrl(nl.getNodeTo().getId());
+                res.addToRctrl(on.getId());
             }
         }
+        for (ExecutionNodeConnectionAmq conn : en.getConnectsTo(ExecutionNodeConnectionAmq.class))
+        {
+            for (ExecutionNode on : en.getEnvironment().getNodesList())
+            {
+                for (ExecutionNodeConnectionAmq ccc : on.getConnectionParameters(ExecutionNodeConnectionAmq.class))
+                {
+                    if (ccc == conn && !res.getToRCTRL().contains(on.getId().toString()))
+                    {
+                        res.addToTcp(on.getId());
+                    }
+                }
+            }
+        }
+
         for (Place p : en.getPlacesHosted())
         {
             res.addPlace(p.getId());

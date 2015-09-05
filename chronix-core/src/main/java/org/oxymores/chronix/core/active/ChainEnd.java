@@ -62,7 +62,7 @@ public class ChainEnd extends ActiveNodeBase
         try
         {
             ObjectMessage msg = jmsSession.createObjectMessage(rr);
-            String qName = String.format(Constants.Q_ENDOFJOB, pj.getPlace(ctx).getNode().getHost().getBrokerName());
+            String qName = String.format(Constants.Q_ENDOFJOB, pj.getPlace(ctx).getNode().getComputingNode().getBrokerName());
             log.info(String.format("An end of job signal for the chain run %s will be sent to the runner over the wire on queue %s",
                     rr.id1, qName));
             Destination d = jmsSession.createQueue(qName);

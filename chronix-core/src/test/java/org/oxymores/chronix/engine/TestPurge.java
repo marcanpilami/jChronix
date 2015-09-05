@@ -29,7 +29,7 @@ public class TestPurge extends TestBase
         // Physical network
         n = new Environment();
         en1 = PlanBuilder.buildExecutionNode(n, "e1", "localhost", 1789);
-        en1.setConsole(true);
+        n.setConsole(en1);
 
         // Logical network
         p1 = PlanBuilder.buildPlace(n, "master node", en1);
