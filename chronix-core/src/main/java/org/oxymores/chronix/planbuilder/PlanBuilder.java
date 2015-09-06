@@ -44,6 +44,7 @@ import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.engine.Constants;
 
 public final class PlanBuilder
 {
@@ -218,10 +219,10 @@ public final class PlanBuilder
 
     public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
     {
-        return buildShellCommand("cmd.exe", a, command, name, description, prmsandvalues);
+        return buildShellCommand(Constants.SHELL.CMD, a, command, name, description, prmsandvalues);
     }
 
-    public static ShellCommand buildShellCommand(String shell, Application a, String command, String name, String description, String... prmsandvalues)
+    public static ShellCommand buildShellCommand(Constants.SHELL shell, Application a, String command, String name, String description, String... prmsandvalues)
     {
         ShellCommand sc1 = new ShellCommand();
         sc1.setCommand(command);

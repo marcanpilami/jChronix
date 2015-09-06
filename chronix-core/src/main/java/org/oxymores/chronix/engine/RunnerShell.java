@@ -50,19 +50,18 @@ public final class RunnerShell
 
     }
 
-    // RunnerAgent logger, yes.
-    private static Logger log = LoggerFactory.getLogger(RunnerAgent.class);
-    private static String POWERSHELL_CMD = "powershell.exe", CMD_CMD = "cmd.exe";
+    // RunnerAgent logger, yes. Clearer logs that way.
+    private static final Logger log = LoggerFactory.getLogger(RunnerAgent.class);
 
     public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)
     {
         RunResult res = new RunResult();
         Process p;
         String nl = System.getProperty("line.separator");
-        Pattern pat = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
-        Matcher matcher = pat.matcher("Testing123Testing");
-        String encoding = getEncoding(rd);
-        log.debug("Encoding is " + encoding);
+        Pattern setVarPattern = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
+        Matcher setVarMatcher = setVarPattern.matcher("Testing123Testing");
+        String logFileEncoding = getEncoding(rd);
+        log.debug("Encoding is " + logFileEncoding);
 
         // ///////////////////////////
         // Build command
@@ -87,14 +86,13 @@ public final class RunnerShell
         try
         {
             // Start!
-            log.debug("GO (" + rd.getSubMethod() + ")");
             p = pb.start();
 
             // Read output (err & out), write it to file
-            InputStreamReader isr = new InputStreamReader(p.getInputStream(), encoding);
+            InputStreamReader isr = new InputStreamReader(p.getInputStream(), logFileEncoding);
             br = new BufferedReader(isr);
 
-            String line = null;
+            String line;
             int i = 0;
             LinkedHashMap<Integer, String> endBuffer = new LinkedHashMap<Integer, String>()
             {
@@ -148,12 +146,12 @@ public final class RunnerShell
                 }
 
                 // Analysis: there may be a new variable definition in the line
-                matcher.reset(line);
-                if (matcher.find())
+                setVarMatcher.reset(line);
+                if (setVarMatcher.find())
                 {
-                    log.debug("Key detected :" + matcher.group(1));
-                    log.debug("Value detected :" + matcher.group(2));
-                    res.newEnvVars.put(matcher.group(1), matcher.group(2));
+                    log.debug("Key detected :" + setVarMatcher.group(1));
+                    log.debug("Value detected :" + setVarMatcher.group(2));
+                    res.newEnvVars.put(setVarMatcher.group(1), setVarMatcher.group(2));
                 }
                 line = br.readLine();
             }
@@ -207,13 +205,12 @@ public final class RunnerShell
     private static String getEncoding(RunDescription rd)
     {
         String encoding = System.getProperty("file.encoding");
-        if (rd.getSubMethod().equals(CMD_CMD) || rd.getSubMethod().equals(POWERSHELL_CMD))
+        Constants.SHELL shell = Constants.SHELL.valueOf(rd.getSubMethod());
+        if (shell == Constants.SHELL.POWERSHELL || shell == Constants.SHELL.CMD)
         {
             try
             {
-                encoding = "cp"
-                        + WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
-                                "OEMCP");
+                encoding = "cp" + WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "OEMCP");
             }
             catch (Exception e)
             {
@@ -225,23 +222,38 @@ public final class RunnerShell
 
     private static List<String> buildCommand(RunDescription rd)
     {
-        ArrayList<String> argsStrings = new ArrayList<String>();
+        ArrayList<String> argsStrings = new ArrayList<>();
+        Constants.SHELL shell = Constants.SHELL.valueOf(rd.getSubMethod());
 
-        // First line is the shell name
-        argsStrings.add(rd.getSubMethod());
-
-        // Depending on the shell, we may have to add shell start parameters to allow batch processing (Windows only)
-        if (rd.getSubMethod().equals(CMD_CMD))
+        // Depending on the shell, we may have to add shell start parameters to allow batch processing
+        switch (shell)
         {
-            argsStrings.add("/C");
-        }
-        else if (rd.getSubMethod().equals(POWERSHELL_CMD))
-        {
-            argsStrings.add("-NoLogo");
-            argsStrings.add("-NonInteractive");
-            argsStrings.add("-WindowStyle");
-            argsStrings.add("Hidden");
-            argsStrings.add("-Command");
+            case CMD:
+                argsStrings.add("cmd.exe");
+                argsStrings.add("/C");
+                break;
+            case POWERSHELL:
+                argsStrings.add("powershell.exe");
+                argsStrings.add("-NoLogo");
+                argsStrings.add("-NonInteractive");
+                argsStrings.add("-WindowStyle");
+                argsStrings.add("Hidden");
+                argsStrings.add("-Command");
+                break;
+            case BASH:
+                argsStrings.add("/bin/bash");
+                argsStrings.add("-c");
+                break;
+            case SH:
+                argsStrings.add("/bin/sh");
+                argsStrings.add("-c");
+                break;
+            case KSH:
+                argsStrings.add("/bin/ksh");
+                argsStrings.add("-c");
+                break;
+            default:
+                throw new IllegalArgumentException("unknown shell");
         }
 
         // Then add the command itself

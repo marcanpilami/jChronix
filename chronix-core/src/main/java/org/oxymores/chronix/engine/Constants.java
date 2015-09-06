@@ -41,6 +41,11 @@ public final class Constants
     // RUN METHODS
     public static final String JD_METHOD_SHELL = "Shell";
 
+    public static enum SHELL
+    {
+        POWERSHELL, CMD, BASH, SH, KSH
+    }
+
     // ENV VARS
     public static final String ENV_AUTO_CHR_CALENDAR = "CHR_CALENDAR";
     public static final String ENV_AUTO_CHR_CHR_CALENDARID = "CHR_CALENDARID";

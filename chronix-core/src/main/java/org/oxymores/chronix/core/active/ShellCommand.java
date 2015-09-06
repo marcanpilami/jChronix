@@ -1,11 +1,11 @@
 /**
  * By Marc-Antoine Gouillart, 2012
- * 
- * See the NOTICE file distributed with this work for 
+ *
+ * See the NOTICE file distributed with this work for
  * information regarding copyright ownership.
- * This file is licensed to you under the Apache License, 
- * Version 2.0 (the "License"); you may not use this file 
- * except in compliance with the License. You may obtain 
+ * This file is licensed to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain
  * a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -17,7 +17,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.oxymores.chronix.core.active;
 
 import javax.validation.constraints.NotNull;
@@ -26,6 +25,7 @@ import javax.validation.constraints.Size;
 import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.RunnerManager;
 
 public class ShellCommand extends ActiveNodeBase
@@ -36,7 +36,8 @@ public class ShellCommand extends ActiveNodeBase
     @Size(min = 1, max = 255)
     protected String command;
 
-    protected String shell = "cmd.exe";
+    // If null, we will use the default shell from the ExecutionNode
+    protected Constants.SHELL shell = null;
 
     public String getCommand()
     {
@@ -57,7 +58,7 @@ public class ShellCommand extends ActiveNodeBase
     @Override
     public String getSubActivityMethod()
     {
-        return this.shell;
+        return this.shell.toString();
     }
 
     @Override
@@ -72,12 +73,12 @@ public class ShellCommand extends ActiveNodeBase
         return true;
     }
 
-    public String getShell()
+    public Constants.SHELL getShell()
     {
         return shell;
     }
 
-    public void setShell(String shell)
+    public void setShell(Constants.SHELL shell)
     {
         this.shell = shell;
     }

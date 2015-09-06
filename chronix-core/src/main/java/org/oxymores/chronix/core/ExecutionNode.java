@@ -24,6 +24,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
+import org.oxymores.chronix.engine.Constants;
 
 @ExecutionNodeIsolation
 public class ExecutionNode extends EnvironmentObject
@@ -33,9 +34,10 @@ public class ExecutionNode extends EnvironmentObject
     private Integer wsPort = 1790;
     private Integer jmxRegistryPort = 1788;
     private Integer jmxServerPort = 1789;
+    @NotNull
+    private Constants.SHELL defaultShell = Constants.SHELL.POWERSHELL;
 
     private List<ExecutionNodeConnection> connectsTo;
-
     private List<ExecutionNodeConnection> connectionParameters;
     private List<Place> placesHosted; //TODO: still used?
     private ExecutionNode computingNode = null;
@@ -228,5 +230,15 @@ public class ExecutionNode extends EnvironmentObject
     public void setY(Integer y)
     {
         this.y = y;
+    }
+
+    public Constants.SHELL getDefaultShell()
+    {
+        return defaultShell;
+    }
+
+    public void setDefaultShell(Constants.SHELL defaultShell)
+    {
+        this.defaultShell = defaultShell;
     }
 }

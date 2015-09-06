@@ -41,6 +41,7 @@ public class ShellParameter extends Parameter
         RunDescription rd = new RunDescription();
         rd.setCommand(this.value);
         rd.setMethod(Constants.JD_METHOD_SHELL);
+        rd.setSubMethod(pj.getPlace(ctx).getNode().getDefaultShell().toString());
         rd.setHelperExecRequest(true);
 
         try

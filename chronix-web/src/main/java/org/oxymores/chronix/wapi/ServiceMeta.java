@@ -33,7 +33,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import net.fortuna.ical4j.model.Period;
@@ -59,6 +58,7 @@ import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTORRule;
 import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
+import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.oxymores.chronix.planbuilder.DemoApplication;
@@ -74,7 +74,7 @@ public class ServiceMeta
 
     private static final Logger log = LoggerFactory.getLogger(ServiceMeta.class);
 
-    private RestApplication restApp;
+    private final RestApplication restApp;
 
     ServiceMeta(RestApplication a)
     {
@@ -269,18 +269,18 @@ public class ServiceMeta
         External ex = PlanBuilder.buildExternal(a, "External");
         Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
         ck1.setDURATION(0);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand("powershell.exe", a, "echooooooo bb", "bb", "should display 'bb'");
-        ShellCommand sc3 = PlanBuilder.buildShellCommand("powershell.exe", a, "echo fin", "FIN", "should display 'fin'");
+        ShellCommand sc1 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        ShellCommand sc2 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echooooooo bb", "bb", "should display 'bb'");
+        ShellCommand sc3 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo fin", "FIN", "should display 'fin'");
 
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand("powershell.exe", a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
 
         PlanBuilder.buildExternal(a, "file 1", "/tmp/meuh.txt");
         PlanBuilder.buildRRuleMinutes(a, 10);
