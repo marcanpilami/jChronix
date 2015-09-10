@@ -59,8 +59,6 @@ public class Clock extends ActiveNodeBase
     private static final Logger log = LoggerFactory.getLogger(Clock.class);
     private static final String LOG_DATE_FORMAT = "dd/MM/YYYY hh:mm:ss";
 
-    org.joda.time.DateTime created;
-
     // Validity in minutes. Should always be 0 here.
     @Range(min = 0, max = 0)
     int duration = 0;
@@ -80,9 +78,6 @@ public class Clock extends ActiveNodeBase
     {
         rulesADD = new ArrayList<>();
         rulesEXC = new ArrayList<>();
-        created = org.joda.time.DateTime.now();
-        created = created.minusMillis(created.getMillisOfSecond());
-        created = created.minusSeconds(created.getSecondOfMinute());
     }
 
     private PipelineJob getHelperPj()
@@ -150,11 +145,6 @@ public class Clock extends ActiveNodeBase
     public void setDURATION(int dURATION)
     {
         duration = dURATION;
-    }
-
-    public org.joda.time.DateTime getCREATED()
-    {
-        return created;
     }
 
     public List<ClockRRule> getRulesADD()
