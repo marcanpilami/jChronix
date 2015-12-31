@@ -34,8 +34,8 @@ import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
-import org.oxymores.chronix.engine.data.RunDescription;
-import org.oxymores.chronix.engine.data.RunResult;
+import org.oxymores.chronix.engine.modularity.runner.RunDescription;
+import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.sql2o.Connection;
 
 public class PipelineJob extends TranscientBase

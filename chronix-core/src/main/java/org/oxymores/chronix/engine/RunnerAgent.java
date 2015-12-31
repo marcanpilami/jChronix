@@ -36,8 +36,9 @@ import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.oxymores.chronix.engine.data.RunDescription;
-import org.oxymores.chronix.engine.data.RunResult;
+import org.oxymores.chronix.engine.modularity.runner.RunDescription;
+import org.oxymores.chronix.engine.modularity.runner.RunResult;
+import org.oxymores.chronix.engine.modularity.runner.RunnerShell;
 import org.slf4j.LoggerFactory;
 
 class RunnerAgent extends BaseListener
@@ -120,15 +121,18 @@ class RunnerAgent extends BaseListener
                 jmsRollback();
                 return;
             }
-            logFileName = String.format("%s_%s_%s_%s.log", start.toString(JODA_FILE_FORMATTER), rd.getPlaceName().replace(" ", "-"), rd
-                    .getActiveSourceName().replace(" ", "-"), rd.getId1());
+            logFileName = String.format("%s_%s_%s_%s.log", start.toString(JODA_FILE_FORMATTER), rd.getPlaceName().replace(" ", "-"),
+                    rd.getActiveSourceName().replace(" ", "-"), rd.getId1());
             logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
         }
+        rd.setLogFilePath(logFilePath);
 
         // Run the command according to its method
         if (rd.getMethod().equals(Constants.JD_METHOD_SHELL))
         {
-            res = RunnerShell.run(rd, logFilePath, !rd.getHelperExecRequest(), rd.getShouldSendLogFile());
+            rd.setStoreLogFile(!rd.getHelperExecRequest());
+            rd.setReturnFullerLog(rd.getShouldSendLogFile());
+            res = (new RunnerShell()).run(rd);
         }
         else
         {
@@ -174,7 +178,8 @@ class RunnerAgent extends BaseListener
                 }
                 else
                 {
-                    log.warn("A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
+                    log.warn(
+                            "A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
                 }
             }
             catch (JMSException | IOException e1)

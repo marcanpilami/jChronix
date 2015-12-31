@@ -27,7 +27,7 @@ import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.RunnerManager;
-import org.oxymores.chronix.engine.data.RunDescription;
+import org.oxymores.chronix.engine.modularity.runner.RunDescription;
 import org.slf4j.LoggerFactory;
 
 public class ShellParameter extends Parameter

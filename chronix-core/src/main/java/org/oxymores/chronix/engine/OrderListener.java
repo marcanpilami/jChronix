@@ -40,10 +40,10 @@ import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.helpers.Order;
 import org.oxymores.chronix.engine.helpers.OrderType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 

@@ -46,8 +46,8 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.data.RunDescription;
 import org.oxymores.chronix.engine.data.TokenRequest;
+import org.oxymores.chronix.engine.modularity.runner.RunDescription;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.slf4j.LoggerFactory;
 

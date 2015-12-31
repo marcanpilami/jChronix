@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.engine.data;
+package org.oxymores.chronix.engine.modularity.runner;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -30,18 +30,23 @@ public class RunDescription implements Serializable
 {
     private static final long serialVersionUID = -7603747840000703435L;
 
-    private String reportToQueueName;
     private String command;
     private List<String> paramNames = new ArrayList<>();
     private List<String> paramValues = new ArrayList<>();
     private List<String> envNames = new ArrayList<>();
     private List<String> envValues = new ArrayList<>();
 
-    private Boolean helperExecRequest = false;
-    private Boolean shouldSendLogFile = false;
-
     private String method = Constants.JD_METHOD_SHELL;
     private String subMethod = "powershell.exe";
+
+    private Boolean helperExecRequest = false;
+    private String reportToQueueName;
+
+    // Log stuff
+    private String logFilePath;
+    private boolean storeLogFile = true;
+    private boolean returnFullerLog = true;
+    private Boolean shouldSendLogFile = false;
 
     // Helper for log file naming
     private String placeName = "";
@@ -226,5 +231,35 @@ public class RunDescription implements Serializable
     public void setOutOfPlan(Boolean outOfPlan)
     {
         this.outOfPlan = outOfPlan;
+    }
+
+    public String getLogFilePath()
+    {
+        return logFilePath;
+    }
+
+    public void setLogFilePath(String logFilePath)
+    {
+        this.logFilePath = logFilePath;
+    }
+
+    public boolean isStoreLogFile()
+    {
+        return storeLogFile;
+    }
+
+    public void setStoreLogFile(boolean storeLogFile)
+    {
+        this.storeLogFile = storeLogFile;
+    }
+
+    public boolean isReturnFullerLog()
+    {
+        return returnFullerLog;
+    }
+
+    public void setReturnFullerLog(boolean returnFullerLog)
+    {
+        this.returnFullerLog = returnFullerLog;
     }
 }

@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.engine.modularity.runner;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,22 +38,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.oxymores.chronix.engine.Constants;
+import org.oxymores.chronix.engine.WinRegistry;
 import org.slf4j.Logger;
-import org.oxymores.chronix.engine.data.RunDescription;
-import org.oxymores.chronix.engine.data.RunResult;
 import org.slf4j.LoggerFactory;
 
-public final class RunnerShell
+public final class RunnerShell implements RunnerApi
 {
-    private RunnerShell()
-    {
+    private static final Logger log = LoggerFactory.getLogger(RunnerShell.class);
 
-    }
-
-    // RunnerAgent logger, yes. Clearer logs that way.
-    private static final Logger log = LoggerFactory.getLogger(RunnerAgent.class);
-
-    public static RunResult run(RunDescription rd, String logFilePath, boolean storeLogFile, boolean returnFullerLog)
+    public RunResult run(RunDescription rd)
     {
         RunResult res = new RunResult();
         Process p;
@@ -105,9 +99,9 @@ public final class RunnerShell
                 }
             };
 
-            if (storeLogFile)
+            if (rd.isStoreLogFile())
             {
-                output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFilePath), "UTF-8"));
+                output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rd.getLogFilePath()), "UTF-8"));
             }
             line = br.readLine();
             while (line != null)
@@ -115,7 +109,7 @@ public final class RunnerShell
                 i++;
 
                 // Local log file gets all lines
-                if (storeLogFile)
+                if (rd.isStoreLogFile())
                 {
                     output.write(line + nl);
                 }
@@ -133,7 +127,7 @@ public final class RunnerShell
                 }
 
                 // Fuller log gets first 10k lines, then last 1k lines.
-                if (returnFullerLog)
+                if (rd.isReturnFullerLog())
                 {
                     if (i < Constants.MAX_RETURNED_BIG_LOG_LINES)
                     {
@@ -158,21 +152,21 @@ public final class RunnerShell
             IOUtils.closeQuietly(br);
 
             if (i > Constants.MAX_RETURNED_BIG_LOG_LINES
-                    && i < Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && returnFullerLog)
+                    && i < Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
             {
                 res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
             }
-            if (i >= Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && returnFullerLog)
+            if (i >= Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
             {
                 res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
                         + Arrays.toString(endBuffer.entrySet().toArray());
             }
 
             // Done: close log file
-            if (storeLogFile)
+            if (rd.isStoreLogFile())
             {
                 IOUtils.closeQuietly(output);
-                File f = new File(logFilePath);
+                File f = new File(rd.getLogFilePath());
                 res.logSizeBytes = f.length();
             }
         }
@@ -188,7 +182,7 @@ public final class RunnerShell
 
         // Return
         res.returnCode = p.exitValue();
-        res.logPath = logFilePath;
+        res.logPath = rd.getLogFilePath();
         res.envtUser = System.getProperty("user.name");
         try
         {
@@ -210,7 +204,8 @@ public final class RunnerShell
         {
             try
             {
-                encoding = "cp" + WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "OEMCP");
+                encoding = "cp" + WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
+                        "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "OEMCP");
             }
             catch (Exception e)
             {
@@ -228,32 +223,32 @@ public final class RunnerShell
         // Depending on the shell, we may have to add shell start parameters to allow batch processing
         switch (shell)
         {
-            case CMD:
-                argsStrings.add("cmd.exe");
-                argsStrings.add("/C");
-                break;
-            case POWERSHELL:
-                argsStrings.add("powershell.exe");
-                argsStrings.add("-NoLogo");
-                argsStrings.add("-NonInteractive");
-                argsStrings.add("-WindowStyle");
-                argsStrings.add("Hidden");
-                argsStrings.add("-Command");
-                break;
-            case BASH:
-                argsStrings.add("/bin/bash");
-                argsStrings.add("-c");
-                break;
-            case SH:
-                argsStrings.add("/bin/sh");
-                argsStrings.add("-c");
-                break;
-            case KSH:
-                argsStrings.add("/bin/ksh");
-                argsStrings.add("-c");
-                break;
-            default:
-                throw new IllegalArgumentException("unknown shell");
+        case CMD:
+            argsStrings.add("cmd.exe");
+            argsStrings.add("/C");
+            break;
+        case POWERSHELL:
+            argsStrings.add("powershell.exe");
+            argsStrings.add("-NoLogo");
+            argsStrings.add("-NonInteractive");
+            argsStrings.add("-WindowStyle");
+            argsStrings.add("Hidden");
+            argsStrings.add("-Command");
+            break;
+        case BASH:
+            argsStrings.add("/bin/bash");
+            argsStrings.add("-c");
+            break;
+        case SH:
+            argsStrings.add("/bin/sh");
+            argsStrings.add("-c");
+            break;
+        case KSH:
+            argsStrings.add("/bin/ksh");
+            argsStrings.add("-c");
+            break;
+        default:
+            throw new IllegalArgumentException("unknown shell");
         }
 
         // Then add the command itself

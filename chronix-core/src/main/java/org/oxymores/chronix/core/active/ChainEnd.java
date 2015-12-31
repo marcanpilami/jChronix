@@ -30,7 +30,7 @@ import org.oxymores.chronix.core.ActiveNodeBase;
 import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.data.RunResult;
+import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
