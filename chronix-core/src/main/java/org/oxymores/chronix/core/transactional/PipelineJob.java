@@ -240,17 +240,7 @@ public class PipelineJob extends TranscientBase
         }
 
         // Execution method is determined by the source
-        rd.setMethod(this.getActive(ctx).getActivityMethod());
-        if (rd.getMethod().equals("Shell"))
-        {
-            rd.setSubMethod(this.getActive(ctx).getSubActivityMethod() == null
-                    ? this.getPlace(ctx).getNode().getDefaultShell().toString()
-                    : this.getActive(ctx).getSubActivityMethod());
-        }
-        else
-        {
-            rd.setSubMethod(this.getActive(ctx).getSubActivityMethod());
-        }
+        rd.setRunPlugin(this.getActive(ctx).getPlugin());
 
         // Run description is complete, on to the actual execution!
         return rd;
@@ -378,10 +368,11 @@ public class PipelineJob extends TranscientBase
 
     public void insertOrUpdate(Connection conn)
     {
-        int i = conn.createQuery("UPDATE PipelineJob SET beganRunningAt=:beganRunningAt, enteredPipeAt=:enteredPipeAt"
-                + ", killAt=:killAt, markedForRunAt=:markedForRunAt, mustLaunchBefore=:mustLaunchBefore"
-                + ", outOfPlan=:outOfPlan, resultCode=:resultCode, runThis=:runThis, status=:status"
-                + ", stoppedRunningAt=:stoppedRunningAt, warnNotEndedAt=:warnNotEndedAt WHERE id=:id")
+        int i = conn
+                .createQuery("UPDATE PipelineJob SET beganRunningAt=:beganRunningAt, enteredPipeAt=:enteredPipeAt"
+                        + ", killAt=:killAt, markedForRunAt=:markedForRunAt, mustLaunchBefore=:mustLaunchBefore"
+                        + ", outOfPlan=:outOfPlan, resultCode=:resultCode, runThis=:runThis, status=:status"
+                        + ", stoppedRunningAt=:stoppedRunningAt, warnNotEndedAt=:warnNotEndedAt WHERE id=:id")
                 .bind(this).executeUpdate().getResult();
         if (i == 0)
         {
@@ -389,8 +380,7 @@ public class PipelineJob extends TranscientBase
                     + "mustLaunchBefore, outOfPlan, resultCode, runThis, status, stoppedRunningAt, "
                     + "warnNotEndedAt, activeId, appId, calendarID, calendarOccurrenceID, createdAt,"
                     + "ignoreCalendarUpdating, level0Id, level1Id, level2Id, level3Id, outsideChainLaunch, placeId,"
-                    + "simulationID, stateID, virtualTime) "
-                    + "VALUES(:id, :beganRunningAt, :enteredPipeAt, :killAt, :markedForRunAt, "
+                    + "simulationID, stateID, virtualTime) " + "VALUES(:id, :beganRunningAt, :enteredPipeAt, :killAt, :markedForRunAt, "
                     + ":mustLaunchBefore, :outOfPlan, :resultCode, :runThis, :status, :stoppedRunningAt, "
                     + ":warnNotEndedAt, :activeID, :appID, :calendarID, :calendarOccurrenceID, :createdAt,"
                     + ":ignoreCalendarUpdating, :level0Id, :level1Id, :level2Id, :level3Id, :outsideChainLaunch, :placeID,"

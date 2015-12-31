@@ -24,7 +24,6 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Range;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
-import org.oxymores.chronix.engine.Constants;
 
 @ExecutionNodeIsolation
 public class ExecutionNode extends EnvironmentObject
@@ -34,12 +33,10 @@ public class ExecutionNode extends EnvironmentObject
     private Integer wsPort = 1790;
     private Integer jmxRegistryPort = 1788;
     private Integer jmxServerPort = 1789;
-    @NotNull
-    private Constants.SHELL defaultShell = Constants.SHELL.POWERSHELL;
 
     private List<ExecutionNodeConnection> connectsTo;
     private List<ExecutionNodeConnection> connectionParameters;
-    private List<Place> placesHosted; //TODO: still used?
+    private List<Place> placesHosted; // TODO: still used?
     private ExecutionNode computingNode = null;
 
     @NotNull
@@ -109,7 +106,8 @@ public class ExecutionNode extends EnvironmentObject
         List<T> prms = target.getConnectionParameters(connectionType);
         if (prms.size() != 1)
         {
-            throw new IllegalArgumentException("using the short form of connect requires the target to have one and only one connection method of the given type");
+            throw new IllegalArgumentException(
+                    "using the short form of connect requires the target to have one and only one connection method of the given type");
         }
         this.getConnectsTo().add((ExecutionNodeConnection) prms.get(0));
     }
@@ -230,15 +228,5 @@ public class ExecutionNode extends EnvironmentObject
     public void setY(Integer y)
     {
         this.y = y;
-    }
-
-    public Constants.SHELL getDefaultShell()
-    {
-        return defaultShell;
-    }
-
-    public void setDefaultShell(Constants.SHELL defaultShell)
-    {
-        this.defaultShell = defaultShell;
     }
 }

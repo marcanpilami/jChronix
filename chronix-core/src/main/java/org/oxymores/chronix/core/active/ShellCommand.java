@@ -35,9 +35,7 @@ public class ShellCommand extends ActiveNodeBase
     @NotNull
     @Size(min = 1, max = 255)
     protected String command;
-
-    // If null, we will use the default shell from the ExecutionNode
-    protected Constants.SHELL shell = null;
+    protected String plugin = Constants.PLUGIN_RUNNER_POWERSHELL;
 
     public String getCommand()
     {
@@ -47,18 +45,6 @@ public class ShellCommand extends ActiveNodeBase
     public void setCommand(String command)
     {
         this.command = command;
-    }
-
-    @Override
-    public String getActivityMethod()
-    {
-        return "Shell";
-    }
-
-    @Override
-    public String getSubActivityMethod()
-    {
-        return this.shell.toString();
     }
 
     @Override
@@ -73,13 +59,13 @@ public class ShellCommand extends ActiveNodeBase
         return true;
     }
 
-    public Constants.SHELL getShell()
+    public String getPlugin()
     {
-        return shell;
+        return this.plugin;
     }
 
-    public void setShell(Constants.SHELL shell)
+    public void setPlugin(String plugin)
     {
-        this.shell = shell;
+        this.plugin = plugin;
     }
 }

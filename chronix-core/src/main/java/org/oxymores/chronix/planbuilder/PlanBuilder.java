@@ -219,16 +219,23 @@ public final class PlanBuilder
 
     public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
     {
-        return buildShellCommand(Constants.SHELL.CMD, a, command, name, description, prmsandvalues);
+        return buildShellCommand(Constants.PLUGIN_RUNNER_CMD, a, command, name, description, prmsandvalues);
     }
 
-    public static ShellCommand buildShellCommand(Constants.SHELL shell, Application a, String command, String name, String description, String... prmsandvalues)
+    public static ShellCommand buildPowerShellCommand(Application a, String command, String name, String description,
+            String... prmsandvalues)
+    {
+        return buildShellCommand(Constants.PLUGIN_RUNNER_POWERSHELL, a, command, name, description, prmsandvalues);
+    }
+
+    public static ShellCommand buildShellCommand(String plugin, Application a, String command, String name, String description,
+            String... prmsandvalues)
     {
         ShellCommand sc1 = new ShellCommand();
         sc1.setCommand(command);
         sc1.setDescription(description);
         sc1.setName(name);
-        sc1.setShell(shell);
+        sc1.setPlugin(plugin);
         a.addActiveElement(sc1);
 
         for (int i = 0; i < prmsandvalues.length / 2; i++)

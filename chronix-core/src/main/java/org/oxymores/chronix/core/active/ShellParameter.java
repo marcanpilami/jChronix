@@ -35,13 +35,14 @@ public class ShellParameter extends Parameter
     private static final long serialVersionUID = 7528888158440570804L;
     private static final Logger log = LoggerFactory.getLogger(ShellParameter.class);
 
+    private String plugin = Constants.PLUGIN_RUNNER_POWERSHELL;
+
     @Override
     public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         RunDescription rd = new RunDescription();
         rd.setCommand(this.value);
-        rd.setMethod(Constants.JD_METHOD_SHELL);
-        rd.setSubMethod(pj.getPlace(ctx).getNode().getDefaultShell().toString());
+        rd.setRunPlugin(plugin);
         rd.setHelperExecRequest(true);
 
         try
@@ -52,5 +53,15 @@ public class ShellParameter extends Parameter
         {
             log.error("Could not ask for parameter resolution due to a communication issue. No retry wil be attempted.", e);
         }
+    }
+
+    public String getPlugin()
+    {
+        return plugin;
+    }
+
+    public void setPlugin(String plugin)
+    {
+        this.plugin = plugin;
     }
 }

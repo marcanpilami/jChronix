@@ -180,7 +180,8 @@ public class ActiveNodeBase extends NamedApplicationObject
                         if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId()))
                         {
                             CalendarDay cd1 = tr.stateTo.getCalendar().getDay(e.getCalendarOccurrenceID());
-                            CalendarDay cd2 = tr.stateTo.getCalendar().getDay(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId());
+                            CalendarDay cd2 = tr.stateTo.getCalendar()
+                                    .getDay(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId());
                             log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)",
                                     cd1.seq, cd2.seq));
                             continue;
@@ -274,9 +275,9 @@ public class ActiveNodeBase extends NamedApplicationObject
         // Go
         if (!places.isEmpty())
         {
-            log.debug(String
-                    .format("State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
-                            s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
+            log.debug(String.format(
+                    "State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
+                    s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
 
             s.consumeEvents(res.consumedEvents, places, conn);
             for (Place p : places)
@@ -320,7 +321,8 @@ public class ActiveNodeBase extends NamedApplicationObject
     // Supposed to do local operations only.
     // Used by active nodes which influence the scheduling itself rather than run a payload.
     // Not called within an open JPA transaction - if you open one, close it!
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession, DateTime virtualTime)
+    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession,
+            DateTime virtualTime)
     {
         // Do nothing by default.
     }
@@ -352,14 +354,14 @@ public class ActiveNodeBase extends NamedApplicationObject
     // Flags (engine and runner)
     // How should the runner agent run this source? (shell command, sql through
     // JDBC, ...)
-    public String getActivityMethod()
-    {
-        return "None";
-    }
 
-    public String getSubActivityMethod()
+    /**
+     * The name of the OSGI plugin which to load to run this active event source. Null if none (i.e. no need for plugin - this source is an
+     * internal engine source)
+     */
+    public String getPlugin()
     {
-        return "None";
+        return null;
     }
 
     // Should it be run by a runner agent?

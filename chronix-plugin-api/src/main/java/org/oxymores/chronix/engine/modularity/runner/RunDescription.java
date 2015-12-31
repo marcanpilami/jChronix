@@ -24,20 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.engine.Constants;
-
 public class RunDescription implements Serializable
 {
     private static final long serialVersionUID = -7603747840000703435L;
+
+    private String runPlugin;
 
     private String command;
     private List<String> paramNames = new ArrayList<>();
     private List<String> paramValues = new ArrayList<>();
     private List<String> envNames = new ArrayList<>();
     private List<String> envValues = new ArrayList<>();
-
-    private String method = Constants.JD_METHOD_SHELL;
-    private String subMethod = "powershell.exe";
 
     private Boolean helperExecRequest = false;
     private String reportToQueueName;
@@ -153,24 +150,14 @@ public class RunDescription implements Serializable
         this.shouldSendLogFile = shouldSendLogFile;
     }
 
-    public String getMethod()
+    public String getRunPlugin()
     {
-        return method;
+        return runPlugin;
     }
 
-    public void setMethod(String method)
+    public void setRunPlugin(String plugin)
     {
-        this.method = method;
-    }
-
-    public String getSubMethod()
-    {
-        return subMethod;
-    }
-
-    public void setSubMethod(String subMethod)
-    {
-        this.subMethod = subMethod;
+        this.runPlugin = plugin;
     }
 
     public String getPlaceName()

@@ -1,81 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.oxymores.chronix</groupId>
-    <artifactId>chronix-parent</artifactId>
-    <version>0.9.2-SNAPSHOT</version>
-    <packaging>pom</packaging>
+	<groupId>org.oxymores.chronix</groupId>
+	<artifactId>chronix-parent</artifactId>
+	<version>0.9.2-SNAPSHOT</version>
+	<packaging>pom</packaging>
 
-    <name>chronix-parent</name>
-    <url>http://www.oxymores.org</url>
+	<name>chronix-parent</name>
+	<url>http://www.oxymores.org</url>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <slf4j.version>1.7.12</slf4j.version>
-    </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<slf4j.version>1.7.12</slf4j.version>
+		<junit.version></junit.version>
+		<joda.version>2.8.1</joda.version>
+		<commonio.version>2.4</commonio.version>
+	</properties>
 
-    <scm>
-        <developerConnection>scm:git:git@github.com:marcanpilami/jChronix.git</developerConnection>
-        <connection>scm:git:https://github.com/marcanpilami/jChronix.git</connection>
-        <url>https://github.com/marcanpilami/jChronix</url>
-        <tag>HEAD</tag>
-    </scm>
+	<scm>
+		<developerConnection>scm:git:git@github.com:marcanpilami/jChronix.git</developerConnection>
+		<connection>scm:git:https://github.com/marcanpilami/jChronix.git</connection>
+		<url>https://github.com/marcanpilami/jChronix</url>
+		<tag>HEAD</tag>
+	</scm>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.2</version>
-                <configuration>
-                    <!-- Only use local Git repository, push will be manual -->
-                    <localCheckout>true</localCheckout>
-                    <pushChanges>false</pushChanges>
-                    <!-- Only install - no pushing to a Maven repository (default is deploy) -->
-                    <goals>install</goals>
-                </configuration>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.2</version>
+				<configuration>
+					<!-- Only use local Git repository, push will be manual -->
+					<localCheckout>true</localCheckout>
+					<pushChanges>false</pushChanges>
+					<!-- Only install - no pushing to a Maven repository (default is deploy) -->
+					<goals>install</goals>
+				</configuration>
+			</plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.18.1</version>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+			</plugin>
 
-        </plugins>
-    </build>
+		</plugins>
+	</build>
 
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+	</dependencies>
 
-    <modules>
-        <module>chronix-doc</module>
-        <module>chronix-core</module>
-        <module>chronix-web</module>
-        <module>chronix-launcher</module>
-        <module>chronix-cli</module>
-    </modules>
+	<modules>
+		<module>chronix-doc</module>
+		<module>chronix-core</module>
+		<module>chronix-web</module>
+		<module>chronix-launcher</module>
+		<module>chronix-cli</module>
+		<module>chronix-plugin-api</module>
+		<module>chronix-runner-shell</module>
+	</modules>
 </project>

@@ -26,25 +26,11 @@ public final class Constants
     public static final int TOKEN_RENEWAL_MN = 5;
     public static final int TOKEN_AUTO_RENEWAL_LOOP_PERIOD_S = 60;
 
-    // RUNNER AGENT
-    public static final int MAX_RETURNED_SMALL_LOG_LINES = 500;
-    public static final int MAX_RETURNED_SMALL_LOG_CHARACTERS = 10000;
-    public static final int MAX_RETURNED_BIG_LOG_LINES = 10000;
-    public static final int MAX_RETURNED_BIG_LOG_END_LINES = 100;
-
     // STATUS
     public static final String JI_STATUS_OVERRIDEN = "OVERRIDEN";
     public static final String JI_STATUS_DONE = "DONE";
     public static final String JI_STATUS_RUNNING = "RUNNING";
     public static final String JI_STATUS_CHECK_SYNC_CONDS = "CHECK_SYNC_CONDS";
-
-    // RUN METHODS
-    public static final String JD_METHOD_SHELL = "Shell";
-
-    public static enum SHELL
-    {
-        POWERSHELL, CMD, BASH, SH, KSH
-    }
 
     // ENV VARS
     public static final String ENV_AUTO_CHR_CALENDAR = "CHR_CALENDAR";
@@ -64,4 +50,8 @@ public final class Constants
     public static final String Q_RUNNERMGR = "Q.%s.RUNNERMGR";
     public static final String Q_META = "Q.%s.APPLICATION";
     public static final String Q_BOOTSTRAP = "Q.CONSOLE.BOOTSTRAP";
+
+    // WELL-KNOWN PLUGINS, FOR DEFAULT VALUES
+    public static final String PLUGIN_RUNNER_POWERSHELL = "org.oxymores.chronix.runner.shell.powershell";
+    public static final String PLUGIN_RUNNER_CMD = "org.oxymores.chronix.runner.shell.wincmd";
 }

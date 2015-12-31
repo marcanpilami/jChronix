@@ -38,8 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.WinRegistry;
+import org.oxymores.chronix.engine.modularity.runner.WinRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +94,7 @@ public final class RunnerShell implements RunnerApi
                 @Override
                 protected boolean removeEldestEntry(java.util.Map.Entry<Integer, String> eldest)
                 {
-                    return this.size() > Constants.MAX_RETURNED_BIG_LOG_END_LINES;
+                    return this.size() > RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES;
                 }
             };
 
@@ -115,7 +114,8 @@ public final class RunnerShell implements RunnerApi
                 }
 
                 // Small log gets first 500 lines or 10000 characters (the smaller of the two)
-                if (i < Constants.MAX_RETURNED_SMALL_LOG_LINES && res.logStart.length() < Constants.MAX_RETURNED_SMALL_LOG_CHARACTERS)
+                if (i < RunnerConstants.MAX_RETURNED_SMALL_LOG_LINES
+                        && res.logStart.length() < RunnerConstants.MAX_RETURNED_SMALL_LOG_CHARACTERS)
                 {
                     res.logStart += nl + line;
                 }
@@ -129,7 +129,7 @@ public final class RunnerShell implements RunnerApi
                 // Fuller log gets first 10k lines, then last 1k lines.
                 if (rd.isReturnFullerLog())
                 {
-                    if (i < Constants.MAX_RETURNED_BIG_LOG_LINES)
+                    if (i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES)
                     {
                         res.fullerLog += line;
                     }
@@ -151,12 +151,13 @@ public final class RunnerShell implements RunnerApi
             }
             IOUtils.closeQuietly(br);
 
-            if (i > Constants.MAX_RETURNED_BIG_LOG_LINES
-                    && i < Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
+            if (i > RunnerConstants.MAX_RETURNED_BIG_LOG_LINES
+                    && i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES
+                    && rd.isReturnFullerLog())
             {
                 res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
             }
-            if (i >= Constants.MAX_RETURNED_BIG_LOG_LINES + Constants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
+            if (i >= RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
             {
                 res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
                         + Arrays.toString(endBuffer.entrySet().toArray());
@@ -199,8 +200,7 @@ public final class RunnerShell implements RunnerApi
     private static String getEncoding(RunDescription rd)
     {
         String encoding = System.getProperty("file.encoding");
-        Constants.SHELL shell = Constants.SHELL.valueOf(rd.getSubMethod());
-        if (shell == Constants.SHELL.POWERSHELL || shell == Constants.SHELL.CMD)
+        if (System.getProperty("os.name").startsWith("Windows"))
         {
             try
             {
@@ -218,16 +218,15 @@ public final class RunnerShell implements RunnerApi
     private static List<String> buildCommand(RunDescription rd)
     {
         ArrayList<String> argsStrings = new ArrayList<>();
-        Constants.SHELL shell = Constants.SHELL.valueOf(rd.getSubMethod());
 
         // Depending on the shell, we may have to add shell start parameters to allow batch processing
-        switch (shell)
+        switch (rd.getRunPlugin())
         {
-        case CMD:
+        case Constants.PLUGIN_WINCMD:
             argsStrings.add("cmd.exe");
             argsStrings.add("/C");
             break;
-        case POWERSHELL:
+        case Constants.PLUGIN_POWERSHELL:
             argsStrings.add("powershell.exe");
             argsStrings.add("-NoLogo");
             argsStrings.add("-NonInteractive");
@@ -235,15 +234,15 @@ public final class RunnerShell implements RunnerApi
             argsStrings.add("Hidden");
             argsStrings.add("-Command");
             break;
-        case BASH:
+        case Constants.PLUGIN_BASH:
             argsStrings.add("/bin/bash");
             argsStrings.add("-c");
             break;
-        case SH:
+        case Constants.PLUGIN_SH:
             argsStrings.add("/bin/sh");
             argsStrings.add("-c");
             break;
-        case KSH:
+        case Constants.PLUGIN_KSH:
             argsStrings.add("/bin/ksh");
             argsStrings.add("-c");
             break;

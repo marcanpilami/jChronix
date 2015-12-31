@@ -269,18 +269,18 @@ public class ServiceMeta
         External ex = PlanBuilder.buildExternal(a, "External");
         Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
         ck1.setDURATION(0);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echooooooo bb", "bb", "should display 'bb'");
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo fin", "FIN", "should display 'fin'");
+        ShellCommand sc1 = PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        ShellCommand sc2 = PlanBuilder.buildPowerShellCommand(a, "echooooooo bb", "bb", "should display 'bb'");
+        ShellCommand sc3 = PlanBuilder.buildPowerShellCommand(a, "echo fin", "FIN", "should display 'fin'");
 
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
-        PlanBuilder.buildShellCommand(Constants.SHELL.POWERSHELL, a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
 
         PlanBuilder.buildExternal(a, "file 1", "/tmp/meuh.txt");
         PlanBuilder.buildRRuleMinutes(a, 10);

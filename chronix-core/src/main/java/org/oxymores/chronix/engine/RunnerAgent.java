@@ -128,7 +128,7 @@ class RunnerAgent extends BaseListener
         rd.setLogFilePath(logFilePath);
 
         // Run the command according to its method
-        if (rd.getMethod().equals(Constants.JD_METHOD_SHELL))
+        if (rd.getRunPlugin().startsWith("org.oxymores.chronix.runner.shell"))
         {
             rd.setStoreLogFile(!rd.getHelperExecRequest());
             rd.setReturnFullerLog(rd.getShouldSendLogFile());
@@ -138,8 +138,8 @@ class RunnerAgent extends BaseListener
         {
             res = new RunResult();
             res.returnCode = -1;
-            res.logStart = String.format("An unimplemented exec method (%s) was called!", rd.getMethod());
-            log.error(String.format("An unimplemented exec method (%s) was called! Job will be failed.", rd.getMethod()));
+            res.logStart = String.format("An unimplemented exec plugin (%s) was called!", rd.getRunPlugin());
+            log.error(String.format("An unimplemented exec plugin (%s) was called! Job will be failed.", rd.getRunPlugin()));
         }
         res.start = start;
         res.end = DateTime.now();
