@@ -12,7 +12,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.oxymores.chronix.core.active.ClockRRule;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.planbuilder.DemoApplication;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 import org.slf4j.LoggerFactory;
@@ -34,15 +34,15 @@ public class AppTest
     @Test
     public void testBasicValidation()
     {
-        ShellCommand sc = new ShellCommand();
+        RunnerCommand sc = new RunnerCommand();
         sc.setDescription("houba hop");
 
-        Set<ConstraintViolation<ShellCommand>> v = validator.validate(sc);
-        for (ConstraintViolation<ShellCommand> violation : v)
+        Set<ConstraintViolation<RunnerCommand>> v = validator.validate(sc);
+        for (ConstraintViolation<RunnerCommand> violation : v)
         {
             log.debug(violation.getLeafBean() + " - " + violation.getPropertyPath() + " - " + violation.getMessage());
         }
-        Assert.assertEquals(3, v.size());
+        Assert.assertEquals(2, v.size());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class AppTest
 
         log.debug("** Validating a cyclic chain");
         Chain c = PlanBuilder.buildChain(a, "test", "description", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo ee", "cmd1", "test cmd");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo ee", "cmd1", "test cmd");
         State s1 = PlanBuilder.buildState(c, pg1, sc1);
         State s2 = PlanBuilder.buildState(c, pg1, sc1);
 
@@ -121,7 +121,7 @@ public class AppTest
         PlaceGroup pg1 = PlanBuilder.buildPlaceGroup(a, "rr", "rr");
 
         Chain c = PlanBuilder.buildChain(a, "test", "description", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo ee", "cmd1", "test cmd");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo ee", "cmd1", "test cmd");
         State s1 = PlanBuilder.buildState(c, pg1, sc1);
         State s2 = PlanBuilder.buildState(c, pg1, sc1);
 

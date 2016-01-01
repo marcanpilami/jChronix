@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.ActiveNodeBase;
@@ -26,7 +27,7 @@ import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.Or;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOCalendar;
@@ -163,14 +164,19 @@ public class CoreToDto
                 res.getClocks().add(getClock(c));
             }
 
-            if (o instanceof ShellCommand)
+            if (o instanceof RunnerCommand)
             {
-                ShellCommand s = (ShellCommand) o;
+                RunnerCommand s = (RunnerCommand) o;
                 DTOShellCommand d = new DTOShellCommand();
                 d.setId(s.getId().toString());
-                d.setCommand(s.getCommand());
                 d.setName(s.getName());
                 d.setDescription(s.getDescription());
+
+                for (Map.Entry<String, String> ep : s.getPluginParameters().entrySet())
+                {
+                    d.getPluginParameters().put(ep.getKey(), ep.getValue());
+                }
+
                 res.getShells().add(d);
             }
 
@@ -831,186 +837,186 @@ public class CoreToDto
         {
             switch (d)
             {
-                case "00":
-                    res.setBn00(true);
-                    break;
-                case "01":
-                    res.setBn01(true);
-                    break;
-                case "02":
-                    res.setBn02(true);
-                    break;
-                case "03":
-                    res.setBn03(true);
-                    break;
-                case "04":
-                    res.setBn04(true);
-                    break;
-                case "05":
-                    res.setBn05(true);
-                    break;
-                case "06":
-                    res.setBn06(true);
-                    break;
-                case "07":
-                    res.setBn07(true);
-                    break;
-                case "08":
-                    res.setBn08(true);
-                    break;
-                case "09":
-                    res.setBn09(true);
-                    break;
-                case "10":
-                    res.setBn10(true);
-                    break;
-                case "11":
-                    res.setBn11(true);
-                    break;
-                case "12":
-                    res.setBn12(true);
-                    break;
-                case "13":
-                    res.setBn13(true);
-                    break;
-                case "14":
-                    res.setBn14(true);
-                    break;
-                case "15":
-                    res.setBn15(true);
-                    break;
-                case "16":
-                    res.setBn16(true);
-                    break;
-                case "17":
-                    res.setBn17(true);
-                    break;
-                case "18":
-                    res.setBn18(true);
-                    break;
-                case "19":
-                    res.setBn19(true);
-                    break;
-                case "20":
-                    res.setBn20(true);
-                    break;
-                case "21":
-                    res.setBn21(true);
-                    break;
-                case "22":
-                    res.setBn22(true);
-                    break;
-                case "23":
-                    res.setBn23(true);
-                    break;
-                case "24":
-                    res.setBn24(true);
-                    break;
-                case "25":
-                    res.setBn25(true);
-                    break;
-                case "26":
-                    res.setBn26(true);
-                    break;
-                case "27":
-                    res.setBn27(true);
-                    break;
-                case "28":
-                    res.setBn28(true);
-                    break;
-                case "29":
-                    res.setBn29(true);
-                    break;
-                case "30":
-                    res.setBn30(true);
-                    break;
-                case "31":
-                    res.setBn31(true);
-                    break;
-                case "32":
-                    res.setBn32(true);
-                    break;
-                case "33":
-                    res.setBn33(true);
-                    break;
-                case "34":
-                    res.setBn34(true);
-                    break;
-                case "35":
-                    res.setBn35(true);
-                    break;
-                case "36":
-                    res.setBn36(true);
-                    break;
-                case "37":
-                    res.setBn37(true);
-                    break;
-                case "38":
-                    res.setBn38(true);
-                    break;
-                case "39":
-                    res.setBn39(true);
-                    break;
-                case "40":
-                    res.setBn40(true);
-                    break;
-                case "41":
-                    res.setBn41(true);
-                    break;
-                case "42":
-                    res.setBn42(true);
-                    break;
-                case "43":
-                    res.setBn43(true);
-                    break;
-                case "44":
-                    res.setBn44(true);
-                    break;
-                case "45":
-                    res.setBn45(true);
-                    break;
-                case "46":
-                    res.setBn46(true);
-                    break;
-                case "47":
-                    res.setBn47(true);
-                    break;
-                case "48":
-                    res.setBn48(true);
-                    break;
-                case "49":
-                    res.setBn49(true);
-                    break;
-                case "50":
-                    res.setBn50(true);
-                    break;
-                case "51":
-                    res.setBn51(true);
-                    break;
-                case "52":
-                    res.setBn52(true);
-                    break;
-                case "53":
-                    res.setBn53(true);
-                    break;
-                case "54":
-                    res.setBn54(true);
-                    break;
-                case "55":
-                    res.setBn55(true);
-                    break;
-                case "56":
-                    res.setBn56(true);
-                    break;
-                case "57":
-                    res.setBn57(true);
-                    break;
-                case "58":
-                    res.setBn58(true);
-                    break;
-                case "59":
-                    res.setBn59(true);
-                    break;
+            case "00":
+                res.setBn00(true);
+                break;
+            case "01":
+                res.setBn01(true);
+                break;
+            case "02":
+                res.setBn02(true);
+                break;
+            case "03":
+                res.setBn03(true);
+                break;
+            case "04":
+                res.setBn04(true);
+                break;
+            case "05":
+                res.setBn05(true);
+                break;
+            case "06":
+                res.setBn06(true);
+                break;
+            case "07":
+                res.setBn07(true);
+                break;
+            case "08":
+                res.setBn08(true);
+                break;
+            case "09":
+                res.setBn09(true);
+                break;
+            case "10":
+                res.setBn10(true);
+                break;
+            case "11":
+                res.setBn11(true);
+                break;
+            case "12":
+                res.setBn12(true);
+                break;
+            case "13":
+                res.setBn13(true);
+                break;
+            case "14":
+                res.setBn14(true);
+                break;
+            case "15":
+                res.setBn15(true);
+                break;
+            case "16":
+                res.setBn16(true);
+                break;
+            case "17":
+                res.setBn17(true);
+                break;
+            case "18":
+                res.setBn18(true);
+                break;
+            case "19":
+                res.setBn19(true);
+                break;
+            case "20":
+                res.setBn20(true);
+                break;
+            case "21":
+                res.setBn21(true);
+                break;
+            case "22":
+                res.setBn22(true);
+                break;
+            case "23":
+                res.setBn23(true);
+                break;
+            case "24":
+                res.setBn24(true);
+                break;
+            case "25":
+                res.setBn25(true);
+                break;
+            case "26":
+                res.setBn26(true);
+                break;
+            case "27":
+                res.setBn27(true);
+                break;
+            case "28":
+                res.setBn28(true);
+                break;
+            case "29":
+                res.setBn29(true);
+                break;
+            case "30":
+                res.setBn30(true);
+                break;
+            case "31":
+                res.setBn31(true);
+                break;
+            case "32":
+                res.setBn32(true);
+                break;
+            case "33":
+                res.setBn33(true);
+                break;
+            case "34":
+                res.setBn34(true);
+                break;
+            case "35":
+                res.setBn35(true);
+                break;
+            case "36":
+                res.setBn36(true);
+                break;
+            case "37":
+                res.setBn37(true);
+                break;
+            case "38":
+                res.setBn38(true);
+                break;
+            case "39":
+                res.setBn39(true);
+                break;
+            case "40":
+                res.setBn40(true);
+                break;
+            case "41":
+                res.setBn41(true);
+                break;
+            case "42":
+                res.setBn42(true);
+                break;
+            case "43":
+                res.setBn43(true);
+                break;
+            case "44":
+                res.setBn44(true);
+                break;
+            case "45":
+                res.setBn45(true);
+                break;
+            case "46":
+                res.setBn46(true);
+                break;
+            case "47":
+                res.setBn47(true);
+                break;
+            case "48":
+                res.setBn48(true);
+                break;
+            case "49":
+                res.setBn49(true);
+                break;
+            case "50":
+                res.setBn50(true);
+                break;
+            case "51":
+                res.setBn51(true);
+                break;
+            case "52":
+                res.setBn52(true);
+                break;
+            case "53":
+                res.setBn53(true);
+                break;
+            case "54":
+                res.setBn54(true);
+                break;
+            case "55":
+                res.setBn55(true);
+                break;
+            case "56":
+                res.setBn56(true);
+                break;
+            case "57":
+                res.setBn57(true);
+                break;
+            case "58":
+                res.setBn58(true);
+                break;
+            case "59":
+                res.setBn59(true);
+                break;
 
             }
         }

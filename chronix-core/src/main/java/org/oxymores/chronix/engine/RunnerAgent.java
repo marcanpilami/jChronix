@@ -98,15 +98,6 @@ class RunnerAgent extends BaseListener
             return;
         }
 
-        if (!rd.getHelperExecRequest())
-        {
-            log.info(String.format("Running command %s", rd.getCommand()));
-        }
-        else
-        {
-            log.debug(String.format("Running helper internal command %s", rd.getCommand()));
-        }
-
         // Log file (only if true run)
         String logFilePath = null;
         String logFileName = null;

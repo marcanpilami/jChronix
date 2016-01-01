@@ -16,7 +16,7 @@ import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -58,7 +58,7 @@ public class TestHostedNode extends TestBase
     {
         // Build a very simple chain
         Chain c1 = PlanBuilder.buildChain(a, "chain fully on hosted node", "simple chain", a.getGroup("hosted node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo oo", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc1);
         c1.getStartState().connectTo(s1);
         s1.connectTo(c1.getEndState());
@@ -85,13 +85,13 @@ public class TestHostedNode extends TestBase
     {
         // Build the test chain
         Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("hosted node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
 
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
         State s2 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc2);
 
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c", "echoc", "c");
+        RunnerCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c", "echoc", "c");
         State s3 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc3);
 
         c1.getStartState().connectTo(s1);
@@ -121,10 +121,10 @@ public class TestHostedNode extends TestBase
     {
         // Build the test chain
         Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("hosted node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
 
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
         State s2 = PlanBuilder.buildState(c1, a.getGroup("hosted node"), sc2);
         State s3 = PlanBuilder.buildStateAND(c1, a.getGroup("master node"));
 

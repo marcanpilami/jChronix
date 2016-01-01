@@ -51,7 +51,7 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
@@ -269,9 +269,9 @@ public class ServiceMeta
         External ex = PlanBuilder.buildExternal(a, "External");
         Clock ck1 = PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1);
         ck1.setDURATION(0);
-        ShellCommand sc1 = PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
-        ShellCommand sc2 = PlanBuilder.buildPowerShellCommand(a, "echooooooo bb", "bb", "should display 'bb'");
-        ShellCommand sc3 = PlanBuilder.buildPowerShellCommand(a, "echo fin", "FIN", "should display 'fin'");
+        RunnerCommand sc1 = PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        RunnerCommand sc2 = PlanBuilder.buildPowerShellCommand(a, "echooooooo bb", "bb", "should display 'bb'");
+        RunnerCommand sc3 = PlanBuilder.buildPowerShellCommand(a, "echo fin", "FIN", "should display 'fin'");
 
         PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
         PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");

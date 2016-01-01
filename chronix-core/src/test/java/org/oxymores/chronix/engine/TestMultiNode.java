@@ -17,7 +17,7 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.NextOccurrence;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.CalendarBuilder;
@@ -103,7 +103,7 @@ public class TestMultiNode extends TestBase
     {
         // Build a very simple chain
         Chain c1 = PlanBuilder.buildChain(a1, "empty chain", "empty chain", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg2, sc1);
         c1.getStartState().connectTo(s1);
         s1.connectTo(c1.getEndState());
@@ -146,7 +146,7 @@ public class TestMultiNode extends TestBase
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain using calendar", "chain2", pg2);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg2, sc1);
         s1.setCalendar(ca);
         s1.setCalendarShift(-1);
@@ -243,13 +243,13 @@ public class TestMultiNode extends TestBase
         Calendar ca = CalendarBuilder.buildWeekDayCalendar(a1, 2500);
 
         Chain c1 = PlanBuilder.buildChain(a1, "AND plus CALENDAR", "chain2", pg2);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo aa", "echo aa", "aa");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo aa", "echo aa", "aa");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo bb", "echo bb", "bb");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a1, "echo bb", "echo bb", "bb");
         State s2 = PlanBuilder.buildState(c1, pg2, sc2);
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(a1, "echo cc", "echo cc", "cc");
+        RunnerCommand sc3 = PlanBuilder.buildShellCommand(a1, "echo cc", "echo cc", "cc");
         State s3 = PlanBuilder.buildState(c1, pg3, sc3);
-        ShellCommand sc4 = PlanBuilder.buildShellCommand(a1, "echo dd", "echo dd", "dd");
+        RunnerCommand sc4 = PlanBuilder.buildShellCommand(a1, "echo dd", "echo dd", "dd");
         State s4 = PlanBuilder.buildState(c1, pg1, sc4);
         State s5 = PlanBuilder.buildStateAND(c1, pg3);
 

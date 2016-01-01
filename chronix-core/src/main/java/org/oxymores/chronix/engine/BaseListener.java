@@ -65,7 +65,7 @@ class BaseListener implements MessageListener
         }
         catch (JMSException e)
         {
-            log.error("failure to commit an event consumption in JMS queue" + qName
+            log.error("failure to commit an event consumption in JMS queue " + qName
                     + ". Scheduler will now abort as it is a dangerous situation. You may need to empty all queues before restarting.", e);
             broker.stop();
         }

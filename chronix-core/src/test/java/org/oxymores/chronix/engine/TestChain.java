@@ -10,7 +10,7 @@ import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -35,7 +35,7 @@ public class TestChain extends TestBase
 
         // First stupid chain
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
 
         c1.getStartState().connectTo(s1);
@@ -72,7 +72,7 @@ public class TestChain extends TestBase
 
         // First stupid chains
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain 1", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         c1.getStartState().connectTo(s1);
         s1.connectTo(c1.getEndState());
@@ -129,7 +129,7 @@ public class TestChain extends TestBase
 
         // First stupid chain
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echo a", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo a", "echo a", "oo");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         s1.setEnabled(false);
 

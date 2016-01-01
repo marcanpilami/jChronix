@@ -13,7 +13,7 @@ import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -85,13 +85,13 @@ public class TestParallelism extends TestBase
 
         // Build a very simple chain
         Chain c1 = PlanBuilder.buildChain(a, "empty chain", "empty chain", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "set", "Display envt", "Will display all env vars");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "set", "Display envt", "Will display all env vars");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:CHR_JOBNAME\"", "Display jobname", "Will display one env vars");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:CHR_JOBNAME\"", "Display jobname", "Will display one env vars");
         State s2 = PlanBuilder.buildState(c1, pg1, sc2);
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo set MARSU=12 54 pohfgh)'", "Set a var", "Will set a new env vars that should be propagated");
+        RunnerCommand sc3 = PlanBuilder.buildShellCommand(a, "echo set MARSU=12 54 pohfgh)'", "Set a var", "Will set a new env vars that should be propagated");
         State s3 = PlanBuilder.buildState(c1, pg1, sc3);
-        ShellCommand sc4 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:MARSU\"", "Display MARSU", "Will display the MARSU env var");
+        RunnerCommand sc4 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo $env:MARSU\"", "Display MARSU", "Will display the MARSU env var");
         State s4 = PlanBuilder.buildState(c1, pg1, sc4);
         State s5 = PlanBuilder.buildState(c1, pg3, sc4);
         c1.getStartState().connectTo(s1);
@@ -151,7 +151,7 @@ public class TestParallelism extends TestBase
     {
         // Build a very simple chain
         Chain c1 = PlanBuilder.buildChain(a, "empty chain", "empty chain", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P21, be OK on other places");
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
         c1.getStartState().connectTo(s1);
@@ -234,9 +234,9 @@ public class TestParallelism extends TestBase
     public void testCaseP1()
     {
         // Build a very simple chain
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
 
         Chain c1 = PlanBuilder.buildChain(a, "chain P1", "chain P1", pg1);
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);
@@ -302,9 +302,9 @@ public class TestParallelism extends TestBase
     public void testCaseP2()
     {
         // Build the test chain
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "Always OK", "Always OK");
 
         Chain c1 = PlanBuilder.buildChain(a, "chain P1", "chain P1", pg1);
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc2, true);
@@ -375,7 +375,7 @@ public class TestParallelism extends TestBase
     @Test
     public void testCaseP5()
     {
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"if ($env:CHR_PLACENAME -eq 'P21') { exit 19 } else {echo 'houba'; exit 0}\"", "Fail on P21",
                 "Will fail with return code 19 on P2, be OK on other places");
         Chain c1 = PlanBuilder.buildChain(a, "chain P1", "chain P1", pg1);
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1);
@@ -490,8 +490,8 @@ public class TestParallelism extends TestBase
     @Test
     public void testCaseP1Prime()
     {
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "A - Always OK", "Always OK");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "B - Always OK", "Always OK");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "A - Always OK", "Always OK");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "powershell.exe -Command \"echo 'job done'\"", "B - Always OK", "Always OK");
 
         Chain c1 = PlanBuilder.buildChain(a, "chain P1", "chain P1", pg1);
         State s1 = PlanBuilder.buildState(c1, groupAllNodes, sc1, true);

@@ -9,7 +9,7 @@ import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
@@ -47,7 +47,7 @@ public class TestPurge extends TestBase
         log.debug("****CREATE PLAN***********************************************************************");
         // A chain that will never be able to finish
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
 
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         State s2 = PlanBuilder.buildState(c1, pg1, sc1);
@@ -84,7 +84,7 @@ public class TestPurge extends TestBase
         log.debug("****CREATE PLAN***********************************************************************");
         // A chain that will never be able to finish
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "echo oo", "echo oo", "oo");
 
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         State s2 = PlanBuilder.buildState(c1, pg1, sc1);

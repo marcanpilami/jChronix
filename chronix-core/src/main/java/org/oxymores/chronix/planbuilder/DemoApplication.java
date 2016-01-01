@@ -34,7 +34,7 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.NextOccurrence;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.active.ShellParameter;
 
 public final class DemoApplication
@@ -90,9 +90,9 @@ public final class DemoApplication
         // //////////////////////////////////////////////////////////////
         // ////////////////////
         // Shell commands
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo", "command 1", "test command 1");
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo c2", "command 2", "test command 2");
-        ShellCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c3", "command 3", "test command 3");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo", "command 1", "test command 1");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo c2", "command 2", "test command 2");
+        RunnerCommand sc3 = PlanBuilder.buildShellCommand(a, "echo c3", "command 3", "test command 3");
 
         // ////////////////////
         // Chains

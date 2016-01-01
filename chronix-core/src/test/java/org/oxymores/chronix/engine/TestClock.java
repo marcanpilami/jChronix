@@ -15,7 +15,7 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
 
@@ -86,7 +86,7 @@ public class TestClock extends TestBase
         ClockRRule rr1 = PlanBuilder.buildRRule10Seconds(a);
         Clock ck1 = PlanBuilder.buildClock(a, "every second", "every second", rr1);
         ck1.setDURATION(1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa", "should display 'aa'");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo aa", "aa", "should display 'aa'");
 
         State s1 = PlanBuilder.buildState(c, pgLocal, ck1);
         State s2 = PlanBuilder.buildState(c, pgLocal, sc1);

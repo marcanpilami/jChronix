@@ -251,7 +251,7 @@ public final class RunnerShell implements RunnerApi
         }
 
         // Then add the command itself
-        argsStrings.add(rd.getCommand());
+        argsStrings.add(rd.getPluginParameters().get("COMMAND"));
 
         // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
         for (int i = 0; i < rd.getParamNames().size(); i++)

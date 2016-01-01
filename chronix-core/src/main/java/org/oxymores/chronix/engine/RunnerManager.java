@@ -60,7 +60,8 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- * <strong>Note: </strong> this class cannot be multi instanciated - there must be only one RunnerManager. Due to parameter resolution cache.
+ * <strong>Note: </strong> this class cannot be multi instanciated - there must be only one RunnerManager. Due to parameter resolution
+ * cache.
  *
  */
 public class RunnerManager extends BaseListener
@@ -296,7 +297,7 @@ public class RunnerManager extends BaseListener
 
         try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
         {
-            j.setRunThis(toRun.getCommandName(j, this, ctx));
+            j.setRunThis(toRun.getName());
             j.setBeganRunningAt(DateTime.now());
             j.insertOrUpdate(conn);
             conn.commit();
@@ -474,11 +475,11 @@ public class RunnerManager extends BaseListener
                 cp.setNextRunOccurrenceCd(next);
             }
             cp.insertOrUpdate(conn);
-            log.debug(String
-                    .format("At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
-                            s.getRepresents().getName(), s.getChain().getName(), cp.getLastEndedOccurrenceCd(ctx).getValue(), cp
-                            .getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), cp
-                            .getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
+            log.debug(String.format(
+                    "At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
+                    s.getRepresents().getName(), s.getChain().getName(), cp.getLastEndedOccurrenceCd(ctx).getValue(),
+                    cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(),
+                    cp.getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
             conn.commit();
         }
     }
@@ -506,7 +507,6 @@ public class RunnerManager extends BaseListener
     {
         // Always send to the node, not its hosting node.
         String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
-        log.info(String.format("A command will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
         Destination destination = jmsSession.createQueue(qName);
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);
@@ -526,7 +526,7 @@ public class RunnerManager extends BaseListener
         // Always send to the node, not its hosting node.
         Place p = pj.getPlace(ctx);
         String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
-        log.info(String.format("A command for parameter resolution will be sent for execution on queue %s (%s)", qName, rd.getCommand()));
+        log.info(String.format("A command for parameter resolution will be sent for execution on queue %s", qName));
         Destination destination = jmsSession.createQueue(qName);
 
         ObjectMessage m = jmsSession.createObjectMessage(rd);

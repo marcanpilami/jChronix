@@ -13,7 +13,7 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
@@ -42,7 +42,7 @@ public class TestSingleNode extends TestBase
         Calendar ca1 = CalendarBuilder.buildWeekDayCalendar(a, 2500);
 
         Chain c1 = PlanBuilder.buildChain(a, "simple chain using calendar", "chain2", a.getGroup("master node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo oo", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo oo", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
         s1.setCalendar(ca1);
         s1.setCalendarShift(-1);
@@ -52,7 +52,7 @@ public class TestSingleNode extends TestBase
         Chain c2 = PlanBuilder.buildChain(a, "advance calendar chain", "chain3", a.getGroup("master node"));
         NextOccurrence no = PlanBuilder.buildNextOccurrence(a, ca1);
         State s2 = PlanBuilder.buildState(c2, a.getGroup("master node"), no);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo ahahaha", "echo hahaha", "oo");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo ahahaha", "echo hahaha", "oo");
         State s3 = PlanBuilder.buildState(c2, a.getGroup("master node"), sc2);
         s3.setCalendar(ca1);
 
@@ -124,9 +124,9 @@ public class TestSingleNode extends TestBase
     {
         // Build the test chain
         Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("master node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
         State s2 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc2);
         State s3 = PlanBuilder.buildStateAND(c1, a.getGroup("master node"));
 
@@ -162,9 +162,9 @@ public class TestSingleNode extends TestBase
 
         // First chain with the AND, with a State blocked by calendar
         Chain c1 = PlanBuilder.buildChain(a, "chain on both nodes", "simple chain", a.getGroup("master node"));
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a, "echo a", "echoa", "a");
         State s1 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc1);
-        ShellCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
+        RunnerCommand sc2 = PlanBuilder.buildShellCommand(a, "echo b", "echob", "b");
         State s2 = PlanBuilder.buildState(c1, a.getGroup("master node"), sc2);
         State s3 = PlanBuilder.buildStateAND(c1, a.getGroup("master node"));
 

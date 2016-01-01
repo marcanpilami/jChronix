@@ -19,53 +19,18 @@
  */
 package org.oxymores.chronix.core.active;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.RunnerManager;
 
-public class ShellCommand extends ActiveNodeBase
+/**
+ * This represents "actual work", i.e. a command run by a plugin inside a Runner.
+ */
+public class RunnerCommand extends ActiveNodeBase
 {
     private static final long serialVersionUID = 3340501935290198518L;
-
-    @NotNull
-    @Size(min = 1, max = 255)
-    protected String command;
-    protected String plugin = Constants.PLUGIN_RUNNER_POWERSHELL;
-
-    public String getCommand()
-    {
-        return command;
-    }
-
-    public void setCommand(String command)
-    {
-        this.command = command;
-    }
-
-    @Override
-    public String getCommandName(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
-    {
-        return this.command;
-    }
 
     @Override
     public boolean hasExternalPayload()
     {
         return true;
-    }
-
-    public String getPlugin()
-    {
-        return this.plugin;
-    }
-
-    public void setPlugin(String plugin)
-    {
-        this.plugin = plugin;
     }
 }

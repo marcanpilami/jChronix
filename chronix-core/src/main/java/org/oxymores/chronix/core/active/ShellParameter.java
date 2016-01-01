@@ -41,7 +41,7 @@ public class ShellParameter extends Parameter
     public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         RunDescription rd = new RunDescription();
-        rd.setCommand(this.value);
+        rd.addPluginParameter("COMMAND", this.value);
         rd.setRunPlugin(plugin);
         rd.setHelperExecRequest(true);
 

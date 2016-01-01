@@ -21,16 +21,21 @@ package org.oxymores.chronix.engine.modularity.runner;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+/**
+ * A property bag containing all the data needed by a Runner plugin to actually run something (shell command, SQL procedure...)
+ */
 public class RunDescription implements Serializable
 {
     private static final long serialVersionUID = -7603747840000703435L;
 
     private String runPlugin;
+    private Map<String, String> pluginParameters = new HashMap<>();
 
-    private String command;
     private List<String> paramNames = new ArrayList<>();
     private List<String> paramValues = new ArrayList<>();
     private List<String> envNames = new ArrayList<>();
@@ -70,6 +75,16 @@ public class RunDescription implements Serializable
         this.envValues.add(value);
     }
 
+    public void addPluginParameter(String key, String value)
+    {
+        this.pluginParameters.put(key, value);
+    }
+
+    public Map<String, String> getPluginParameters()
+    {
+        return this.pluginParameters;
+    }
+
     public String getReportToQueueName()
     {
         return reportToQueueName;
@@ -78,16 +93,6 @@ public class RunDescription implements Serializable
     public void setReportToQueueName(String reportToQueueName)
     {
         this.reportToQueueName = reportToQueueName;
-    }
-
-    public String getCommand()
-    {
-        return command;
-    }
-
-    public void setCommand(String command)
-    {
-        this.command = command;
     }
 
     public List<String> getParamNames()

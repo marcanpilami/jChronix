@@ -20,11 +20,14 @@
 package org.oxymores.chronix.core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
@@ -48,6 +51,11 @@ public class ActiveNodeBase extends NamedApplicationObject
     @NotNull
     protected ArrayList<Parameter> parameters;
 
+    @NotNull
+    protected Map<String, String> pluginParameters = new HashMap<>();
+
+    protected String plugin = null;
+
     public ActiveNodeBase()
     {
         super();
@@ -60,11 +68,23 @@ public class ActiveNodeBase extends NamedApplicationObject
         return String.format("%s (%s)", name, description);
     }
 
-    // Helper function (could be overloaded) returning something intelligible
-    // designating the element that is run by this source
-    public String getCommandName(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
+    /**
+     * The name of the OSGI plugin which to load to run this active event source. Null if none (i.e. no need for plugin - this source is an
+     * internal engine source)
+     */
+    public String getPlugin()
     {
-        return null;
+        return this.plugin;
+    }
+
+    public void setPlugin(String plugin)
+    {
+        this.plugin = plugin;
+    }
+
+    public Map<String, String> getPluginParameters()
+    {
+        return this.pluginParameters;
     }
 
     // stupid get/set
@@ -110,6 +130,12 @@ public class ActiveNodeBase extends NamedApplicationObject
         this.application.addParameter(p);
         addParameter(p);
     }
+
+    public void addPluginParameter(String key, String value)
+    {
+        this.pluginParameters.put(key, value);
+    }
+
     // Parameter handling
     // ////////////////////////////////////////////////////////////////////////////
 
@@ -354,15 +380,6 @@ public class ActiveNodeBase extends NamedApplicationObject
     // Flags (engine and runner)
     // How should the runner agent run this source? (shell command, sql through
     // JDBC, ...)
-
-    /**
-     * The name of the OSGI plugin which to load to run this active event source. Null if none (i.e. no need for plugin - this source is an
-     * internal engine source)
-     */
-    public String getPlugin()
-    {
-        return null;
-    }
 
     // Should it be run by a runner agent?
     public boolean hasExternalPayload()

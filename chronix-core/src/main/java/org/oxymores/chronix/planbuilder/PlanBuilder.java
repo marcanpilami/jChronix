@@ -43,7 +43,7 @@ import org.oxymores.chronix.core.active.Clock;
 import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.engine.Constants;
 
 public final class PlanBuilder
@@ -217,22 +217,22 @@ public final class PlanBuilder
         return n;
     }
 
-    public static ShellCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
+    public static RunnerCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
     {
         return buildShellCommand(Constants.PLUGIN_RUNNER_CMD, a, command, name, description, prmsandvalues);
     }
 
-    public static ShellCommand buildPowerShellCommand(Application a, String command, String name, String description,
+    public static RunnerCommand buildPowerShellCommand(Application a, String command, String name, String description,
             String... prmsandvalues)
     {
         return buildShellCommand(Constants.PLUGIN_RUNNER_POWERSHELL, a, command, name, description, prmsandvalues);
     }
 
-    public static ShellCommand buildShellCommand(String plugin, Application a, String command, String name, String description,
+    public static RunnerCommand buildShellCommand(String plugin, Application a, String command, String name, String description,
             String... prmsandvalues)
     {
-        ShellCommand sc1 = new ShellCommand();
-        sc1.setCommand(command);
+        RunnerCommand sc1 = new RunnerCommand();
+        sc1.addPluginParameter("COMMAND", command);
         sc1.setDescription(description);
         sc1.setName(name);
         sc1.setPlugin(plugin);

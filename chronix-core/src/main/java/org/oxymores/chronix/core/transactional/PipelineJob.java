@@ -213,9 +213,6 @@ public class PipelineJob extends TranscientBase
     {
         RunDescription rd = new RunDescription();
 
-        // Command to run
-        rd.setCommand(this.runThis);
-
         // Misc.
         rd.setOutOfPlan(this.outOfPlan);
         rd.setPlaceName(this.getPlace(ctx).getName());
@@ -241,6 +238,12 @@ public class PipelineJob extends TranscientBase
 
         // Execution method is determined by the source
         rd.setRunPlugin(this.getActive(ctx).getPlugin());
+
+        // Actual command to run is determined by the plugin from the parameter map
+        for (Map.Entry<String, String> e : this.getActive(ctx).getPluginParameters().entrySet())
+        {
+            rd.addPluginParameter(e.getKey(), e.getValue());
+        }
 
         // Run description is complete, on to the actual execution!
         return rd;

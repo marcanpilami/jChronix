@@ -11,7 +11,7 @@ import org.oxymores.chronix.core.Chain;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.planbuilder.PlanBuilder;
@@ -43,7 +43,7 @@ public class TestToken extends TestBase
         Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description");
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         s1.addToken(tk1);
 
@@ -84,7 +84,7 @@ public class TestToken extends TestBase
         Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description", 0);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 1\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg1, sc1);
         s1.addToken(tk1);
 
@@ -117,7 +117,7 @@ public class TestToken extends TestBase
         Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description");
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg2, sc1);
         s1.addToken(tk1);
 
@@ -156,7 +156,7 @@ public class TestToken extends TestBase
         Token tk1 = PlanBuilder.buildToken(a1, "my token", "test token description", 1, true);
 
         Chain c1 = PlanBuilder.buildChain(a1, "simple chain", "chain1", pg1);
-        ShellCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");
+        RunnerCommand sc1 = PlanBuilder.buildShellCommand(a1, "powershell.exe -Command \"Start-Sleep 2\"", "echo oo", "oo");
         State s1 = PlanBuilder.buildState(c1, pg2, sc1);
         s1.addToken(tk1);
 

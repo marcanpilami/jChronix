@@ -1,9 +1,13 @@
 package org.oxymores.chronix.dto;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DTOShellCommand
 {
     private String id;
     private String command, name, description;
+    private Map<String, String> pluginParameters = new HashMap<>();
 
     public String getId()
     {
@@ -45,4 +49,13 @@ public class DTOShellCommand
         this.description = description;
     }
 
+    public Map<String, String> getPluginParameters()
+    {
+        return pluginParameters;
+    }
+
+    public void setPluginParameters(Map<String, String> pluginParameters)
+    {
+        this.pluginParameters = pluginParameters;
+    }
 }

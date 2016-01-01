@@ -22,7 +22,7 @@ import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.Or;
-import org.oxymores.chronix.core.active.ShellCommand;
+import org.oxymores.chronix.core.active.RunnerCommand;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOCalendar;
 import org.oxymores.chronix.dto.DTOCalendarDay;
@@ -263,7 +263,9 @@ public class DtoToCore
 
     /**
      * Pass 1: create nodes without transitions
-     * @param d the DTO object describing the execution node - a true EN will be created from this.
+     * 
+     * @param d
+     *            the DTO object describing the execution node - a true EN will be created from this.
      * @return the core execution node corresponding to the DTO object.
      */
     public static ExecutionNode getExecutionNode(DTOExecutionNode d)
@@ -287,8 +289,11 @@ public class DtoToCore
 
     /**
      * Pass 2: add connections between nodes. All nodes must exist when this method is called.
-     * @param d the DTO object describing the node to connect.
-     * @param e the Environment that the new connections should be added to.
+     * 
+     * @param d
+     *            the DTO object describing the node to connect.
+     * @param e
+     *            the Environment that the new connections should be added to.
      */
     public static void setExecutionNodeNetwork(DTOExecutionNode d, Environment e)
     {
@@ -340,10 +345,10 @@ public class DtoToCore
         return r;
     }
 
-    public static ShellCommand getShellCommand(DTOShellCommand d)
+    public static RunnerCommand getShellCommand(DTOShellCommand d)
     {
-        ShellCommand r = new ShellCommand();
-        r.setCommand(d.getCommand());
+        RunnerCommand r = new RunnerCommand();
+        r.addPluginParameter("COMMAND", d.getCommand());
         r.setDescription(d.getDescription());
         r.setId(UUID.fromString(d.getId()));
         r.setName(d.getName());
