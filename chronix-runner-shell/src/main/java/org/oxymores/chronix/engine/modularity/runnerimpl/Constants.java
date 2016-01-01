@@ -1,4 +1,4 @@
-package org.oxymores.chronix.engine.modularity.runner;
+package org.oxymores.chronix.engine.modularity.runnerimpl;
 
 final class Constants
 {

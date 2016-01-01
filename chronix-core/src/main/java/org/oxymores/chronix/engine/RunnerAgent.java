@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -36,9 +38,14 @@ import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.engine.modularity.runner.RunDescription;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
-import org.oxymores.chronix.engine.modularity.runner.RunnerShell;
+import org.oxymores.chronix.engine.modularity.runner.RunnerApi;
 import org.slf4j.LoggerFactory;
 
 class RunnerAgent extends BaseListener
@@ -51,6 +58,10 @@ class RunnerAgent extends BaseListener
 
     private MessageProducer jmsProducer;
     private String logDbPath;
+
+    // Optional OSGI stuff
+    private Map<String, ServiceTracker<RunnerApi, RunnerApi>> runnerTrackers = new HashMap<>();
+    private boolean isOsgi = FrameworkUtil.getBundle(RunnerAgent.class) != null;
 
     void startListening(Broker broker) throws JMSException, IOException
     {
@@ -117,21 +128,64 @@ class RunnerAgent extends BaseListener
             logFilePath = FilenameUtils.concat(logFileDateDir, logFileName);
         }
         rd.setLogFilePath(logFilePath);
+        rd.setStoreLogFile(!rd.getHelperExecRequest());
+        rd.setReturnFullerLog(rd.getShouldSendLogFile());
 
         // Run the command according to its method
-        if (rd.getRunPlugin().startsWith("org.oxymores.chronix.runner.shell"))
+        RunnerApi runner = null;
+        if (isOsgi)
         {
-            rd.setStoreLogFile(!rd.getHelperExecRequest());
-            rd.setReturnFullerLog(rd.getShouldSendLogFile());
-            res = (new RunnerShell()).run(rd);
+            // Get or create the tracker
+            ServiceTracker<RunnerApi, RunnerApi> tracker = runnerTrackers.get(rd.getPluginSelector());
+            if (tracker == null)
+            {
+                BundleContext ctx = FrameworkUtil.getBundle(RunnerAgent.class).getBundleContext();
+                Filter filter = null;
+                try
+                {
+                    filter = ctx.createFilter("(&(objectClass=com.eclipsesource.MyInterface)(shell=" + rd.getPluginSelector() + "))");
+                }
+                catch (InvalidSyntaxException e)
+                {
+                    log.warn("a job was defined to run with an invalid capability '" + rd.getPluginSelector() + "'. It is ignored.", e);
+                    jmsCommit();
+                    return;
+                }
+                tracker = new ServiceTracker<>(ctx, filter, null);
+                runnerTrackers.put(rd.getPluginSelector(), tracker);
+            }
+
+            // Get the service
+            runner = tracker.getService();
+            if (runner == null)
+            {
+                res = new RunResult();
+                res.returnCode = -1;
+                res.logStart = String.format("An unimplemented exec plugin (%s) was called!", rd.getPluginSelector());
+                log.warn("There are no runners able to run a job of type " + rd.getPluginSelector() + ". Job will be failed.");
+            }
+            else
+            {
+                res = runner.run(rd);
+            }
         }
         else
         {
-            res = new RunResult();
-            res.returnCode = -1;
-            res.logStart = String.format("An unimplemented exec plugin (%s) was called!", rd.getRunPlugin());
-            log.error(String.format("An unimplemented exec plugin (%s) was called! Job will be failed.", rd.getRunPlugin()));
+            // This only happens during tests. The only runner we ever need during tests is the shell runner.
+            try
+            {
+                runner = (RunnerApi) Class.forName("org.oxymores.chronix.engine.modularity.runnerimpl.RunnerShell").newInstance();
+                res = runner.run(rd);
+            }
+            catch (Exception e)
+            {
+                log.error("Could not load shell runner (which should only be loaded during tests, never during normal run", e);
+                jmsCommit();
+                return;
+            }
         }
+
+        // Internal stuff with dates and IDs.
         res.start = start;
         res.end = DateTime.now();
         res.logFileName = logFileName;

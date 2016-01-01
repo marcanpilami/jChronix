@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.engine.modularity.runner;
+package org.oxymores.chronix.engine.modularity.runnerimpl;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,14 +38,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.oxymores.chronix.engine.modularity.runner.WinRegistry;
+import org.osgi.service.component.annotations.Component;
+import org.oxymores.chronix.engine.modularity.runner.RunDescription;
+import org.oxymores.chronix.engine.modularity.runner.RunResult;
+import org.oxymores.chronix.engine.modularity.runner.RunnerApi;
+import org.oxymores.chronix.engine.modularity.runner.RunnerConstants;
+import org.oxymores.chronix.engine.modularity.runnerimpl.WinRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Component(property = { "shell=" + Constants.PLUGIN_POWERSHELL }, immediate = false)
 public final class RunnerShell implements RunnerApi
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerShell.class);
 
+    @Override
     public RunResult run(RunDescription rd)
     {
         RunResult res = new RunResult();
@@ -220,7 +227,7 @@ public final class RunnerShell implements RunnerApi
         ArrayList<String> argsStrings = new ArrayList<>();
 
         // Depending on the shell, we may have to add shell start parameters to allow batch processing
-        switch (rd.getRunPlugin())
+        switch (rd.getPluginSelector())
         {
         case Constants.PLUGIN_WINCMD:
             argsStrings.add("cmd.exe");

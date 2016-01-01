@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.validation.Configuration;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -49,6 +50,7 @@ import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.core.transactional.TokenReservation;
+import org.oxymores.chronix.core.validation.ValidationProviderResolver;
 import org.oxymores.chronix.engine.helpers.ContextHelper;
 import org.oxymores.chronix.engine.helpers.DbUpgrader;
 import org.oxymores.chronix.engine.helpers.UUIDQuirk;
@@ -61,8 +63,16 @@ import org.sql2o.Sql2o;
 public final class ChronixContext
 {
     private static final Logger log = LoggerFactory.getLogger(ChronixContext.class);
-    private static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+    private static final Configuration<?> config = Validation.byDefaultProvider().providerResolver(new ValidationProviderResolver())
+            .configure();
+    private static final ValidatorFactory validatorFactory = config.buildValidatorFactory();
     private static final XStream xmlUtility = new XStream(new StaxDriver());
+
+    static
+    {
+        // Needed in OSGI context
+        xmlUtility.setClassLoader(ChronixContext.class.getClassLoader());
+    }
 
     // Persistence roots/datasources
     private Sql2o historyDS, transacDS;
@@ -286,11 +296,12 @@ public final class ChronixContext
         }
 
         // TODO: Don't load applications that are not active on the local node
-        //if (CollectionUtils.intersection(this.environment.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
-        //{
-        // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded", res.name));
+        // if (CollectionUtils.intersection(this.environment.getPlacesIdList(), res.getAllPlacesId()).isEmpty())
+        // {
+        // log.info(String.format("Application %s has no execution node defined on this server and therefore will not be loaded",
+        // res.name));
         // return null;
-        //}
+        // }
         // Set the context so as to enable environment access through the application
         res.setContext(this);
 
@@ -353,12 +364,12 @@ public final class ChronixContext
     }
 
     /**
-     Save the given application to the metabase.
-     If the application is already in the metabase, the current version is archived.
-     If the application was created from an existing application, the version is incremented before saving.
-     @param a
-     @param dir
-     @throws ChronixPlanStorageException
+     * Save the given application to the metabase. If the application is already in the metabase, the current version is archived. If the
+     * application was created from an existing application, the version is incremented before saving.
+     * 
+     * @param a
+     * @param dir
+     * @throws ChronixPlanStorageException
      */
     public static void saveApplication(Application a, File dir) throws ChronixPlanStorageException
     {
@@ -517,7 +528,8 @@ public final class ChronixContext
                 Query q2 = c.createQuery("DELETE FROM ENVIRONMENTVALUE WHERE transientid=:id");
                 Query q3 = c.createQuery("DELETE FROM EVENTCONSUMPTION WHERE eventid=:id");
                 int i1 = 0;
-                for (Event e : c.createQuery("SELECT * FROM Event WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(Event.class))
+                for (Event e : c.createQuery("SELECT * FROM Event WHERE appID=:a").addParameter("a", a.getId())
+                        .executeAndFetch(Event.class))
                 {
                     if (e.getState(this) == null || e.getPlace(this) == null || e.getActive(this) == null)
                     {
@@ -537,7 +549,8 @@ public final class ChronixContext
                 // PJ
                 q1 = c.createQuery("DELETE FROM PipelineJob WHERE id=:id");
                 i1 = 0;
-                for (PipelineJob e : c.createQuery("SELECT * FROM PipelineJob WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(PipelineJob.class))
+                for (PipelineJob e : c.createQuery("SELECT * FROM PipelineJob WHERE appID=:a").addParameter("a", a.getId())
+                        .executeAndFetch(PipelineJob.class))
                 {
                     if (e.getState(this) == null || e.getPlace(this) == null || e.getActive(this) == null)
                     {
@@ -555,7 +568,8 @@ public final class ChronixContext
                 // CALENDARPOINTER
                 q1 = c.createQuery("DELETE FROM CALENDARPOINTER WHERE id=:id");
                 i1 = 0;
-                for (CalendarPointer tb : c.createQuery("SELECT * FROM CalendarPointer WHERE appID=:a").addParameter("a", a.getId()).executeAndFetch(CalendarPointer.class))
+                for (CalendarPointer tb : c.createQuery("SELECT * FROM CalendarPointer WHERE appID=:a").addParameter("a", a.getId())
+                        .executeAndFetch(CalendarPointer.class))
                 {
                     // CalendarPointer are special: there is one without Place & State per Calendar (the calendar main pointer)
                     tb.getCalendar(this);
@@ -595,7 +609,8 @@ public final class ChronixContext
                 // TR must have Place, State, Token
                 q1 = c.createQuery("DELETE FROM TokenReservation WHERE id=:id");
                 i1 = 0;
-                for (TokenReservation tr : c.createQuery("SELECT * FROM TokenReservation WHERE APPLICATIONID=:a").addParameter("a", a.getId()).executeAndFetch(TokenReservation.class))
+                for (TokenReservation tr : c.createQuery("SELECT * FROM TokenReservation WHERE APPLICATIONID=:a")
+                        .addParameter("a", a.getId()).executeAndFetch(TokenReservation.class))
                 {
                     try
                     {

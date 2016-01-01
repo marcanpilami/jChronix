@@ -107,7 +107,6 @@ class Broker
         broker.setEnableStatistics(false);
         broker.setPersistent(true);
         broker.setRestartAllowed(false);
-        broker.setSupportFailOver(false);
         broker.setStartAsync(false);
         broker.setUseShutdownHook(false);
 
@@ -198,8 +197,9 @@ class Broker
         registerListeners(engine, true, true, true, true, true, true, true, true, true);
     }
 
-    void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner, boolean startLog, boolean startTranscient,
-            boolean startEventListener, boolean startOrderListener, boolean startTokenDistributionCenter) throws JMSException, IOException, ChronixInitializationException
+    void registerListeners(ChronixEngine engine, boolean startMeta, boolean startRunnerAgent, boolean startPipeline, boolean startRunner,
+            boolean startLog, boolean startTranscient, boolean startEventListener, boolean startOrderListener,
+            boolean startTokenDistributionCenter) throws JMSException, IOException, ChronixInitializationException
     {
         this.engine = engine;
 
@@ -429,7 +429,9 @@ class Broker
         }
         catch (IOException e1)
         {
-            log.warn("An error occurend while purging queues. Not a real problem - the engine will still run perfectly. Still, please report this bug.", e1);
+            log.warn(
+                    "An error occurend while purging queues. Not a real problem - the engine will still run perfectly. Still, please report this bug.",
+                    e1);
         }
     }
 

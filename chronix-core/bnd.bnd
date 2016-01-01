@@ -1,0 +1,5 @@
+-dsannotations: *
+-sources: true
+-metatype: *
+Bundle-Activator: ${classes;IMPLEMENTS;org.osgi.framework.BundleActivator}
+Import-Package: org.joda.time.chrono, *

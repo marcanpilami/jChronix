@@ -20,9 +20,12 @@
 package org.oxymores.chronix.engine;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -41,6 +44,7 @@ import org.slf4j.MDC;
  * A Chronix Node. Can be either engine + runner or simply runner.
  *
  */
+@Component(enabled = true)
 public class ChronixEngine extends Thread
 {
     private static Logger log = LoggerFactory.getLogger(ChronixEngine.class);
@@ -75,11 +79,11 @@ public class ChronixEngine extends Thread
 
     public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner)
     {
-        this(dbPath, nodeName, runnerMode, nbRunner, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"));
+        this(dbPath, nodeName, runnerMode, nbRunner, FilenameUtils.concat(dbPath, "db_history/db"),
+                FilenameUtils.concat(dbPath, "db_transac/db"));
     }
 
-    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner, String historyDBPath,
-            String transacDbPath)
+    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner, String historyDBPath, String transacDbPath)
     {
         this.dbPath = dbPath;
         this.runnerMode = runnerMode;
@@ -110,7 +114,8 @@ public class ChronixEngine extends Thread
             BootstrapListener bl = new BootstrapListener(new File(this.dbPath), localNodeName, feederHost, feederPort);
             if (!bl.fetchEnvironment())
             {
-                throw new ChronixInitializationException("Could not fetch environment from remote node. Will not be able to start. See errors above for details.");
+                throw new ChronixInitializationException(
+                        "Could not fetch environment from remote node. Will not be able to start. See errors above for details.");
             }
         }
 

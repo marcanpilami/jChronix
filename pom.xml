@@ -17,6 +17,7 @@
 		<junit.version></junit.version>
 		<joda.version>2.8.1</joda.version>
 		<commonio.version>2.4</commonio.version>
+		<bnd.version>3.1.0</bnd.version>
 	</properties>
 
 	<scm>
@@ -58,6 +59,39 @@
 			</plugin>
 
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!-- Needed to avoid Maven JAR plugin replacing the manifest generated 
+					by the OSGI plugin -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<configuration>
+						<useDefaultManifestFile>true</useDefaultManifestFile>
+					</configuration>
+				</plugin>
+
+				<!-- Helper for OSGI bundles: always copy libraries, so bundles can choose 
+					to copy them or not -->
+				<plugin>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<executions>
+						<execution>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${project.build.directory}/lib</outputDirectory>
+								<includeScope>compile</includeScope>
+								<excludeGroupIds>org.osgi</excludeGroupIds>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 	<dependencies>
@@ -66,12 +100,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 	</dependencies>
 

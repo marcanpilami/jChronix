@@ -1,7 +1,7 @@
 /*
  * Taken from http://stackoverflow.com/a/6163701
  */
-package org.oxymores.chronix.engine.modularity.runner;
+package org.oxymores.chronix.engine.modularity.runnerimpl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -42,7 +42,7 @@ public class ShellParameter extends Parameter
     {
         RunDescription rd = new RunDescription();
         rd.addPluginParameter("COMMAND", this.value);
-        rd.setRunPlugin(plugin);
+        rd.setPluginSelector(plugin);
         rd.setHelperExecRequest(true);
 
         try

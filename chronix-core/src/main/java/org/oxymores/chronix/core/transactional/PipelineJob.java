@@ -237,7 +237,7 @@ public class PipelineJob extends TranscientBase
         }
 
         // Execution method is determined by the source
-        rd.setRunPlugin(this.getActive(ctx).getPlugin());
+        rd.setPluginSelector(this.getActive(ctx).getPlugin());
 
         // Actual command to run is determined by the plugin from the parameter map
         for (Map.Entry<String, String> e : this.getActive(ctx).getPluginParameters().entrySet())

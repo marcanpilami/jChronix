@@ -33,7 +33,7 @@ public class RunDescription implements Serializable
 {
     private static final long serialVersionUID = -7603747840000703435L;
 
-    private String runPlugin;
+    private String runPluginSelector;
     private Map<String, String> pluginParameters = new HashMap<>();
 
     private List<String> paramNames = new ArrayList<>();
@@ -155,14 +155,14 @@ public class RunDescription implements Serializable
         this.shouldSendLogFile = shouldSendLogFile;
     }
 
-    public String getRunPlugin()
+    public String getPluginSelector()
     {
-        return runPlugin;
+        return runPluginSelector;
     }
 
-    public void setRunPlugin(String plugin)
+    public void setPluginSelector(String plugin)
     {
-        this.runPlugin = plugin;
+        this.runPluginSelector = plugin;
     }
 
     public String getPlaceName()

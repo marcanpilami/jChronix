@@ -1,0 +1,4 @@
+-exportcontents: \
+	org.oxymores.chronix.engine.modularity.runner
+-sources: true
+#-includeresource: target/lib
