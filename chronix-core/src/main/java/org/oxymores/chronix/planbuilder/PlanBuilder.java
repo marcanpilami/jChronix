@@ -44,7 +44,7 @@ import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.active.External;
 import org.oxymores.chronix.core.active.NextOccurrence;
 import org.oxymores.chronix.core.active.RunnerCommand;
-import org.oxymores.chronix.engine.Constants;
+import org.oxymores.chronix.engine.modularity.runner.RunnerConstants;
 
 public final class PlanBuilder
 {
@@ -219,13 +219,13 @@ public final class PlanBuilder
 
     public static RunnerCommand buildShellCommand(Application a, String command, String name, String description, String... prmsandvalues)
     {
-        return buildShellCommand(Constants.PLUGIN_RUNNER_CMD, a, command, name, description, prmsandvalues);
+        return buildShellCommand(RunnerConstants.SHELL_WINCMD, a, command, name, description, prmsandvalues);
     }
 
     public static RunnerCommand buildPowerShellCommand(Application a, String command, String name, String description,
             String... prmsandvalues)
     {
-        return buildShellCommand(Constants.PLUGIN_RUNNER_POWERSHELL, a, command, name, description, prmsandvalues);
+        return buildShellCommand(RunnerConstants.SHELL_POWERSHELL, a, command, name, description, prmsandvalues);
     }
 
     public static RunnerCommand buildShellCommand(String plugin, Application a, String command, String name, String description,

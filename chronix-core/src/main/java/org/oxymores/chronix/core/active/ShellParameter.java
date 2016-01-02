@@ -28,6 +28,7 @@ import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.RunnerManager;
 import org.oxymores.chronix.engine.modularity.runner.RunDescription;
+import org.oxymores.chronix.engine.modularity.runner.RunnerConstants;
 import org.slf4j.LoggerFactory;
 
 public class ShellParameter extends Parameter
@@ -35,7 +36,7 @@ public class ShellParameter extends Parameter
     private static final long serialVersionUID = 7528888158440570804L;
     private static final Logger log = LoggerFactory.getLogger(ShellParameter.class);
 
-    private String plugin = Constants.PLUGIN_RUNNER_POWERSHELL;
+    private String plugin = RunnerConstants.SHELL_POWERSHELL;
 
     @Override
     public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)

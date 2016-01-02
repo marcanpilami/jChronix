@@ -47,7 +47,9 @@ import org.oxymores.chronix.engine.modularity.runnerimpl.WinRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(property = { "shell=" + Constants.PLUGIN_POWERSHELL, "shell=" + Constants.PLUGIN_WINCMD }, immediate = false)
+@Component(property = { "target=" + RunnerConstants.SHELL_POWERSHELL, "target=" + RunnerConstants.SHELL_WINCMD,
+        "target=" + RunnerConstants.SHELL_BASH, "target=" + RunnerConstants.SHELL_KSH,
+        "target=" + RunnerConstants.SHELL_SH }, immediate = false)
 public final class RunnerShell implements RunnerApi
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerShell.class);
@@ -229,11 +231,11 @@ public final class RunnerShell implements RunnerApi
         // Depending on the shell, we may have to add shell start parameters to allow batch processing
         switch (rd.getPluginSelector())
         {
-        case Constants.PLUGIN_WINCMD:
+        case RunnerConstants.SHELL_WINCMD:
             argsStrings.add("cmd.exe");
             argsStrings.add("/C");
             break;
-        case Constants.PLUGIN_POWERSHELL:
+        case RunnerConstants.SHELL_POWERSHELL:
             argsStrings.add("powershell.exe");
             argsStrings.add("-NoLogo");
             argsStrings.add("-NonInteractive");
@@ -241,15 +243,15 @@ public final class RunnerShell implements RunnerApi
             argsStrings.add("Hidden");
             argsStrings.add("-Command");
             break;
-        case Constants.PLUGIN_BASH:
+        case RunnerConstants.SHELL_BASH:
             argsStrings.add("/bin/bash");
             argsStrings.add("-c");
             break;
-        case Constants.PLUGIN_SH:
+        case RunnerConstants.SHELL_SH:
             argsStrings.add("/bin/sh");
             argsStrings.add("-c");
             break;
-        case Constants.PLUGIN_KSH:
+        case RunnerConstants.SHELL_KSH:
             argsStrings.add("/bin/ksh");
             argsStrings.add("-c");
             break;

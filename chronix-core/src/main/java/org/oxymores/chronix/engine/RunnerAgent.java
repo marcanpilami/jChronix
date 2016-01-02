@@ -145,7 +145,9 @@ class RunnerAgent extends BaseListener
                 Filter filter = null;
                 try
                 {
-                    filter = ctx.createFilter("(&(objectClass=com.eclipsesource.MyInterface)(shell=" + rd.getPluginSelector() + "))");
+                    filter = ctx.createFilter("(&(objectClass=org.oxymores.chronix.engine.modularity.runner.RunnerApi)(target="
+                            + rd.getPluginSelector() + "))");
+                    log.debug(filter.toString());
                 }
                 catch (InvalidSyntaxException e)
                 {
@@ -154,6 +156,7 @@ class RunnerAgent extends BaseListener
                     return;
                 }
                 tracker = new ServiceTracker<>(ctx, filter, null);
+                tracker.open();
                 runnerTrackers.put(rd.getPluginSelector(), tracker);
             }
 

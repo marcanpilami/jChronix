@@ -50,8 +50,4 @@ public final class Constants
     public static final String Q_RUNNERMGR = "Q.%s.RUNNERMGR";
     public static final String Q_META = "Q.%s.APPLICATION";
     public static final String Q_BOOTSTRAP = "Q.CONSOLE.BOOTSTRAP";
-
-    // WELL-KNOWN PLUGINS, FOR DEFAULT VALUES
-    public static final String PLUGIN_RUNNER_POWERSHELL = "org.oxymores.chronix.runner.shell.powershell";
-    public static final String PLUGIN_RUNNER_CMD = "org.oxymores.chronix.runner.shell.wincmd";
 }
