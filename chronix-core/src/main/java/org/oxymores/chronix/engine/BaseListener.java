@@ -42,6 +42,9 @@ class BaseListener implements MessageListener
 
         // Open the JMS session that will be used for listening to messages
         this.jmsSession = this.jmsConnection.createSession(true, Session.SESSION_TRANSACTED);
+
+        // Set class loader to current one - that way, even with OSGI the broker will find the serializable objects
+
     }
 
     protected Queue subscribeTo(String qName) throws JMSException
@@ -65,8 +68,10 @@ class BaseListener implements MessageListener
         }
         catch (JMSException e)
         {
-            log.error("failure to commit an event consumption in JMS queue " + qName
-                    + ". Scheduler will now abort as it is a dangerous situation. You may need to empty all queues before restarting.", e);
+            log.error(
+                    "failure to commit an event consumption in JMS queue " + qName
+                            + ". Scheduler will now abort as it is a dangerous situation. You may need to empty all queues before restarting.",
+                    e);
             broker.stop();
         }
     }
@@ -79,14 +84,29 @@ class BaseListener implements MessageListener
         }
         catch (JMSException e)
         {
-            log.error("Failed to rollback an event consumption in JMS queue " + qName
-                    + ". Scheduler will now abort as it is a dangerous situation. You may need to empty the queue before restarting.", e);
+            log.error(
+                    "Failed to rollback an event consumption in JMS queue " + qName
+                            + ". Scheduler will now abort as it is a dangerous situation. You may need to empty the queue before restarting.",
+                    e);
             broker.stop();
         }
     }
 
+    /**
+     * Do NOT override this method is child classes. Override {@link #onMessageAction(Message)} instead.
+     */
     @Override
     public void onMessage(Message arg0)
+    {
+        // This allows the message broker to actually see the classes behind MessageObject messages.
+        // It is needed if the broker classes are inside another OSGI bundle.
+        Thread.currentThread().setContextClassLoader(Pipeline.class.getClassLoader());
+
+        // The actual actions.
+        this.onMessageAction(arg0);
+    }
+
+    public void onMessageAction(Message arg0)
     {
         throw new NotImplementedException();
     }

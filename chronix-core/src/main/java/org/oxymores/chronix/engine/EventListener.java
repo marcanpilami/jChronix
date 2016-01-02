@@ -57,7 +57,7 @@ class EventListener extends BaseListener
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         // For commits: remember an event can be analyzed multiple times without problems.
         ObjectMessage omsg = (ObjectMessage) msg;

@@ -96,6 +96,13 @@ class Broker
         log.info(String.format("Starting configuration of a message broker listening on vm://%s", this.brokerName));
         this.thrsRA = new ArrayList<>();
 
+        // Class white listing (see http://activemq.apache.org/objectmessage.html)
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
+                "java.util,java.lang,org.joda.time," + "org.oxymores.chronix.core," + "org.oxymores.chronix.core.active,"
+                        + "org.oxymores.chronix.core.timedata," + "org.oxymores.chronix.core.transactional,"
+                        + "org.oxymores.chronix.engine.data," + "org.oxymores.chronix.engine.helpers,"
+                        + "org.oxymores.chronix.engine.modularity.runner");
+
         // Create broker service
         broker = new BrokerService();
 
@@ -171,6 +178,7 @@ class Broker
 
         // Factory
         this.factory = new ActiveMQConnectionFactory("vm://" + brokerName);
+        // this.factory.setObjectMessageSerializationDefered(true);
 
         // Connect to it...
         try

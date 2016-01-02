@@ -126,6 +126,7 @@ public class Application extends ChronixObject
 
     /**
      * Will create one PlaceGroup per Place present in the Environment. Only adds. Name used is the name of the place.
+     * 
      * @param n
      */
     public void createStarterGroups(Environment n)
@@ -256,6 +257,21 @@ public class Application extends ChronixObject
             }
         }
         return res;
+    }
+
+    /**
+     * Helper - returns the first chain found with that name or null if none found.
+     */
+    public Chain getChain(String name)
+    {
+        for (ActiveNodeBase n : this.activeElements.values())
+        {
+            if (n instanceof Chain && ((Chain) n).getName().equals(name))
+            {
+                return (Chain) n;
+            }
+        }
+        return null;
     }
 
     public List<State> getStates()

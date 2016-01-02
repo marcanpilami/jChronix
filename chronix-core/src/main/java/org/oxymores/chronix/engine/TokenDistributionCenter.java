@@ -91,7 +91,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         TokenRequest request;

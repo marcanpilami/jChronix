@@ -48,7 +48,7 @@ class MetadataListener extends BaseListener
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;

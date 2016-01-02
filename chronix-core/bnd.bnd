@@ -2,4 +2,4 @@
 -sources: true
 -metatype: *
 Bundle-Activator: ${classes;IMPLEMENTS;org.osgi.framework.BundleActivator}
-Import-Package: org.joda.time.chrono, *
+Import-Package: org.joda.time.chrono, org.apache.activemq.wireformat, *

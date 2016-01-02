@@ -47,7 +47,7 @@ import org.oxymores.chronix.engine.modularity.runnerimpl.WinRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(property = { "shell=" + Constants.PLUGIN_POWERSHELL }, immediate = false)
+@Component(property = { "shell=" + Constants.PLUGIN_POWERSHELL, "shell=" + Constants.PLUGIN_WINCMD }, immediate = false)
 public final class RunnerShell implements RunnerApi
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerShell.class);

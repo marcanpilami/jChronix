@@ -43,7 +43,7 @@ class LogListener extends BaseListener
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         RunLog rlog;

@@ -20,12 +20,9 @@
 package org.oxymores.chronix.engine;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ChronixContext;
@@ -44,7 +41,7 @@ import org.slf4j.MDC;
  * A Chronix Node. Can be either engine + runner or simply runner.
  *
  */
-@Component(enabled = true)
+// @Component(enabled = true)
 public class ChronixEngine extends Thread
 {
     private static Logger log = LoggerFactory.getLogger(ChronixEngine.class);

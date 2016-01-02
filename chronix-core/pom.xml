@@ -14,7 +14,7 @@
 	<properties>
 		<activemq.version>5.13.0</activemq.version>
 		<hsqldb.version>2.3.3</hsqldb.version>
-		<validator.version>5.2.1.Final</validator.version>
+		<validator.version>5.2.2.Final</validator.version>
 	</properties>
 
 	<build>
@@ -106,6 +106,18 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 			<version>${validator.version}</version>
+			<exclusions>
+				<!-- The 2.x bundled version is buggy (OSGI headers have wrong dependencies) -->
+				<exclusion>
+					<artifactId>jboss-logging</artifactId>
+					<groupId>org.jboss.logging</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<artifactId>jboss-logging</artifactId>
+			<groupId>org.jboss.logging</groupId>
+			<version>3.3.0.Final</version>
 		</dependency>
 
 		<dependency>

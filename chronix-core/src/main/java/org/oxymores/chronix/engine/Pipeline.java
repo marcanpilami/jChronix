@@ -80,7 +80,8 @@ class Pipeline extends BaseListener implements Runnable
         List<PipelineJob> old;
         try (Connection conn = ctx.getTransacDataSource().open())
         {
-            old = conn.createQuery("SELECT * FROM PipelineJob j WHERE j.status = :status").addParameter("status", "CHECK_SYNC_CONDS").executeAndFetch(PipelineJob.class);
+            old = conn.createQuery("SELECT * FROM PipelineJob j WHERE j.status = :status").addParameter("status", "CHECK_SYNC_CONDS")
+                    .executeAndFetch(PipelineJob.class);
         }
         entering.addAll(old);
 
@@ -207,7 +208,7 @@ class Pipeline extends BaseListener implements Runnable
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         PipelineJob pj = null;
@@ -287,7 +288,7 @@ class Pipeline extends BaseListener implements Runnable
 
             this.analyze.release();
             jmsCommit();
-            entering.add(new PipelineJob()); //TODO: why?
+            entering.add(new PipelineJob()); // TODO: why?
         }
     }
 

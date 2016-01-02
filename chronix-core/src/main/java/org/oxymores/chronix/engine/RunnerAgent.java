@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,7 +86,7 @@ class RunnerAgent extends BaseListener
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         log.info("Run request received");
         ObjectMessage omsg = (ObjectMessage) msg;
@@ -208,23 +210,26 @@ class RunnerAgent extends BaseListener
                 response.setJMSCorrelationID(msg.getJMSCorrelationID());
                 jmsProducer.send(msg.getJMSReplyTo(), response);
 
-                if (res.logSizeBytes <= 500000)
+                if (Files.exists(Paths.get(res.logPath)))
                 {
-                    response = jmsSession.createBytesMessage();
-                    byte[] bytes = new byte[(int) res.logSizeBytes];
-                    is = new FileInputStream(res.logPath);
-                    is.read(bytes);
-                    IOUtils.closeQuietly(is);
+                    if (res.logSizeBytes <= 500000)
+                    {
+                        response = jmsSession.createBytesMessage();
+                        byte[] bytes = new byte[(int) res.logSizeBytes];
+                        is = new FileInputStream(res.logPath);
+                        is.read(bytes);
+                        IOUtils.closeQuietly(is);
 
-                    ((BytesMessage) response).writeBytes(bytes);
-                    response.setJMSCorrelationID(msg.getJMSCorrelationID());
-                    response.setStringProperty("FileName", logFileName);
-                    jmsProducer.send(msg.getJMSReplyTo(), response);
-                }
-                else
-                {
-                    log.warn(
-                            "A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
+                        ((BytesMessage) response).writeBytes(bytes);
+                        response.setJMSCorrelationID(msg.getJMSCorrelationID());
+                        response.setStringProperty("FileName", logFileName);
+                        jmsProducer.send(msg.getJMSReplyTo(), response);
+                    }
+                    else
+                    {
+                        log.warn(
+                                "A log file was too big and will not be sent. Only the full log file will be missing - the launch will still appear in the console.");
+                    }
                 }
             }
             catch (JMSException | IOException e1)

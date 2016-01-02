@@ -60,7 +60,7 @@ class TranscientListener extends BaseListener
     }
 
     @Override
-    public void onMessage(Message msg)
+    public void onMessageAction(Message msg)
     {
         // Read message (don't commit yet)
         ObjectMessage omsg = (ObjectMessage) msg;

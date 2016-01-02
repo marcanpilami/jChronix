@@ -1,10 +1,14 @@
 package org.oxymores.chronix.engine;
 
-import java.io.FileWriter;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 
+/**
+ * TEST CLASS - to be removed before release.
+ *
+ */
 public class TestActivator implements BundleActivator
 {
     ChronixEngine e;
@@ -15,10 +19,12 @@ public class TestActivator implements BundleActivator
         e = new ChronixEngine("C:\\TEMP\\db1", "local");
         try
         {
-            FileWriter f = new FileWriter("C:\\TEMP\\db1\\marsu.txt");
-            f.write("lllllllllll");
-            f.close();
-            e.startEngine(false);
+            e.start();
+            e.waitForInitEnd();
+
+            // Corresponds to testChainLaunch unit test application
+            State s = e.getContext().getApplicationByName("test1").getChain("simple chain").getStartState();
+            SenderHelpers.runStateInsidePlan(s, e.getContext());
         }
         catch (Exception e1)
         {
@@ -31,6 +37,7 @@ public class TestActivator implements BundleActivator
     public void stop(BundleContext context) throws Exception
     {
         e.stopEngine();
+        e.waitForStopEnd();
     }
 
 }

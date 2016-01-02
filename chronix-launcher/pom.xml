@@ -1,123 +1,145 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.oxymores.chronix</groupId>
-        <artifactId>chronix-parent</artifactId>
-        <version>0.9.2-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<groupId>org.oxymores.chronix</groupId>
+		<artifactId>chronix-parent</artifactId>
+		<version>0.9.2-SNAPSHOT</version>
+	</parent>
 
-    <artifactId>chronix-launcher</artifactId>
-    <packaging>jar</packaging>
+	<artifactId>chronix-launcher</artifactId>
+	<packaging>jar</packaging>
 
-    <properties>
-        <jetty.version>8.1.17.v20150415</jetty.version>
-    </properties>
+	<properties>
+		<jetty.version>8.1.17.v20150415</jetty.version>
+	</properties>
 
-    <build>
-        <plugins>
-            <plugin>
-                <!-- Build an executable JAR -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass> org.oxymores.chronix.launcher.Scheduler</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Class-Path>../conf/log4j.properties</Class-Path>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
+	<build>
+		<plugins>
+			<plugin>
+				<!-- Build an executable JAR -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass> org.oxymores.chronix.launcher.Scheduler</mainClass>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>../conf/log4j.properties</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.5.5</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/main-package.xml</descriptor>
-                    </descriptors>
-                    <finalName>chronix-${project.version}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- bind to the packaging phase -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.5.5</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/main/assembly/main-package.xml</descriptor>
+					</descriptors>
+					<finalName>chronix-${project.version}</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id> <!-- this is used for inheritance merges -->
+						<phase>package</phase> <!-- bind to the packaging phase -->
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>2.6.1</version>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>metabase</directory>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.6.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>metabase</directory>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-    <dependencies>
-        <!-- Obviously -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>chronix-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+	<dependencies>
+		<!-- Obviously -->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-        <!-- We need a full servlet container to house the WS -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jsp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-annotations</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
+		<!-- We need a full servlet container to house the WS -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-jsp</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-annotations</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
 
-        <!-- We use the log4j implementation in the standard launcher -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
+		<!-- We use the log4j implementation in the standard launcher -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
 
-        <!-- We embed all dependencies from the web app -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>chronix-web</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
+		<!-- We embed all dependencies from the web app -->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-web</artifactId>
+			<version>${project.version}</version>
+			<type>pom</type>
+		</dependency>
 
-        <!-- Test only -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+		<!-- Test only -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<artifactId>chronix-runner-shell</artifactId>
+			<groupId>org.oxymores.chronix</groupId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<version>5.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 
 </project>
