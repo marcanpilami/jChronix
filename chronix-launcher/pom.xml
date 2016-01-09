@@ -104,13 +104,6 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 
-		<!-- We embed all dependencies from the web app -->
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>chronix-web</artifactId>
-			<version>${project.version}</version>
-			<type>pom</type>
-		</dependency>
 
 		<!-- Test only -->
 		<dependency>

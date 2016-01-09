@@ -14,7 +14,7 @@ public class TestLaunch
 {
     private static final Logger log = Logger.getLogger(TestLaunch.class);
 
-    @Test
+    //@Test
     public void testLaunch() throws ParseException
     {
         try

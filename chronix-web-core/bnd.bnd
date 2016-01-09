@@ -1,0 +1,5 @@
+-sources: true
+-wab: src/main/webapp
+-dsannotations: *
+Web-ContextPath: /
+Import-Package: org.eclipse.persistence.internal.jaxb.many, *
