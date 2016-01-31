@@ -2,6 +2,7 @@
 	org.oxymores.chronix.engine.modularity.runner, \
 	org.oxymores.chronix.engine.modularity.web, \
 	org.oxymores.chronix.core.engine.api, \
+	org.oxymores.chronix.core.source.api, \
 	org.oxymores.chronix.dto
 -sources: true
 #-includeresource: target/lib

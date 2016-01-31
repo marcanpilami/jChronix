@@ -19,6 +19,10 @@
 		<joda.version>2.8.1</joda.version>
 		<commonio.version>2.4</commonio.version>
 		<bnd.version>3.1.0</bnd.version>
+		<activemq.version>5.13.0</activemq.version>
+		<hsqldb.version>2.3.3</hsqldb.version>
+		<validator.version>5.2.2.Final</validator.version>
+		<xstream.version>1.4.8</xstream.version>
 	</properties>
 
 	<scm>
@@ -111,6 +115,9 @@
 		<module>chronix-cli</module>
 		<module>chronix-plugin-api</module>
 		<module>chronix-runner-shell</module>
+		<module>chronix-source-chain</module>
+		<module>chronix-integration-tests</module>
+		<module>chronix-nonosgilibs</module>
 		<module>chronix-web-core</module>
 	</modules>
 </project>

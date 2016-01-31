@@ -337,12 +337,6 @@ public class ActiveNodeBase extends NamedApplicationObject
         }
     }
 
-    // ?
-    public void endOfRun(PipelineJob pj, RunnerManager sender, ChronixContext ctx, Connection conn)
-    {
-        log.info("end of run");
-    }
-
     // Called before external run (i.e. sending the PJ to the runner agent)
     // Supposed to do local operations only.
     // Used by active nodes which influence the scheduling itself rather than run a payload.

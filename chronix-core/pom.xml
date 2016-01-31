@@ -12,9 +12,7 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<activemq.version>5.13.0</activemq.version>
-		<hsqldb.version>2.3.3</hsqldb.version>
-		<validator.version>5.2.2.Final</validator.version>
+
 	</properties>
 
 	<build>
@@ -99,7 +97,7 @@
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
-			<version>1.4.8</version>
+			<version>${xstream.version}</version>
 		</dependency>
 
 		<dependency>

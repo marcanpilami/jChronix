@@ -156,6 +156,8 @@ public final class ChronixContext
     {
         log.info(String.format("Creating a new context from configuration database %s", this.configurationDirectory));
 
+        // Directories beginning by app_ are application directories.
+
         // List files in directory - and therefore applications
         File[] fileList = this.configurationDirectory.listFiles();
         HashMap<String, File> toLoad = new HashMap<>();

@@ -39,17 +39,4 @@ public class ChronixException extends RuntimeException
     {
         super(message, innerException);
     }
-
-    @Override
-    public String toString()
-    {
-        if (this.getCause() != null)
-        {
-            return this.getMessage() + "\n" + this.getCause().getMessage() + "\n\n" + Arrays.toString(this.getStackTrace());
-        }
-        else
-        {
-            return this.getMessage() + "\n\n" + Arrays.toString(this.getStackTrace());
-        }
-    }
 }

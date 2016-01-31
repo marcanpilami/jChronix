@@ -40,7 +40,7 @@ public class RunResult implements Serializable
     // conditionData4 is actually an UUID
     public UUID conditionData4 = null;
     public Map<String, String> newEnvVars = new HashMap<>();
-    public DateTime start, end;
+    public DateTime start = DateTime.now(), end = DateTime.now();
     public String envtUser, envtServer, envtOther;
 
     // Data below is from and for the engine - not created by the run
