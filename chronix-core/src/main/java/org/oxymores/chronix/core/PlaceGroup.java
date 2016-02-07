@@ -34,6 +34,15 @@ public class PlaceGroup extends NamedApplicationObject
         super();
     }
 
+    private Object readResolve()
+    {
+        if (places == null)
+        {
+            places = new ArrayList<>();
+        }
+        return this;
+    }
+
     public List<Place> getPlaces()
     {
         return new ArrayList<>(places);
@@ -45,7 +54,7 @@ public class PlaceGroup extends NamedApplicationObject
         this.places.add(p);
     }
 
-    void map_places(Environment n)
+    public void map_places(Environment n)
     {
         if (this.places == null)
         {

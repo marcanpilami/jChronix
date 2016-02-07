@@ -24,17 +24,17 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import org.slf4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class SelfTriggerAgent extends Thread
@@ -43,8 +43,10 @@ class SelfTriggerAgent extends Thread
 
     protected Semaphore loop;
     protected boolean run = true;
-    protected List<ActiveNodeBase> nodes;
-    protected ChronixContext ctx;
+    protected List<EventSourceContainer> nodes;
+    protected ChronixContextMeta ctxMeta;
+    protected ChronixContextTransient ctxDb;
+    protected ExecutionNode localNode;
     protected MessageProducer producerEvents;
     protected Session jmsSession;
     protected Semaphore triggering;
@@ -73,38 +75,33 @@ class SelfTriggerAgent extends Thread
         loop.release();
     }
 
-    public void startAgent(ChronixContext ctx, Connection cnx) throws JMSException
+    public void startAgent(ChronixEngine engine) throws JMSException
     {
-        this.startAgent(ctx, cnx, DateTime.now());
+        this.startAgent(engine, DateTime.now());
     }
 
-    void startAgent(ChronixContext ctx, Connection cnx, DateTime startTime) throws JMSException
+    private void startAgent(ChronixEngine engine, DateTime startTime) throws JMSException
     {
-        log.debug(String.format("Agent responsible for clocks will start"));
+        log.debug(String.format("Agent responsible for clocks and other active sources will start"));
 
         // Save pointers
         this.loop = new Semaphore(0);
-        this.ctx = ctx;
-        this.jmsSession = cnx.createSession(true, Session.SESSION_TRANSACTED);
+        this.ctxMeta = engine.getContextMeta();
+        this.ctxDb = engine.getContextTransient();
+        this.localNode = engine.getLocalNode();
+        this.jmsSession = engine.getBroker().getConnection().createSession(true, Session.SESSION_TRANSACTED);
         this.producerEvents = jmsSession.createProducer(null);
         this.triggering = new Semaphore(1);
         this.nextLoopVirtualTime = startTime;
 
         // Get all self triggered nodes
         this.nodes = new ArrayList<>();
-        for (Application a : this.ctx.getApplications())
-        {
-            for (ActiveNodeBase n : a.getActiveElements().values())
-            {
-                if (n.selfTriggered())
-                {
-                    this.nodes.add(n);
-                }
-            }
-            // TODO: select only clocks with local consequences
-        }
+        /*
+         * for (Application2 a : this.ctx.getApplications()) { for (ActiveNodeBase n : a.getActiveElements().values()) { if
+         * (n.selfTriggered()) { this.nodes.add(n); } } // TODO: select only clocks with local consequences }
+         */
         log.debug(String.format("Agent responsible for clocks will handle %s clock nodes", this.nodes.size()));
-        for (ActiveNodeBase node : this.nodes)
+        for (EventSourceContainer node : this.nodes)
         {
             log.debug(String.format("\t\t" + node.getName()));
         }
@@ -168,18 +165,19 @@ class SelfTriggerAgent extends Thread
             }
 
             // Loop through all the self triggered nodes and get their next loop virtual time
-            try (org.sql2o.Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (org.sql2o.Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 DateTime tmp;
-                for (ActiveNodeBase n : this.nodes)
+                for (EventSourceContainer n : this.nodes)
                 {
                     try
                     {
-                        tmp = n.selfTrigger(producerEvents, jmsSession, ctx, conn, loopVirtualTime);
+                        // TODO
+                        /* tmp = n.selfTrigger(producerEvents, jmsSession, ctxMeta, conn, loopVirtualTime);
                         if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
                         {
                             this.nextLoopVirtualTime = tmp;
-                        }
+                        }*/
                     }
                     catch (Exception e)
                     {
@@ -221,6 +219,5 @@ class SelfTriggerAgent extends Thread
     }
 
     protected void preLoopHook()
-    {
-    }
+    {}
 }

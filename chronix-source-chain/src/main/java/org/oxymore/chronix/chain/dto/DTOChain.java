@@ -1,21 +1,22 @@
 package org.oxymore.chronix.chain.dto;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.DTOContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
+import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOChain implements DTO, Serializable
+public class DTOChain implements DTOContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
     private String name;
     private String description;
     private UUID id;
+    private boolean enabled = true;
 
     private List<DTOState> states = new ArrayList<DTOState>();
     private List<DTOTransition> transitions = new ArrayList<DTOTransition>();
@@ -28,21 +29,23 @@ public class DTOChain implements DTO, Serializable
     /**
      * Helper constructor that creates a ready to use chain.
      */
-    public DTOChain(String name, String description)
+    public DTOChain(String name, String description, DTOPlaceGroup runsOn)
     {
         this.name = name;
         this.description = description;
         this.id = UUID.randomUUID();
 
         DTOState s1 = new DTOState();
-        s1.setEventSourceId(new DTOChainStart().getId());
+        s1.setEventSourceId(DTOChainStart.START_ID);
         s1.setX(50);
         s1.setY(50);
+        s1.setRunsOnId(runsOn.getId());
 
         DTOState s2 = new DTOState();
-        s1.setEventSourceId(new DTOChainStart().getId());
-        s1.setX(50);
-        s1.setY(200);
+        s2.setEventSourceId(DTOChainEnd.END_ID);
+        s2.setX(50);
+        s2.setY(200);
+        s2.setRunsOnId(runsOn.getId());
 
         this.addState(s1);
         this.addState(s2);
@@ -69,6 +72,36 @@ public class DTOChain implements DTO, Serializable
         tr.setTo(to.getId());
         tr.setGuard1(0);
         this.transitions.add(tr);
+    }
+
+    public void setPlaceGroup(DTOPlaceGroup group)
+    {
+        this.getStart().setRunsOnId(group.getId());
+        this.getEnd().setRunsOnId(group.getId());
+    }
+
+    public DTOState getStart()
+    {
+        for (DTOState s : this.states)
+        {
+            if (s.getEventSourceId() == DTOChainStart.START_ID)
+            {
+                return s;
+            }
+        }
+        throw new RuntimeException("chain has no start");
+    }
+
+    public DTOState getEnd()
+    {
+        for (DTOState s : this.states)
+        {
+            if (s.getEventSourceId() == DTOChainEnd.END_ID)
+            {
+                return s;
+            }
+        }
+        throw new RuntimeException("chain has no end");
     }
 
     // Stupid GET/SET
@@ -122,6 +155,29 @@ public class DTOChain implements DTO, Serializable
     void setTransitions(List<DTOTransition> transitions)
     {
         this.transitions = transitions;
+    }
+
+    @Override
+    public List<DTOState> getContainedStates()
+    {
+        return this.states;
+    }
+
+    @Override
+    public List<DTOTransition> getContainedTransitions()
+    {
+        return this.transitions;
+    }
+
+    @Override
+    public boolean isEnabled()
+    {
+        return this.enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
     }
 
 }

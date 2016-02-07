@@ -31,15 +31,15 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.slf4j.Logger;
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
+import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
@@ -78,7 +78,7 @@ class Pipeline extends BaseListener implements Runnable
 
         // Retrieve jobs from previous service launches
         List<PipelineJob> old;
-        try (Connection conn = ctx.getTransacDataSource().open())
+        try (Connection conn = ctxDb.getTransacDataSource().open())
         {
             old = conn.createQuery("SELECT * FROM PipelineJob j WHERE j.status = :status").addParameter("status", "CHECK_SYNC_CONDS")
                     .executeAndFetch(PipelineJob.class);
@@ -137,12 +137,12 @@ class Pipeline extends BaseListener implements Runnable
             {
                 Place p = null;
                 org.oxymores.chronix.core.State s = null;
-                Application a;
+                Application2 a;
                 try
                 {
-                    a = pj.getApplication(ctx);
-                    p = pj.getPlace(ctx);
-                    s = pj.getState(ctx);
+                    a = pj.getApplication(ctxMeta);
+                    p = pj.getPlace(ctxMeta);
+                    s = pj.getState(ctxMeta);
                 }
                 catch (Exception e)
                 {
@@ -241,7 +241,7 @@ class Pipeline extends BaseListener implements Runnable
 
         if (pj != null)
         {
-            try (Connection conn = ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = ctxDb.getTransacDataSource().beginTransaction())
             {
                 // So that we find it again after a crash/stop
                 pj.setStatus(Constants.JI_STATUS_CHECK_SYNC_CONDS);
@@ -302,7 +302,7 @@ class Pipeline extends BaseListener implements Runnable
 
     private void anToken(PipelineJob pj)
     {
-        org.oxymores.chronix.core.State s = pj.getState(ctx);
+        org.oxymores.chronix.core.State s = pj.getState(ctxMeta);
         if (s.getTokens().size() > 0)
         {
             for (Token tk : s.getTokens())
@@ -312,7 +312,7 @@ class Pipeline extends BaseListener implements Runnable
                 tr.local = true;
                 tr.placeID = pj.getPlaceID();
                 tr.requestedAt = new DateTime();
-                tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getComputingNode().getId();
+                tr.requestingNodeID = this.broker.getEngine().getLocalNode().getComputingNode().getId();
                 tr.stateID = pj.getStateID();
                 tr.tokenID = tk.getId();
                 tr.type = TokenRequestType.REQUEST;
@@ -320,7 +320,7 @@ class Pipeline extends BaseListener implements Runnable
 
                 try
                 {
-                    SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, jmsJRProducer, true);
+                    SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, jmsJRProducer, true, this.brokerName);
                 }
                 catch (JMSException e)
                 {
@@ -354,7 +354,7 @@ class Pipeline extends BaseListener implements Runnable
         // Remove from queue
         waitingRun.remove(pj);
 
-        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctx).getNode().getComputingNode().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctxMeta).getNode().getComputingNode().getBrokerName());
         try
         {
             Destination d = jmsSession.createQueue(qName);
@@ -370,7 +370,7 @@ class Pipeline extends BaseListener implements Runnable
 
         pj.setStatus(Constants.JI_STATUS_RUNNING);
         pj.setMarkedForRunAt(DateTime.now());
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             pj.insertOrUpdate(conn);
             conn.commit();

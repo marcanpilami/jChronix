@@ -66,7 +66,7 @@ public interface PlanAccessService
     /**
      * Helper method that will return a list of the next few occurrences for a recurrence rule.
      */
-    public DTOResultClock testRecurrenceRule(DTORRule rule);
+    //public DTOResultClock testRecurrenceRule(DTORRule rule);
 
     /**
      * <strong>Data loss danger</strong><br>

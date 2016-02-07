@@ -11,8 +11,8 @@ import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -33,17 +33,10 @@ public class ChainBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public RunResult run(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
     {
         // A chain only starts its own start event source. The actual RunResult is sent by the end source, so all we need here is to return
         // at once.
-        return null;
-    }
-
-    @Override
-    public RunResult runDisabled(EngineCallback cb, JobDescription jd)
-    {
-        // TODO Auto-generated method stub
         return null;
     }
 

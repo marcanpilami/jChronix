@@ -30,7 +30,6 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
     public EventSourceBehaviour addingService(ServiceReference<EventSourceBehaviour> ref)
     {
         // On add, simply init the plugin.
-        log.info("Event source plugin registering: " + ref.toString() + " from bundle " + ref.getBundle().getSymbolicName());
 
         // get the service reference - it will stored alongside the event sources (if any)
         EventSourceBehaviour srv = bd.getBundleContext().getService(ref);
@@ -39,6 +38,9 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
             log.warn("Event source plugin has disappeared before finishing its registration: " + ref.getClass().getCanonicalName());
             return null;
         }
+
+        log.info("Event source plugin registering: " + srv.getClass().getCanonicalName() + " from bundle "
+                + ref.getBundle().getSymbolicName());
 
         // Each application may have data created by this plugin - load that data
         Collection<Application2> apps = new ArrayList<>();
@@ -59,8 +61,8 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
                         "Configuration directory " + bundleDir.getAbsolutePath() + " does not exist and could not be created");
             }
 
-            log.info("Asking plugin " + ref.getBundle().getSymbolicName() + " to read directory " + bundleDir.getAbsolutePath());
-            srv.deserialize(bundleDir, new EngineCb(app, srv));
+            log.trace("Asking plugin " + ref.getBundle().getSymbolicName() + " to read directory " + bundleDir.getAbsolutePath());
+            srv.deserialize(bundleDir, new EngineCb(app, srv, ref.getBundle().getSymbolicName()));
         }
 
         return srv;

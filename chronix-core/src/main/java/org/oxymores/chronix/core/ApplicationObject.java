@@ -21,29 +21,32 @@ package org.oxymores.chronix.core;
 
 import javax.validation.constraints.NotNull;
 
+import org.oxymores.chronix.core.context.Application2;
+
 /**
- All configuration objects belonging to an application derive from this class.<br>
- Provides (in addition to {@link ChronixObject} fields) a pointer to the application the object belongs to
- as well as the possibility to disable the object.
- @author Marc-Antoine
+ * All configuration objects belonging to an application derive from this class.<br>
+ * Provides (in addition to {@link ChronixObject} fields) a pointer to the application the object belongs to as well as the possibility to
+ * disable the object.
+ * 
+ * @author Marc-Antoine
  */
 public class ApplicationObject extends ChronixObject
 {
     private static final long serialVersionUID = -926121748083888054L;
 
     @NotNull(message = "an application object must be inside an application")
-    protected Application application;
+    protected Application2 application;
 
     private boolean enabled = true;
 
-    public Application getApplication()
+    public Application2 getApplication()
     {
         return application;
     }
 
     // No access modifier: package private. Should only be called by Application
     // (inside an addObject method)
-    public void setApplication(Application application)
+    public void setApplication(Application2 application)
     {
         this.application = application;
     }

@@ -1,11 +1,16 @@
 package org.oxymore.chronix.source;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymore.chronix.chain.dto.DTOChainEnd;
+import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
@@ -34,30 +39,35 @@ public class ChainEndBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public RunResult run(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
     {
         // This method creates to results: one for itself (we are good!) and one for the parent chain., inside the parent chain scope.
 
         // Parent result
-        RunResult rr = new RunResult();
+        EventSourceRunResult rr = new EventSourceRunResult();
         rr.returnCode = 0;
-        rr.logStart = this.getSourceName();
-        rr.id1 = jd.getParentScopeLaunchId(); // Scope is: parent chain launch ID.
+        rr.overloadedScopeId = jd.getParentScopeLaunchId(); // Scope is: parent chain launch ID.
         rr.end = jd.getVirtualTimeStart();
         cb.sendRunResult(rr);
 
         // Self result
-        RunResult res = new RunResult();
+        EventSourceRunResult res = new EventSourceRunResult();
+        res.end = jd.getVirtualTimeStart(); // Does not take any time.
         res.returnCode = 0;
-        res.start = jd.getVirtualTimeStart();
-        res.end = res.start;
         return res;
     }
 
     @Override
-    public RunResult runDisabled(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
         return run(cb, jd);
     }
 
+    @Override
+    public List<Class<? extends DTO>> getExposedDtoClasses()
+    {
+        List<Class<? extends DTO>> res = new ArrayList<>();
+        res.add(DTOChainEnd.class);
+        return res;
+    }
 }

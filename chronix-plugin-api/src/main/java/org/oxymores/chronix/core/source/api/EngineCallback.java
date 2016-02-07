@@ -15,13 +15,18 @@ public interface EngineCallback
      * Sends a JMS message to another Chronix Component.
      * 
      * @param msg
-     *            the object that will be serialized inside a JMS ObjectMessage.
+     *            the object that will be serialised inside a JMS ObjectMessage.
      * @param destinationQueue
      *            the name of the destination JMS queue.
      */
     public void sendMessageXCXXXXX(Object msg, String destinationQueue);
 
-    public void sendRunResult(RunResult r);
+    /**
+     * Relays the result of an execution to the engine. Mostly used by asynchronous launches (as synchronous launches can directly return
+     * their {@link EventSourceRunResult} as a result of the run method) even if it can be used in all cases (for example to create two
+     * results in a single launch).
+     */
+    public void sendRunResult(EventSourceRunResult r);
 
     /**
      * Retrieves an event source instance from the loaded instances cache. If none found, null is returned.<br>

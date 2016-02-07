@@ -12,6 +12,22 @@ public class DTOEnvironment
         return places;
     }
 
+    /**
+     * Helper method. Please note that the name is not a unique key - if there are multiple places with the same name, thr first is
+     * returned.
+     */
+    public DTOPlace getPlace(String name)
+    {
+        for (DTOPlace p : places)
+        {
+            if (p.getName().equals(name))
+            {
+                return p;
+            }
+        }
+        throw new RuntimeException("no place named " + name);
+    }
+
     public void setPlaces(List<DTOPlace> places)
     {
         this.places = places;

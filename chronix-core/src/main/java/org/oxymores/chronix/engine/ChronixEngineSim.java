@@ -1,23 +1,7 @@
 package org.oxymores.chronix.engine;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import javax.jms.JMSException;
 
-import org.joda.time.DateTime;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.exceptions.ChronixInitializationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.sql2o.Connection;
-
+/*
 public class ChronixEngineSim extends ChronixEngine
 {
     private static final Logger log = LoggerFactory.getLogger(ChronixEngineSim.class);
@@ -49,14 +33,14 @@ public class ChronixEngineSim extends ChronixEngine
         try
         {
             // Context
-            this.ctx = new ChronixContext("simu", this.dbPath, true, null, null);
+            this.ctxMeta = new ChronixContext("simu", this.dbPath, true, null, null);
 
             // This is a simulation: we are only interested in a single application
-            for (Application ap : this.ctx.getApplications())
+            for (Application ap : this.ctxMeta.getApplications())
             {
                 if (!ap.getId().equals(appToSimulateId))
                 {
-                    this.ctx.removeApplicationFromCache(ap.getId());
+                    this.ctxMeta.removeApplicationFromCache(ap.getId());
                 }
             }
 
@@ -67,17 +51,17 @@ public class ChronixEngineSim extends ChronixEngine
             conn.setqPort(9999);
             simulationNode.addConnectionMethod(conn);
             simulationNode.setName("simu");
-            this.ctx.getEnvironment().addNode(simulationNode);
-            this.ctx.getEnvironment().setConsole(simulationNode);
-            ctx.setLocalNodeName(simulationNode.getName());
+            this.ctxMeta.getEnvironment().addNode(simulationNode);
+            this.ctxMeta.getEnvironment().setConsole(simulationNode);
+            ctxMeta.setLocalNodeName(simulationNode.getName());
 
-            for (Place p : this.ctx.getEnvironment().getPlaces().values())
+            for (Place p : this.ctxMeta.getEnvironment().getPlaces().values())
             {
                 p.setNode(simulationNode);
             }
 
             // Broker with some of the consumer threads. Not started: meta, runner agent, order. In memory broker, no networking, with EM.
-            this.broker = new Broker(this.ctx, false, true, false);
+            this.broker = new Broker(this.ctxMeta, false, true, false);
             this.broker.setNbRunners(this.nbRunner);
             this.broker.registerListeners(this, false, false, true, true, true, true, true, false, true);
 
@@ -85,11 +69,11 @@ public class ChronixEngineSim extends ChronixEngine
             this.stAgent = new SelfTriggerAgentSim();
             ((SelfTriggerAgentSim) this.stAgent).setBeginTime(start);
             ((SelfTriggerAgentSim) this.stAgent).setEndTime(end);
-            this.stAgent.startAgent(ctx, broker.getConnection(), this.start);
+            this.stAgent.startAgent(ctxMeta, broker.getConnection(), this.start);
 
             // Done
             this.engineStarts.release();
-            log.info("Simulator for context " + this.ctx.getContextRoot() + " has finished its boot sequence");
+            log.info("Simulator for context " + this.ctxMeta.getContextRoot() + " has finished its boot sequence");
 
         }
         catch (ChronixInitializationException | JMSException | IOException e)
@@ -113,9 +97,10 @@ public class ChronixEngineSim extends ChronixEngine
         log.info("Simulation has ended. Returning results");
         MDC.remove("node");
 
-        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        try (Connection conn = this.ctxMeta.getHistoryDataSource().open())
         {
             return conn.createQuery("SELECT * from RunLog h").executeAndFetch(RunLog.class);
         }
     }
 }
+*/

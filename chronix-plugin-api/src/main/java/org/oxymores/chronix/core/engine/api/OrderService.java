@@ -33,4 +33,6 @@ public interface OrderService
      * @return
      */
     public ResOrder duplicateEndedLaunchOutOfPlan(UUID launchId);
+
+    public void resetCache();
 }

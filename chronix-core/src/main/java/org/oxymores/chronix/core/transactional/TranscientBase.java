@@ -26,12 +26,12 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.joda.time.DateTime;
 
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.sql2o.Connection;
 
 public class TranscientBase implements Serializable
@@ -102,7 +102,7 @@ public class TranscientBase implements Serializable
         this.calendarID = id;
     }
 
-    public Calendar getCalendar(ChronixContext ctx)
+    public Calendar getCalendar(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getCalendar(this.calendarID);
     }
@@ -136,7 +136,7 @@ public class TranscientBase implements Serializable
         if (state != null)
         {
             this.stateID = state.getId();
-            this.setActive(state.getRepresents());
+            this.setActiveID(state.getRepresents().getId());
             this.setApplication(state.getApplication());
         }
         else
@@ -145,7 +145,7 @@ public class TranscientBase implements Serializable
         }
     }
 
-    public State getState(ChronixContext ctx)
+    public State getState(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getState(this.stateID);
     }
@@ -169,14 +169,9 @@ public class TranscientBase implements Serializable
         this.activeID = activeID;
     }
 
-    private void setActive(ActiveNodeBase active)
+    public EventSourceContainer getActive(ChronixContextMeta ctx)
     {
-        this.activeID = active.getId();
-    }
-
-    public ActiveNodeBase getActive(ChronixContext ctx)
-    {
-        return this.getApplication(ctx).getActiveNode(this.activeID);
+        return this.getApplication(ctx).getEventSourceContainer(this.activeID);
     }
 
     //
@@ -205,7 +200,7 @@ public class TranscientBase implements Serializable
         }
     }
 
-    public Place getPlace(ChronixContext ctx)
+    public Place getPlace(ChronixContextMeta ctx)
     {
         return ctx.getEnvironment().getPlace(this.placeID);
     }
@@ -224,12 +219,12 @@ public class TranscientBase implements Serializable
         this.appID = appID;
     }
 
-    public Application getApplication(ChronixContext ctx)
+    public Application2 getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.appID);
     }
 
-    public void setApplication(Application application)
+    public void setApplication(Application2 application)
     {
         if (application != null)
         {
@@ -265,15 +260,18 @@ public class TranscientBase implements Serializable
     {
         if (this.envValues == null)
         {
-            this.envValues = conn.createQuery("SELECT * FROM EnvironmentValue WHERE TransientId=:id").
-                    addParameter("id", this.id).executeAndFetch(EnvironmentValue.class);
+            this.envValues = conn.createQuery("SELECT * FROM EnvironmentValue WHERE TransientId=:id").addParameter("id", this.id)
+                    .executeAndFetch(EnvironmentValue.class);
         }
         return envValues;
     }
 
-    /** Does not persist the value - only stores it in local cache
+    /**
+     * Does not persist the value - only stores it in local cache
+     * 
      * @param key
-     * @param value **/
+     * @param value
+     **/
     public void addEnvValueToCache(String key, String value)
     {
         if (this.envValues == null)

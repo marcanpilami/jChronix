@@ -22,6 +22,7 @@ package org.oxymores.chronix.engine;
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -34,17 +35,17 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- This class is only called when an engine starts without an environment file file and is part of a network.
- Its role is to fetch the environment file from a known other engine.<br>
- As it is called before the broker is created, it is the only listener that directly connects to a remote broker.
+ * This class is only called when an engine starts without an environment file file and is part of a network. Its role is to fetch the
+ * environment file from a known other engine.<br>
+ * As it is called before the broker is created, it is the only listener that directly connects to a remote broker.
  */
 public class BootstrapListener implements MessageListener
 {
@@ -132,7 +133,8 @@ public class BootstrapListener implements MessageListener
     {
         if (!(message instanceof ObjectMessage))
         {
-            log.error("Received a message that was not an ObjectMessage on bootstrap temporary queue. Will continue to wait for a good answer.");
+            log.error(
+                    "Received a message that was not an ObjectMessage on bootstrap temporary queue. Will continue to wait for a good answer.");
             jmsCommit();
             return;
         }
@@ -142,7 +144,8 @@ public class BootstrapListener implements MessageListener
         {
             if (!omsg.getJMSCorrelationID().equals(corelId))
             {
-                log.warn("Received a message that was not an answer to the current request - may come from a previous engine launch. Is ignored.");
+                log.warn(
+                        "Received a message that was not an answer to the current request - may come from a previous engine launch. Is ignored.");
                 jmsCommit();
                 return;
             }
@@ -157,7 +160,7 @@ public class BootstrapListener implements MessageListener
 
             Environment n = (Environment) o;
             log.info("environment was received from remote node and will now be stored to disk");
-            ChronixContext.saveEnvironment(n, confDir);
+            // ChronixContext.saveEnvironment(n, confDir);
             jmsCommit();
             ok = true;
             stop();
@@ -178,7 +181,8 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException ex)
         {
-            log.warn("Could not close JMS connections after fetching the environment file from console. Implies a possible resource leak.", ex);
+            log.warn("Could not close JMS connections after fetching the environment file from console. Implies a possible resource leak.",
+                    ex);
         }
         ended.release();
     }
@@ -203,8 +207,10 @@ public class BootstrapListener implements MessageListener
         }
         catch (JMSException e)
         {
-            log.error("failure to commit an event consumption in JMS queue"
-                    + ". Scheduler will now abort as it is a dangerous situation. You may need to empty all queues before restarting.", e);
+            log.error(
+                    "failure to commit an event consumption in JMS queue"
+                            + ". Scheduler will now abort as it is a dangerous situation. You may need to empty all queues before restarting.",
+                    e);
         }
     }
 }

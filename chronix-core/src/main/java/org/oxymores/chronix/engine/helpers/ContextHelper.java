@@ -4,30 +4,30 @@ import java.io.File;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- Some methods not used at all for now.
+ * Some methods not used at all for now.
  */
 public final class ContextHelper
 {
     private static final Logger log = LoggerFactory.getLogger(ContextHelper.class);
 
     private ContextHelper()
-    {
-    }
+    {}
 
-    public static void resetContext(ChronixContext ctx)
+    public static void resetContext(ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb)
     {
         // Clear metabase directory of all XML/AMQ files
-        File[] fileList = new File(ctx.getContextRoot()).listFiles();
+        File[] fileList = ctxMeta.getRootMeta().listFiles();
         for (File ff : fileList)
         {
             if (!ff.getAbsolutePath().contains("db_") && !FileUtils.deleteQuietly(ff))
@@ -37,7 +37,8 @@ public final class ContextHelper
         }
 
         // Clear JPA elements (do NOT simply remove the files - this would invalidate the context)
-        try (Connection connHist = ctx.getHistoryDataSource().beginTransaction(); Connection connTransac = ctx.getTransacDataSource().beginTransaction())
+        try (Connection connHist = ctxDb.getHistoryDataSource().beginTransaction();
+                Connection connTransac = ctxDb.getTransacDataSource().beginTransaction())
         {
             // Clean history db
             connHist.createQuery("DELETE FROM RunLog r").executeUpdate();

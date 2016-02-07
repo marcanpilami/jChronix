@@ -19,93 +19,102 @@
  */
 package org.oxymores.chronix.core;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.joda.time.DateTime;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.DTOTransition;
+import org.oxymores.chronix.core.source.api.EngineCallback;
+import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.ChronixEngine;
 import org.oxymores.chronix.engine.RunnerManager;
 import org.oxymores.chronix.engine.data.EventAnalysisResult;
 import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
 import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
-import org.oxymores.chronix.exceptions.ChronixRunException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-public class ActiveNodeBase extends NamedApplicationObject
+public class EventSourceContainer implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
-    private static final Logger log = LoggerFactory.getLogger(ActiveNodeBase.class);
+    private static final Logger log = LoggerFactory.getLogger(EventSourceContainer.class);
 
     @NotNull
     protected ArrayList<Parameter> parameters;
 
-    @NotNull
-    protected Map<String, String> pluginParameters = new HashMap<>();
+    private Application2 application;
 
-    protected String plugin = null;
+    // A simple indication - only used when a plugin is missing and we need its name to help the user.
+    private String pluginName;
 
-    public ActiveNodeBase()
+    // The real event source description
+    private transient DTO eventSource;
+    private transient EventSourceBehaviour behaviour;
+
+    public EventSourceContainer(Application2 app, DTO source, EventSourceBehaviour behaviour, String pluginName)
     {
         super();
+        this.application = app;
+        this.eventSource = source;
+        this.behaviour = behaviour;
+        this.pluginName = pluginName;
         parameters = new ArrayList<>();
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s (%s)", name, description);
+        return String.format("%s (%s)", eventSource.getName(), pluginName);
     }
 
-    /**
-     * The name of the OSGI plugin which to load to run this active event source. Null if none (i.e. no need for plugin - this source is an
-     * internal engine source)
-     */
-    public String getPlugin()
+    // ////////////////////////////////////////////////////////////////////////////
+    // stupid get/set
+
+    public String getName()
     {
-        return this.plugin;
+        return this.eventSource.getName();
     }
 
-    public void setPlugin(String plugin)
+    public UUID getId()
     {
-        this.plugin = plugin;
+        return this.eventSource.getId();
     }
 
-    public Map<String, String> getPluginParameters()
+    public DTO getSource()
     {
-        return this.pluginParameters;
+        return this.eventSource;
+    }
+
+    public EventSourceBehaviour getBehaviour()
+    {
+        return this.behaviour;
     }
 
     // stupid get/set
     // ////////////////////////////////////////////////////////////////////////////
+
     // ////////////////////////////////////////////////////////////////////////////
     // Relationship traversing
     public List<State> getClientStates()
     {
-        ArrayList<State> res = new ArrayList<>();
-        for (State s : this.application.getStates())
-        {
-            if (s.represents == this)
-            {
-                res.add(s);
-            }
-        }
-        return res;
+        return this.application.getStatesClientOfSource(getId());
     }
 
     // Relationship traversing
     // ////////////////////////////////////////////////////////////////////////////
+
     // ////////////////////////////////////////////////////////////////////////////
     // Parameter handling
     public ArrayList<Parameter> getParameters()
@@ -127,13 +136,7 @@ public class ActiveNodeBase extends NamedApplicationObject
         p.setDescription(description);
         p.setKey(key);
         p.setValue(value);
-        this.application.addParameter(p);
         addParameter(p);
-    }
-
-    public void addPluginParameter(String key, String value)
-    {
-        this.pluginParameters.put(key, value);
     }
 
     // Parameter handling
@@ -141,9 +144,8 @@ public class ActiveNodeBase extends NamedApplicationObject
 
     // ////////////////////////////////////////////////////////////////////////////
     // Event analysis
-    // Do the given events allow for a transition originating from a state
-    // representing this source?
-    public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(Transition tr, List<Event> events, Place p, Connection conn)
+    // Do the given events allow for a transition originating from a state representing this source?
+    public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(DTOTransition tr, List<Event> events, Place p, Connection conn)
     {
         PlaceAnalysisResult res = new PlaceAnalysisResult(p);
         res.res = false;
@@ -156,35 +158,36 @@ public class ActiveNodeBase extends NamedApplicationObject
                 continue;
             }
 
-            if (!e.getStateID().equals(tr.stateFrom.id))
+            if (!e.getStateID().equals(tr.getFrom()))
             {
                 // Only accept events from the analyzed state
                 continue;
             }
 
             // Check guards
-            if (tr.guard1 != null && !tr.guard1.equals(e.getConditionData1()))
+            if (tr.getGuard1() != null && !tr.getGuard1().equals(e.getConditionData1()))
             {
                 continue;
             }
-            if (tr.guard2 != null && !tr.guard2.equals(e.getConditionData2()))
+            if (tr.getGuard2() != null && !tr.getGuard2().equals(e.getConditionData2()))
             {
                 continue;
             }
-            if (tr.guard3 != null && !tr.guard3.equals(e.getConditionData3()))
+            if (tr.getGuard3() != null && !tr.getGuard3().equals(e.getConditionData3()))
             {
                 continue;
             }
-            if (tr.guard4 != null && !tr.guard4.equals(e.getConditionData4()))
+            if (tr.getGuard4() != null && !tr.getGuard4().equals(e.getConditionData4()))
             {
                 continue;
             }
 
             // Check calendar if the transition is calendar-aware
-            if (tr.calendarAware)
+            if (tr.isCalendarAware())
             {
+                State stateTo = this.application.getState(tr.getTo());
                 log.debug("Checking wether an event respects a calendar transition guard");
-                if (!tr.stateTo.usesCalendar())
+                if (!stateTo.usesCalendar())
                 {
                     // No calendar used on the target - yet the transition must make sure a calendar is enforced...
                     continue;
@@ -203,11 +206,11 @@ public class ActiveNodeBase extends NamedApplicationObject
 
                     try
                     {
-                        if (!e.getCalendarOccurrenceID().equals(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId()))
+                        if (!e.getCalendarOccurrenceID().equals(stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId()))
                         {
-                            CalendarDay cd1 = tr.stateTo.getCalendar().getDay(e.getCalendarOccurrenceID());
-                            CalendarDay cd2 = tr.stateTo.getCalendar()
-                                    .getDay(tr.stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId());
+                            CalendarDay cd1 = stateTo.getCalendar().getDay(e.getCalendarOccurrenceID());
+                            CalendarDay cd2 = stateTo.getCalendar()
+                                    .getDay(stateTo.getCurrentCalendarPointer(conn, p).getNextRunOccurrenceId());
                             log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)",
                                     cd1.seq, cd2.seq));
                             continue;
@@ -234,7 +237,7 @@ public class ActiveNodeBase extends NamedApplicationObject
     }
 
     public EventAnalysisResult isStateExecutionAllowed(State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
-            ChronixContext ctx)
+            ChronixEngine engine)
     {
         EventAnalysisResult res = new EventAnalysisResult(s);
 
@@ -248,7 +251,7 @@ public class ActiveNodeBase extends NamedApplicationObject
         List<Event> sessionEvents = new ArrayList<>();
         for (Event e : sessionEvents2)
         {
-            for (Place p : s.runsOn.places)
+            for (Place p : s.getRunsOnPlaces())
             {
                 if (!sessionEvents.contains(e) && !e.wasConsumedOnPlace(p, s, conn))
                 {
@@ -265,27 +268,28 @@ public class ActiveNodeBase extends NamedApplicationObject
         log.debug("There are " + sessionEvents.size() + " events not consumed to be considered for analysis");
 
         // Check every incoming transition: are they allowed?
-        for (Transition tr : s.getTrReceivedHere())
+        for (DTOTransition tr : s.getTransitionsReceivedHere())
         {
-            log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.represents.getName(),
-                    s.chain.getName(), sessionEvents.size()));
+            log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.getRepresents().getName(),
+                    s.getContainerName(), sessionEvents.size()));
 
-            TransitionAnalysisResult tar = tr.isTransitionAllowed(sessionEvents, conn);
+            TransitionAnalysisResult tar = State.isTransitionAllowed(this.application, tr, sessionEvents, conn);
 
-            if (tar.totallyBlocking() && this.multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND)
+            if (tar.totallyBlocking()) // we do an AND by default
             {
                 // No need to go further - one transition will block everything
                 log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
-                        s.represents.getName(), s.chain.getName(), tr.stateFrom.represents.name));
+                        s.getRepresents().getName(), s.getContainerName(),
+                        this.application.getState(tr.getFrom()).getRepresents().getName()));
                 return new EventAnalysisResult(s);
             }
 
-            res.analysis.put(tr.id, tar);
+            res.analysis.put(tr.getId(), tar);
         }
 
         List<Place> places = res.getPossiblePlaces();
-        log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places", s.represents.getName(),
-                s.chain.getName(), places.size()));
+        log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places",
+                s.getRepresents().getName(), s.getContainerName(), places.size()));
 
         // Check calendar
         for (Place p : places.toArray(new Place[0]))
@@ -296,19 +300,19 @@ public class ActiveNodeBase extends NamedApplicationObject
             }
         }
         log.debug(String.format("After taking calendar conditions into account, the state [%s] in chain [%s] could run on %s places",
-                s.represents.getName(), s.chain.getName(), places.size()));
+                s.getRepresents().getName(), s.getContainerName(), places.size()));
 
         // Go
         if (!places.isEmpty())
         {
             log.debug(String.format(
                     "State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
-                    s.represents.getName(), s.chain.getName(), places.size(), res.consumedEvents.size()));
+                    s.getRepresents().getName(), s.getContainerName(), places.size(), res.consumedEvents.size()));
 
             s.consumeEvents(res.consumedEvents, places, conn);
             for (Place p : places)
             {
-                if (p.node.getComputingNode() == s.application.getLocalNode())
+                if (p.node.getComputingNode() == engine.getLocalNode())
                 {
                     s.runFromEngine(p, conn, pjProducer, session, evt);
                 }
@@ -329,81 +333,29 @@ public class ActiveNodeBase extends NamedApplicationObject
     // Responsible for parameters resolution.
     // Default implementation resolves all parameters. Should usually be called
     // by overloads.
-    public void prepareRun(PipelineJob pj, RunnerManager sender, ChronixContext ctx)
+    public void prepareRun(PipelineJob pj, RunnerManager sender)
     {
-        for (Parameter p : this.parameters)
-        {
-            p.resolveValue(ctx, sender, pj);
-        }
+        /*
+         * for (Parameter p : this.parameters) { p.resolveValue(ctx, sender, pj); }
+         */
     }
 
-    // Called before external run (i.e. sending the PJ to the runner agent)
-    // Supposed to do local operations only.
-    // Used by active nodes which influence the scheduling itself rather than run a payload.
-    // Not called within an open JPA transaction - if you open one, close it!
-    public void internalRun(Connection conn, ChronixContext ctx, PipelineJob pj, MessageProducer jmsProducer, Session jmsSession,
-            DateTime virtualTime)
+    public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        // Do nothing by default.
+        return new RunResult(jd, this.behaviour.run(cb, jd));
     }
 
-    public DateTime selfTrigger(MessageProducer eventProducer, Session jmsSession, ChronixContext ctx, Connection conn, DateTime present)
-            throws ChronixRunException
+    public RunResult forceOK(EngineCallback cb, JobDescription jd)
     {
-        throw new NotImplementedException();
+        return new RunResult(jd, this.behaviour.runForceOk(cb, jd));
     }
 
-    public RunResult forceOK()
+    public RunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
-        RunResult rr = new RunResult();
-        rr.returnCode = 0;
-        rr.conditionData2 = null;
-        rr.conditionData3 = null;
-        rr.conditionData4 = null;
-        rr.end = DateTime.now();
-        rr.logStart = "Job forced OK";
-        rr.fullerLog = rr.logStart;
-        rr.start = rr.end;
-
-        return rr;
+        return new RunResult(jd, this.behaviour.runDisabled(cb, jd));
     }
 
     //
     // ////////////////////////////////////////////////////////////////////////////
-    // ////////////////////////////////////////////////////////////////////////////
-    // Flags (engine and runner)
-    // How should the runner agent run this source? (shell command, sql through
-    // JDBC, ...)
 
-    // Should it be run by a runner agent?
-    public boolean hasExternalPayload()
-    {
-        return false;
-    }
-
-    // Should it be run locally but asynchronously?
-    public boolean hasInternalPayload()
-    {
-        return false;
-    }
-
-    // Should the node execution results be visible in the history table?
-    public boolean visibleInHistory()
-    {
-        return true;
-    }
-
-    // Should it be executed by the self-trigger agent?
-    public boolean selfTriggered()
-    {
-        return false;
-    }
-
-    // How should it behave when multiple transition point on a single State?
-    public MultipleTransitionsHandlingMode multipleTransitionHandling()
-    {
-        return MultipleTransitionsHandlingMode.AND;
-    }
-    //
-    // ////////////////////////////////////////////////////////////////////////////
 }

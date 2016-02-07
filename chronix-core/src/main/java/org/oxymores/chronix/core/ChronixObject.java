@@ -35,7 +35,7 @@ public class ChronixObject implements Serializable
     private static final long serialVersionUID = 1106120751950998543L;
 
     @NotNull
-    protected UUID id;
+    public UUID id;
 
     @NotNull
     protected ArrayList<EnvironmentParameter> envParams;

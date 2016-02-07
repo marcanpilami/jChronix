@@ -28,13 +28,13 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.slf4j.Logger;
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
+import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.transactional.Event;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
@@ -61,7 +61,7 @@ class EventListener extends BaseListener
     {
         // For commits: remember an event can be analyzed multiple times without problems.
         ObjectMessage omsg = (ObjectMessage) msg;
-        Event evt, tmp;
+        Event evt;
         try
         {
             Object o = omsg.getObject();
@@ -72,12 +72,10 @@ class EventListener extends BaseListener
                 return;
             }
             evt = (Event) o;
-            //TODO: why do we look it up? For analysis status?
-            /*tmp = this.emTransac.find(Event.class, evt.getId());
-             if (tmp != null)
-             {
-             evt = tmp;
-             }*/
+            // TODO: why do we look it up? For analysis status?
+            /*
+             * tmp = this.emTransac.find(Event.class, evt.getId()); if (tmp != null) { evt = tmp; }
+             */
         }
         catch (JMSException e)
         {
@@ -88,14 +86,14 @@ class EventListener extends BaseListener
 
         //
         // Check event is OK while getting data from event
-        Application a;
+        Application2 a;
         State s;
-        ActiveNodeBase active;
+        EventSourceContainer active;
         try
         {
-            a = evt.getApplication(ctx);
-            s = evt.getState(ctx);
-            active = s.getRepresents();
+            a = evt.getApplication(ctxMeta);
+            s = evt.getState(ctxMeta);
+            active = a.getEventSourceContainer(evt.getActiveID());
         }
         catch (Exception e)
         {
@@ -109,14 +107,14 @@ class EventListener extends BaseListener
         //
         // Analyse event!
         ArrayList<Event> toCheck = new ArrayList<>();
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             // Should it be discarded?
             if (evt.getBestBefore() != null && evt.getBestBefore().isBeforeNow())
             {
-                log.info(String
-                        .format("Event %s (from application %s / active node %s) was discarded because it was too old according to its 'best before' date",
-                                evt.getId(), a.getName(), active.getName()));
+                log.info(String.format(
+                        "Event %s (from application %s / active node %s) was discarded because it was too old according to its 'best before' date",
+                        evt.getId(), a.getName(), active.getName()));
                 jmsCommit();
                 return;
             }
@@ -150,7 +148,8 @@ class EventListener extends BaseListener
             // Analyze on every local consumer
             for (State st : localConsumers)
             {
-                toCheck.addAll(st.getRepresents().isStateExecutionAllowed(st, evt, conn, producerPJ, jmsSession, ctx).consumedEvents);
+                toCheck.addAll(st.getRepresentsContainer().isStateExecutionAllowed(st, evt, conn, producerPJ, jmsSession,
+                        this.broker.getEngine()).consumedEvents);
             }
 
             // Ack
@@ -168,7 +167,7 @@ class EventListener extends BaseListener
 
     private void cleanUp(List<Event> events)
     {
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             Query q = conn.createQuery("DELETE FROM Event WHERE id=:id");
             HashSet<Event> hs = new HashSet<>();
@@ -179,7 +178,7 @@ class EventListener extends BaseListener
             for (Event e : events)
             {
                 boolean shouldPurge = true;
-                State s = e.getState(ctx);
+                State s = e.getState(ctxMeta);
                 List<State> clientStates = s.getClientStates();
 
                 for (State cs : clientStates)
@@ -187,7 +186,7 @@ class EventListener extends BaseListener
                     for (Place p : cs.getRunsOn().getPlaces())
                     {
                         // Don't purge if place is local & event no consumed on that place
-                        if (p.getNode().getComputingNode() == e.getApplication(ctx).getLocalNode() && !e.wasConsumedOnPlace(p, cs, conn))
+                        if (p.getNode().getComputingNode() == this.broker.getEngine().getLocalNode() && !e.wasConsumedOnPlace(p, cs, conn))
                         {
                             shouldPurge = false;
                             break;

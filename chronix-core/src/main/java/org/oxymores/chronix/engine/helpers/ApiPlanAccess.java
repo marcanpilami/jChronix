@@ -2,7 +2,6 @@ package org.oxymores.chronix.engine.helpers;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,17 +13,15 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Path.Node;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.joda.time.DateTime;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.active.Clock;
-import org.oxymores.chronix.core.active.ClockRRule;
+import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
@@ -32,15 +29,11 @@ import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
-import org.oxymores.chronix.dto.DTORRule;
-import org.oxymores.chronix.dto.DTOResultClock;
+import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.PeriodList;
 
 /**
  * The Plan Metadata API implementation as an OSGI Declarative Service.<br>
@@ -57,18 +50,7 @@ public class ApiPlanAccess implements PlanAccessService
     @Activate
     private void activate(ComponentContext cc)
     {
-        resetCache();
-    }
-
-    public ApiPlanAccess()
-    {
-        // Default constructor for OSGI injection
-    }
-
-    public ApiPlanAccess(ChronixContextMeta ctx)
-    {
-        // Specific constructor for non-OSGI environments
-        this.ctx = ctx;
+        ctx = ApiOrder.getMeta("C:\\TEMP\\db1");
     }
 
     @Override
@@ -76,6 +58,18 @@ public class ApiPlanAccess implements PlanAccessService
     {
         DTOApplication2 app = new DTOApplication2();
         app.setId(UUID.randomUUID());
+
+        // Create one group per place inside the environment
+        for (Place p : this.ctx.getEnvironment().getPlacesList())
+        {
+            DTOPlaceGroup pg = new DTOPlaceGroup();
+            pg.setId(UUID.randomUUID());
+            pg.setDescription(p.getName());
+            pg.setName(p.getName());
+
+            app.getGroups().add(pg);
+        }
+
         return app;
     }
 
@@ -160,7 +154,6 @@ public class ApiPlanAccess implements PlanAccessService
             }
         }
 
-        log.debug("nb of sources: " + app.getEventSources().size());
         DTOApplication2 res = new DTOApplication2();
         res.setActive(active);
         res.setDescription(app.getDescription());
@@ -169,6 +162,12 @@ public class ApiPlanAccess implements PlanAccessService
         res.setLatestVersionComment(app.getCommitComment());
         res.setName(app.getName());
         res.setVersion(app.getVersion());
+
+        for (PlaceGroup pg : app.getGroupsList())
+        {
+            DTOPlaceGroup d = CoreToDto.getPlaceGroup(pg);
+            res.getGroups().add(d);
+        }
 
         return res;
     }
@@ -180,32 +179,17 @@ public class ApiPlanAccess implements PlanAccessService
         // return CoreToDto.getEnvironment(this.ctx.getEnvironment());
     }
 
-    @Override
-    public DTOResultClock testRecurrenceRule(DTORRule rule)
-    {
-        DTOResultClock res = new DTOResultClock();
-        ClockRRule r = DtoToCore.getRRule(rule);
-        Clock tmp = new Clock();
-        tmp.addRRuleADD(r);
-        PeriodList pl = null;
-
-        try
-        {
-            pl = tmp.getOccurrences(new DateTime(rule.getSimulStart()), new DateTime(rule.getSimulEnd()));
-        }
-        catch (ParseException e)
-        {
-            log.error("Could not compute next ocurrences", e);
-        }
-
-        for (Object pe : pl)
-        {
-            Period p = (Period) pe;
-            res.getRes().add(p.getStart());
-        }
-
-        return res;
-    }
+    /*
+     * @Override public DTOResultClock testRecurrenceRule(DTORRule rule) { DTOResultClock res = new DTOResultClock(); ClockRRule r =
+     * DtoToCore.getRRule(rule); Clock tmp = new Clock(); tmp.addRRuleADD(r); PeriodList pl = null;
+     * 
+     * try { pl = tmp.getOccurrences(new DateTime(rule.getSimulStart()), new DateTime(rule.getSimulEnd())); } catch (ParseException e) {
+     * log.error("Could not compute next ocurrences", e); }
+     * 
+     * for (Object pe : pl) { Period p = (Period) pe; res.getRes().add(p.getStart()); }
+     * 
+     * return res; }
+     */
 
     @Override
     public void resetApplicationDraft(DTOApplication2 app)
@@ -223,7 +207,13 @@ public class ApiPlanAccess implements PlanAccessService
 
         for (DTO d : app.getEventSources())
         {
-            a.registerSource(d, this.ctx.getBehaviour(d));
+            a.registerSource(d, this.ctx.getBehaviour(d), FrameworkUtil.getBundle(d.getClass()).getSymbolicName());
+        }
+
+        for (DTOPlaceGroup pg : app.getGroups())
+        {
+            PlaceGroup gr = DtoToCore.getPlaceGroup(pg, ctx.getEnvironment());
+            a.addGroup(gr);
         }
 
         this.ctx.saveApplicationDraft(a);
@@ -329,7 +319,7 @@ public class ApiPlanAccess implements PlanAccessService
         Environment n = DtoToCore.getEnvironment(nn);
 
         // Validate & translate results for the GUI
-        res = getErrors(ChronixContext.validate(n));
+        // res = getErrors(ChronixContext.validate(n));
         return res;
     }
 
@@ -359,6 +349,7 @@ public class ApiPlanAccess implements PlanAccessService
     public void resetCache()
     {
         // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ctx = new ChronixContextMeta("C:\\TEMP\\db1");
+        ApiOrder.resetCtx();
+        ctx = ApiOrder.getMeta("C:\\TEMP\\db1");
     }
 }

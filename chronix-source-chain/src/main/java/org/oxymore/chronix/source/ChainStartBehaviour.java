@@ -1,13 +1,16 @@
 package org.oxymore.chronix.source;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymore.chronix.chain.dto.DTOChainStart;
+import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
 @Component(immediate = true, service = EventSourceBehaviour.class)
 public class ChainStartBehaviour extends EventSourceBehaviour
@@ -33,17 +36,24 @@ public class ChainStartBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public RunResult run(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
     {
-        RunResult rr = new RunResult();
+        EventSourceRunResult rr = new EventSourceRunResult();
         rr.returnCode = 0;
         return rr;
     }
 
     @Override
-    public RunResult runDisabled(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
         return run(cb, jd);
     }
 
+    @Override
+    public List<Class<? extends DTO>> getExposedDtoClasses()
+    {
+        List<Class<? extends DTO>> res = new ArrayList<>();
+        res.add(DTOChainStart.class);
+        return res;
+    }
 }

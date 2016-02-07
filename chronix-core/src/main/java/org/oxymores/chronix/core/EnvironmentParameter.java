@@ -54,11 +54,12 @@ public class EnvironmentParameter
     }
 
     /**
-     Full environment, without taking into account addToRunEnvironment
-     @param s
-     @param p
-     @param params
-     @return
+     * Full environment, without taking into account addToRunEnvironment
+     * 
+     * @param s
+     * @param p
+     * @param params
+     * @return
      */
     public static Map<String, String> resolveEnvironment(State s, Place p, EnvironmentValue... params)
     {
@@ -68,10 +69,10 @@ public class EnvironmentParameter
         // Auto variables are reset each time and always have priority over others.
         addAllToRes(res, p.getNode().getEnvVars());
         addAllToRes(res, p.getEnvVars());
-        addAllToRes(res, s.getApplication().getEnvVars());
+        // addAllToRes(res, s.getApplication().getEnvVars());
         addAllToRes(res, s.getRunsOn().getEnvVars());
-        addAllToRes(res, s.getRepresents().getEnvVars());
-        addAllToRes(res, s.getChain().getEnvVars());
+        // addAllToRes(res, s.getRepresents().getEnvVars());
+        // addAllToRes(res, s.getChain().getEnvVars());
         addAllToRes(res, s.getEnvVars());
         for (EnvironmentValue ev : params)
         {
@@ -87,11 +88,12 @@ public class EnvironmentParameter
     }
 
     /**
-     The environment that should be exposed to the runtime environment (i.e. shell variables, etc.)
-     @param s
-     @param p
-     @param params
-     @return
+     * The environment that should be exposed to the runtime environment (i.e. shell variables, etc.)
+     * 
+     * @param s
+     * @param p
+     * @param params
+     * @return
      */
     public static Map<String, String> resolveRuntimeEnvironment(State s, Place p, EnvironmentValue... params)
     {
@@ -101,10 +103,10 @@ public class EnvironmentParameter
         // Auto variables are reset each time and always have priority over others.
         addAllPublicToRes(res, p.getNode().getEnvVars());
         addAllPublicToRes(res, p.getEnvVars());
-        addAllPublicToRes(res, s.getApplication().getEnvVars());
+        // addAllPublicToRes(res, s.getApplication().getEnvVars());
         addAllPublicToRes(res, s.getRunsOn().getEnvVars());
-        addAllPublicToRes(res, s.getRepresents().getEnvVars());
-        addAllPublicToRes(res, s.getChain().getEnvVars());
+        // addAllPublicToRes(res, s.getRepresents().getEnvVars());
+        // addAllPublicToRes(res, s.getChain().getEnvVars());
         addAllPublicToRes(res, s.getEnvVars());
         for (EnvironmentValue ev : params)
         {

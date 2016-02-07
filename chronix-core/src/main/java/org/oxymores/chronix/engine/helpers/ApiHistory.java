@@ -9,7 +9,7 @@ import org.joda.time.DateTime;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.engine.api.HistoryService;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
@@ -25,13 +25,13 @@ public class ApiHistory implements HistoryService
     private static final Logger log = LoggerFactory.getLogger(ApiHistory.class);
 
     // The service works under an independent context.
-    private ChronixContext ctx;
+    private ChronixContextTransient ctxDb;
 
     @Activate
     private void activate(ComponentContext cc)
     {
-        // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ctx = new ChronixContext("local", "C:\\TEMP\\db1", false, "C:\\TEMP\\db1\\db_history\\db", "C:\\TEMP\\db1\\db_transac\\db");
+        // TODO: use configuration.
+        ctxDb = new ChronixContextTransient("C:\\TEMP\\db1\\db_history\\db", "C:\\TEMP\\db1\\db_transac\\db");
     }
 
     public ApiHistory()
@@ -39,10 +39,10 @@ public class ApiHistory implements HistoryService
         // Default constructor for OSGI injection
     }
 
-    public ApiHistory(ChronixContext ctx)
+    public ApiHistory(ChronixContextTransient ctx)
     {
         // Specific constructor for non-OSGI environments
-        this.ctx = ctx;
+        this.ctxDb = ctx;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ApiHistory implements HistoryService
         }
 
         // TODO: direct to DTO attempt!
-        try (Connection conn = ctx.getHistoryDataSource().open())
+        try (Connection conn = ctxDb.getHistoryDataSource().open())
         {
             String sort = "";
             if (q.getSorts().size() > 0)
@@ -105,7 +105,7 @@ public class ApiHistory implements HistoryService
     {
         String res;
 
-        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
         {
             res = conn.createQuery("SELECT shortLog FROM RunLog WHERE id=:id").addParameter("id", id).executeScalar(String.class);
         }
@@ -126,7 +126,7 @@ public class ApiHistory implements HistoryService
     public File getLogFile(UUID launchId)
     {
         String path;
-        try (Connection conn = this.ctx.getHistoryDataSource().open())
+        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
         {
             path = conn.createQuery("SELECT logPath FROM RunLog WHERE id=:id").addParameter("id", launchId).executeScalar(String.class);
         }

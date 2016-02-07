@@ -1,0 +1,23 @@
+<configuration>
+	<appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%-6relative %-5level %-35.35logger{35} %-25thread %-10mdc{node} - %message%exception%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="org.apache.activemq" level="WARN" />
+	<logger name="hsqldb" level="WARN" />
+	<logger name="org.apache.bval" level="WARN" />
+	<logger name="org.ops4j" level="WARN" />
+	<logger name="org.hibernate.validator" level="INFO" />
+	<logger name="net.fortuna.ical4j" level="WARN" />
+	<logger name="org.apache.kahadb" level="WARN" />
+	<logger name="org.sql2o" level="INFO" />
+	<logger name="shaded.org.eclipse.aether" level="WARN" />
+	<logger name="shaded.org.apache.http" level="WARN" />
+	<logger name="org.apache.aries.blueprint" level="INFO" />
+
+	<root level="DEBUG">
+		<appender-ref ref="consoleAppender" />
+	</root>
+</configuration>

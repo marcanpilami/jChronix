@@ -19,7 +19,7 @@ public final class Constants
 
     // ENGINE
     public static final int BROKER_PORT_FREEING_MS = 1000;
-    public static final int DEFAULT_NB_RUNNER = 4;
+    public static final int DEFAULT_NB_RUNNER = 1;
 
     // TOKENS
     public static final int MAX_TOKEN_VALIDITY_MN = 10;

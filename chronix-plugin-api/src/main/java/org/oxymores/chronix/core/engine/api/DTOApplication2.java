@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOApplication2
 {
@@ -16,6 +17,19 @@ public class DTOApplication2
     private String latestVersionComment = "";
 
     private List<DTO> eventSources = new ArrayList<>();
+    private List<DTOPlaceGroup> groups = new ArrayList<>();
+
+    public DTOPlaceGroup getGroup(String name)
+    {
+        for (DTOPlaceGroup pg : groups)
+        {
+            if (pg.getName().equals(name))
+            {
+                return pg;
+            }
+        }
+        throw new RuntimeException("no group named " + name);
+    }
 
     public String getName()
     {
@@ -92,7 +106,16 @@ public class DTOApplication2
         this.eventSources.add(source);
     }
 
-    // private List<DTOPlaceGroup> groups;
+    public List<DTOPlaceGroup> getGroups()
+    {
+        return groups;
+    }
+
+    public void setGroups(List<DTOPlaceGroup> groups)
+    {
+        this.groups = groups;
+    }
+
     // private List<DTOParameter> parameters;
 
 }

@@ -8,15 +8,26 @@ public class DTOState
     protected UUID id = UUID.randomUUID();
 
     // Drawings
-    protected Integer x, y;
+    private Integer x, y;
 
-    protected Boolean parallel = false;
+    private Boolean parallel = false;
 
-    protected Integer warnAfterMn, killAfterMn, maxPipeWaitTime, eventValidityMn;
+    private Integer warnAfterMn, killAfterMn, maxPipeWaitTime, eventValidityMn;
 
-    protected UUID eventSourceId;
+    private UUID eventSourceId;
 
-    protected List<UUID> exclusiveStatesId;
+    private List<UUID> exclusiveStatesId;
+
+    private UUID runsOnId;
+
+    // Calendar stuff
+    private UUID calendarId;
+    private int calendarShift = 0;
+    private Boolean loopMissedOccurrences = false;
+    private Boolean endOfOccurrence = false;
+    private Boolean blockIfPreviousFailed = false;
+
+    // private List<DTOToken> tokens; sequences
 
     public Integer getX()
     {
@@ -116,6 +127,66 @@ public class DTOState
     public void setId(UUID id)
     {
         this.id = id;
+    }
+
+    public UUID getRunsOnId()
+    {
+        return runsOnId;
+    }
+
+    public void setRunsOnId(UUID runsOnId)
+    {
+        this.runsOnId = runsOnId;
+    }
+
+    public UUID getCalendarId()
+    {
+        return calendarId;
+    }
+
+    public void setCalendarId(UUID calendarId)
+    {
+        this.calendarId = calendarId;
+    }
+
+    public int getCalendarShift()
+    {
+        return calendarShift;
+    }
+
+    public void setCalendarShift(int calendarShift)
+    {
+        this.calendarShift = calendarShift;
+    }
+
+    public Boolean getLoopMissedOccurrences()
+    {
+        return loopMissedOccurrences;
+    }
+
+    public void setLoopMissedOccurrences(Boolean loopMissedOccurrences)
+    {
+        this.loopMissedOccurrences = loopMissedOccurrences;
+    }
+
+    public Boolean getEndOfOccurrence()
+    {
+        return endOfOccurrence;
+    }
+
+    public void setEndOfOccurrence(Boolean endOfOccurrence)
+    {
+        this.endOfOccurrence = endOfOccurrence;
+    }
+
+    public Boolean getBlockIfPreviousFailed()
+    {
+        return blockIfPreviousFailed;
+    }
+
+    public void setBlockIfPreviousFailed(Boolean blockIfPreviousFailed)
+    {
+        this.blockIfPreviousFailed = blockIfPreviousFailed;
     }
 
 }

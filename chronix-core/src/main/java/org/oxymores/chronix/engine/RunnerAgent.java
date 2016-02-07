@@ -71,7 +71,8 @@ class RunnerAgent extends BaseListener
         log.info(String.format("Starting a runner agent"));
 
         // Log repository
-        this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.getContextRoot(), "LOCALJOBLOG"));
+        // TODO: path
+        this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat("C:/TEMP/db1", "LOCALJOBLOG"));
         if (!(new File(this.logDbPath)).exists())
         {
             (new File(this.logDbPath)).mkdir();
@@ -218,7 +219,7 @@ class RunnerAgent extends BaseListener
                     if (res.logSizeBytes <= 500000)
                     {
                         response = jmsSession.createBytesMessage();
-                        byte[] bytes = new byte[(int) res.logSizeBytes];
+                        byte[] bytes = new byte[(int) (long) res.logSizeBytes]; // Erk. But res.logSizeBytes <= 500000 so it's OK.
                         is = new FileInputStream(res.logPath);
                         is.read(bytes);
                         IOUtils.closeQuietly(is);

@@ -35,4 +35,9 @@ public interface JobDescription
      */
     public DateTime getVirtualTimeStart();
 
+    /**
+     * Some launches are done without event throwing and calendar updating. Sources may want to know it.
+     */
+    public boolean isOutOfPlan();
+
 }

@@ -29,7 +29,6 @@ import javax.validation.constraints.Size;
 
 import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
-import org.oxymores.chronix.core.active.ClockRRule;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -52,7 +51,7 @@ public class Calendar extends NamedApplicationObject
     @Size(message = "A calendar must have at least one occurrence", min = 1)
     protected ArrayList<CalendarDay> days;
 
-    protected ClockRRule createdFrom = null;
+    // protected ClockRRule createdFrom = null;
     protected boolean autoReset = false;
 
     // Constructor
@@ -190,15 +189,11 @@ public class Calendar extends NamedApplicationObject
         return null;
     }
 
-    public ClockRRule getCreatedFrom()
-    {
-        return createdFrom;
-    }
-
-    public void setCreatedFrom(ClockRRule createdFrom)
-    {
-        this.createdFrom = createdFrom;
-    }
+    /*
+     * public ClockRRule getCreatedFrom() { return createdFrom; }
+     * 
+     * public void setCreatedFrom(ClockRRule createdFrom) { this.createdFrom = createdFrom; }
+     */
 
     //
     // ///////////////////////////////////////////////////////////////
@@ -207,8 +202,9 @@ public class Calendar extends NamedApplicationObject
     public CalendarPointer getCurrentOccurrencePointer(Connection conn)
     {
         // Calendar current occurrence pointers have no states and places: they are only related to the calendar itself.
-        return conn.createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = :calendarID").
-                addParameter("calendarID", this.id.toString()).executeAndFetchFirst(CalendarPointer.class);
+        return conn
+                .createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID IS NULL AND p.placeID IS NULL AND p.calendarID = :calendarID")
+                .addParameter("calendarID", this.id.toString()).executeAndFetchFirst(CalendarPointer.class);
     }
 
     public CalendarDay getCurrentOccurrence(Connection conn)
@@ -254,17 +250,17 @@ public class Calendar extends NamedApplicationObject
         int minShift = 0;
         for (State s : usedInStates)
         {
-            if (s.calendarShift < minShift)
+            if (s.getCalendarShift() < minShift)
             {
-                minShift = s.calendarShift;
+                minShift = s.getCalendarShift();
             }
         }
         minShift--;
 
         CalendarDay cd = this.getOccurrenceShiftedBy(this.getFirstOccurrence(), -minShift);
-        log.info(String
-                .format("Calendar %s current value will be initialised at its first allowed occurrence by the shifts of the using states (max shift is %s): %s - %s",
-                        this.name, minShift, cd.getValue(), cd.getId()));
+        log.info(String.format(
+                "Calendar %s current value will be initialised at its first allowed occurrence by the shifts of the using states (max shift is %s): %s - %s",
+                this.name, minShift, cd.getValue(), cd.getId()));
 
         CalendarPointer tmp = new CalendarPointer();
         tmp.setApplication(this.application);
@@ -336,10 +332,10 @@ public class Calendar extends NamedApplicationObject
         CalendarDay d = this.getCurrentOccurrence(conn);
         for (StragglerIssue i : getStragglers(conn))
         {
-            log.warn(String
-                    .format("State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
-                            i.s.represents.name, i.p.name, i.s.chain.name, i.s.getCurrentCalendarOccurrence(conn, i.p).seq, d.seq,
-                            i.s.calendarShift));
+            log.warn(String.format(
+                    "State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
+                    i.s.getRepresents().getName(), i.p.name, "chain name", i.s.getCurrentCalendarOccurrence(conn, i.p).seq, d.seq,
+                    i.s.getCalendarShift()));
         }
     }
 

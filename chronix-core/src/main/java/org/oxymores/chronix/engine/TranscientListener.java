@@ -27,14 +27,13 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import org.apache.commons.lang.StringUtils;
 
-import org.slf4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.Transition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
@@ -86,7 +85,7 @@ class TranscientListener extends BaseListener
             Calendar ca;
             State ss = null;
 
-            ca = cp.getCalendar(ctx);
+            ca = cp.getCalendar(ctxMeta);
             if (ca == null)
             {
                 log.error("A calendar pointer was received that was unrelated to a locally known calendar - it was ignored");
@@ -95,7 +94,7 @@ class TranscientListener extends BaseListener
             }
             if (cp.getPlaceID() != null)
             {
-                ss = cp.getState(ctx);
+                ss = cp.getState(ctxMeta);
                 if (ss == null)
                 {
                     log.error("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
@@ -105,13 +104,14 @@ class TranscientListener extends BaseListener
             }
 
             // Save it/update it. Beware, id are not the same throughout the network, so query the logical key
-            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 if (cp.getPlaceID() != null)
                 {
                     // Concerning a single state, not the calendar itself.
-                    CalendarPointer tmp = conn.createQuery("SELECT * FROM CalendarPointer cp WHERE cp.stateID=:stateID "
-                            + "AND cp.placeID=:placeID AND cp.calendarID=:calendarID")
+                    CalendarPointer tmp = conn
+                            .createQuery("SELECT * FROM CalendarPointer cp WHERE cp.stateID=:stateID "
+                                    + "AND cp.placeID=:placeID AND cp.calendarID=:calendarID")
                             .addParameter("stateID", cp.getStateID()).addParameter("placeID", cp.getPlaceID())
                             .addParameter("calendarID", cp.getCalendarID()).executeAndFetchFirst(CalendarPointer.class);
                     if (tmp != null)
@@ -122,8 +122,9 @@ class TranscientListener extends BaseListener
                 else
                 {
                     // The calendar itself is moving.
-                    CalendarPointer tmp = conn.createQuery("SELECT * FROM CalendarPointer cp WHERE cp.stateID IS NULL "
-                            + "AND cp.placeID IS NULL AND cp.calendarID=:calendarID")
+                    CalendarPointer tmp = conn
+                            .createQuery("SELECT * FROM CalendarPointer cp WHERE cp.stateID IS NULL "
+                                    + "AND cp.placeID IS NULL AND cp.calendarID=:calendarID")
                             .addParameter("calendarID", cp.getCalendarID()).executeAndFetchFirst(CalendarPointer.class);
                     if (tmp != null)
                     {
@@ -140,9 +141,9 @@ class TranscientListener extends BaseListener
                     represents = ss.getRepresents().getName();
                 }
                 log.debug(String.format(
-                        "The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]", cp
-                        .getNextRunOccurrenceCd(ctx).getValue(), cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp
-                        .getLastEndedOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(), represents));
+                        "The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]",
+                        cp.getNextRunOccurrenceCd(ctxMeta).getValue(), cp.getLastEndedOkOccurrenceCd(ctxMeta).getValue(),
+                        cp.getLastEndedOccurrenceCd(ctxMeta).getValue(), cp.getLastStartedOccurrenceCd(ctxMeta).getValue(), represents));
 
                 // Re analyse events that may benefit from this calendar change
                 // All events still there are supposed to be waiting for a new analysis.
@@ -151,14 +152,14 @@ class TranscientListener extends BaseListener
                 for (State s : statesUsingCalendar)
                 {
                     // Events come from states *before* the ones that use the calendar
-                    for (Transition tr : s.getTrReceivedHere())
+                    for (State stateFrom : s.getParentStates())
                     {
-                        ids.add("'" + tr.getStateFrom().getId() + "'");
+                        ids.add("'" + stateFrom.getId() + "'");
                     }
                 }
                 // TODO: remove this horrible join and find a way to use bound parameters...
-                List<Event> events = conn.createQuery("SELECT * from Event e WHERE e.stateID IN (" + StringUtils.join(ids, ",") + ")").
-                        executeAndFetch(Event.class);
+                List<Event> events = conn.createQuery("SELECT * from Event e WHERE e.stateID IN (" + StringUtils.join(ids, ",") + ")")
+                        .executeAndFetch(Event.class);
 
                 // Send these events for analysis (local only - every execution node
                 // has also received this pointer)
@@ -185,7 +186,7 @@ class TranscientListener extends BaseListener
             log.debug("Saved correctly");
 
             // Some jobs may now be late (or later than before). Signal them (log only).
-            try (Connection conn = this.ctx.getTransacDataSource().open())
+            try (Connection conn = this.ctxDb.getTransacDataSource().open())
             {
                 ca.processStragglers(conn);
             }

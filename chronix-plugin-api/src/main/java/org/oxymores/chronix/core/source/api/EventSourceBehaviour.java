@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
-
 /**
  * The base class to extend for all event source plugins. <br>
  * An <strong>event source</strong> is a node of the production plan graph, that is an item that can be triggered (the source itself having
@@ -84,31 +81,29 @@ public abstract class EventSourceBehaviour
      * 
      * @return
      */
-    public abstract RunResult run(EngineCallback cb, JobDescription jd);
+    public abstract EventSourceRunResult run(EngineCallback cb, JobDescription jd);
 
     /**
      * This method simulates the result that a job would have had if it has ended OK, without actually running the job. (this is needed
      * because the interpretation of "OK" depends of the plugin)
-     * 
-     * @return
      */
-    public RunResult runForceOk(EngineCallback cb, JobDescription jd)
+    public EventSourceRunResult runForceOk(EngineCallback cb, JobDescription jd)
     {
-        // TODO: check this.
-        RunResult rr = new RunResult();
+        EventSourceRunResult rr = new EventSourceRunResult();
         rr.returnCode = 0;
-        rr.conditionData2 = null;
-        rr.conditionData3 = null;
-        rr.conditionData4 = null;
-        rr.end = DateTime.now();
-        rr.logStart = "Job forced OK";
-        rr.fullerLog = rr.logStart;
-        rr.start = rr.end;
+        rr.logStart = "Source forced OK";
 
         return rr;
     }
 
-    public abstract RunResult runDisabled(EngineCallback cb, JobDescription jd);
+    public EventSourceRunResult runDisabled(EngineCallback cb, JobDescription jd)
+    {
+        EventSourceRunResult rr = new EventSourceRunResult();
+        rr.returnCode = 0;
+        rr.logStart = "Source disabled - doing as if it had ended OK";
+
+        return rr;
+    }
 
     // Run methods
     ///////////////////////////////////////////////////////////////////////////
@@ -138,5 +133,27 @@ public abstract class EventSourceBehaviour
     }
 
     // Construction
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Toggles
+
+    /**
+     * Should the node execution results be visible in the history table, or should it be hidden (low end-user value)?
+     */
+    public boolean visibleInHistory()
+    {
+        return true;
+    }
+
+    /**
+     * Should it be executed by the self-trigger agent?
+     */
+    public boolean selfTriggered()
+    {
+        return false;
+    }
+
+    //
     ///////////////////////////////////////////////////////////////////////////
 }

@@ -22,23 +22,26 @@ package org.oxymores.chronix.core.transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.ChronixContext;
+import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 import org.oxymores.chronix.engine.modularity.runner.RunDescription;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.sql2o.Connection;
 
-public class PipelineJob extends TranscientBase
+public class PipelineJob extends TranscientBase implements JobDescription
 {
     private static final long serialVersionUID = -3301527645931127170L;
 
@@ -201,15 +204,15 @@ public class PipelineJob extends TranscientBase
         this.stoppedRunningAt = stoppedRunningAt;
     }
 
-    public boolean isReady(ChronixContext ctx)
+    public boolean isReady(ChronixContextMeta ctx)
     {
-        ActiveNodeBase a = this.getActive(ctx);
+        EventSourceContainer a = this.getActive(ctx);
         return a.getParameters().size() == this.resolvedParameters.size();
     }
 
     //
     // //////////////////////////////////////////////////////////////////////
-    public RunDescription getRD(ChronixContext ctx)
+    public RunDescription getRD(ChronixContextMeta ctx)
     {
         RunDescription rd = new RunDescription();
 
@@ -237,13 +240,13 @@ public class PipelineJob extends TranscientBase
         }
 
         // Execution method is determined by the source
-        rd.setPluginSelector(this.getActive(ctx).getPlugin());
+        // rd.setPluginSelector(this.getActive(ctx).getPlugin());
 
         // Actual command to run is determined by the plugin from the parameter map
-        for (Map.Entry<String, String> e : this.getActive(ctx).getPluginParameters().entrySet())
-        {
-            rd.addPluginParameter(e.getKey(), e.getValue());
-        }
+        /*
+         * for (Map.Entry<String, String> e : this.getActive(ctx).getPluginParameters().entrySet()) { rd.addPluginParameter(e.getKey(),
+         * e.getValue()); }
+         */
 
         // Run description is complete, on to the actual execution!
         return rd;
@@ -292,17 +295,17 @@ public class PipelineJob extends TranscientBase
         return e;
     }
 
-    public RunLog getEventLog(ChronixContext ctx)
+    public RunLog getEventLog(ChronixContextMeta ctx)
     {
         return this.getEventLog(ctx, new RunResult());
     }
 
-    public RunLog getEventLog(ChronixContext ctx, RunResult rr)
+    public RunLog getEventLog(ChronixContextMeta ctx, RunResult rr)
     {
         RunLog rlog = new RunLog();
-        Application a = ctx.getApplication(this.appID);
+        Application2 a = ctx.getApplication(this.appID);
         Place p = ctx.getEnvironment().getPlace(this.placeID);
-        ActiveNodeBase act = this.getActive(ctx);
+        EventSourceContainer act = this.getActive(ctx);
 
         rlog.setActiveNodeId(this.activeID);
         rlog.setActiveNodeName(act.getName());
@@ -311,7 +314,7 @@ public class PipelineJob extends TranscientBase
         rlog.setBeganRunningAt(this.beganRunningAt);
         rlog.setChainLaunchId(this.level1Id);
         rlog.setChainId(this.level0Id);
-        rlog.setChainName(a.getActiveNode(this.level0Id).getName());
+        rlog.setChainName(a.getEventSource(this.level0Id).getName());
         rlog.setDns(rr.envtServer);
         rlog.setEnteredPipeAt(this.enteredPipeAt);
         rlog.setExecutionNodeId(p.getNode().getId());
@@ -326,7 +329,7 @@ public class PipelineJob extends TranscientBase
         rlog.setShortLog(rr.logStart);
         rlog.setStateId(this.stateID);
         rlog.setStoppedRunningAt(this.stoppedRunningAt);
-        rlog.setVisible(act.visibleInHistory());
+        rlog.setVisible(act.getBehaviour().visibleInHistory());
         rlog.setWhatWasRun(this.runThis);
         rlog.setLogPath(rr.logPath);
 
@@ -369,6 +372,9 @@ public class PipelineJob extends TranscientBase
         return res;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Persistence
+
     public void insertOrUpdate(Connection conn)
     {
         int i = conn
@@ -391,5 +397,38 @@ public class PipelineJob extends TranscientBase
         }
 
         updateEnvValues(conn);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Public interface
+
+    @Override
+    public UUID getEventSourceId()
+    {
+        return this.activeID;
+    }
+
+    @Override
+    public UUID getLaunchId()
+    {
+        return this.id;
+    }
+
+    @Override
+    public UUID getParentScopeLaunchId()
+    {
+        return this.level2Id;
+    }
+
+    @Override
+    public DateTime getVirtualTimeStart()
+    {
+        return this.virtualTime;
+    }
+
+    @Override
+    public boolean isOutOfPlan()
+    {
+        return this.outOfPlan;
     }
 }

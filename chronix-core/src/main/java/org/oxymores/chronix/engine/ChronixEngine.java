@@ -19,21 +19,16 @@
  */
 package org.oxymores.chronix.engine;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
-import org.oxymores.chronix.exceptions.ChronixInitializationException;
-import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
-import org.oxymores.chronix.planbuilder.MaintenanceApplication;
-import org.oxymores.chronix.planbuilder.OperationsApplication;
-import org.oxymores.chronix.planbuilder.PlanBuilder;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -46,13 +41,13 @@ public class ChronixEngine extends Thread
 {
     private static Logger log = LoggerFactory.getLogger(ChronixEngine.class);
 
-    private boolean runnerMode;
-    private int runnerPort, feederPort;
-    private String runnerHost, feederHost;
+    private int feederPort;
+    private String feederHost;
 
-    protected ChronixContext ctx;
-    protected String dbPath;
-    protected String historyDbPath, transacDbPath;
+    protected ChronixContextMeta ctxMeta;
+    protected ChronixContextTransient ctxDb;
+    protected String dbPath, brokerPath, logPath;
+
     protected String localNodeName;
 
     protected Broker broker;
@@ -60,34 +55,34 @@ public class ChronixEngine extends Thread
 
     protected Semaphore stop, stopped, engineStops, engineStarts;
     protected boolean run = true;
-    protected int nbRunner;
 
     // ///////////////////////////////////////////////////////////////
     // Construction
-    public ChronixEngine(String dbPath, String nodeName)
+
+    public ChronixEngine(String dbPath, String nodeName, String logPath)
     {
-        this(dbPath, nodeName, false, 1);
+        this(dbPath, nodeName, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"),
+                FilenameUtils.concat(dbPath, "broker/amq"), logPath);
     }
 
-    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode)
-    {
-        this(dbPath, nodeName, runnerMode, 1);
-    }
-
-    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner)
-    {
-        this(dbPath, nodeName, runnerMode, nbRunner, FilenameUtils.concat(dbPath, "db_history/db"),
-                FilenameUtils.concat(dbPath, "db_transac/db"));
-    }
-
-    public ChronixEngine(String dbPath, String nodeName, boolean runnerMode, int nbRunner, String historyDBPath, String transacDbPath)
+    public ChronixEngine(String dbPath, String nodeName, String historyDBPath, String transacDbPath, String brokerDataPath, String logPath)
     {
         this.dbPath = dbPath;
-        this.runnerMode = runnerMode;
+        this.brokerPath = brokerDataPath;
         this.localNodeName = nodeName;
-        this.nbRunner = nbRunner;
-        this.historyDbPath = historyDBPath;
-        this.transacDbPath = transacDbPath;
+        this.logPath = logPath;
+
+        // preContextLoad();
+
+        this.ctxDb = new ChronixContextTransient(historyDBPath, transacDbPath);
+
+        // Force DB init to get errors at once
+        this.ctxDb.getHistoryDataSource();
+        this.ctxDb.getTransacDataSource();
+
+        this.ctxMeta = new ChronixContextMeta(dbPath);
+
+        // postContextLoad();
 
         // Putting a token in this will stop the engine
         this.stop = new Semaphore(0);
@@ -106,65 +101,23 @@ public class ChronixEngine extends Thread
         log.info(String.format("Engine %s starting on database %s", this.localNodeName, this.dbPath));
 
         // Remote nodes must fetch the environment on startup if not already present
-        if (!runnerMode && feederHost != null && !ChronixContext.hasEnvironmentFile(this.dbPath))
-        {
-            BootstrapListener bl = new BootstrapListener(new File(this.dbPath), localNodeName, feederHost, feederPort);
-            if (!bl.fetchEnvironment())
-            {
-                throw new ChronixInitializationException(
-                        "Could not fetch environment from remote node. Will not be able to start. See errors above for details.");
-            }
-        }
-
-        // Context
-        if (!runnerMode)
-        {
-            preContextLoad();
-            this.ctx = new ChronixContext(this.localNodeName, this.dbPath, false, this.historyDbPath, this.transacDbPath);
-            this.ctx.getHistoryDataSource(); // Force DB init to get errors at once
-            this.ctx.getTransacDataSource();
-            postContextLoad();
-        }
-
-        // Mock-up for hosted nodes
-        if (runnerMode)
-        {
-            ExecutionNode e = new ExecutionNode();
-            ExecutionNodeConnectionAmq c = new ExecutionNodeConnectionAmq();
-
-            e.setName(this.localNodeName);
-            c.setDns(this.runnerHost);
-            c.setqPort(this.runnerPort);
-            e.addConnectionMethod(c);
-            this.ctx = new ChronixContext("runner", this.dbPath, false, null, null);
-            this.ctx.setLocalNode(e);
-        }
+        /*
+         * if (feederHost != null && !ChronixContext.hasEnvironmentFile(this.dbPath)) { BootstrapListener bl = new BootstrapListener(new
+         * File(this.dbPath), localNodeName, feederHost, feederPort); if (!bl.fetchEnvironment()) { throw new
+         * ChronixInitializationException(
+         * "Could not fetch environment from remote node. Will not be able to start. See errors above for details."); } }
+         */
 
         // Broker with all the consumer threads
         if (this.broker == null)
         {
-            this.broker = new Broker(this.ctx, false, !this.runnerMode, true);
+            this.broker = new Broker(this, this.brokerPath, false, true, true);
         }
-        else
-        {
-            this.broker.resetContext(ctx);
-        }
-        this.broker.setNbRunners(this.nbRunner);
-        if (!runnerMode)
-        {
-            this.broker.registerListeners(this);
-        }
-        else
-        {
-            this.broker.registerListeners(this, false, true, false, false, false, false, false, false, false);
-        }
+        this.broker.registerListeners(this);
 
         // Active sources agent
-        if (!this.runnerMode)
-        {
-            this.stAgent = new SelfTriggerAgent();
-            this.stAgent.startAgent(ctx, broker.getConnection());
-        }
+        this.stAgent = new SelfTriggerAgent();
+        this.stAgent.startAgent(this);
 
         // Done
         log.info("Engine has finished its boot sequence");
@@ -235,7 +188,7 @@ public class ChronixEngine extends Thread
         // Stop every thread, not only the event engine threads.
         this.broker.stopRunnerAgents();
         this.broker.stopBroker();
-        this.ctx.close();
+        this.ctxDb.close();
         this.stopped.release();
         log.info("The scheduler has stopped");
     }
@@ -288,36 +241,25 @@ public class ChronixEngine extends Thread
     protected void preContextLoad()
     {
         // First start? (only create apps if first start on a console)
-        if (!this.runnerMode && !ChronixContext.hasEnvironmentFile(this.dbPath))
-        {
-            try
-            {
-                // Create a default environment
-                Environment n = PlanBuilder.buildLocalDnsNetwork();
-                ChronixContext.saveEnvironment(n, new File(this.dbPath));
-
-                // Create OPERATIONS application
-                Application a = OperationsApplication.getNewApplication(n.getPlace("local"));
-                ChronixContext.saveApplication(a, new File(this.dbPath));
-
-                // Create CHRONIX_MAINTENANCE application
-                a = MaintenanceApplication.getNewApplication(n.getPlace("local"));
-                ChronixContext.saveApplication(a, new File(this.dbPath));
-            }
-            catch (ChronixPlanStorageException e)
-            {
-                throw new ChronixInitializationException("Could not create default applications", e);
-            }
-        }
+        /*
+         * if (!ChronixContext.hasEnvironmentFile(this.dbPath)) { try { // Create a default environment Environment n =
+         * PlanBuilder.buildLocalDnsNetwork(); ChronixContext.saveEnvironment(n, new File(this.dbPath));
+         * 
+         * // Create OPERATIONS application Application a = OperationsApplication.getNewApplication(n.getPlace("local"));
+         * ChronixContext.saveApplication(a, new File(this.dbPath));
+         * 
+         * // Create CHRONIX_MAINTENANCE application a = MaintenanceApplication.getNewApplication(n.getPlace("local"));
+         * ChronixContext.saveApplication(a, new File(this.dbPath)); } catch (ChronixPlanStorageException e) { throw new
+         * ChronixInitializationException("Could not create default applications", e); } }
+         */
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Helper accessors
 
     protected void postContextLoad()
     {
-        // Cleanup
-        if (!this.runnerMode)
-        {
-            this.ctx.cleanTransanc();
-        }
+        // this.ctxMeta.cleanTransanc();
     }
 
     boolean shouldRun()
@@ -325,19 +267,19 @@ public class ChronixEngine extends Thread
         return this.run;
     }
 
-    public ChronixContext getContext()
+    public ChronixContextMeta getContextMeta()
     {
-        return this.ctx;
+        return this.ctxMeta;
     }
 
-    public void setRunnerPort(int port)
+    public ChronixContextTransient getContextTransient()
     {
-        this.runnerPort = port;
+        return this.ctxDb;
     }
 
-    public void setRunnerHost(String host)
+    public String getLogPath()
     {
-        this.runnerHost = host;
+        return this.logPath;
     }
 
     public void setFeeder(String host, int port)
@@ -355,5 +297,37 @@ public class ChronixEngine extends Thread
     {
         ExecutionNodeConnectionAmq conn = en.getComputingNode().getConnectionParameters(ExecutionNodeConnectionAmq.class).get(0);
         this.setFeeder(conn.getDns(), conn.getqPort());
+    }
+
+    public ExecutionNode getLocalNode()
+    {
+        return this.ctxMeta.getEnvironment().getNode(this.localNodeName);
+    }
+
+    /**
+     * A list of all execution nodes that this engine should connect to (way is always this node -> other node). Takes application usage
+     * into account.
+     * 
+     * @return
+     */
+    public List<ExecutionNodeConnectionAmq> getDirectNeigbhours()
+    {
+        List<ExecutionNodeConnectionAmq> res = new ArrayList<>();
+
+        // TODO: filter nodes which are not actually used by locally loaded applications.
+
+        ExecutionNode local = this.getLocalNode();
+        return local.getConnectsTo(ExecutionNodeConnectionAmq.class);
+
+    }
+
+    public Broker getBroker()
+    {
+        return this.broker;
+    }
+
+    public boolean isSimulator()
+    {
+        return false;
     }
 }

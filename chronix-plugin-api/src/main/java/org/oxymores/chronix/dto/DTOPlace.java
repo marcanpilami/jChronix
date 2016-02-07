@@ -6,7 +6,8 @@ import java.util.UUID;
 
 public class DTOPlace
 {
-    private String id, name, prop1, prop2, prop3, prop4;
+    private UUID id;
+    private String name, prop1, prop2, prop3, prop4;
     private List<String> memberOf = new ArrayList<>();
     private String nodeid;
 
@@ -17,12 +18,12 @@ public class DTOPlace
     }
 
     // Stupid GET/SET
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }

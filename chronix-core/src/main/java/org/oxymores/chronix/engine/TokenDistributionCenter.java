@@ -31,16 +31,16 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.slf4j.Logger;
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
+import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
@@ -117,7 +117,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         // Check.
-        Application a = ctx.getApplication(request.applicationID);
+        Application2 a = ctxMeta.getApplication(request.applicationID);
         if (a == null)
         {
             log.warn("A token for an application that does not run locally was received. Ignored.");
@@ -126,12 +126,12 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         Token tk = a.getToken(request.tokenID);
-        Place p = ctx.getEnvironment().getPlace(request.placeID);
+        Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
-        ExecutionNode en = ctx.getEnvironment().getNode(request.requestingNodeID);
+        ExecutionNode en = ctxMeta.getEnvironment().getNode(request.requestingNodeID);
 
-        log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s", request.type, tk.getName(), p.getName(),
-                s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
+        log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
+                request.type, tk.getName(), p.getName(), s.getRepresents().getName(), a.getName(), en.getBrokerName(), request.local));
 
         // Case 1: TDC proxy: local request.
         if (request.local && request.type == TokenRequestType.REQUEST)
@@ -150,7 +150,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             tr.setRequestedBy(request.requestingNodeID);
             tr.setPipelineJobId(request.pipelineJobID);
 
-            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 tr.insertOrUpdate(conn);
                 shouldRenew.add(tr);
@@ -160,7 +160,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctx, jmsSession, jmsProducer, false);
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, brokerName);
             }
             catch (JMSException e)
             {
@@ -192,7 +192,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctx, jmsSession, jmsProducer, false);
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, brokerName);
             }
             catch (JMSException e)
             {
@@ -206,7 +206,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         // Case 3: TDC: request
         if (!request.local && request.type == TokenRequestType.REQUEST)
         {
-            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 log.debug(String.format("Analysing token request for PJ %s", request.pipelineJobID));
                 processRequest(request, conn);
@@ -218,11 +218,11 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (!request.local && request.type == TokenRequestType.RELEASE)
         {
             // Log
-            log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(), p.getName(), a.getName(),
-                    en.getBrokerName(), s.getRepresents().getName()));
+            log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(),
+                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresents().getName()));
 
             // Find the element
-            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 TokenReservation tr = getTR(request, conn);
                 tr.delete(conn);
@@ -234,10 +234,10 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (!request.local && request.type == TokenRequestType.RENEW)
         {
             // Log
-            log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(), p.getName(), a.getName(),
-                    en.getBrokerName(), s.getRepresents().getName()));
+            log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(),
+                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresents().getName()));
 
-            try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 // Find the element
                 TokenReservation tr = getTR(request, conn);
@@ -256,7 +256,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qNameDest = String.format(Constants.Q_PJ, a.getLocalNode().getComputingNode().getBrokerName());
+                String qNameDest = String.format(Constants.Q_PJ, this.broker.getEngine().getLocalNode().getComputingNode().getBrokerName());
                 Destination d = jmsSession.createQueue(qNameDest);
                 log.debug(String.format("A message will be sent to queue %s", qNameDest));
                 jmsProducer.send(d, response);
@@ -270,22 +270,23 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         }
 
         // Classic TDC run - purge, then analyse all pending requests
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             // TDC: Step 1: Purge granted requests that are too old
             if (!request.local)
             {
                 // Note: we do not use a simple DELETE statement as we want to log the term of the reservation (should be very rare!)
 
-                List<TokenReservation> q = conn.createQuery("SELECT * from TokenReservation q where q.renewedOn < :notRenewedSince AND q.pending = :pending").
-                        addParameter("notRenewedSince", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
-                        addParameter("pending", false).executeAndFetch(TokenReservation.class);
+                List<TokenReservation> q = conn
+                        .createQuery("SELECT * from TokenReservation q where q.renewedOn < :notRenewedSince AND q.pending = :pending")
+                        .addParameter("notRenewedSince", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate())
+                        .addParameter("pending", false).executeAndFetch(TokenReservation.class);
                 for (TokenReservation tr : q)
                 {
-                    Application aa = ctx.getApplication(tr.getApplicationId());
+                    Application2 aa = ctxMeta.getApplication(tr.getApplicationId());
                     org.oxymores.chronix.core.State ss = aa.getState(tr.getStateId());
-                    Place pp = ctx.getEnvironment().getPlace(tr.getPlaceId());
-                    ExecutionNode enn = ctx.getEnvironment().getNode(tr.getRequestedBy());
+                    Place pp = ctxMeta.getEnvironment().getPlace(tr.getPlaceId());
+                    ExecutionNode enn = ctxMeta.getEnvironment().getNode(tr.getRequestedBy());
                     log.warn(String.format(
                             "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
                             pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresents().getName()));
@@ -298,8 +299,9 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             // TDC: Step 2: Now that the purge is done, analyse pending requests again - tokens may have freed
             if (!request.local)
             {
-                List<TokenReservation> q = conn.createQuery("SELECT * from TokenReservation q where q.pending = :pending AND q.localRenew = :localRenew").
-                        addParameter("pending", true).addParameter("localRenew", false).executeAndFetch(TokenReservation.class);
+                List<TokenReservation> q = conn
+                        .createQuery("SELECT * from TokenReservation q where q.pending = :pending AND q.localRenew = :localRenew")
+                        .addParameter("pending", true).addParameter("localRenew", false).executeAndFetch(TokenReservation.class);
                 for (TokenReservation tr : q)
                 {
                     log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
@@ -314,8 +316,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         log.debug("Commit successful");
     }
 
-    private TokenReservation
-            getTR(TokenRequest request, Connection conn)
+    private TokenReservation getTR(TokenRequest request, Connection conn)
     {
         return conn.createQuery("SELECT * from TokenReservation q where q.pipelineJobId = :pjId AND q.localRenew = :local")
                 .addParameter("pjId", request.pipelineJobID).addParameter("local", false).executeAndFetchFirst(TokenReservation.class);
@@ -324,9 +325,9 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     private void processRequest(TokenRequest request, Connection conn)
     {
         // Get data
-        Application a = ctx.getApplication(request.applicationID);
+        Application2 a = ctxMeta.getApplication(request.applicationID);
         Token tk = a.getToken(request.tokenID);
-        Place p = ctx.getEnvironment().getPlace(request.placeID);
+        Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
 
         // Process
@@ -336,16 +337,16 @@ class TokenDistributionCenter extends BaseListener implements Runnable
     private void processRequest(TokenReservation tr, Connection conn)
     {
         // Get data
-        Application a = ctx.getApplication(tr.getApplicationId());
+        Application2 a = ctxMeta.getApplication(tr.getApplicationId());
         Token tk = a.getToken(tr.getTokenId());
-        Place p = ctx.getEnvironment().getPlace(tr.getPlaceId());
+        Place p = ctxMeta.getEnvironment().getPlace(tr.getPlaceId());
         org.oxymores.chronix.core.State s = a.getState(tr.getStateId());
 
         // Process
         processRequest(conn, a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
     }
 
-    private void processRequest(Connection conn, Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
+    private void processRequest(Connection conn, Application2 a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
             TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId)
     {
         // Locate all the currently allocated tokens on this Token/Place
@@ -353,23 +354,18 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (tk.isByPlace())
         {
             i = conn.createQuery("SELECT COUNT(1) from TokenReservation q where q.tokenId = :tokenId AND "
-                    + "q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = :pending AND q.localRenew = :localRenew").
-                    addParameter("tokenId", tk.getId()).
-                    addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
-                    addParameter("placeId", p.getId()).
-                    addParameter("pending", false).
-                    addParameter("localRenew", false).
-                    executeScalar(Integer.class);
+                    + "q.renewedOn > :ro AND q.placeId = :placeId AND q.pending = :pending AND q.localRenew = :localRenew")
+                    .addParameter("tokenId", tk.getId())
+                    .addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate())
+                    .addParameter("placeId", p.getId()).addParameter("pending", false).addParameter("localRenew", false)
+                    .executeScalar(Integer.class);
         }
         else
         {
             i = conn.createQuery("SELECT COUNT(1) from TokenReservation q where q.tokenId = :tokenId AND "
-                    + "q.renewedOn > :ro AND q.pending = :pending AND q.localRenew = :localRenew").
-                    addParameter("tokenId", tk.getId()).
-                    addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate()).
-                    addParameter("pending", false).
-                    addParameter("localRenew", false).
-                    executeScalar(Integer.class);
+                    + "q.renewedOn > :ro AND q.pending = :pending AND q.localRenew = :localRenew").addParameter("tokenId", tk.getId())
+                    .addParameter("ro", DateTime.now().minusMinutes(Constants.MAX_TOKEN_VALIDITY_MN).toDate())
+                    .addParameter("pending", false).addParameter("localRenew", false).executeScalar(Integer.class);
         }
 
         if (i >= tk.getCount())
@@ -479,7 +475,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                     try
                     {
                         log.debug("Sending a renewal request for token state");
-                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctx, jmsSession, jmsProducer, false);
+                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctxMeta, jmsSession, jmsProducer, false, brokerName);
                     }
                     catch (JMSException e)
                     {

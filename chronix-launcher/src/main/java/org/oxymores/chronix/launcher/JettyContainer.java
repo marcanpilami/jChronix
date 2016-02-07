@@ -25,10 +25,10 @@ public class JettyContainer
 
     public JettyContainer(ChronixEngine e)
     {
-        log.info("Starting web server on port " + e.getContext().getLocalNode().getWsPort());
+        log.info("Starting web server on port " + e.getContextMeta().getLocalNode().getWsPort());
         log.info("The web server will use plain HTTP for all communications (no SSL)");
 
-        server = new Server(e.getContext().getLocalNode().getWsPort());
+        server = new Server(e.getContextMeta().getLocalNode().getWsPort());
 
         // There are two places where the web service might be: inside ./www (nominal) or ../chronix-web/target/chronix-web-* (tests)
         File f = new File("./www");

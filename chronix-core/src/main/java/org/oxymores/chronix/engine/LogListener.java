@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- * Responsible for storing RunLog in the database (i.e. history elements, including a short text log). Sending a copy to the console if necessary is handled at
- * the source (cf. <code>SenderHelpers</code>).
+ * Responsible for storing RunLog in the database (i.e. history elements, including a short text log). Sending a copy to the console if
+ * necessary is handled at the source (cf. <code>SenderHelpers</code>).
  *
  */
 class LogListener extends BaseListener
@@ -65,8 +65,8 @@ class LogListener extends BaseListener
             return;
         }
 
-        try (Connection connHistory = this.ctx.getHistoryDataSource().beginTransaction();
-                Connection connTransac = this.ctx.getTransacDataSource().beginTransaction();)
+        try (Connection connHistory = this.ctxDb.getHistoryDataSource().beginTransaction();
+                Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction();)
         {
 
             log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.getId(),
@@ -81,10 +81,10 @@ class LogListener extends BaseListener
         }
         jmsCommit();
 
-        //TODO: merge this with above transaction (only one test)
-        if (!ctx.isSimulator() && rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
+        // TODO: merge this with above transaction (only one test)
+        if (!this.broker.getEngine().isSimulator() && rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
         {
-            try (Connection connTransac = this.ctx.getTransacDataSource().beginTransaction())
+            try (Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 RunStats.updateStats(rlog, connTransac);
                 connTransac.commit();

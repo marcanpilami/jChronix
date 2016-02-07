@@ -19,19 +19,16 @@
  */
 package org.oxymores.chronix.core;
 
-import javax.jms.JMSException;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.RunnerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  A base implementation (simple key/value pair) for parameters. Can be use directly or overloaded.
  */
-public class Parameter extends ApplicationObject
+public class Parameter extends ChronixObject
 {
     private static final Logger log = LoggerFactory.getLogger(Parameter.class);
     private static final long serialVersionUID = 8017529181151172909L;
@@ -78,7 +75,7 @@ public class Parameter extends ApplicationObject
         this.description = description;
     }
 
-    public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
+   /* public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
     {
         try
         {
@@ -88,5 +85,5 @@ public class Parameter extends ApplicationObject
         {
             log.error("Could not send dynamic parameter value", e);
         }
-    }
+    } */
 }

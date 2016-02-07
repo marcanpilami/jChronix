@@ -3,8 +3,10 @@ package org.oxymores.chronix.core.context;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,6 +17,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
 import org.oxymores.chronix.exceptions.ChronixException;
@@ -73,12 +78,12 @@ public class ChronixContextMeta
 
     private void registerTracker()
     {
-        log.info("Registering source event plugin tracker");
-        Bundle bd = FrameworkUtil.getBundle(EventSourceRegistry.class);
+        log.debug("Registering source event plugin tracker");
+        Bundle bd = FrameworkUtil.getBundle(ChronixContextMeta.class);
         tracker = new ServiceTracker<EventSourceBehaviour, EventSourceBehaviour>(bd.getBundleContext(), EventSourceBehaviour.class,
                 new EventSourceTracker(this));
         tracker.open();
-        log.info("Source event plugin tracker is open");
+        log.debug("Source event plugin tracker is open");
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -141,6 +146,13 @@ public class ChronixContextMeta
             throw new ChronixInitializationException(
                     "Application XML file cannot be read as an Application object: " + appFile.getAbsolutePath(), e);
         }
+
+        // Helper denormalisation of places (link between envt and app)
+        for (PlaceGroup pg : app.getGroupsList())
+        {
+            pg.map_places(envt);
+        }
+
         log.info("Application " + app.getName() + " has been deserialized from file " + appDir);
         return app;
     }
@@ -148,7 +160,7 @@ public class ChronixContextMeta
     /**
      * The directory containing all metadata
      */
-    private File getRootMeta()
+    public File getRootMeta()
     {
         return this.rootDir;
     }

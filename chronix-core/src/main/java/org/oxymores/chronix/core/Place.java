@@ -22,7 +22,9 @@ package org.oxymores.chronix.core;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import javax.validation.constraints.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,15 @@ public class Place extends EnvironmentObject
 
     protected String property1, property2, property3, property4;
     private List<UUID> memberOfIds = new ArrayList<>();
+
+    private Object readResolve()
+    {
+        if (memberOfIds == null)
+        {
+            memberOfIds = new ArrayList<>();
+        }
+        return this;
+    }
 
     @NotNull
     protected ExecutionNode node;

@@ -37,16 +37,16 @@ import javax.jms.TextMessage;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
+import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.EngineCbRun;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -56,11 +56,14 @@ import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.engine.modularity.runner.RunDescription;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- * <strong>Note: </strong> this class cannot be multi instanciated - there must be only one RunnerManager. Due to parameter resolution
+ * This manager receives {@link PipelineJob}s that have been fully cleared for running. It is responsible for handling their parameters and
+ * their results.<br>
+ * <strong>Note: </strong> this class cannot be multi-instantiated - there must be only one RunnerManager. Due to parameter resolution
  * cache.
  *
  */
@@ -71,6 +74,7 @@ public class RunnerManager extends BaseListener
     private Destination destEndJob;
     private String logDbPath;
 
+    // The list of jobs waiting for parameter resolution
     private List<PipelineJob> resolving;
 
     private MessageProducer producerRunDescription, producerHistory, producerEvents;
@@ -82,7 +86,7 @@ public class RunnerManager extends BaseListener
             this.init(broker);
 
             // Log repository
-            this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(ctx.getContextRoot(), "GLOBALJOBLOG"));
+            this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(this.broker.getEngine().getLogPath(), "GLOBALJOBLOG"));
             File logDb = new File(this.logDbPath);
             if (!logDb.exists())
             {
@@ -237,7 +241,7 @@ public class RunnerManager extends BaseListener
 
         // Get the parameter awaiting resolution
         int paramIndex = -1;
-        ArrayList<Parameter> prms = resolvedJob.getActive(ctx).getParameters();
+        ArrayList<Parameter> prms = resolvedJob.getActive(ctxMeta).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
             if (prms.get(i).getId().toString().equals(paramid))
@@ -253,16 +257,16 @@ public class RunnerManager extends BaseListener
         }
 
         // Update the parameter with its value
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             resolvedJob.setParamValue(paramIndex, res);
             conn.commit();
         }
 
         // Perhaps launch the job
-        if (resolvedJob.isReady(ctx))
+        if (resolvedJob.isReady(ctxMeta))
         {
-            this.sendRunDescription(resolvedJob.getRD(ctx), resolvedJob.getPlace(ctx), resolvedJob);
+            this.sendRunDescription(resolvedJob.getRD(ctxMeta), resolvedJob.getPlace(ctxMeta), resolvedJob);
         }
     }
 
@@ -270,19 +274,19 @@ public class RunnerManager extends BaseListener
     private void recvPJ(PipelineJob job) throws JMSException
     {
         PipelineJob j = job;
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             j.insertOrUpdate(conn);
             j.getEnvValues(conn); // To load them, even if empty
         }
 
         // Check the job is OK
-        ActiveNodeBase toRun;
+        EventSourceContainer toRun;
         State s;
         try
         {
-            toRun = j.getActive(ctx);
-            s = j.getState(ctx);
+            toRun = j.getActive(ctxMeta);
+            s = j.getState(ctxMeta);
         }
         catch (Exception e)
         {
@@ -295,7 +299,7 @@ public class RunnerManager extends BaseListener
             return;
         }
 
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             j.setRunThis(toRun.getName());
             j.setBeganRunningAt(DateTime.now());
@@ -304,65 +308,36 @@ public class RunnerManager extends BaseListener
         }
         resolving.add(j);
 
-        if (!toRun.isEnabled() || !s.isEnabled())
+        if (!toRun.getSource().isEnabled() || !s.isEnabled())
         {
             // Disabled => don't run it for real
-            log.debug("Job execution request of a disabled element. A return code of 0 is assumed.");
-            recvRR(j.getDisabledResult());
+            log.debug("Job execution request of a disabled element.");
+            // recvRR(j.getDisabledResult());
         }
-        else if (!toRun.hasExternalPayload() && !toRun.hasInternalPayload())
+        else if (!this.broker.getEngine().isSimulator())
         {
-            // No payload - direct to analysis and event throwing
-            log.debug(String.format(
-                    "Job execution request %s corresponds to an element (%s) with only internal execution - no asynchronous operations",
-                    j.getId(), toRun.getClass()));
-            RunResult res = new RunResult();
-            res.returnCode = 0;
-            res.id1 = j.getId();
-            res.end = j.getVirtualTime();
-            res.start = res.end;
-            res.outOfPlan = j.getOutOfPlan();
-            try (Connection conn = this.ctx.getTransacDataSource().open())
+            // Run - either sync or async.
+            log.debug(String.format("Job execution request %s corresponds to an element (%s) that should run async or sync", j.getId(),
+                    toRun.getClass()));
+            RunResult res = toRun.run(new EngineCbRun(this.broker.getEngine(), this.ctxMeta, j.getApplication(ctxMeta), j), j);
+
+            if (res != null)
             {
-                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession, j.getVirtualTime());
+                // Synchronous execution - go on to result analysis at once in the current thread.
+                recvRR(res);
             }
-            recvRR(res);
-        }
-        else if (!ctx.isSimulator() && toRun.hasInternalPayload())
-        {
-            // Asynchronous local run
-            log.debug(String.format("Job execution request %s corresponds to an element (%s) with asynchronous internal execution",
-                    j.getId(), toRun.getClass()));
-            try (Connection conn = this.ctx.getTransacDataSource().open())
+            else
             {
-                toRun.internalRun(conn, ctx, j, this.producerRunDescription, this.jmsSession, j.getVirtualTime());
+                // Asynchronous execution - we need to wait for a RunResult in the JMS queue.
             }
-        }
-        else if (!ctx.isSimulator() && j.isReady(ctx))
-        {
-            // It has an active part, but no need for dynamic parameters -> just run it (i.e. send it to a runner agent)
-            log.debug(String.format(
-                    "Job execution request %s corresponds to an element with a true execution but no parameters to resolve before run",
-                    j.getId()));
-            SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
-            this.sendRunDescription(j.getRD(ctx), j.getPlace(ctx), j);
-        }
-        else if (!ctx.isSimulator())
-        {
-            // implicit && !j.isReady(ctx)
-            // Active part, and dynamic parameters -> resolve parameters.
-            // The run will occur at parameter value reception
-            log.debug(String.format(
-                    "Job execution request %s corresponds to an element with a true execution and parameters to resolve before run",
-                    j.getId()));
-            SenderHelpers.sendHistory(j.getEventLog(ctx), ctx, producerHistory, jmsSession, true);
-            toRun.prepareRun(j, this, ctx);
+
+            // TODO: parameters
         }
         else
         {
             // External active part, but simulation. Synchronously simulate it.
             log.debug(String.format("Job execution request %s will be simulated", j.getId()));
-            try (Connection conn = this.ctx.getTransacDataSource().open())
+            try (Connection conn = this.ctxDb.getTransacDataSource().open())
             {
                 recvRR(j.getSimulatedResult(conn));
             }
@@ -402,12 +377,12 @@ public class RunnerManager extends BaseListener
 
         State s = null;
         Place p = null;
-        Application a = null;
+        Application2 a = null;
         if (!rr.outOfPlan)
         {
-            s = pj.getState(ctx);
-            p = pj.getPlace(ctx);
-            a = pj.getApplication(ctx);
+            s = pj.getState(ctxMeta);
+            p = pj.getPlace(ctxMeta);
+            a = pj.getApplication(ctxMeta);
             if (s == null)
             {
                 log.error("A result was received for a pipeline job without state - thrown out");
@@ -416,14 +391,14 @@ public class RunnerManager extends BaseListener
             }
         }
 
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             // Event throwing
             if (!rr.outOfPlan)
             {
                 pj.getEnvValues(conn);
                 Event e = pj.createEvent(rr, rr.end);
-                SenderHelpers.sendEvent(e, producerEvents, jmsSession, ctx, true);
+                SenderHelpers.sendEvent(e, producerEvents, jmsSession, ctxMeta, true);
             }
 
             // Update the PJ (it will stay in the DB for a while)
@@ -439,7 +414,8 @@ public class RunnerManager extends BaseListener
         }
 
         // Send history
-        SenderHelpers.sendHistory(pj.getEventLog(ctx, rr), ctx, producerHistory, jmsSession, true);
+        SenderHelpers.sendHistory(pj.getEventLog(ctxMeta, rr), ctxMeta, producerHistory, jmsSession, true,
+                this.broker.getEngine().getLocalNode().getName());
 
         // Calendar progress
         if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating())
@@ -457,13 +433,13 @@ public class RunnerManager extends BaseListener
         resolving.remove(pj);
     }
 
-    private void updateCalendar(PipelineJob pj, Application a, State s, Place p)
+    private void updateCalendar(PipelineJob pj, Application2 a, State s, Place p)
     {
         Calendar c = a.getCalendar(pj.getCalendarID());
         CalendarDay justDone = c.getDay(pj.getCalendarOccurrenceID());
         CalendarDay next = c.getOccurrenceAfter(justDone);
 
-        try (Connection conn = this.ctx.getTransacDataSource().beginTransaction())
+        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             CalendarPointer cp = s.getCurrentCalendarPointer(conn, p);
 
@@ -477,9 +453,9 @@ public class RunnerManager extends BaseListener
             cp.insertOrUpdate(conn);
             log.debug(String.format(
                     "At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
-                    s.getRepresents().getName(), s.getChain().getName(), cp.getLastEndedOccurrenceCd(ctx).getValue(),
-                    cp.getLastEndedOkOccurrenceCd(ctx).getValue(), cp.getLastStartedOccurrenceCd(ctx).getValue(),
-                    cp.getNextRunOccurrenceCd(ctx).getValue(), cp.getLatestFailed(), cp.getRunning()));
+                    s.getRepresents().getName(), s.getContainerName(), cp.getLastEndedOccurrenceCd(ctxMeta).getValue(),
+                    cp.getLastEndedOkOccurrenceCd(ctxMeta).getValue(), cp.getLastStartedOccurrenceCd(ctxMeta).getValue(),
+                    cp.getNextRunOccurrenceCd(ctxMeta).getValue(), cp.getLatestFailed(), cp.getRunning()));
             conn.commit();
         }
     }
@@ -493,13 +469,13 @@ public class RunnerManager extends BaseListener
             tr.local = true;
             tr.placeID = pj.getPlaceID();
             tr.requestedAt = new DateTime();
-            tr.requestingNodeID = pj.getApplication(ctx).getLocalNode().getComputingNode().getId();
+            tr.requestingNodeID = this.broker.getEngine().getLocalNode().getComputingNode().getId();
             tr.stateID = pj.getStateID();
             tr.tokenID = tk.getId();
             tr.type = TokenRequestType.RELEASE;
             tr.pipelineJobID = pj.getId();
 
-            SenderHelpers.sendTokenRequest(tr, ctx, jmsSession, producerEvents, true);
+            SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, producerEvents, true, brokerName);
         }
     }
 
@@ -518,13 +494,13 @@ public class RunnerManager extends BaseListener
 
     public void sendCalendarPointer(CalendarPointer cp, Calendar ca) throws JMSException
     {
-        SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true, this.ctx);
+        SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.producerHistory, true, this.ctxMeta.getEnvironment());
     }
 
     public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId) throws JMSException
     {
         // Always send to the node, not its hosting node.
-        Place p = pj.getPlace(ctx);
+        Place p = pj.getPlace(ctxMeta);
         String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
         log.info(String.format("A command for parameter resolution will be sent for execution on queue %s", qName));
         Destination destination = jmsSession.createQueue(qName);

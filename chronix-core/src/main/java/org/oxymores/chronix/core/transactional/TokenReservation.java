@@ -21,14 +21,15 @@ package org.oxymores.chronix.core.transactional;
 
 import java.io.Serializable;
 import java.util.UUID;
+
 import javax.validation.constraints.NotNull;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.sql2o.Connection;
@@ -219,22 +220,22 @@ public class TokenReservation implements Serializable
 
     //
     // ///////////////////////////////////////////
-    public Application getApplication(ChronixContext ctx)
+    public Application2 getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.applicationId);
     }
 
-    public Place getPlace(ChronixContext ctx)
+    public Place getPlace(ChronixContextMeta ctx)
     {
         return ctx.getEnvironment().getPlace(this.placeId);
     }
 
-    public State getState(ChronixContext ctx)
+    public State getState(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getState(this.stateId);
     }
 
-    public Token getToken(ChronixContext ctx)
+    public Token getToken(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getToken(this.stateId);
     }
@@ -246,8 +247,8 @@ public class TokenReservation implements Serializable
 
     public void insertOrUpdate(Connection conn)
     {
-        int i = conn.createQuery("UPDATE TokenReservation SET grantedOn=:grantedOn, pending=:pending, renewedOn=:renewedOn WHERE id=:id").
-                bind(this).executeUpdate().getResult();
+        int i = conn.createQuery("UPDATE TokenReservation SET grantedOn=:grantedOn, pending=:pending, renewedOn=:renewedOn WHERE id=:id")
+                .bind(this).executeUpdate().getResult();
         if (i == 0)
         {
             conn.createQuery("INSERT INTO TokenReservation(applicationId, grantedOn, localRenew, pending, pipelineJobId, placeId, "

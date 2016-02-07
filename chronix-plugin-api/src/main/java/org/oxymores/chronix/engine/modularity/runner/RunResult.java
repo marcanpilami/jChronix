@@ -23,17 +23,51 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.core.source.api.JobDescription;
 
 public class RunResult implements Serializable
 {
     private static final long serialVersionUID = 316559310140465996L;
 
+    public RunResult()
+    {}
+
+    public RunResult(JobDescription jd)
+    {
+        this.id1 = jd.getLaunchId();
+        this.id2 = jd.getParentScopeLaunchId();
+        this.start = jd.getVirtualTimeStart();
+        this.end = null;
+    }
+
+    public RunResult(JobDescription jd, EventSourceRunResult r)
+    {
+        this(jd);
+
+        if (r != null)
+        {
+            this.end = r.end;
+            this.fullerLog = r.fullerLog;
+            this.logPath = r.logPath;
+            this.logSizeBytes = r.logSizeBytes;
+            this.logStart = r.logStart;
+            this.newEnvVars = r.newEnvVars;
+            this.returnCode = r.returnCode;
+            if (r.overloadedScopeId != null)
+            {
+                this.id1 = r.overloadedScopeId;
+            }
+        }
+    }
+
     public String logStart = "";
     public String fullerLog = "";
     public String logPath = "";
     public String logFileName = "";
-    public long logSizeBytes = 0;
+    public Long logSizeBytes = null;
     public int returnCode = -1;
     public String conditionData2 = null;
     public String conditionData3 = null;
@@ -47,4 +81,6 @@ public class RunResult implements Serializable
     public UUID id1 = null;
     public UUID id2 = null;
     public Boolean outOfPlan = false;
+
+    public DateTime nextRun = null;
 }

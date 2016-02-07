@@ -23,10 +23,10 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 
-import org.slf4j.Logger;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class MetadataListener extends BaseListener
@@ -52,7 +52,7 @@ class MetadataListener extends BaseListener
     {
         log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;
-        Application a = null;
+        Application2 a = null;
         Environment n = null;
         boolean restart = true;
         try
@@ -67,16 +67,16 @@ class MetadataListener extends BaseListener
         try
         {
             Object o = omsg.getObject();
-            if (!(o instanceof Application) && !(o instanceof Environment))
+            if (!(o instanceof Application2) && !(o instanceof Environment))
             {
                 log.warn("An object was received on the metadata queue but was not an app or an environment specification! Ignored.");
                 jmsCommit();
                 return;
             }
 
-            if (o instanceof Application)
+            if (o instanceof Application2)
             {
-                a = (Application) o;
+                a = (Application2) o;
             }
             else
             {
@@ -96,7 +96,8 @@ class MetadataListener extends BaseListener
             try
             {
                 log.debug("Saving received app as the current working copy");
-                ctx.saveApplication(a);
+                ctxMeta.saveApplicationDraft(a);
+                ctxMeta.activateApplicationDraft(a.getId(), "x");
             }
             catch (Exception e1)
             {
@@ -112,7 +113,8 @@ class MetadataListener extends BaseListener
         {
             try
             {
-                ctx.saveEnvironment(n);
+                ctxMeta.saveEnvironmentDraft(n);
+                ctxMeta.activateEnvironmentDraft("F");
             }
             catch (ChronixPlanStorageException ex)
             {

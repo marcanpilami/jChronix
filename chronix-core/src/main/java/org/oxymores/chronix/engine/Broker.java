@@ -36,12 +36,9 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
-import org.slf4j.Logger;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ChronixContext;
-import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
@@ -57,8 +54,10 @@ class Broker
     private ActiveMQConnectionFactory factory;
     private Connection connection;
 
+    private String brokerDataDirectory;
+
     // Chronix running context
-    private ChronixContext ctx;
+    // private ChronixContext ctx;
     private ChronixEngine engine;
 
     // Threads
@@ -73,25 +72,12 @@ class Broker
     private TokenDistributionCenter thrTC;
     private int nbRunners = Constants.DEFAULT_NB_RUNNER;
 
-    Broker(ChronixEngine engine) throws ChronixInitializationException
+    Broker(ChronixEngine engine, String brokerDataDirectory, boolean purge, boolean persistent, boolean tcp)
+            throws ChronixInitializationException
     {
-        this(engine, false);
-    }
-
-    Broker(ChronixContext ctx) throws ChronixInitializationException
-    {
-        this(ctx, false, true, true);
-    }
-
-    Broker(ChronixEngine engine, boolean purge) throws ChronixInitializationException
-    {
-        this(engine.ctx, purge, true, true);
-    }
-
-    Broker(ChronixContext ctx, boolean purge, boolean persistent, boolean tcp) throws ChronixInitializationException
-    {
-        this.ctx = ctx;
-        this.brokerName = ctx.getLocalNode().getBrokerName();
+        this.engine = engine;
+        this.brokerDataDirectory = brokerDataDirectory;
+        this.brokerName = engine.getLocalNode().getBrokerName();
 
         log.info(String.format("Starting configuration of a message broker listening on vm://%s", this.brokerName));
         this.thrsRA = new ArrayList<>();
@@ -108,7 +94,7 @@ class Broker
 
         // Basic configuration
         broker.setBrokerName(brokerName);
-        broker.setDataDirectory(ctx.getContextRoot() + File.separator + "activemq-data");
+        broker.setDataDirectory(this.brokerDataDirectory + File.separator + "activemq-data");
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(purge);
         broker.setEnableStatistics(false);
@@ -136,7 +122,7 @@ class Broker
         // Add a listener
         if (tcp)
         {
-            for (ExecutionNodeConnectionAmq conn : this.ctx.getLocalNode().getConnectionParameters(ExecutionNodeConnectionAmq.class))
+            for (ExecutionNodeConnectionAmq conn : this.engine.getLocalNode().getConnectionParameters(ExecutionNodeConnectionAmq.class))
             {
                 try
                 {
@@ -153,7 +139,7 @@ class Broker
         // Always add VM connector.
         try
         {
-            TransportConnector tc = broker.addConnector("vm://" + this.ctx.getLocalNode().getId());
+            TransportConnector tc = broker.addConnector("vm://" + this.engine.getLocalNode().getId());
             tc.setDiscoveryUri(null);
         }
         catch (Exception e1)
@@ -190,14 +176,6 @@ class Broker
         {
             throw new ChronixInitializationException("Could not connect to the JMS broker", e);
         }
-    }
-
-    void resetContext(ChronixContext ctx) throws ChronixInitializationException
-    {
-        log.debug("The broker context will be reset " + ctx.getContextRoot());
-        this.ctx = ctx;
-        broker.setBrokerName(brokerName);
-        resetLinks();
     }
 
     void registerListeners(ChronixEngine engine) throws JMSException, IOException, ChronixInitializationException
@@ -272,7 +250,7 @@ class Broker
 
     void stopEngineListeners()
     {
-        log.debug("Stopping all engine threads " + ctx.getContextRoot());
+        log.debug("Stopping all engine threads");
         if (this.thrML != null)
         {
             this.thrML.stopListening();
@@ -317,7 +295,7 @@ class Broker
 
     void stopRunnerAgents()
     {
-        log.debug("Stopping all runner agent threads " + ctx.getContextRoot());
+        log.debug("Stopping all runner agent threads");
         if (this.thrsRA.size() > 0)
         {
             for (RunnerAgent ra : this.thrsRA)
@@ -358,7 +336,7 @@ class Broker
     {
         if (this.broker.isStarted())
         {
-            log.debug("Stopping all outgoing network connectors " + ctx.getContextRoot());
+            log.debug("Stopping all outgoing network connectors");
         }
         try
         {
@@ -379,43 +357,42 @@ class Broker
         stopAllOutgoingLinks();
 
         ArrayList<UUID> opened = new ArrayList<>();
-        for (Application a : this.ctx.getApplications())
+
+        for (ExecutionNodeConnectionAmq conn : this.engine.getDirectNeigbhours())
         {
-            for (ExecutionNodeConnectionAmq conn : a.getLocalNode().getConnectsTo(ExecutionNodeConnectionAmq.class))
+            // Only if not already opened
+            if (opened.contains(conn.getId()))
             {
-                // Only if not already opened
-                if (opened.contains(conn.getId()))
-                {
-                    break;
-                }
-                opened.add(conn.getId());
-
-                String url = "static:(tcp://" + conn.getDns() + ":" + conn.getqPort() + ")";
-                log.info(String.format("The broker will open a channel towards %s", url));
-                NetworkConnector tc;
-                try
-                {
-                    tc = broker.addNetworkConnector(url);
-                    if (broker.isStarted())
-                    {
-                        // Connectors are auto started on broker startup, but not started otherwise.
-                        tc.start();
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw new ChronixInitializationException("Could not create a JMS network connector", e);
-                }
-                tc.setDuplex(true);
-                tc.setAlwaysSyncSend(true);
-                // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
+                break;
             }
+            opened.add(conn.getId());
 
-            for (ExecutionNode en : a.getLocalNode().getCanReceiveFrom())
+            String url = "static:(tcp://" + conn.getDns() + ":" + conn.getqPort() + ")";
+            log.info(String.format("The broker will open a channel towards %s", url));
+            NetworkConnector tc;
+            try
             {
-                log.info(String.format("The broker should receive channels incoming from %s", en.getName()));
+                tc = broker.addNetworkConnector(url);
+                if (broker.isStarted())
+                {
+                    // Connectors are auto started on broker startup, but not started otherwise.
+                    tc.start();
+                }
             }
+            catch (Exception e)
+            {
+                throw new ChronixInitializationException("Could not create a JMS network connector", e);
+            }
+            tc.setDuplex(true);
+            tc.setAlwaysSyncSend(true);
+            // tc.setNetworkTTL(Constants.DEFAULT_BROKER_NETWORK_CONNECTOR_TTL_S);
         }
+
+        /*
+         * for (ExecutionNode en : a.getLocalNode().getCanReceiveFrom()) { log.info(String.format(
+         * "The broker should receive channels incoming from %s", en.getName())); }
+         */
+
     }
 
     BrokerService getBroker()
@@ -443,11 +420,6 @@ class Broker
         }
     }
 
-    ChronixContext getCtx()
-    {
-        return ctx;
-    }
-
     String getBrokerName()
     {
         return this.brokerName;
@@ -456,5 +428,10 @@ class Broker
     void setNbRunners(int nbRunners)
     {
         this.nbRunners = nbRunners;
+    }
+
+    public ChronixEngine getEngine()
+    {
+        return this.engine;
     }
 }

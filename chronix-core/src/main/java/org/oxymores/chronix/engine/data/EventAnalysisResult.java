@@ -51,36 +51,26 @@ public class EventAnalysisResult
     public List<Place> getPossiblePlaces()
     {
         ArrayList<Place> res = new ArrayList<>();
-        places:
-        for (Place p : state.getRunsOn().getPlaces())
+        places: for (Place p : state.getRunsOn().getPlaces())
         {
             ArrayList<Event> ce = new ArrayList<>();
-            if (state.getRepresents().multipleTransitionHandling() == MultipleTransitionsHandlingMode.AND)
-            {
-                for (TransitionAnalysisResult tra : this.analysis.values())
-                {
-                    if (!tra.allowedOnPlace(p))
-                    {
-                        ce.clear();
-                        continue places;
-                    }
-                    ce.addAll(tra.eventsConsumedOnPlace(p));
-                }
-                res.add(p);
-            }
 
-            if (state.getRepresents().multipleTransitionHandling() == MultipleTransitionsHandlingMode.OR)
+            for (TransitionAnalysisResult tra : this.analysis.values())
             {
-                for (TransitionAnalysisResult tra : this.analysis.values())
+                if (!tra.allowedOnPlace(p))
                 {
-                    if (tra.allowedOnPlace(p))
-                    {
-                        ce.addAll(tra.eventsConsumedOnPlace(p));
-                        res.add(p);
-                        break;
-                    }
+                    ce.clear();
+                    continue places;
                 }
+                ce.addAll(tra.eventsConsumedOnPlace(p));
             }
+            res.add(p);
+
+            /*
+             * if (state.getRepresents().multipleTransitionHandling() == MultipleTransitionsHandlingMode.OR) { for (TransitionAnalysisResult
+             * tra : this.analysis.values()) { if (tra.allowedOnPlace(p)) { ce.addAll(tra.eventsConsumedOnPlace(p)); res.add(p); break; } }
+             * }
+             */
 
             this.consumedEvents.addAll(ce);
         }

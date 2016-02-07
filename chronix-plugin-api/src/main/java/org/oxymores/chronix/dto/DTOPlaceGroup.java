@@ -6,20 +6,21 @@ import java.util.UUID;
 
 public class DTOPlaceGroup
 {
-    private String id, name, description;
-    private List<String> places = new ArrayList<String>();
+    private UUID id;
+    private String name, description;
+    private List<UUID> places = new ArrayList<UUID>();
 
-    public void addPlace(UUID id)
+    /*public void addPlace(UUID id)
     {
-        this.places.add(id.toString());
-    }
+        this.places.add(id);
+    }*/
 
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }
@@ -44,13 +45,13 @@ public class DTOPlaceGroup
         this.description = description;
     }
 
-    public List<String> getPlaces()
+    /*public List<UUID> getPlaces()
     {
         return places;
-    }
+    }*/
 
-    void setPlaces(List<String> places)
+    /*void setPlaces(List<UUID> places)
     {
         this.places = places;
-    }
+    }*/
 }

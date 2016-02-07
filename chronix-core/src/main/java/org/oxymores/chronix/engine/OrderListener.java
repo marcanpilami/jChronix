@@ -28,15 +28,14 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
-import org.slf4j.Logger;
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.ActiveNodeBase;
-import org.oxymores.chronix.core.Application;
-import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.active.External;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.EngineCbRun;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -44,6 +43,7 @@ import org.oxymores.chronix.engine.helpers.Order;
 import org.oxymores.chronix.engine.helpers.OrderType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.engine.modularity.runner.RunResult;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
@@ -62,7 +62,7 @@ class OrderListener extends BaseListener
         this.qName = String.format(Constants.Q_ORDER, brokerName);
         this.jmsProducer = this.jmsSession.createProducer(null);
         this.subscribeTo(qName);
-        if (broker.getCtx().getLocalNode() == broker.getCtx().getEnvironment().getConsoleNode())
+        if (broker.getEngine().getLocalNode() == this.ctxMeta.getEnvironment().getConsoleNode())
         {
             this.subscribeTo(Constants.Q_BOOTSTRAP);
         }
@@ -124,7 +124,7 @@ class OrderListener extends BaseListener
 
         else if (order.type == OrderType.EXTERNAL)
         {
-            orderExternal(order);
+            // orderExternal(order);
         }
 
         jmsCommit();
@@ -134,9 +134,10 @@ class OrderListener extends BaseListener
     {
         // Find the PipelineJob
         PipelineJob pj;
-        try (Connection conn = this.ctx.getTransacDataSource().open())
+        try (Connection conn = this.ctxDb.getTransacDataSource().open())
         {
-            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data).executeAndFetchFirst(PipelineJob.class);
+            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data)
+                    .executeAndFetchFirst(PipelineJob.class);
         }
 
         // Put the pipeline job inside the local pipeline
@@ -158,9 +159,10 @@ class OrderListener extends BaseListener
     {
         // Find the PipelineJob
         PipelineJob pj;
-        try (Connection conn = this.ctx.getTransacDataSource().open())
+        try (Connection conn = this.ctxDb.getTransacDataSource().open())
         {
-            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data).executeAndFetchFirst(PipelineJob.class);
+            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data)
+                    .executeAndFetchFirst(PipelineJob.class);
             pj.getEnvValues(conn);
         }
 
@@ -168,14 +170,14 @@ class OrderListener extends BaseListener
         {
             try
             {
-                ActiveNodeBase a = pj.getActive(ctx);
-                RunResult rr = a.forceOK();
+                EventSourceContainer a = pj.getActive(ctxMeta);
+                RunResult rr = a.forceOK(new EngineCbRun(this.broker.getEngine(), this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
                 Event e = pj.createEvent(rr, pj.getVirtualTime());
-                SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctx, false);
+                SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);
 
                 // Update history & PJ
-                try (Connection connHist = this.ctx.getHistoryDataSource().beginTransaction();
-                        Connection connTransac = this.ctx.getTransacDataSource().beginTransaction())
+                try (Connection connHist = this.ctxDb.getHistoryDataSource().beginTransaction();
+                        Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction())
                 {
                     pj.setStatus(Constants.JI_STATUS_OVERRIDEN);
                     pj.insertOrUpdate(connTransac);
@@ -208,78 +210,32 @@ class OrderListener extends BaseListener
         }
     }
 
-    private void orderExternal(Order order)
-    {
-        External e = null;
-        Application a = null;
-        for (Application app : ctx.getApplications())
-        {
-            for (External anb : app.getActiveElements(External.class))
-            {
-                if (anb.getName().equals((String) order.data))
-                {
-                    e = anb;
-                    a = app;
-                }
-            }
-        }
-
-        if (e == null)
-        {
-            // destroy message - it's corrupt
-            log.error(String.format("An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).", order.data,
-                    order.data2));
-            jmsCommit();
-            return;
-        }
-
-        String d = null;
-        if (order.data2 != null)
-        {
-            d = e.getCalendarString((String) order.data2);
-        }
-        log.debug(String.format("Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
-
-        // Create an event for each State using this external event
-        for (State s : a.getStates())
-        {
-            if (!s.getRepresents().equals(e))
-            {
-                continue;
-            }
-            Event evt = new Event();
-            evt.setApplication(a);
-            if (d != null && s.getCalendar() != null)
-            {
-                evt.setCalendar(s.getCalendar());
-                evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId());
-            }
-            evt.setConditionData1(0);
-            evt.setLevel1Id(new UUID(0, 1));
-            evt.setLevel0Id(s.getChain().getId());
-            evt.setState(s);
-            evt.setVirtualTime(DateTime.now());
-
-            for (Place p : s.getRunsOn().getPlaces())
-            {
-                evt.setPlace(p);
-                try
-                {
-                    log.debug("Sending event for external source");
-                    SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctx, false);
-                }
-                catch (JMSException e1)
-                {
-                    log.error("Could not create the events triggered by an external event. It will be ignored.", e1);
-                }
-            }
-        }
-    }
+    /*
+     * private void orderExternal(Order order) { External e = null; Application a = null; for (Application2 app : ctxMeta.getApplications())
+     * { for (External anb : app.getActiveElements(External.class)) { if (anb.getName().equals((String) order.data)) { e = anb; a = app; } }
+     * }
+     * 
+     * if (e == null) { // destroy message - it's corrupt log.error(String.format(
+     * "An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).",
+     * order.data, order.data2)); jmsCommit(); return; }
+     * 
+     * String d = null; if (order.data2 != null) { d = e.getCalendarString((String) order.data2); } log.debug(String.format(
+     * "Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
+     * 
+     * // Create an event for each State using this external event for (State s : a.getStates()) { if (!s.getRepresents().equals(e)) {
+     * continue; } Event evt = new Event(); evt.setApplication(a); if (d != null && s.getCalendar() != null) {
+     * evt.setCalendar(s.getCalendar()); evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId()); } evt.setConditionData1(0);
+     * evt.setLevel1Id(new UUID(0, 1)); evt.setLevel0Id(s.getChain().getId()); evt.setState(s); evt.setVirtualTime(DateTime.now());
+     * 
+     * for (Place p : s.getRunsOn().getPlaces()) { evt.setPlace(p); try { log.debug("Sending event for external source");
+     * SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctxMeta, false); } catch (JMSException e1) { log.error(
+     * "Could not create the events triggered by an external event. It will be ignored.", e1); } } } }
+     */
 
     private void orderSendMeta(String nodeName, Destination replyTo, String corelId)
     {
         // Does the node really exist?
-        Environment n = this.ctx.getEnvironment();
+        Environment n = this.ctxMeta.getEnvironment();
         ExecutionNode en = n.getNode(nodeName);
         if (en == null)
         {
@@ -301,9 +257,9 @@ class OrderListener extends BaseListener
         // Enqueue all applications using the standard queues and send environment in the answer queue
         try
         {
-            int nbApps = this.ctx.getApplications().size();
+            int nbApps = this.ctxMeta.getApplications().size();
             int nbSent = 0;
-            for (Application a : this.ctx.getApplications())
+            for (Application2 a : this.ctxMeta.getApplications())
             {
                 nbSent++;
                 SenderHelpers.sendApplication(a, en, jmsProducer, jmsSession, false, nbSent != nbApps);

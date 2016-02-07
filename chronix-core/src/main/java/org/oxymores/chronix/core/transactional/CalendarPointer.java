@@ -22,13 +22,13 @@ package org.oxymores.chronix.core.transactional;
 import java.io.Serializable;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
-import org.oxymores.chronix.core.Application;
 import org.oxymores.chronix.core.Calendar;
 
 import org.oxymores.chronix.core.CalendarDay;
-import org.oxymores.chronix.core.ChronixContext;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.sql2o.Connection;
 
 public class CalendarPointer implements Serializable
@@ -109,7 +109,7 @@ public class CalendarPointer implements Serializable
         this.lastEndedOkOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastEndedOkOccurrenceCd(ChronixContext ctx)
+    public CalendarDay getLastEndedOkOccurrenceCd(ChronixContextMeta ctx)
     {
         return this.getCalendar(ctx).getDay(this.lastEndedOkOccurrenceId);
     }
@@ -133,7 +133,7 @@ public class CalendarPointer implements Serializable
         this.lastStartedOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastStartedOccurrenceCd(ChronixContext ctx)
+    public CalendarDay getLastStartedOccurrenceCd(ChronixContextMeta ctx)
     {
         return this.getCalendar(ctx).getDay(this.lastStartedOccurrenceId);
     }
@@ -162,7 +162,7 @@ public class CalendarPointer implements Serializable
         this.lastEndedOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastEndedOccurrenceCd(ChronixContext ctx)
+    public CalendarDay getLastEndedOccurrenceCd(ChronixContextMeta ctx)
     {
         return this.getCalendar(ctx).getDay(this.lastEndedOccurrenceId);
     }
@@ -186,7 +186,7 @@ public class CalendarPointer implements Serializable
         this.nextRunOccurrenceId = dayId;
     }
 
-    public CalendarDay getNextRunOccurrenceCd(ChronixContext ctx)
+    public CalendarDay getNextRunOccurrenceCd(ChronixContextMeta ctx)
     {
         return this.getCalendar(ctx).getDay(this.nextRunOccurrenceId);
     }
@@ -196,7 +196,7 @@ public class CalendarPointer implements Serializable
         this.nextRunOccurrenceId = day.getId();
     }
 
-    public Calendar getCalendar(ChronixContext ctx)
+    public Calendar getCalendar(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getCalendar(this.calendarID);
     }
@@ -206,12 +206,12 @@ public class CalendarPointer implements Serializable
         return this.calendarID;
     }
 
-    public Application getApplication(ChronixContext ctx)
+    public Application2 getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.appID);
     }
 
-    public void setApplication(Application a)
+    public void setApplication(Application2 a)
     {
         this.appID = a == null ? null : a.getId();
     }
@@ -241,7 +241,7 @@ public class CalendarPointer implements Serializable
         return this.stateID;
     }
 
-    public State getState(ChronixContext ctx)
+    public State getState(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getState(this.stateID);
     }
@@ -250,10 +250,11 @@ public class CalendarPointer implements Serializable
 
     public void insertOrUpdate(Connection conn)
     {
-        int i = conn.createQuery("UPDATE CalendarPointer SET lastEndedOkOccurrenceId=:lastEndedOkOccurrenceId, "
-                + "lastStartedOccurrenceId=:lastStartedOccurrenceId, nextRunOccurrenceId=:nextRunOccurrenceId, "
-                + "lastEndedOccurrenceId=:lastEndedOccurrenceId, latestFailed=:latestFailed, running=:running "
-                + "WHERE id=:id").bind(this).executeUpdate().getResult();
+        int i = conn
+                .createQuery("UPDATE CalendarPointer SET lastEndedOkOccurrenceId=:lastEndedOkOccurrenceId, "
+                        + "lastStartedOccurrenceId=:lastStartedOccurrenceId, nextRunOccurrenceId=:nextRunOccurrenceId, "
+                        + "lastEndedOccurrenceId=:lastEndedOccurrenceId, latestFailed=:latestFailed, running=:running " + "WHERE id=:id")
+                .bind(this).executeUpdate().getResult();
         if (i == 0)
         {
             conn.createQuery("INSERT INTO CalendarPointer(ID, STATEID, PLACEID, APPID, CALENDARID, lastEndedOkOccurrenceId, "

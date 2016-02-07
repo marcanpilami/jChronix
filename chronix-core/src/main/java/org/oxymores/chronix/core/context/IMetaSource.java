@@ -11,7 +11,7 @@ public interface IMetaSource
 {
     public DTO getEventSource(UUID id);
 
-    public <T extends DTO & Serializable> void registerSource(T source, EventSourceBehaviour service);
+    public <T extends DTO & Serializable> void registerSource(T source, EventSourceBehaviour service, String pluginName);
 
     public <T extends DTO> void unregisterSource(T source);
 }

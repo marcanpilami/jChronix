@@ -45,10 +45,10 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
     private Long getRunningCount()
     {
         Long running;
-        try (Connection conn = this.ctx.getTransacDataSource().open())
+        try (Connection conn = this.ctxDb.getTransacDataSource().open())
         {
-            running = conn.createQuery("SELECT COUNT(1) FROM Event e WHERE e.analysed = :f").addParameter("f", false).executeScalar(Long.class)
-                    + conn.createQuery("SELECT COUNT(1) FROM PipelineJob p WHERE p.status <> 'DONE'").executeScalar(Long.class);
+            running = conn.createQuery("SELECT COUNT(1) FROM Event e WHERE e.analysed = :f").addParameter("f", false).executeScalar(
+                    Long.class) + conn.createQuery("SELECT COUNT(1) FROM PipelineJob p WHERE p.status <> 'DONE'").executeScalar(Long.class);
         }
         log.debug(String.format("There are %s elements unack in the db", running));
 
@@ -59,8 +59,8 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
         Enumeration enu;
         try
         {
-            String eventQueueName = String.format(Constants.Q_EVENT, this.ctx.getLocalNode().getBrokerName());
-            String pjQueueName = String.format(Constants.Q_PJ, this.ctx.getLocalNode().getBrokerName());
+            String eventQueueName = String.format(Constants.Q_EVENT, this.localNode.getBrokerName());
+            String pjQueueName = String.format(Constants.Q_PJ, this.localNode.getBrokerName());
             devents = this.jmsSession.createQueue(eventQueueName);
             dpjs = this.jmsSession.createQueue(pjQueueName);
             events = this.jmsSession.createBrowser(devents);

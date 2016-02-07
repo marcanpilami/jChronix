@@ -27,20 +27,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.Transition;
+import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 
 public class TransitionAnalysisResult
 {
-    private Transition transition;
+    private DTOTransition transition;
     private boolean parallel;
     // PlaceID, result.
     private Map<UUID, PlaceAnalysisResult> analysis = new HashMap<UUID, PlaceAnalysisResult>();
 
-    public TransitionAnalysisResult(Transition tr)
+    public TransitionAnalysisResult(DTOTransition tr, boolean parallel)
     {
         this.transition = tr;
-        this.parallel = tr.isTransitionParallelEnabled();
+        this.parallel = parallel;
     }
 
     public List<Event> getConsumedEvents()
@@ -133,7 +133,7 @@ public class TransitionAnalysisResult
         this.analysis.put(res.getPlace().getId(), res);
     }
 
-    public Transition getTransition()
+    public DTOTransition getTransition()
     {
         return transition;
     }
