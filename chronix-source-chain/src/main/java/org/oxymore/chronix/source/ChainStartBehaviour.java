@@ -9,6 +9,7 @@ import org.oxymore.chronix.chain.dto.DTOChainStart;
 import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
@@ -28,7 +29,7 @@ public class ChainStartBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public void deserialize(File sourceFile, EngineCallback cb)
+    public void deserialize(File sourceFile, EventSourceRegistry cb)
     {
         // Only one chain start for the whole application. No need to put it inside a file.
         DTOChainStart start = new DTOChainStart();

@@ -55,15 +55,18 @@ public abstract class EventSourceBehaviour
      * <br>
      * <strong>This method is supposed to cope with model version upgrades</strong>. That is, if the given <code>File</code> contains
      * serialized objects related to a previous version of the model, this method will either successfully convert them to the latest
-     * version or throw an FFFFException.<br>
+     * version or throw a runtime exception.<br>
      * <br>
-     * It any, the deserialized sources should be converted to an object implementing {@link DTO} and registered through the
+     * It any, the deserialised sources should be converted to an object implementing {@link DTO} and registered through the
      * {@link EngineCallback}
      * 
      * @param sourceFile
+     *            a directory containing the serialised data.
+     * @param reg
+     *            for registering the deserialised items inside the engine.
      * @return
      */
-    public abstract void deserialize(File sourceFile, EngineCallback cb);
+    public abstract void deserialize(File sourceFile, EventSourceRegistry reg);
     // Serialization
     ///////////////////////////////////////////////////////////////////////////
 

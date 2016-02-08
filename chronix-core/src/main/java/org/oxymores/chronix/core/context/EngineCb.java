@@ -1,15 +1,12 @@
 package org.oxymores.chronix.core.context;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.oxymores.chronix.core.source.api.DTO;
-import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 
-public class EngineCb implements EngineCallback
+public class EngineCb implements EventSourceRegistry
 {
     private IMetaSource metaSource;
     private EventSourceBehaviour service;
@@ -23,25 +20,13 @@ public class EngineCb implements EngineCallback
     }
 
     @Override
-    public void sendMessageXCXXXXX(Object msg, String destinationQueue)
-    {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void sendRunResult(EventSourceRunResult r)
-    {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public DTO getEventSource(UUID id)
     {
         return this.metaSource.getEventSource(id);
     }
 
     @Override
-    public <T extends DTO & Serializable> void registerSource(T source)
+    public <T extends DTO> void registerSource(T source)
     {
         this.metaSource.registerSource(source, service, pluginName);
     }

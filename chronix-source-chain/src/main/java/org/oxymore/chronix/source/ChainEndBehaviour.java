@@ -5,14 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymore.chronix.chain.dto.DTOChainEnd;
 import org.oxymores.chronix.core.source.api.DTO;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
 @Component(immediate = true, service = EventSourceBehaviour.class)
 public class ChainEndBehaviour extends EventSourceBehaviour
@@ -31,7 +30,7 @@ public class ChainEndBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public void deserialize(File sourceFile, EngineCallback cb)
+    public void deserialize(File sourceFile, EventSourceRegistry cb)
     {
         // Only one chain end for the whole application. No need to put it inside a file.
         DTOChainEnd end = new DTOChainEnd();

@@ -36,19 +36,4 @@ public interface EngineCallback
      * @return
      */
     public DTO getEventSource(UUID id);
-
-    /**
-     * Allow the engine to use an event source. Used during the startup sequence. Should usually be called in the
-     * {@link EventSourceBehaviour#deserialize(java.io.File, EngineCallback)} method.
-     * 
-     * @param source
-     */
-    public <T extends DTO & Serializable> void registerSource(T source);
-
-    /**
-     * The opposite of {@link #registerSource(DTO)}. It makes the source unavailable to new jobs (running jobs are not affected).
-     * 
-     * @param source
-     */
-    public <T extends DTO> void unregisterSource(T source);
 }

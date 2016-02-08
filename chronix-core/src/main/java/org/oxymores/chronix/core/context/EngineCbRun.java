@@ -1,6 +1,5 @@
 package org.oxymores.chronix.core.context;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 import javax.jms.JMSException;
@@ -55,17 +54,4 @@ public class EngineCbRun implements EngineCallback
     {
         return this.a.getEventSource(id);
     }
-
-    @Override
-    public <T extends DTO & Serializable> void registerSource(T source)
-    {
-        // INVALID!
-    }
-
-    @Override
-    public <T extends DTO> void unregisterSource(T source)
-    {
-        // INVALID!
-    }
-
 }
