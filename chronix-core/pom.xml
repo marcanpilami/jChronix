@@ -138,12 +138,12 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<artifactId>chronix-runner-shell</artifactId>
 			<groupId>org.oxymores.chronix</groupId>
 			<version>${project.version}</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>org.osgi</groupId>

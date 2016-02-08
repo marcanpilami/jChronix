@@ -116,7 +116,8 @@ public class FirstTest
        * } catch (IOException e) { throw new RuntimeException("could not change log configuration", e); } }
        */
 
-    @Test
+    //TODO: auto create an environment on startup with empty metabase.
+    // @Test
     public void testStartStop()
     {
         Assert.assertNotNull(e);

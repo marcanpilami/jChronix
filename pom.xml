@@ -116,8 +116,8 @@
 		<module>chronix-plugin-api</module>
 		<!-- <module>chronix-runner-shell</module> -->
 		<module>chronix-source-chain</module>
-		<module>chronix-integration-tests</module>
 		<module>chronix-nonosgilibs</module>
 		<!-- <module>chronix-web-core</module> -->
+		<module>chronix-integration-tests</module>
 	</modules>
 </project>
