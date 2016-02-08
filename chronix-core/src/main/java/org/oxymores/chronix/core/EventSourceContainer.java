@@ -29,7 +29,7 @@ import javax.jms.Session;
 import javax.validation.constraints.NotNull;
 
 import org.oxymores.chronix.core.context.Application2;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
@@ -60,10 +60,10 @@ public class EventSourceContainer implements Serializable
     private String pluginName;
 
     // The real event source description
-    private transient DTO eventSource;
+    private transient EventSource eventSource;
     private transient EventSourceBehaviour behaviour;
 
-    public EventSourceContainer(Application2 app, DTO source, EventSourceBehaviour behaviour, String pluginName)
+    public EventSourceContainer(Application2 app, EventSource source, EventSourceBehaviour behaviour, String pluginName)
     {
         super();
         this.application = app;
@@ -92,7 +92,7 @@ public class EventSourceContainer implements Serializable
         return this.eventSource.getId();
     }
 
-    public DTO getSource()
+    public EventSource getSource()
     {
         return this.eventSource;
     }

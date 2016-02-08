@@ -20,7 +20,7 @@ import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.DTOContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
@@ -122,7 +122,7 @@ public class Application2 implements IMetaSource, Serializable
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DTO getEventSource(UUID id)
+    public EventSource getEventSource(UUID id)
     {
         if (!this.containsSource(id))
         {
@@ -141,7 +141,7 @@ public class Application2 implements IMetaSource, Serializable
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends DTO> List<T> getEventSources(Class<T> klass)
+    public <T extends EventSource> List<T> getEventSources(Class<T> klass)
     {
         List<T> res = new ArrayList<>();
         for (EventSourceContainer d : this.sources.values())
@@ -157,9 +157,9 @@ public class Application2 implements IMetaSource, Serializable
     /**
      * Returns a copy of the event source list.
      */
-    public List<DTO> getEventSources()
+    public List<EventSource> getEventSources()
     {
-        List<DTO> res = new ArrayList<>();
+        List<EventSource> res = new ArrayList<>();
         for (EventSourceContainer s : this.sources.values())
         {
             res.add(s.getSource());
@@ -168,7 +168,7 @@ public class Application2 implements IMetaSource, Serializable
     }
 
     @Override
-    public <T extends DTO & Serializable> void registerSource(T source, EventSourceBehaviour service, String pluginName)
+    public <T extends EventSource & Serializable> void registerSource(T source, EventSourceBehaviour service, String pluginName)
     {
         log.trace("Registering event source with ID " + source.getId() + " associated to service " + service.getClass().getSimpleName()
                 + " - " + this.toString());
@@ -177,7 +177,7 @@ public class Application2 implements IMetaSource, Serializable
     }
 
     @Override
-    public <T extends DTO> void unregisterSource(T source)
+    public <T extends EventSource> void unregisterSource(T source)
     {
         if (this.sources.containsKey(source.getId()))
         {
@@ -185,7 +185,7 @@ public class Application2 implements IMetaSource, Serializable
         }
     }
 
-    public boolean containsSource(DTO source)
+    public boolean containsSource(EventSource source)
     {
         return this.containsSource(source.getId());
     }

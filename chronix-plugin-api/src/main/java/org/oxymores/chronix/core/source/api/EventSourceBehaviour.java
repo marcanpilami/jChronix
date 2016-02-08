@@ -45,7 +45,7 @@ public abstract class EventSourceBehaviour
      * 
      * @param targetFile
      */
-    public void serialize(File targetFile, Collection<? extends DTO> instances)
+    public void serialize(File targetFile, Collection<? extends EventSource> instances)
     {
 
     }
@@ -57,7 +57,7 @@ public abstract class EventSourceBehaviour
      * serialized objects related to a previous version of the model, this method will either successfully convert them to the latest
      * version or throw a runtime exception.<br>
      * <br>
-     * It any, the deserialised sources should be converted to an object implementing {@link DTO} and registered through the
+     * It any, the deserialised sources should be converted to an object implementing {@link EventSource} and registered through the
      * {@link EngineCallback}
      * 
      * @param sourceFile
@@ -130,7 +130,7 @@ public abstract class EventSourceBehaviour
      * 
      * @return
      */
-    public List<Class<? extends DTO>> getExposedDtoClasses()
+    public List<Class<? extends EventSource>> getExposedDtoClasses()
     {
         return new ArrayList<>();
     }

@@ -8,7 +8,7 @@ import java.util.List;
  * scope is itself a container, it is a different scope.<br>
  * In addition to the normal event source methods, it also contains methods to allow the engine to access the sub-plan.
  */
-public interface DTOContainer extends DTO
+public interface DTOContainer extends EventSource
 {
     /**
      * This method returns all the states directly inside the scope defined by the source (i.e. not in sub-scopes).<br>

@@ -16,7 +16,7 @@ public interface EventSourceRegistry
      *            the unique ID of the event source instance.
      * @return
      */
-    public DTO getEventSource(UUID id);
+    public EventSource getEventSource(UUID id);
 
     /**
      * Allow the engine to use an event source. Used during the startup sequence. Should usually be called in the
@@ -24,12 +24,12 @@ public interface EventSourceRegistry
      * 
      * @param source
      */
-    public <T extends DTO> void registerSource(T source);
+    public <T extends EventSource> void registerSource(T source);
 
     /**
-     * The opposite of {@link #registerSource(DTO)}. It makes the source unavailable to new jobs (running jobs are not affected).
+     * The opposite of {@link #registerSource(EventSource)}. It makes the source unavailable to new jobs (running jobs are not affected).
      * 
      * @param source
      */
-    public <T extends DTO> void unregisterSource(T source);
+    public <T extends EventSource> void unregisterSource(T source);
 }

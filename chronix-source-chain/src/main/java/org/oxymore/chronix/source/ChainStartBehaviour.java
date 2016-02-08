@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymore.chronix.chain.dto.DTOChainStart;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
@@ -51,9 +51,9 @@ public class ChainStartBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public List<Class<? extends DTO>> getExposedDtoClasses()
+    public List<Class<? extends EventSource>> getExposedDtoClasses()
     {
-        List<Class<? extends DTO>> res = new ArrayList<>();
+        List<Class<? extends EventSource>> res = new ArrayList<>();
         res.add(DTOChainStart.class);
         return res;
     }

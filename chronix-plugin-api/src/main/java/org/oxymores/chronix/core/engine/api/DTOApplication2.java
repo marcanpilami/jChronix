@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOApplication2
@@ -16,7 +16,7 @@ public class DTOApplication2
     private int version = 0;
     private String latestVersionComment = "";
 
-    private List<DTO> eventSources = new ArrayList<>();
+    private List<EventSource> eventSources = new ArrayList<>();
     private List<DTOPlaceGroup> groups = new ArrayList<>();
 
     public DTOPlaceGroup getGroup(String name)
@@ -91,17 +91,17 @@ public class DTOApplication2
         this.latestVersionComment = latestVersionComment;
     }
 
-    public List<DTO> getEventSources()
+    public List<EventSource> getEventSources()
     {
         return eventSources;
     }
 
-    public void setEventSources(List<DTO> eventSources)
+    public void setEventSources(List<EventSource> eventSources)
     {
         this.eventSources = eventSources;
     }
 
-    public void addEventSource(DTO source)
+    public void addEventSource(EventSource source)
     {
         this.eventSources.add(source);
     }

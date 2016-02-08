@@ -9,7 +9,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
     {
         log.info("Source event plugin is going away: " + ref.getClass().getCanonicalName() + ". It was from bundle "
                 + ref.getBundle().getSymbolicName());
-        for (Class<? extends DTO> klass : service.getExposedDtoClasses())
+        for (Class<? extends EventSource> klass : service.getExposedDtoClasses())
         {
             for (Application2 app : this.ctx.getApplications())
             {

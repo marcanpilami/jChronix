@@ -32,7 +32,7 @@ import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOEnvironment;
 
 @RunWith(PaxExam.class)
@@ -159,7 +159,7 @@ public class FirstTest
 
         // Assert.assertEquals(3, a2.getEventSources().size());
         boolean found = false;
-        for (DTO d : a2.getEventSources())
+        for (EventSource d : a2.getEventSources())
         {
             if (d instanceof DTOChain && "first chain".equals(((DTOChain) d).getName()))
             {

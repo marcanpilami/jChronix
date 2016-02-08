@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import javax.jms.JMSException;
 
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -50,7 +50,7 @@ public class EngineCbRun implements EngineCallback
     }
 
     @Override
-    public DTO getEventSource(UUID id)
+    public EventSource getEventSource(UUID id)
     {
         return this.a.getEventSource(id);
     }

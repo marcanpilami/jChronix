@@ -11,7 +11,7 @@ import org.joda.time.DateTime;
 public interface JobDescription
 {
     /**
-     * The ID of the {@link DTO} describing the event source that should run.
+     * The ID of the {@link EventSource} describing the event source that should run.
      */
     public UUID getEventSourceId();
 

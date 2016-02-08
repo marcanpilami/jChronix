@@ -20,7 +20,7 @@ import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
@@ -301,7 +301,7 @@ public class ChronixContextMeta
                 continue;
             }
             EventSourceBehaviour b = (EventSourceBehaviour) ob;
-            for (Class<? extends DTO> c : b.getExposedDtoClasses())
+            for (Class<? extends EventSource> c : b.getExposedDtoClasses())
             {
                 String f = FrameworkUtil.getBundle(c).getSymbolicName();
                 File targetBundleDir = new File(FilenameUtils.concat(targetDir.getAbsolutePath(), f));
@@ -485,7 +485,7 @@ public class ChronixContextMeta
     // MISC GET/SET
     ///////////////////////////////////////////////////////////////////////////
 
-    public EventSourceBehaviour getBehaviour(DTO source)
+    public EventSourceBehaviour getBehaviour(EventSource source)
     {
         for (Object o : getAllKnownBehaviours())
         {

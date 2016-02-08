@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-public interface DTO extends Serializable
+public interface EventSource extends Serializable
 {
     /**
      * Every event source instance has an unique ID. We use statistically unique UUID since this is an easy solution for uniqueness in

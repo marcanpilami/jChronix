@@ -26,7 +26,7 @@ import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
@@ -205,7 +205,7 @@ public class ApiPlanAccess implements PlanAccessService
         a.setName(app.getName());
         a.setId(app.getId());
 
-        for (DTO d : app.getEventSources())
+        for (EventSource d : app.getEventSources())
         {
             a.registerSource(d, this.ctx.getBehaviour(d), FrameworkUtil.getBundle(d.getClass()).getSymbolicName());
         }

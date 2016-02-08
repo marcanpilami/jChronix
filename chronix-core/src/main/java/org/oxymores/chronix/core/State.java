@@ -33,7 +33,7 @@ import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.context.Application2;
-import org.oxymores.chronix.core.source.api.DTO;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.DTOContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
@@ -201,7 +201,7 @@ public class State extends ApplicationObject
         return this.trReceivedHere;
     }
 
-    public DTO getRepresents()
+    public EventSource getRepresents()
     {
         return this.application.getEventSource(this.dto.getEventSourceId());
     }

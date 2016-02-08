@@ -35,5 +35,5 @@ public interface EngineCallback
      * @param id
      * @return
      */
-    public DTO getEventSource(UUID id);
+    public EventSource getEventSource(UUID id);
 }
