@@ -9,11 +9,8 @@ import java.util.List;
 import org.osgi.service.component.annotations.Component;
 import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.JobDescription;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
@@ -31,14 +28,6 @@ public class ChainBehaviour extends EventSourceBehaviour
     public String getSourceDescription()
     {
         return "a reusable piece of production plan";
-    }
-
-    @Override
-    public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
-    {
-        // A chain only starts its own start event source. The actual RunResult is sent by the end source, so all we need here is to return
-        // at once.
-        return null;
     }
 
     @Override

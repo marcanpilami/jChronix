@@ -2,6 +2,8 @@ package org.oxymores.chronix.core;
 
 public class ExecutionNodeConnectionAmq extends ExecutionNodeConnection
 {
+    private static final long serialVersionUID = 3903963749812501283L;
+
     private String dns;
     private Integer qPort;
 

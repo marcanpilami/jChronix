@@ -7,8 +7,6 @@ import org.osgi.annotation.versioning.ProviderType;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
-import org.oxymores.chronix.dto.DTORRule;
-import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
 
 /**
@@ -66,7 +64,7 @@ public interface PlanAccessService
     /**
      * Helper method that will return a list of the next few occurrences for a recurrence rule.
      */
-    //public DTOResultClock testRecurrenceRule(DTORRule rule);
+    // public DTOResultClock testRecurrenceRule(DTORRule rule);
 
     /**
      * <strong>Data loss danger</strong><br>

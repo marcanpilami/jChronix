@@ -3,10 +3,8 @@ package org.oxymores.chronix.core.context;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,8 +15,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
@@ -484,23 +480,6 @@ public class ChronixContextMeta
     ///////////////////////////////////////////////////////////////////////////
     // MISC GET/SET
     ///////////////////////////////////////////////////////////////////////////
-
-    public EventSourceBehaviour getBehaviour(EventSource source)
-    {
-        for (Object o : getAllKnownBehaviours())
-        {
-            if (o == null)
-            {
-                continue;
-            }
-            EventSourceBehaviour b = (EventSourceBehaviour) o;
-            if (b.getExposedDtoClasses().contains(source.getClass()))
-            {
-                return b;
-            }
-        }
-        throw new ChronixException("no known plugin for a DTO of class " + source.getClass());
-    }
 
     public Object[] getAllKnownBehaviours()
     {

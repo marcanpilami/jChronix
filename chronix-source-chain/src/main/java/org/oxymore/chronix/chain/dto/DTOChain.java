@@ -7,9 +7,12 @@ import java.util.UUID;
 import org.oxymores.chronix.core.source.api.DTOContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
+import org.oxymores.chronix.core.source.api.EngineCallback;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOChain implements DTOContainer
+public class DTOChain extends DTOContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
@@ -49,6 +52,18 @@ public class DTOChain implements DTOContainer
 
         this.addState(s1);
         this.addState(s2);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // RUN
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
+    {
+        // A chain only starts its own start event source. The actual RunResult is sent by the end source, so all we need here is to return
+        // at once.
+        return null;
     }
 
     ///////////////////////////////////////////////////////////////////////////

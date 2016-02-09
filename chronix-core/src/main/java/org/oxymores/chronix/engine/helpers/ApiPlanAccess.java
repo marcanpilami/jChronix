@@ -207,7 +207,7 @@ public class ApiPlanAccess implements PlanAccessService
 
         for (EventSource d : app.getEventSources())
         {
-            a.registerSource(d, this.ctx.getBehaviour(d), FrameworkUtil.getBundle(d.getClass()).getSymbolicName());
+            a.registerSource(d, FrameworkUtil.getBundle(d.getClass()).getSymbolicName());
         }
 
         for (DTOPlaceGroup pg : app.getGroups())

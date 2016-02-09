@@ -329,7 +329,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         rlog.setShortLog(rr.logStart);
         rlog.setStateId(this.stateID);
         rlog.setStoppedRunningAt(this.stoppedRunningAt);
-        rlog.setVisible(act.getBehaviour().visibleInHistory());
+        rlog.setVisible(!act.isHiddenFromHistory());
         rlog.setWhatWasRun(this.runThis);
         rlog.setLogPath(rr.logPath);
 

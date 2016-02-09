@@ -20,11 +20,10 @@ import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.DTOContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,11 +167,11 @@ public class Application2 implements IMetaSource, Serializable
     }
 
     @Override
-    public <T extends EventSource & Serializable> void registerSource(T source, EventSourceBehaviour service, String pluginName)
+    public <T extends EventSource & Serializable> void registerSource(T source, String pluginSymbolicName)
     {
-        log.trace("Registering event source with ID " + source.getId() + " associated to service " + service.getClass().getSimpleName()
-                + " - " + this.toString());
-        EventSourceContainer esc = new EventSourceContainer(this, source, service, pluginName);
+        log.trace("Registering event source with ID " + source.getId() + " from plugin " + pluginSymbolicName + " of class "
+                + source.getClass().getSimpleName() + " - " + this.toString());
+        EventSourceContainer esc = new EventSourceContainer(this, source, pluginSymbolicName);
         sources.put(source.getId(), esc);
     }
 
@@ -193,15 +192,6 @@ public class Application2 implements IMetaSource, Serializable
     public boolean containsSource(UUID id)
     {
         return this.sources.containsKey(id);
-    }
-
-    public EventSourceBehaviour getEventSourceBehaviour(UUID id)
-    {
-        if (!this.containsSource(id))
-        {
-            throw new ChronixException("non existing source");
-        }
-        return this.sources.get(id).getBehaviour();
     }
 
     ///////////////////////////////////////////////////////////////////////////

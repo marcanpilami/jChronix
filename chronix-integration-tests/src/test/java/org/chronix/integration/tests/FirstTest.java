@@ -7,12 +7,7 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 
 import javax.inject.Inject;
 
@@ -24,7 +19,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymore.chronix.chain.dto.DTOChainEnd;
 import org.oxymore.chronix.chain.dto.DTOChainStart;
@@ -116,7 +110,7 @@ public class FirstTest
        * } catch (IOException e) { throw new RuntimeException("could not change log configuration", e); } }
        */
 
-    //TODO: auto create an environment on startup with empty metabase.
+    // TODO: auto create an environment on startup with empty metabase.
     // @Test
     public void testStartStop()
     {

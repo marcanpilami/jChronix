@@ -19,8 +19,6 @@
  */
 package org.oxymores.chronix.exceptions;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 public class ChronixException extends RuntimeException
 {
     private static final long serialVersionUID = 6684815812625785453L;

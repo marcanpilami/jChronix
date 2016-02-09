@@ -19,8 +19,6 @@
  */
 package org.oxymores.chronix.engine;
 
-import java.util.UUID;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -32,8 +30,6 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceContainer;
 import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.EngineCbRun;
 import org.oxymores.chronix.core.timedata.RunLog;

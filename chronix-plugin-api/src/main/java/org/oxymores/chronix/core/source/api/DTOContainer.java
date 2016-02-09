@@ -8,17 +8,19 @@ import java.util.List;
  * scope is itself a container, it is a different scope.<br>
  * In addition to the normal event source methods, it also contains methods to allow the engine to access the sub-plan.
  */
-public interface DTOContainer extends EventSource
+public abstract class DTOContainer extends EventSource
 {
+    private static final long serialVersionUID = -118374232425130974L;
+
     /**
      * This method returns all the states directly inside the scope defined by the source (i.e. not in sub-scopes).<br>
      * Returning null is an error. Empty lists are OK.
      */
-    public List<DTOState> getContainedStates();
+    public abstract List<DTOState> getContainedStates();
 
     /**
      * All the transitions contained by the scope.<br>
      * Returning null is an error. Empty lists are OK.
      */
-    public List<DTOTransition> getContainedTransitions();
+    public abstract List<DTOTransition> getContainedTransitions();
 }

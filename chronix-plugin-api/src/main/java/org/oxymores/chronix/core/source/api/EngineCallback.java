@@ -1,9 +1,6 @@
 package org.oxymores.chronix.core.source.api;
 
-import java.io.Serializable;
 import java.util.UUID;
-
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
 /**
  * A few methods useful to Event Sources.

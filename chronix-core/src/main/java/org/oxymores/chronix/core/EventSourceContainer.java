@@ -29,10 +29,11 @@ import javax.jms.Session;
 import javax.validation.constraints.NotNull;
 
 import org.oxymores.chronix.core.context.Application2;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
+import org.oxymores.chronix.core.source.api.EventSourceOptionSelfTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -61,15 +62,13 @@ public class EventSourceContainer implements Serializable
 
     // The real event source description
     private transient EventSource eventSource;
-    private transient EventSourceBehaviour behaviour;
 
-    public EventSourceContainer(Application2 app, EventSource source, EventSourceBehaviour behaviour, String pluginName)
+    public EventSourceContainer(Application2 app, EventSource source, String pluginSymbolicName)
     {
         super();
         this.application = app;
         this.eventSource = source;
-        this.behaviour = behaviour;
-        this.pluginName = pluginName;
+        this.pluginName = pluginSymbolicName;
         parameters = new ArrayList<>();
     }
 
@@ -79,7 +78,7 @@ public class EventSourceContainer implements Serializable
         return String.format("%s (%s)", eventSource.getName(), pluginName);
     }
 
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // stupid get/set
 
     public String getName()
@@ -97,15 +96,10 @@ public class EventSourceContainer implements Serializable
         return this.eventSource;
     }
 
-    public EventSourceBehaviour getBehaviour()
-    {
-        return this.behaviour;
-    }
-
     // stupid get/set
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Relationship traversing
     public List<State> getClientStates()
     {
@@ -113,9 +107,9 @@ public class EventSourceContainer implements Serializable
     }
 
     // Relationship traversing
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Parameter handling
     public ArrayList<Parameter> getParameters()
     {
@@ -140,10 +134,11 @@ public class EventSourceContainer implements Serializable
     }
 
     // Parameter handling
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Event analysis
+
     // Do the given events allow for a transition originating from a state representing this source?
     public PlaceAnalysisResult createdEventRespectsTransitionOnPlace(DTOTransition tr, List<Event> events, Place p, Connection conn)
     {
@@ -326,8 +321,9 @@ public class EventSourceContainer implements Serializable
     }
 
     //
-    // ////////////////////////////////////////////////////////////////////////////
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
     // Methods called before and after run
     // Run - phase 1
     // Responsible for parameters resolution.
@@ -342,20 +338,37 @@ public class EventSourceContainer implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.behaviour.run(cb, jd));
+        // TODO: BUG! DO NOT RETURN RunResult IF NULL
+        return new RunResult(jd, this.eventSource.run(cb, jd));
     }
 
     public RunResult forceOK(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.behaviour.runForceOk(cb, jd));
+        return new RunResult(jd, this.eventSource.runForceOk(cb, jd));
     }
 
     public RunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.behaviour.runDisabled(cb, jd));
+        return new RunResult(jd, this.eventSource.runDisabled(cb, jd));
     }
 
     //
-    // ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Toggles
+
+    public boolean isSelfTriggered()
+    {
+        return this.eventSource instanceof EventSourceOptionSelfTriggered;
+    }
+
+    public boolean isHiddenFromHistory()
+    {
+        return this.eventSource instanceof EventSourceOptionInvisible;
+    }
+
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
 }

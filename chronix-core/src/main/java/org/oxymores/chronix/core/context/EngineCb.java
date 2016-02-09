@@ -28,7 +28,7 @@ public class EngineCb implements EventSourceRegistry
     @Override
     public <T extends EventSource> void registerSource(T source)
     {
-        this.metaSource.registerSource(source, service, pluginName);
+        this.metaSource.registerSource(source, pluginName);
     }
 
     @Override
