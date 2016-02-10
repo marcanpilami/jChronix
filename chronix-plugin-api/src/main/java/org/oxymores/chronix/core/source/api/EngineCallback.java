@@ -27,7 +27,7 @@ public interface EngineCallback
 
     /**
      * Retrieves an event source instance from the loaded instances cache. If none found, null is returned.<br>
-     * {@link EventSourceBehaviour} instances are expected to use this method to fetch the instances of their own DTOs.
+     * {@link EventSourceProvider} instances are expected to use this method to fetch the instances of their own DTOs.
      * 
      * @param id
      * @return

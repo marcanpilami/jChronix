@@ -3,8 +3,10 @@ package org.oxymores.chronix.core.context;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -16,14 +18,15 @@ import org.joda.time.DateTime;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.source.api.DTOContainer;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +67,7 @@ public class Application2 implements IMetaSource, Serializable
 
     // The sources must NOT be serialised. Each plugin is responsible for its own serialisation.
     @XStreamOmitField
-    private transient Map<UUID, EventSourceContainer> sources = new HashMap<>();
+    private transient Map<UUID, EventSourceWrapper> sources = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction
@@ -130,7 +133,7 @@ public class Application2 implements IMetaSource, Serializable
         return this.sources.get(id).getSource();
     }
 
-    public EventSourceContainer getEventSourceContainer(UUID id)
+    public EventSourceWrapper getEventSourceContainer(UUID id)
     {
         if (!this.containsSource(id))
         {
@@ -143,7 +146,7 @@ public class Application2 implements IMetaSource, Serializable
     public <T extends EventSource> List<T> getEventSources(Class<T> klass)
     {
         List<T> res = new ArrayList<>();
-        for (EventSourceContainer d : this.sources.values())
+        for (EventSourceWrapper d : this.sources.values())
         {
             if (d != null && klass.isInstance(d.getSource()))
             {
@@ -159,7 +162,7 @@ public class Application2 implements IMetaSource, Serializable
     public List<EventSource> getEventSources()
     {
         List<EventSource> res = new ArrayList<>();
-        for (EventSourceContainer s : this.sources.values())
+        for (EventSourceWrapper s : this.sources.values())
         {
             res.add(s.getSource());
         }
@@ -171,7 +174,7 @@ public class Application2 implements IMetaSource, Serializable
     {
         log.trace("Registering event source with ID " + source.getId() + " from plugin " + pluginSymbolicName + " of class "
                 + source.getClass().getSimpleName() + " - " + this.toString());
-        EventSourceContainer esc = new EventSourceContainer(this, source, pluginSymbolicName);
+        EventSourceWrapper esc = new EventSourceWrapper(this, source, pluginSymbolicName);
         sources.put(source.getId(), esc);
     }
 
@@ -192,6 +195,29 @@ public class Application2 implements IMetaSource, Serializable
     public boolean containsSource(UUID id)
     {
         return this.sources.containsKey(id);
+    }
+
+    public Set<Class<? extends EventSource>> getAllEventSourceClasses()
+    {
+        Set<Class<? extends EventSource>> res = new HashSet<>();
+        for (EventSourceWrapper es : this.sources.values())
+        {
+            res.add(es.getSource().getClass());
+        }
+        return res;
+    }
+
+    public List<EventSource> getEventSources(EventSourceProvider pr)
+    {
+        List<EventSource> res = new ArrayList<>();
+        for (EventSourceWrapper s : this.sources.values())
+        {
+            if (s.getSource().getProvider().equals(pr.getClass()))
+            {
+                res.add(s.getSource());
+            }
+        }
+        return res;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -355,7 +381,7 @@ public class Application2 implements IMetaSource, Serializable
     // STATES
     ///////////////////////////////////////////////////////////////////////////
 
-    private State dto2state(DTOState d, DTOContainer parent)
+    private State dto2state(DTOState d, EventSourceContainer parent)
     {
         List<DTOTransition> trFromState = new ArrayList<>(), trToState = new ArrayList<>();
         for (DTOTransition tr : parent.getContainedTransitions())
@@ -375,11 +401,11 @@ public class Application2 implements IMetaSource, Serializable
 
     public State getState(UUID id)
     {
-        for (EventSourceContainer d : this.sources.values())
+        for (EventSourceWrapper d : this.sources.values())
         {
-            if (d.getSource() instanceof DTOContainer)
+            if (d.getSource() instanceof EventSourceContainer)
             {
-                DTOContainer c = (DTOContainer) d.getSource();
+                EventSourceContainer c = (EventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())
                 {
                     if (s.getId().equals(id))
@@ -396,11 +422,11 @@ public class Application2 implements IMetaSource, Serializable
     {
         List<State> res = new ArrayList<>();
 
-        for (EventSourceContainer d : this.sources.values())
+        for (EventSourceWrapper d : this.sources.values())
         {
-            if (d.getSource() instanceof DTOContainer)
+            if (d.getSource() instanceof EventSourceContainer)
             {
-                DTOContainer c = (DTOContainer) d.getSource();
+                EventSourceContainer c = (EventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())
                 {
                     if (s.getEventSourceId() == sourceId)

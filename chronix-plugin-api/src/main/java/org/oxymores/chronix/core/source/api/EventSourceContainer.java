@@ -8,7 +8,7 @@ import java.util.List;
  * scope is itself a container, it is a different scope.<br>
  * In addition to the normal event source methods, it also contains methods to allow the engine to access the sub-plan.
  */
-public abstract class DTOContainer extends EventSource
+public abstract class EventSourceContainer extends EventSource
 {
     private static final long serialVersionUID = -118374232425130974L;
 

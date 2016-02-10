@@ -3,6 +3,21 @@ package org.oxymores.chronix.core.source.api;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * An <strong>event source</strong> is a node of the production plan graph, that is an item that can be triggered, then runs and returns a
+ * result from which events will be created (the event creation is taken care of by the engine itself, not the source which only returns a
+ * "run result" object). Examples are aplenty among the event sources bundled with the default distribution: a shell command, a clock, a
+ * file incoming inside a directory...<br>
+ * <br>
+ * Instances of classes extending EventSource can be either directly created by clients (through a constructor) or deserialised from
+ * persistent storage by an {@link EventSourceProvider}. The EventSource has a pointer to the {@link EventSourceProvider} which handles
+ * serialisation/deserialisation for itself.<br>
+ * <br>
+ * Event sources are expected to behave like <strong>Data Transfer Objects (DTO)</strong> - that is, they should be as stable as possible
+ * between versions, easy to create, easy to serialise (no complex graph).<br>
+ * Note this is not an interface but a base abstract class, so as to allow easier ascending compatibility in the event of an evolution of
+ * the core model.
+ */
 public abstract class EventSource implements Serializable
 {
     private static final long serialVersionUID = -1239160226415660389L;
@@ -24,14 +39,9 @@ public abstract class EventSource implements Serializable
     public abstract String getName();
 
     /**
-     * Event sources can be disabled by returning false. In this case, every State that uses this sources will run in disabled mode (i.e.
-     * the {@link EventSourceBehaviour#runDisabled(EngineCallback, JobDescription)} will be called instead of calling
-     * {@link EventSourceBehaviour#run(EngineCallback, JobDescription)}.
+     * The {@link EventSourceProvider} that should be used for persistence.
      */
-    public boolean isEnabled()
-    {
-        return true;
-    }
+    public abstract Class<? extends EventSourceProvider> getProvider();
 
     ///////////////////////////////////////////////////////////////////////////
     // Run methods

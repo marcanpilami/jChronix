@@ -7,11 +7,11 @@ import java.util.List;
 import org.osgi.service.component.annotations.Component;
 import org.oxymore.chronix.chain.dto.DTOChainStart;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 
-@Component(immediate = true, service = EventSourceBehaviour.class)
-public class ChainStartBehaviour extends EventSourceBehaviour
+@Component(immediate = true, service = EventSourceProvider.class)
+public class ChainStartBehaviour extends EventSourceProvider
 {
     @Override
     public String getSourceName()
@@ -26,7 +26,7 @@ public class ChainStartBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public void deserialize(File sourceFile, EventSourceRegistry cb)
+    public void deserialise(File sourceFile, EventSourceRegistry cb)
     {
         // Only one chain start for the whole application. No need to put it inside a file.
         DTOChainStart start = new DTOChainStart();

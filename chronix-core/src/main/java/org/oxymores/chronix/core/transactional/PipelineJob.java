@@ -29,7 +29,7 @@ import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.context.Application2;
@@ -206,7 +206,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     public boolean isReady(ChronixContextMeta ctx)
     {
-        EventSourceContainer a = this.getActive(ctx);
+        EventSourceWrapper a = this.getActive(ctx);
         return a.getParameters().size() == this.resolvedParameters.size();
     }
 
@@ -305,7 +305,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         RunLog rlog = new RunLog();
         Application2 a = ctx.getApplication(this.appID);
         Place p = ctx.getEnvironment().getPlace(this.placeID);
-        EventSourceContainer act = this.getActive(ctx);
+        EventSourceWrapper act = this.getActive(ctx);
 
         rlog.setActiveNodeId(this.activeID);
         rlog.setActiveNodeName(act.getName());

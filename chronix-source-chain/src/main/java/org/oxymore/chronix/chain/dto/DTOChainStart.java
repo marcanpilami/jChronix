@@ -2,8 +2,10 @@ package org.oxymore.chronix.chain.dto;
 
 import java.util.UUID;
 
+import org.oxymore.chronix.source.ChainStartBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
@@ -25,9 +27,9 @@ public class DTOChainStart extends EventSource
     }
 
     @Override
-    public boolean isEnabled()
+    public Class<? extends EventSourceProvider> getProvider()
     {
-        return true;
+        return ChainStartBehaviour.class;
     }
 
     @Override

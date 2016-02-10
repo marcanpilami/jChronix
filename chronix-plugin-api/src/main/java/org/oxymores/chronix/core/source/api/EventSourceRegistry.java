@@ -9,7 +9,7 @@ public interface EventSourceRegistry
 {
     /**
      * Retrieves an event source instance from the loaded instances cache. If none found, null is returned.<br>
-     * {@link EventSourceBehaviour} instances are expected to use this method to fetch the instances of their own DTOs.<br>
+     * {@link EventSourceProvider} instances are expected to use this method to fetch the instances of their own DTOs.<br>
      * Only registered instances are returned.
      * 
      * @param id
@@ -20,7 +20,7 @@ public interface EventSourceRegistry
 
     /**
      * Allow the engine to use an event source. Used during the startup sequence. Should usually be called in the
-     * {@link EventSourceBehaviour#deserialize(java.io.File, EventSourceRegistry)} method.
+     * {@link EventSourceProvider#deserialise(java.io.File, EventSourceRegistry)} method.
      * 
      * @param source
      */

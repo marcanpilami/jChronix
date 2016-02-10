@@ -28,7 +28,7 @@ import javax.jms.TextMessage;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.EngineCbRun;
@@ -166,7 +166,7 @@ class OrderListener extends BaseListener
         {
             try
             {
-                EventSourceContainer a = pj.getActive(ctxMeta);
+                EventSourceWrapper a = pj.getActive(ctxMeta);
                 RunResult rr = a.forceOK(new EngineCbRun(this.broker.getEngine(), this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
                 Event e = pj.createEvent(rr, pj.getVirtualTime());
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);

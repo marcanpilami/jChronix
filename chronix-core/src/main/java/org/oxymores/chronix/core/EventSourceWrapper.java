@@ -47,10 +47,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-public class EventSourceContainer implements Serializable
+public class EventSourceWrapper implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
-    private static final Logger log = LoggerFactory.getLogger(EventSourceContainer.class);
+    private static final Logger log = LoggerFactory.getLogger(EventSourceWrapper.class);
 
     @NotNull
     protected ArrayList<Parameter> parameters;
@@ -63,7 +63,9 @@ public class EventSourceContainer implements Serializable
     // The real event source description
     private transient EventSource eventSource;
 
-    public EventSourceContainer(Application2 app, EventSource source, String pluginSymbolicName)
+    private boolean enabled = true;
+
+    public EventSourceWrapper(Application2 app, EventSource source, String pluginSymbolicName)
     {
         super();
         this.application = app;
@@ -94,6 +96,16 @@ public class EventSourceContainer implements Serializable
     public EventSource getSource()
     {
         return this.eventSource;
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
     }
 
     // stupid get/set

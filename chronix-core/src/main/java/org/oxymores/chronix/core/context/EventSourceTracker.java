@@ -10,12 +10,12 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviour, EventSourceBehaviour>
+class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider, EventSourceProvider>
 {
     private static final Logger log = LoggerFactory.getLogger(EventSourceTracker.class);
     private ChronixContextMeta ctx;
@@ -27,12 +27,12 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
     }
 
     @Override
-    public EventSourceBehaviour addingService(ServiceReference<EventSourceBehaviour> ref)
+    public EventSourceProvider addingService(ServiceReference<EventSourceProvider> ref)
     {
         // On add, simply init the plugin.
 
         // get the service reference - it will stored alongside the event sources (if any)
-        EventSourceBehaviour srv = bd.getBundleContext().getService(ref);
+        EventSourceProvider srv = bd.getBundleContext().getService(ref);
         if (srv == null)
         {
             log.warn("Event source plugin has disappeared before finishing its registration: " + ref.getClass().getCanonicalName());
@@ -62,31 +62,29 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceBehaviou
             }
 
             log.trace("Asking plugin " + ref.getBundle().getSymbolicName() + " to read directory " + bundleDir.getAbsolutePath());
-            srv.deserialize(bundleDir, new EngineCb(app, srv, ref.getBundle().getSymbolicName()));
+            srv.deserialise(bundleDir, new EngineCb(app, srv, ref.getBundle().getSymbolicName()));
         }
 
         return srv;
     }
 
     @Override
-    public void modifiedService(ServiceReference<EventSourceBehaviour> reference, EventSourceBehaviour service)
+    public void modifiedService(ServiceReference<EventSourceProvider> reference, EventSourceProvider service)
     {
         // Nothing to do
     }
 
     @Override
-    public void removedService(ServiceReference<EventSourceBehaviour> ref, EventSourceBehaviour service)
+    public void removedService(ServiceReference<EventSourceProvider> ref, EventSourceProvider service)
     {
         log.info("Source event plugin is going away: " + ref.getClass().getCanonicalName() + ". It was from bundle "
                 + ref.getBundle().getSymbolicName());
-        for (Class<? extends EventSource> klass : service.getExposedDtoClasses())
+
+        for (Application2 app : this.ctx.getApplications())
         {
-            for (Application2 app : this.ctx.getApplications())
+            for (EventSource o : app.getEventSources(service))
             {
-                for (Object o : app.getEventSources(klass))
-                {
-                    app.unregisterSource(klass.cast(o));
-                }
+                app.unregisterSource(o);
             }
         }
     }

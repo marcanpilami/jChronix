@@ -32,7 +32,7 @@ public class EventSourceRunResult
     public Long logSizeBytes = null;
 
     /**
-     * A return code. The interpretation of this code is left to the {@link EventSourceBehaviour}, but a recommendation is to use 0 for a
+     * A return code. The interpretation of this code is left to the {@link EventSourceProvider}, but a recommendation is to use 0 for a
      * success. It must be set for the {@link EventSourceRunResult} to be valid.
      */
     public Integer returnCode = null;

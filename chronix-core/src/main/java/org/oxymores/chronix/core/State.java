@@ -34,7 +34,7 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.DTOContainer;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
@@ -63,7 +63,7 @@ public class State extends ApplicationObject
 
     // The container it belongs to
     @NotNull
-    protected DTOContainer container;
+    protected EventSourceContainer container;
 
     // Transitions
     @NotNull
@@ -80,7 +80,7 @@ public class State extends ApplicationObject
 
     // /////////////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application2 app, DTOState state, DTOContainer container, List<DTOTransition> trFromState, List<DTOTransition> trToState)
+    public State(Application2 app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState, List<DTOTransition> trToState)
     {
         super();
         this.application = app;
@@ -206,7 +206,7 @@ public class State extends ApplicationObject
         return this.application.getEventSource(this.dto.getEventSourceId());
     }
 
-    public EventSourceContainer getRepresentsContainer()
+    public EventSourceWrapper getRepresentsContainer()
     {
         return this.application.getEventSourceContainer(this.dto.getEventSourceId());
     }

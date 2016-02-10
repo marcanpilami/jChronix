@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
@@ -41,7 +42,7 @@ public class ChronixContextMeta
     private File rootDir;
 
     // Source tracker
-    private ServiceTracker<EventSourceBehaviour, EventSourceBehaviour> tracker;
+    private ServiceTracker<EventSourceProvider, EventSourceProvider> tracker;
 
     // all known applications
     private Map<UUID, Application2> applications = new HashMap<>();
@@ -76,7 +77,7 @@ public class ChronixContextMeta
     {
         log.debug("Registering source event plugin tracker");
         Bundle bd = FrameworkUtil.getBundle(ChronixContextMeta.class);
-        tracker = new ServiceTracker<EventSourceBehaviour, EventSourceBehaviour>(bd.getBundleContext(), EventSourceBehaviour.class,
+        tracker = new ServiceTracker<EventSourceProvider, EventSourceProvider>(bd.getBundleContext(), EventSourceProvider.class,
                 new EventSourceTracker(this));
         tracker.open();
         log.debug("Source event plugin tracker is open");
@@ -296,8 +297,8 @@ public class ChronixContextMeta
             {
                 continue;
             }
-            EventSourceBehaviour b = (EventSourceBehaviour) ob;
-            for (Class<? extends EventSource> c : b.getExposedDtoClasses())
+
+            for (Class<? extends EventSource> c : app.getAllEventSourceClasses())
             {
                 String f = FrameworkUtil.getBundle(c).getSymbolicName();
                 File targetBundleDir = new File(FilenameUtils.concat(targetDir.getAbsolutePath(), f));
@@ -308,7 +309,12 @@ public class ChronixContextMeta
                             "plugin directory does not exist and cannot be created: " + targetBundleDir.getAbsolutePath());
                 }
 
-                b.serialize(targetBundleDir, app.getEventSources(c));
+                List<? extends EventSource> p = app.getEventSources(c);
+                if (p.size() == 0)
+                {
+                    continue;
+                }
+                getProviderForClass(p.get(0).getProvider()).serialise(targetBundleDir, p);
             }
         }
 
@@ -496,5 +502,18 @@ public class ChronixContextMeta
             }
         }
         return tracker.getServices();
+    }
+
+    public EventSourceProvider getProviderForClass(Class<? extends EventSourceProvider> klass)
+    {
+        for (Object o : getAllKnownBehaviours())
+        {
+            EventSourceProvider pr = (EventSourceProvider) o;
+            if (pr.getClass().isAssignableFrom(klass))
+            {
+                return pr;
+            }
+        }
+        throw new ChronixException("no such provider");
     }
 }

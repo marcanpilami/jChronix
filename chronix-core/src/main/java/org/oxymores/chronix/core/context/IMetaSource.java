@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 
 public interface IMetaSource
 {

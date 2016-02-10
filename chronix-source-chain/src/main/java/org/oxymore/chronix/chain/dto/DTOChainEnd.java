@@ -2,8 +2,10 @@ package org.oxymore.chronix.chain.dto;
 
 import java.util.UUID;
 
+import org.oxymore.chronix.source.ChainEndBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
@@ -22,6 +24,12 @@ public class DTOChainEnd extends EventSource
     public String getName()
     {
         return "END";
+    }
+
+    @Override
+    public Class<? extends EventSourceProvider> getProvider()
+    {
+        return ChainEndBehaviour.class;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -52,5 +60,4 @@ public class DTOChainEnd extends EventSource
     {
         return run(cb, jd);
     }
-
 }

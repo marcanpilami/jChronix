@@ -4,22 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.DTOContainer;
+import org.oxymore.chronix.source.ChainBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOChain extends DTOContainer
+public class DTOChain extends EventSourceContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
     private String name;
     private String description;
     private UUID id;
-    private boolean enabled = true;
 
     private List<DTOState> states = new ArrayList<DTOState>();
     private List<DTOTransition> transitions = new ArrayList<DTOTransition>();
@@ -185,14 +186,8 @@ public class DTOChain extends DTOContainer
     }
 
     @Override
-    public boolean isEnabled()
+    public Class<? extends EventSourceProvider> getProvider()
     {
-        return this.enabled;
+        return ChainBehaviour.class;
     }
-
-    public void setEnabled(boolean enabled)
-    {
-        this.enabled = enabled;
-    }
-
 }

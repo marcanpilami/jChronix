@@ -28,7 +28,7 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
-import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
@@ -88,7 +88,7 @@ class EventListener extends BaseListener
         // Check event is OK while getting data from event
         Application2 a;
         State s;
-        EventSourceContainer active;
+        EventSourceWrapper active;
         try
         {
             a = evt.getApplication(ctxMeta);

@@ -6,28 +6,29 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * The base class to extend for all event source plugins. <br>
- * An <strong>event source</strong> is a node of the production plan graph, that is an item that can be triggered (the source itself having
- * the final word on whether the events coming from other sources should trigger this one or not), then runs and returns a result from which
- * events will be created (the event creation is taken care of by the engine itself, not the source which only returns a "run result"
- * object).<br>
+ * The base class to extend for all event source plugins. It contains some metadata and allows to store and fetch event source instances.
+ * <br>
+ * All event source providers (classes extending this one) should be exposed as an OSGI service implementing contract EventSourceProvider.
+ * <br>
  * <br>
  * Note this is not an interface but a base abstract class, so as to allow easier ascending compatibility in the event of an evolution of
- * the core model. TODO: mark what should be thread-safe
+ * the core model.
  */
-public abstract class EventSourceBehaviour
+public abstract class EventSourceProvider
 {
     ///////////////////////////////////////////////////////////////////////////
     // Identity Card
     /**
-     * The name of this event source type, as it should appear in the log and the web pages.
+     * The name of this event source type, as it should appear in the log and the web pages.<br>
+     * If the result is expected to be stable with time, it is not used anywhere but in user interfaces so a change is not catastrophic.
      */
     public abstract String getSourceName();
 
     // TODO: a localised variant.
 
     /**
-     * The description of this event source type, as it should appear in the log and the web pages.
+     * The description of this event source type, as it should appear in the log and the web pages. See {@link #getSourceName()} for
+     * stability.
      */
     public abstract String getSourceDescription();
     // Identity Card
@@ -45,13 +46,13 @@ public abstract class EventSourceBehaviour
      * 
      * @param targetFile
      */
-    public void serialize(File targetFile, Collection<? extends EventSource> instances)
+    public void serialise(File targetFile, Collection<? extends EventSource> instances)
     {
 
     }
 
     /**
-     * The reverse method of {@link #serialize(File)}. <br>
+     * The reverse method of {@link #serialise(File)}. <br>
      * <br>
      * <strong>This method is supposed to cope with model version upgrades</strong>. That is, if the given <code>File</code> contains
      * serialised objects related to a previous version of the model, this method will either successfully convert them to the latest
@@ -66,7 +67,7 @@ public abstract class EventSourceBehaviour
      *            for registering the deserialised items inside the engine.
      * @return
      */
-    public abstract void deserialize(File sourceFile, EventSourceRegistry reg);
+    public abstract void deserialise(File sourceFile, EventSourceRegistry reg);
     // Serialisation
     ///////////////////////////////////////////////////////////////////////////
 
@@ -77,10 +78,12 @@ public abstract class EventSourceBehaviour
      * As the plugins can declare any DTO they like, this can cause issues to frameworks that rely on class discovery inside some class
      * loaders. This method actually returns all the Class objects that can be used outside the plugin so to allow to explicitly register
      * them inside these frameworks.<br>
-     * Default is an empty list.
+     * Default is an empty list. <br>
+     * Marked for deprecation - we hope we won't need this in this end.
      * 
      * @return
      */
+    @Deprecated
     public List<Class<? extends EventSource>> getExposedDtoClasses()
     {
         return new ArrayList<>();

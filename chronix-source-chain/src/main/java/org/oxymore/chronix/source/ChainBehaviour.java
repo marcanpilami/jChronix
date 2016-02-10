@@ -9,14 +9,14 @@ import java.util.List;
 import org.osgi.service.component.annotations.Component;
 import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceBehaviour;
+import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 
-@Component(immediate = true, service = EventSourceBehaviour.class)
-public class ChainBehaviour extends EventSourceBehaviour
+@Component(immediate = true, service = EventSourceProvider.class)
+public class ChainBehaviour extends EventSourceProvider
 {
     @Override
     public String getSourceName()
@@ -39,7 +39,7 @@ public class ChainBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public void serialize(File targetFile, Collection<? extends EventSource> instances)
+    public void serialise(File targetFile, Collection<? extends EventSource> instances)
     {
         List<DTOChain> chains = new ArrayList<>();
         for (EventSource d : instances)
@@ -60,7 +60,7 @@ public class ChainBehaviour extends EventSourceBehaviour
     }
 
     @Override
-    public void deserialize(File sourceFile, EventSourceRegistry cb)
+    public void deserialise(File sourceFile, EventSourceRegistry cb)
     {
         if (!sourceFile.isDirectory() || sourceFile.list().length == 0)
         {

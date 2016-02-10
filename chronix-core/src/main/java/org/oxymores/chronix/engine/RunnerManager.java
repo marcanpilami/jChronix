@@ -40,7 +40,7 @@ import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
-import org.oxymores.chronix.core.EventSourceContainer;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
@@ -281,7 +281,7 @@ public class RunnerManager extends BaseListener
         }
 
         // Check the job is OK
-        EventSourceContainer toRun;
+        EventSourceWrapper toRun;
         State s;
         try
         {
@@ -308,7 +308,7 @@ public class RunnerManager extends BaseListener
         }
         resolving.add(j);
 
-        if (!toRun.getSource().isEnabled() || !s.isEnabled())
+        if (!toRun.isEnabled() || !s.isEnabled())
         {
             // Disabled => don't run it for real
             log.debug("Job execution request of a disabled element.");
