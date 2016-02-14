@@ -125,19 +125,21 @@ public class FirstTest
     {
         Assert.assertNotNull(meta);
 
+        // Environment
         DTOEnvironment envt = meta.createMinimalEnvironment(); // node is called "local"
         meta.saveEnvironmentDraft(envt);
-        meta.promoteEnvironmentDraft("test commit");
 
+        // Application
         DTOApplication2 app = meta.createMinimalApplication(); // also creates placegroup "local"
         app.setName("test app");
         app.setDescription("This app was created by integration tests");
 
+        // Application content
         DTOChain c = new DTOChain("first chain", "integration test chain", app.getGroup("local"));
         c.connect(c.getStart(), c.getEnd());
         app.addEventSource(c);
-        app.addEventSource(new DTOChainStart());
-        app.addEventSource(new DTOChainEnd());
+        // app.addEventSource(new DTOChainStart());
+        // app.addEventSource(new DTOChainEnd());
 
         DTOChain p = new DTOChain("plan", "integration test plan", app.getGroup("local"));
         DTOState s = p.addState(c, app.getGroup("local"));
@@ -145,18 +147,18 @@ public class FirstTest
 
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
-
         meta.saveEnvironmentDraft(envt);
         meta.promoteEnvironmentDraft("test commit");
+
         meta.saveApplicationDraft(app);
         meta.promoteApplicationDraft(app.getId(), "test commit");
 
-        // meta.resetCache();
-
+        // Tests
+        meta.resetCache();
         DTOApplication2 a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
-        // Assert.assertEquals(3, a2.getEventSources().size());
+        Assert.assertEquals(4, a2.getEventSources().size());
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {

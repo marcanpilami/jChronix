@@ -1,7 +1,5 @@
 package org.oxymores.chronix.engine.helpers;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.service.component.ComponentContext;
@@ -12,6 +10,7 @@ import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.ResOrder;
@@ -26,70 +25,37 @@ public class ApiOrder implements OrderService
     private static final Logger log = LoggerFactory.getLogger(ApiOrder.class);
 
     // The service works under an independent context.
-    private ChronixContextMeta ctxMeta;
-    private ChronixContextTransient ctxDb;
+    private String ctxMetaPath, ctxDbHistoryPath, ctxDbTransacPath;
     private String localNodeName;
-
-    // We share contexts between all service instance on the same DB
-    private static Map<String, ChronixContextMeta> allMeta = new HashMap<>();
-    private static Map<String, ChronixContextTransient> allDb = new HashMap<>();
-
-    public static ChronixContextMeta getMeta(String key)
-    {
-        synchronized (allMeta)
-        {
-            if (allMeta.get(key) != null)
-            {
-                return allMeta.get(key);
-            }
-            allMeta.put(key, new ChronixContextMeta(key));
-            return allMeta.get(key);
-        }
-    }
-
-    public static ChronixContextTransient getDb(String db1, String db2)
-    {
-        String key = db1 + db2;
-        synchronized (allDb)
-        {
-            if (allDb.get(key) != null)
-            {
-                return allDb.get(key);
-            }
-            allDb.put(key, new ChronixContextTransient(db1, db2));
-            return allDb.get(key);
-        }
-    }
-
-    public static void resetCtx()
-    {
-        synchronized (allMeta)
-        {
-            allMeta.clear();
-        }
-        synchronized (allDb)
-        {
-            allDb.clear();
-        }
-    }
 
     @Activate
     private void activate(ComponentContext cc)
     {
         // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ctxMeta = ApiOrder.getMeta("C:\\TEMP\\db1");
-        ctxDb = ApiOrder.getDb("C:\\TEMP\\db1\\db_history\\db", "C:\\TEMP\\db1\\db_transac\\db");
+        ctxMetaPath = "C:\\TEMP\\db1";
+        ctxDbHistoryPath = "C:\\TEMP\\db1\\db_history\\db";
+        ctxDbTransacPath = "C:\\TEMP\\db1\\db_transac\\db";
         localNodeName = "local";
+    }
+
+    private ChronixContextTransient getCtxDb()
+    {
+        return ContextHandler.getDb(ctxDbHistoryPath, ctxDbTransacPath);
+    }
+
+    private ChronixContextMeta getMetaDb()
+    {
+        return ContextHandler.getMeta(ctxMetaPath);
     }
 
     @Override
     public ResOrder orderForceOK(UUID launchId)
     {
-        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
+        try (Connection conn = this.getCtxDb().getHistoryDataSource().open())
         {
             RunLog rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId)
                     .executeAndFetchFirst(RunLog.class);
-            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.ctxMeta.getEnvironment(),
+            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.getMetaDb().getEnvironment(),
                     this.localNodeName);
         }
         catch (ChronixException e)
@@ -106,12 +72,12 @@ public class ApiOrder implements OrderService
     {
         try
         {
-            Application2 a = this.ctxMeta.getApplication(appId);
-            Place p = this.ctxMeta.getEnvironment().getPlace(placeId);
+            Application2 a = this.getMetaDb().getApplication(appId);
+            Place p = this.getMetaDb().getEnvironment().getPlace(placeId);
             State s = a.getState(stateId);
             if (insidePlan)
             {
-                try (Connection o = this.ctxDb.getTransacDataSource().beginTransaction())
+                try (Connection o = this.getCtxDb().getTransacDataSource().beginTransaction())
                 {
                     SenderHelpers.runStateInsidePlan(s, p, o, this.localNodeName);
                 }
@@ -133,7 +99,7 @@ public class ApiOrder implements OrderService
     public ResOrder duplicateEndedLaunchOutOfPlan(UUID launchId)
     {
         RunLog rl;
-        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
+        try (Connection conn = this.getCtxDb().getHistoryDataSource().open())
         {
             rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId).executeAndFetchFirst(RunLog.class);
         }
@@ -143,9 +109,6 @@ public class ApiOrder implements OrderService
     @Override
     public void resetCache()
     {
-        // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ApiOrder.resetCtx();
-        ctxMeta = ApiOrder.getMeta("C:\\TEMP\\db1");
-        ctxDb = ApiOrder.getDb("C:\\TEMP\\db1\\db_history\\db", "C:\\TEMP\\db1\\db_transac\\db");
+        ContextHandler.resetCtx();
     }
 }

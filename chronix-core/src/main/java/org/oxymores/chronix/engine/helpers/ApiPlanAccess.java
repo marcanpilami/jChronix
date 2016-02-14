@@ -24,11 +24,13 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
+import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.exceptions.ChronixException;
@@ -44,13 +46,17 @@ public class ApiPlanAccess implements PlanAccessService
 {
     private static final Logger log = LoggerFactory.getLogger(PlanAccessService.class);
 
-    // The service works under an independent context.
-    private ChronixContextMeta ctx;
+    private String ctxMetaPath;
 
     @Activate
     private void activate(ComponentContext cc)
     {
-        ctx = ApiOrder.getMeta("C:\\TEMP\\db1");
+        ctxMetaPath = "C:\\TEMP\\db1";
+    }
+
+    private ChronixContextMeta getMetaDb()
+    {
+        return ContextHandler.getMeta(ctxMetaPath);
     }
 
     @Override
@@ -60,7 +66,7 @@ public class ApiPlanAccess implements PlanAccessService
         app.setId(UUID.randomUUID());
 
         // Create one group per place inside the environment
-        for (Place p : this.ctx.getEnvironment().getPlacesList())
+        for (DTOPlace p : this.getEnvironment().getPlaces())
         {
             DTOPlaceGroup pg = new DTOPlaceGroup();
             pg.setId(UUID.randomUUID());
@@ -124,13 +130,13 @@ public class ApiPlanAccess implements PlanAccessService
     {
         Map<UUID, DTOApplicationShort> res = new HashMap<>();
 
-        for (Application2 a : this.ctx.getApplications())
+        for (Application2 a : this.getMetaDb().getApplications())
         {
             DTOApplicationShort s = appToDtoShort(a);
             s.setDraft(false);
             res.put(a.getId(), s);
         }
-        for (Application2 a : this.ctx.getDrafts())
+        for (Application2 a : this.getMetaDb().getDrafts())
         {
             DTOApplicationShort s = appToDtoShort(a);
             s.setDraft(true);
@@ -143,11 +149,11 @@ public class ApiPlanAccess implements PlanAccessService
     public DTOApplication2 getApplication(UUID id)
     {
         boolean active = false;
-        Application2 app = this.ctx.getApplicationDraft(id);
+        Application2 app = this.getMetaDb().getApplicationDraft(id);
         if (app == null)
         {
             active = true;
-            app = this.ctx.getApplication(id);
+            app = this.getMetaDb().getApplication(id);
             if (app == null)
             {
                 throw new ChronixException("cannot find application " + id);
@@ -175,8 +181,16 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public DTOEnvironment getEnvironment()
     {
-        throw new NotImplementedException();
-        // return CoreToDto.getEnvironment(this.ctx.getEnvironment());
+        Environment e = this.getMetaDb().getEnvironmentDraft();
+        if (e == null)
+        {
+            e = this.getMetaDb().getEnvironment();
+        }
+        if (e == null)
+        {
+            throw new IllegalStateException("trying to load an environment from an empty metabase");
+        }
+        return CoreToDto.getEnvironment(e);
     }
 
     /*
@@ -194,7 +208,7 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public void resetApplicationDraft(DTOApplication2 app)
     {
-        this.ctx.resetApplicationDraft(app.getId());
+        this.getMetaDb().resetApplicationDraft(app.getId());
     }
 
     @Override
@@ -212,18 +226,18 @@ public class ApiPlanAccess implements PlanAccessService
 
         for (DTOPlaceGroup pg : app.getGroups())
         {
-            PlaceGroup gr = DtoToCore.getPlaceGroup(pg, ctx.getEnvironment());
+            PlaceGroup gr = DtoToCore.getPlaceGroup(pg, getMetaDb().getEnvironment());
             a.addGroup(gr);
         }
 
-        this.ctx.saveApplicationDraft(a);
+        this.getMetaDb().saveApplicationDraft(a);
     }
 
     @Override
     public void promoteApplicationDraft(UUID id, String commitMessage)
     {
         // TODO: send via JMS, not via FS
-        this.ctx.activateApplicationDraft(id, commitMessage);
+        this.getMetaDb().activateApplicationDraft(id, commitMessage);
 
         /*
          * Application a = this.ctx.getApplication(id); a.addVersion(a.getVersion() + 1, a.getLatestSave() + "");
@@ -238,14 +252,14 @@ public class ApiPlanAccess implements PlanAccessService
     public void saveEnvironmentDraft(DTOEnvironment e)
     {
         Environment env = DtoToCore.getEnvironment(e);
-        this.ctx.saveEnvironmentDraft(env);
+        this.getMetaDb().saveEnvironmentDraft(env);
     }
 
     @Override
     public void promoteEnvironmentDraft(String commitMessage)
     {
         // TODO: JMS send
-        this.ctx.activateEnvironmentDraft(commitMessage);
+        this.getMetaDb().activateEnvironmentDraft(commitMessage);
     }
 
     @Override
@@ -348,8 +362,6 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public void resetCache()
     {
-        // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ApiOrder.resetCtx();
-        ctx = ApiOrder.getMeta("C:\\TEMP\\db1");
+        ContextHandler.resetCtx();
     }
 }
