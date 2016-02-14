@@ -33,4 +33,10 @@ public interface EngineCallback
      * @return
      */
     public EventSource getEventSource(UUID id);
+
+    /**
+     * Launch asynchronously (the method returns at once) another state. This launch will occur in the scope of the current run (i.e. all
+     * the calls to this method will take place in the same dedicated scope).
+     */
+    public void launchState(DTOState s);
 }

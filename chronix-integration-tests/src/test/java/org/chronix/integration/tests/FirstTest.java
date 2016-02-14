@@ -26,6 +26,7 @@ import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
+import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOEnvironment;
 
@@ -138,6 +139,10 @@ public class FirstTest
         app.addEventSource(new DTOChainStart());
         app.addEventSource(new DTOChainEnd());
 
+        DTOChain p = new DTOChain("plan", "integration test plan", app.getGroup("local"));
+        DTOState s = p.addState(c, app.getGroup("local"));
+        app.addEventSource(p);
+
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
 
@@ -165,7 +170,7 @@ public class FirstTest
 
         e.start();
         System.out.println(c.getStart().getId());
-        order.orderLaunch(a2.getId(), c.getStart().getId(), envt.getPlace("local").getId(), true);
+        order.orderLaunch(a2.getId(), s.getId(), envt.getPlace("local").getId(), true);
 
         Thread.sleep(3000);
         e.stop();

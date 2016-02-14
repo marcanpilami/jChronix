@@ -34,6 +34,7 @@ import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
 import org.oxymores.chronix.core.source.api.EventSourceOptionSelfTriggered;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -350,8 +351,12 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        // TODO: BUG! DO NOT RETURN RunResult IF NULL
-        return new RunResult(jd, this.eventSource.run(cb, jd));
+        EventSourceRunResult esrr = this.eventSource.run(cb, jd);
+        if (esrr != null)
+        {
+            return new RunResult(jd, esrr);
+        }
+        return null;
     }
 
     public RunResult forceOK(EngineCallback cb, JobDescription jd)

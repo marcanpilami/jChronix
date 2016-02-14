@@ -9,6 +9,7 @@ import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
+import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
@@ -51,8 +52,8 @@ public class DTOChain extends EventSourceContainer
         s2.setY(200);
         s2.setRunsOnId(runsOn.getId());
 
-        this.addState(s1);
-        this.addState(s2);
+        this.states.add(s1);
+        this.states.add(s2);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -62,6 +63,9 @@ public class DTOChain extends EventSourceContainer
     @Override
     public EventSourceRunResult run(EngineCallback cb, JobDescription jd)
     {
+        // Enqueue start (in a new context)
+        cb.launchState(this.getStart());
+
         // A chain only starts its own start event source. The actual RunResult is sent by the end source, so all we need here is to return
         // at once.
         return null;
@@ -76,9 +80,25 @@ public class DTOChain extends EventSourceContainer
         this.transitions.add(tr);
     }
 
-    public void addState(DTOState s)
+    public DTOState addState(EventSource s)
     {
-        this.states.add(s);
+        return addState(s, this.getStart().getRunsOnId());
+    }
+
+    public DTOState addState(EventSource s, DTOPlaceGroup runsOn)
+    {
+        return addState(s, runsOn.getId());
+    }
+
+    private DTOState addState(EventSource s, UUID runsOnId)
+    {
+        DTOState s1 = new DTOState();
+        s1.setEventSourceId(s.getId());
+        s1.setX(50);
+        s1.setY(50);
+        s1.setRunsOnId(runsOnId);
+        this.states.add(s1);
+        return s1;
     }
 
     public void connect(DTOState from, DTOState to)
@@ -100,7 +120,7 @@ public class DTOChain extends EventSourceContainer
     {
         for (DTOState s : this.states)
         {
-            if (s.getEventSourceId() == DTOChainStart.START_ID)
+            if (s.getEventSourceId().equals(DTOChainStart.START_ID))
             {
                 return s;
             }
@@ -112,7 +132,7 @@ public class DTOChain extends EventSourceContainer
     {
         for (DTOState s : this.states)
         {
-            if (s.getEventSourceId() == DTOChainEnd.END_ID)
+            if (s.getEventSourceId().equals(DTOChainEnd.END_ID))
             {
                 return s;
             }

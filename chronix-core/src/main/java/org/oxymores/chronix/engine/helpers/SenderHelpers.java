@@ -65,13 +65,13 @@ public class SenderHelpers
 
     }
 
-    private static class JmsSendData
+    public static class JmsSendData implements AutoCloseable
     {
-        MessageProducer jmsProducer;
-        Session jmsSession;
+        public MessageProducer jmsProducer;
+        public Session jmsSession;
         Connection connection;
 
-        JmsSendData(String brokerName) throws JMSException
+        public JmsSendData(String brokerName) throws JMSException
         {
             this("vm://" + brokerName.toUpperCase() + "?create=false", true);
         }
@@ -90,6 +90,7 @@ public class SenderHelpers
             this.jmsProducer = jmsSession.createProducer(null);
         }
 
+        @Override
         public void close()
         {
             try
