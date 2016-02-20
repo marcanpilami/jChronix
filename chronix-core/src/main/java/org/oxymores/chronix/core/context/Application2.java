@@ -460,7 +460,7 @@ public class Application2 implements IMetaSource, Serializable
     {
         for (EventSourceWrapper d : this.sources.values())
         {
-            if (d.getSource() instanceof EventSourceContainer)
+            if (d.isContainer())
             {
                 EventSourceContainer c = (EventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())
@@ -481,7 +481,7 @@ public class Application2 implements IMetaSource, Serializable
 
         for (EventSourceWrapper d : this.sources.values())
         {
-            if (d.getSource() instanceof EventSourceContainer)
+            if (d.isContainer())
             {
                 EventSourceContainer c = (EventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())

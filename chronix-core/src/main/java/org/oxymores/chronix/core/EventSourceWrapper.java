@@ -32,6 +32,7 @@ import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
 import org.oxymores.chronix.core.source.api.EventSourceOptionSelfTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
@@ -97,6 +98,11 @@ public class EventSourceWrapper implements Serializable
         return this.eventSource.getId();
     }
 
+    public String getSourceClass()
+    {
+        return this.eventSource.getClass().getCanonicalName();
+    }
+
     public String getPluginSymbolicName()
     {
         return this.pluginName;
@@ -115,6 +121,11 @@ public class EventSourceWrapper implements Serializable
     public void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
+    }
+
+    public boolean isContainer()
+    {
+        return this.eventSource instanceof EventSourceContainer;
     }
 
     // stupid get/set

@@ -318,7 +318,7 @@ public class RunnerManager extends BaseListener
         {
             // Run - either sync or async.
             log.debug(String.format("Job execution request %s corresponds to an element (%s - %s) that should run async or sync", j.getId(),
-                    toRun.getSource().getName(), toRun.getSource().getClass()));
+                    toRun.getName(), toRun.getSourceClass()));
             RunResult res = toRun.run(new EngineCbRun(this.broker.getEngine(), this.ctxMeta, j.getApplication(ctxMeta), j), j);
 
             if (res != null)
