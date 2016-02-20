@@ -181,30 +181,18 @@ public class EventSourceWrapper implements Serializable
         {
             if (!e.getPlaceID().equals(p.id))
             {
-                // Only accept events from the analyzed place
+                // Only accept events from the analysed place
                 continue;
             }
 
             if (!e.getStateID().equals(tr.getFrom()))
             {
-                // Only accept events from the analyzed state
+                // Only accept events from the analysed state
                 continue;
             }
 
-            // Check guards
-            if (tr.getGuard1() != null && !tr.getGuard1().equals(e.getConditionData1()))
-            {
-                continue;
-            }
-            if (tr.getGuard2() != null && !tr.getGuard2().equals(e.getConditionData2()))
-            {
-                continue;
-            }
-            if (tr.getGuard3() != null && !tr.getGuard3().equals(e.getConditionData3()))
-            {
-                continue;
-            }
-            if (tr.getGuard4() != null && !tr.getGuard4().equals(e.getConditionData4()))
+            // Check guards (according to source plugin)
+            if (!this.eventSource.isTransitionPossible(tr, e))
             {
                 continue;
             }

@@ -80,7 +80,8 @@ public class State extends ApplicationObject
 
     // /////////////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application2 app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState, List<DTOTransition> trToState)
+    public State(Application2 app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState,
+            List<DTOTransition> trToState)
     {
         super();
         this.application = app;
@@ -210,13 +211,6 @@ public class State extends ApplicationObject
     {
         return this.application.getEventSourceContainer(this.dto.getEventSourceId());
     }
-
-    /*
-     * public Transition connectTo(State target, Integer guard1, String guard2, String guard3, UUID guard4, Boolean calendarAware) { //
-     * Note: there can be multiple transitions between two states. Transition t = new Transition(); t.setStateFrom(this);
-     * t.setStateTo(target); t.setGuard1(guard1); t.setGuard2(guard2); t.setGuard3(guard3); t.setGuard4(guard4);
-     * t.setCalendarAware(calendarAware); t.setApplication(this.application); this.chain.addTransition(t); return t; }
-     */
 
     public List<Place> getRunsOnPlaces()
     {

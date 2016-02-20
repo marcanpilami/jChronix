@@ -84,4 +84,41 @@ public abstract class EventSource implements Serializable
     // Run methods
     ///////////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Event analysis
+
+    /**
+     * The engine calls this method to get the correct interpretation of an event and a transition definition. This is the one method that
+     * "gives meaning" to event data (the very same data that was created by this source).<br>
+     * It is given a transition originating from this source, the event (created by this source) to analyse, and the place on which it
+     * should be analysed.<br>
+     * The method must focus on giving meaning to the event and transition data - it should not take anything else into account (such as
+     * calendars, tokens...)<br>
+     * <br>
+     * The default implementation simply checks eventData == transitionGuard (for non null guards only).
+     */
+    public boolean isTransitionPossible(DTOTransition tr, DTOEvent event)
+    {
+        // Check guards
+        if (tr.getGuard1() != null && !tr.getGuard1().equals(event.getConditionData1()))
+        {
+            return false;
+        }
+        if (tr.getGuard2() != null && !tr.getGuard2().equals(event.getConditionData2()))
+        {
+            return false;
+        }
+        if (tr.getGuard3() != null && !tr.getGuard3().equals(event.getConditionData3()))
+        {
+            return false;
+        }
+        if (tr.getGuard4() != null && !tr.getGuard4().equals(event.getConditionData4()))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    // Event analysis
+    ///////////////////////////////////////////////////////////////////////////
 }

@@ -7,7 +7,7 @@ public class DTOTransition
     private UUID from, to;
     private Integer guard1;
     private String guard2, guard3;
-    private String guard4;
+    private UUID guard4;
     private UUID id;
     private boolean calendarAware;
     private Integer calendarShift;
@@ -62,12 +62,12 @@ public class DTOTransition
         this.guard3 = guard3;
     }
 
-    public String getGuard4()
+    public UUID getGuard4()
     {
         return guard4;
     }
 
-    public void setGuard4(String guard4)
+    public void setGuard4(UUID guard4)
     {
         this.guard4 = guard4;
     }

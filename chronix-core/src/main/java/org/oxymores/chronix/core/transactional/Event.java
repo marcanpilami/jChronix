@@ -25,9 +25,10 @@ import org.joda.time.DateTime;
 
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.source.api.DTOEvent;
 import org.sql2o.Connection;
 
-public class Event extends TranscientBase
+public class Event extends TranscientBase implements DTOEvent
 {
     private static final long serialVersionUID = 2488490723929455210L;
 
@@ -115,7 +116,8 @@ public class Event extends TranscientBase
     public Boolean wasConsumedOnPlace(Place p, State s, Connection conn)
     {
         int i = conn.createQuery("SELECT COUNT(1) FROM EVENTCONSUMPTION WHERE eventId=:eventId AND stateId=:stateId AND placeId=:placeId")
-                .addParameter("eventId", this.id).addParameter("stateId", s.getId()).addParameter("placeId", p.getId()).executeScalar(Integer.class);
+                .addParameter("eventId", this.id).addParameter("stateId", s.getId()).addParameter("placeId", p.getId())
+                .executeScalar(Integer.class);
         return i > 0;
     }
 
