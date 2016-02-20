@@ -17,21 +17,22 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 public class Application2 implements IMetaSource, Serializable
 {
@@ -65,9 +66,8 @@ public class Application2 implements IMetaSource, Serializable
     @Valid
     protected Map<UUID, Calendar> calendars = new HashMap<>();
 
-    // The sources must NOT be serialised. Each plugin is responsible for its own serialisation.
-    @XStreamOmitField
-    private transient Map<UUID, EventSourceWrapper> sources = new HashMap<>();
+    // The sources
+    private Map<UUID, EventSourceWrapper> sources = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction
@@ -218,6 +218,63 @@ public class Application2 implements IMetaSource, Serializable
             }
         }
         return res;
+    }
+
+    void waitForAllPlugins()
+    {
+        Set<String> plugins = new HashSet<>();
+        for (EventSourceWrapper w : this.sources.values())
+        {
+            plugins.add(w.getPluginSymbolicName());
+        }
+        log.info("Application " + this.name + " has " + this.sources.size() + " sources coming from the following plugins: "
+                + plugins.toString());
+
+        ServiceTracker<EventSourceProvider, EventSourceProvider> tracker = new ServiceTracker<EventSourceProvider, EventSourceProvider>(
+                FrameworkUtil.getBundle(Application2.class).getBundleContext(), EventSourceProvider.class, null);
+        int maxWaitSec = 60;
+        int waitedSec = 0;
+        int waitStepSec = 1;
+
+        try
+        {
+            tracker.open();
+            nextplugin: for (String symbolicName : plugins)
+            {
+                while (true)
+                {
+                    for (ServiceReference<EventSourceProvider> ref : tracker.getServiceReferences())
+                    {
+                        if (ref.getBundle().getSymbolicName().equals(symbolicName))
+                        {
+                            // Found
+                            continue nextplugin;
+                        }
+                    }
+
+                    // Not found - wait and try again
+                    try
+                    {
+                        Thread.sleep(waitStepSec * 1000);
+                        waitedSec += waitStepSec;
+                        if (waitedSec > maxWaitSec)
+                        {
+                            throw new ChronixInitializationException(
+                                    "Cannot load application " + this.name + " as it uses missing plugin " + symbolicName);
+                        }
+                    }
+                    catch (InterruptedException e)
+                    {
+                        // not an issue.
+                    }
+                }
+            }
+
+        }
+        finally
+        {
+            tracker.close();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

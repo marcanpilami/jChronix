@@ -150,6 +150,10 @@ public class ChronixContextMeta
             pg.map_places(envt);
         }
 
+        // Check all plugins are present
+        app.waitForAllPlugins();
+
+        // Done
         log.info("Application " + app.getName() + " has been deserialized from file " + appDir);
         return app;
     }

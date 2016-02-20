@@ -48,6 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
+
 public class EventSourceWrapper implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
@@ -61,8 +63,9 @@ public class EventSourceWrapper implements Serializable
     // A simple indication - only used when a plugin is missing and we need its name to help the user.
     private String pluginName;
 
-    // The real event source description
-    private transient EventSource eventSource;
+    // The real event source description. Must NOT be XML-serialised. Each plugin is responsible for its own serialisation.
+    @XStreamOmitField
+    private EventSource eventSource;
 
     private boolean enabled = true;
 
@@ -92,6 +95,11 @@ public class EventSourceWrapper implements Serializable
     public UUID getId()
     {
         return this.eventSource.getId();
+    }
+
+    public String getPluginSymbolicName()
+    {
+        return this.pluginName;
     }
 
     public EventSource getSource()
