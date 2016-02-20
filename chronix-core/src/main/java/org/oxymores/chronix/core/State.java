@@ -33,18 +33,15 @@ import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.context.Application2;
-import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
+import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.Constants;
-import org.oxymores.chronix.engine.data.PlaceAnalysisResult;
-import org.oxymores.chronix.engine.data.TransitionAnalysisResult;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +52,7 @@ public class State extends ApplicationObject
     private static final Logger log = LoggerFactory.getLogger(State.class);
     private static final long serialVersionUID = -2640644872229489081L;
 
-    // /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Fields
 
     // The data bag
@@ -76,9 +73,9 @@ public class State extends ApplicationObject
     protected List<Token> tokens;
 
     // Fields
-    // /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    // /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Construction / destruction
     public State(Application2 app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState,
             List<DTOTransition> trToState)
@@ -98,8 +95,9 @@ public class State extends ApplicationObject
     }
 
     //
-    // /////////////////////////////////////////////////////////////////////////////////
-    // /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
     // Stupid GET/SET
 
     public PlaceGroup getRunsOn()
@@ -172,11 +170,17 @@ public class State extends ApplicationObject
         this.tokens = tokens;
     }
 
-    // Stupid GET/SET
-    // /////////////////////////////////////////////////////////////////////////////////
+    public boolean isParallel()
+    {
+        return this.dto.getParallel();
+    }
 
-    // /////////////////////////////////////////////////////////////////////////////////
+    // Stupid GET/SET
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
     // Relationship handling
+
     public List<State> getClientStates()
     {
         ArrayList<State> res = new ArrayList<>();
@@ -256,86 +260,11 @@ public class State extends ApplicationObject
     }
 
     // Relationship handling
-    /////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////
-    // EVENT ANALYSIS
-
-    public void consumeEvents(List<Event> events, List<Place> places, Connection conn)
-    {
-        for (Event e : events)
-        {
-            for (Place p : places)
-            {
-                log.debug(String.format("Event %s marked as consumed on place %s", e.getId(), p.name));
-                EventConsumption ec = new EventConsumption();
-                ec.setEventID(e.getId());
-                ec.setPlaceID(p.getId());
-                ec.setStateID(this.getId());
-                ec.setAppID(e.getAppID());
-
-                ec.insert(conn);
-            }
-        }
-    }
-
-    public static TransitionAnalysisResult isTransitionAllowed(Application2 app, DTOTransition tr, List<Event> events, Connection conn)
-    {
-        boolean parallelAnalaysis = isTransitionParallelEnabled(app, tr);
-        TransitionAnalysisResult res = new TransitionAnalysisResult(tr, parallelAnalaysis);
-        State from = app.getState(tr.getFrom());
-        State to = app.getState(tr.getTo());
-
-        for (Place p : from.getRunsOnPlaces())
-        {
-            ArrayList<Event> virginEvents = new ArrayList<>();
-            for (Event e : events)
-            {
-                if (!e.wasConsumedOnPlace(p, to, conn) && !virginEvents.contains(e))
-                {
-                    virginEvents.add(e);
-                }
-            }
-            res.addPlaceAnalysis(from.getRepresentsContainer().createdEventRespectsTransitionOnPlace(tr, virginEvents, p, conn));
-
-            if (!parallelAnalaysis && !res.allowedOnAllPlaces())
-            {
-                // We already know the transition is KO, so no need to continue. Create a blocking analysis result for that.
-                res = new TransitionAnalysisResult(tr, parallelAnalaysis);
-                for (Place pp : from.getRunsOnPlaces())
-                {
-                    // Create a FORBIDDEN result on all places
-                    res.addPlaceAnalysis(new PlaceAnalysisResult(pp));
-                }
-                return res;
-            }
-        }
-        return res;
-    }
-
-    private static Boolean isTransitionParallelEnabled(Application2 app, DTOTransition tr)
-    {
-        State from = app.getState(tr.getFrom());
-        State to = app.getState(tr.getTo());
-
-        if (!from.dto.getParallel() || !to.dto.getParallel())
-        {
-            return false;
-        }
-
-        if (!from.getRunsOn().equals(to.getRunsOn()))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    //
-    ///////////////////////////////////////////////////////////////////////////////////
-
-    // /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Create and post PJ for run
+
     /**
      * To be called to launch a state without any consequences whatsoever: it will not trigger the launch of other states, it will not
      * update calendars. Used to test launch a single state. Virtual time used is system current time.
@@ -527,9 +456,9 @@ public class State extends ApplicationObject
     }
 
     // Create and post PJ for run
-    /////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
-    /////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Calendar stuff
 
     // Called within an open transaction. Won't be committed here.
@@ -700,5 +629,5 @@ public class State extends ApplicationObject
     }
 
     // Calendar stuff
-    // ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 }

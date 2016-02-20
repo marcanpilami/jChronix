@@ -29,11 +29,11 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
 import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.engine.analyser.StateAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -72,10 +72,6 @@ class EventListener extends BaseListener
                 return;
             }
             evt = (Event) o;
-            // TODO: why do we look it up? For analysis status?
-            /*
-             * tmp = this.emTransac.find(Event.class, evt.getId()); if (tmp != null) { evt = tmp; }
-             */
         }
         catch (JMSException e)
         {
@@ -122,24 +118,11 @@ class EventListener extends BaseListener
             // All clients
             List<State> clientStates = s.getClientStates();
 
-            // All client physical nodes
-            ArrayList<ExecutionNode> clientPN = new ArrayList<>();
-            for (State st : clientStates)
-            {
-                for (ExecutionNode en : st.getRunsOnPhysicalNodes())
-                {
-                    if (!clientPN.contains(en))
-                    {
-                        clientPN.add(en);
-                    }
-                }
-            }
-
             // All local clients
             ArrayList<State> localConsumers = new ArrayList<>();
             for (State st : clientStates)
             {
-                if (st.getApplication().equals(a))
+                if (st.getRunsOnPhysicalNodes().contains(this.broker.getEngine().getLocalNode()))
                 {
                     localConsumers.add(st);
                 }
@@ -148,8 +131,8 @@ class EventListener extends BaseListener
             // Analyze on every local consumer
             for (State st : localConsumers)
             {
-                toCheck.addAll(st.getRepresentsContainer().isStateExecutionAllowed(st, evt, conn, producerPJ, jmsSession,
-                        this.broker.getEngine()).consumedEvents);
+                StateAnalyser ana = new StateAnalyser(a, st, evt, conn, producerPJ, jmsSession, this.broker.getEngine());
+                toCheck.addAll(ana.consumedEvents);                
             }
 
             // Ack
