@@ -19,6 +19,17 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>2.4.3</version>
+				<configuration>
+					<filters>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>org/hsqldb/resources/**</exclude>
+								<exclude>org/hsqldb/lib/**</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				</configuration>
 				<executions>
 					<!-- Run shade goal on package phase -->
 					<execution>
@@ -54,8 +65,11 @@
 			<artifactId>sql2o</artifactId>
 			<version>1.5.4</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.hsqldb</groupId> <artifactId>sqltool</artifactId> 
-			<version>${hsqldb.version}</version> </dependency> -->
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>sqltool</artifactId>
+			<version>${hsqldb.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>xpp3</groupId>
 			<artifactId>xpp3_min</artifactId>
@@ -70,6 +84,29 @@
 			<groupId>xmlpull</groupId>
 			<artifactId>xmlpull</artifactId>
 			<version>1.1.3.4d_b4_min</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-kahadb-store</artifactId>
+			<version>${activemq.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-net</artifactId>
+					<groupId>org.apache.commons</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<version>${activemq.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

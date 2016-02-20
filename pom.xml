@@ -23,6 +23,7 @@
 		<hsqldb.version>2.3.3</hsqldb.version>
 		<validator.version>5.2.2.Final</validator.version>
 		<xstream.version>1.4.8</xstream.version>
+		<felix.version>5.4.0</felix.version>
 	</properties>
 
 	<scm>
@@ -118,6 +119,7 @@
 		<module>chronix-source-chain</module>
 		<module>chronix-nonosgilibs</module>
 		<!-- <module>chronix-web-core</module> -->
+		<module>chronix-package</module>
 		<module>chronix-integration-tests</module>
 	</modules>
 </project>

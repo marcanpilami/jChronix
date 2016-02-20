@@ -24,6 +24,17 @@
             <configuration />
           </execution>
         </executions>
+        <configuration>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>org/hsqldb/resources/**</exclude>
+                <exclude>org/hsqldb/lib/**</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>biz.aQute.bnd</groupId>

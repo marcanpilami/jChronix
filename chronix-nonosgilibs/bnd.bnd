@@ -1,4 +1,10 @@
-Export-Package: *
-Import-Package: *;resolution:=optional
-#Import-Package: org.hsqldb.lib, *
-#Require-Bundle: org.hsqldb.hsqldb;bundle-version=2.3.3
+Export-Package: \
+		edu.emory.mathcs.backport.java.util, edu.emory.mathcs.backport.java.util.concurrent, \
+		javax.jms, javax.management.j2ee, javax.management.j2ee.statistics, \
+		org.fusesource.hawtbuf, org.fusesource.hawtbuf.codec, \
+		org.apache.activemq, org.apache.activemq.broker, org.apache.activemq.network, org.apache.activemq.usage, org.apache.activemq.wireformat, \
+		org.hsqldb.cmdline,org.hsqldb.cmdline.sqltool, \
+		org.sql2o, org.sql2o.quirks, \
+		org.xmlpull.v1, org.xmlpull.mxp1
+# Joda is needed to enable SQL2O magical Joda integration
+Import-Package: *;resolution:=optional, javax.net, org.joda.time
