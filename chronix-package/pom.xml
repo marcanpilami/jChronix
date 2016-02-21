@@ -115,12 +115,6 @@
 			<version>1.8.5</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.ops4j.pax.logging</groupId>
-			<artifactId>pax-logging-log4j2</artifactId>
-			<version>1.8.5</version>
-			<scope>provided</scope>
-		</dependency>
 
 		<!-- Base Chronix bundles -->
 		<dependency>

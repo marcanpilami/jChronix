@@ -1,9 +1,7 @@
 package org.oxymores.chronix;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,10 +19,21 @@ public class Launcher
     {
         System.out.println("Hello World!");
 
+        System.setProperty("felix.fileinstall.dir", "./plugins/ext, ./config");
+        System.setProperty("felix.fileinstall.bundles.new.start", "true");
+        System.setProperty("felix.fileinstall.noInitialDelay", "false");
+        System.setProperty("felix.fileinstall.poll", "1000");
+        System.setProperty("felix.fileinstall.log.level", "3");
+
+        File curDir = new File(".");
+
         FrameworkFactory frameworkFactory = ServiceLoader.load(FrameworkFactory.class).iterator().next();
         Map<String, String> config = new HashMap<String, String>();
-        config.put("felix.log.level", "4");
+        config.put("org.osgi.framework.storage", curDir.getAbsolutePath() + "/cache/felix");
+        config.put("felix.log.level", "2");
         config.put(org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "sun.misc,sun.reflect,javax.annotation");
+        config.put("felix.cm.loglevel", "3");
+        config.put("felix.cm.dir", curDir.getAbsolutePath() + "/cache/config");
         Framework framework = frameworkFactory.newFramework(config);
         framework.start();
 
@@ -38,6 +47,7 @@ public class Launcher
         // Enable config admin (before scan as it can use it)
         Bundle b2 = context.installBundle("file:" + getFile("core", "org.apache.felix.configadmin").getAbsolutePath());
         b2.start();
+        System.out.println("file:" + getFile("core", "org.apache.felix.configadmin"));
 
         // Install bundles
         List<Bundle> bundles = new ArrayList<>();
@@ -74,17 +84,11 @@ public class Launcher
         }
 
         // Enable the directory scanning plugin
-        System.setProperty("felix.fileinstall.dir", "./plugins/ext, ./plugins/core");
-        System.setProperty("felix.fileinstall.bundles.new.start", "true");
-        System.setProperty("felix.fileinstall.noInitialDelay", "false");
-        System.setProperty("felix.fileinstall.poll", "1000");
-        System.setProperty("felix.fileinstall.log.level", "4");
         Bundle b1 = context.installBundle("file:" + getFile("bootstrap", "org.apache.felix.fileinstall").getAbsolutePath());
+        System.out.println("Starting directory scanner");
+        b1.start();
 
-        // System.out.println("Starting directory scanner");
-        // b1.start();
-        // System.out.println("Directory scanner started");
-
+        // DEBUG
         Thread.sleep(5000);
         for (Bundle b : framework.getBundleContext().getBundles())
         {

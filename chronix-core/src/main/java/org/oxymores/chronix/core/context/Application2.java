@@ -243,12 +243,16 @@ public class Application2 implements IMetaSource, Serializable
             {
                 while (true)
                 {
-                    for (ServiceReference<EventSourceProvider> ref : tracker.getServiceReferences())
+                    ServiceReference<EventSourceProvider>[] refs = tracker.getServiceReferences();
+                    if (refs != null)
                     {
-                        if (ref.getBundle().getSymbolicName().equals(symbolicName))
+                        for (ServiceReference<EventSourceProvider> ref : refs)
                         {
-                            // Found
-                            continue nextplugin;
+                            if (ref.getBundle().getSymbolicName().equals(symbolicName))
+                            {
+                                // Found
+                                continue nextplugin;
+                            }
                         }
                     }
 

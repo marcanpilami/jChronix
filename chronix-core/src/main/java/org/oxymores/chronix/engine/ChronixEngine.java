@@ -36,7 +36,6 @@ import org.slf4j.MDC;
  * A Chronix Node. Can be either engine + runner or simply runner.
  *
  */
-// @Component(enabled = true)
 public class ChronixEngine extends Thread
 {
     private static Logger log = LoggerFactory.getLogger(ChronixEngine.class);

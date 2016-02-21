@@ -6,11 +6,19 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -18,7 +26,12 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 import org.oxymore.chronix.chain.dto.DTOChain;
+import org.oxymore.chronix.chain.dto.DTONoop;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.OrderService;
@@ -32,7 +45,10 @@ import org.oxymores.chronix.dto.DTOEnvironment;
 public class FirstTest
 {
     @Inject
-    ChronixEngine e;
+    private BundleContext bc;
+
+    @Inject
+    ConfigurationAdmin conf;
 
     @Inject
     PlanAccessService meta;
@@ -46,11 +62,10 @@ public class FirstTest
         return options(junitBundles(), systemPackage("sun.misc"),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.14"), mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"),
-                mavenBundle("ch.qos.logback", "logback-core", "1.1.3"), mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"),
-                // systemProperty("felix.cm.dir").value(Paths.get("./target/test-classes/config").toAbsolutePath().normalize().toString()),
-                // mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
+                systemProperty("felix.cm.dir").value(Paths.get("./target/felix-config").toAbsolutePath().normalize().toString()),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"), mavenBundle("org.slf4j", "slf4j-api", "1.7.14"),
+                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"), mavenBundle("ch.qos.logback", "logback-core", "1.1.3"),
+                mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"), mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-core", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-nonosgilibs", "0.9.2-SNAPSHOT"),
@@ -64,54 +79,99 @@ public class FirstTest
                 mavenBundle("javax.validation", "validation-api", "1.1.0.Final"));
     }
 
-    // TODO: auto create an environment on startup with empty metabase.
-    // @Test
-    public void testStartStop()
-    {
-        Assert.assertNotNull(e);
-        e.start();
-        e.stop();
-    }
+    protected DTOEnvironment envt;
+    protected DTOApplication2 app;
+    protected DTONoop noop;
+    protected Map<String, ChronixEngine> engines;
 
-    @Test
-    public void testCreatePlan() throws InterruptedException
+    @Before
+    public void before()
     {
         Assert.assertNotNull(meta);
+        Assert.assertNotNull(order);
+
+        noop = new DTONoop();
+
+        //
+        engines = new HashMap<>();
 
         // Environment
-        DTOEnvironment envt = meta.createMinimalEnvironment(); // node is called "local"
+        envt = meta.createMinimalEnvironment(); // node is called "local"
         meta.saveEnvironmentDraft(envt);
 
         // Application
-        DTOApplication2 app = meta.createMinimalApplication(); // also creates placegroup "local"
+        app = meta.createMinimalApplication(); // also creates placegroup "local"
         app.setName("test app");
         app.setDescription("This app was created by integration tests");
-
-        // Application content
-        DTOChain c = new DTOChain("first chain", "integration test chain", app.getGroup("local"));
-        c.connect(c.getStart(), c.getEnd());
-        app.addEventSource(c);
-        // app.addEventSource(new DTOChainStart());
-        // app.addEventSource(new DTOChainEnd());
-
-        DTOChain p = new DTOChain("plan", "integration test plan", app.getGroup("local"));
-        DTOState s = p.addState(c, app.getGroup("local"));
-        app.addEventSource(p);
+        app.addEventSource(noop);
 
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
+
+        // App is not saved here - it will be by the test
+    }
+
+    protected void save()
+    {
         meta.saveEnvironmentDraft(envt);
         meta.promoteEnvironmentDraft("test commit");
 
         meta.saveApplicationDraft(app);
         meta.promoteApplicationDraft(app.getId(), "test commit");
+    }
+
+    protected void addAndStartEngine(String name)
+    {
+        try
+        {
+            org.osgi.service.cm.Configuration cfg = conf.getConfiguration("scheduler", null);
+            Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
+            props.put("chronix.repository.path", "C:/TEMP/db1");
+            props.put("chronix.cluster.node.name", "local");
+            cfg.update(props);
+
+            ServiceTracker<ChronixEngine, ChronixEngine> tracker = new ServiceTracker<>(bc,
+                    bc.createFilter(
+                            "(&(objectClass=" + ChronixEngine.class.getCanonicalName() + ")(chronix.cluster.node.name=" + name + "))"),
+                    null);
+            tracker.open();
+            tracker.waitForService(20 * 1000);
+            ChronixEngine e = tracker.getService();
+            tracker.close();
+            if (e == null)
+            {
+                throw new RuntimeException("could not start engine");
+            }
+            e.waitOperational();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testCreatePlan() throws InterruptedException
+    {
+        // Application content
+        DTOChain c = new DTOChain("first chain", "integration test chain", app.getGroup("local"));
+        app.addEventSource(c);
+        DTOState n1 = c.addState(noop);
+        c.connect(c.getStart(), n1);
+        c.connect(n1, c.getEnd());
+
+        DTOChain p = new DTOChain("plan", "integration test plan", app.getGroup("local"));
+        app.addEventSource(p);
+        DTOState s = p.addState(c, app.getGroup("local"));
+
+        save();
 
         // Tests
         meta.resetCache();
         DTOApplication2 a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
-        Assert.assertEquals(4, a2.getEventSources().size());
+        Assert.assertEquals(5, a2.getEventSources().size());
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {
@@ -123,11 +183,11 @@ public class FirstTest
         }
         Assert.assertTrue(found);
 
-        e.start();
+        addAndStartEngine("local");
         System.out.println(c.getStart().getId());
         order.orderLaunch(a2.getId(), s.getId(), envt.getPlace("local").getId(), true);
 
         Thread.sleep(3000);
-        e.stop();
+        // e.stop();
     }
 }
