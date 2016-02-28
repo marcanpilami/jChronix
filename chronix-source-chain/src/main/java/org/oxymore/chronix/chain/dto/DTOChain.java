@@ -55,6 +55,16 @@ public class DTOChain extends EventSourceContainer
         this.states.add(s1);
         this.states.add(s2);
     }
+    
+    /**
+     * Creates a ready to use plan (a chain without start or end that cannot be a subscope)
+     * @param name
+     * @param description
+     */
+    public DTOChain(String name, String description)
+    {
+        
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // RUN

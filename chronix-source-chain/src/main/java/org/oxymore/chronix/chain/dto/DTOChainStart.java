@@ -4,12 +4,13 @@ import java.util.UUID;
 
 import org.oxymore.chronix.source.ChainStartBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.core.source.api.EventSourceOptionCannotReceive;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
-public class DTOChainStart extends EventSource
+public class DTOChainStart extends EventSourceTriggered implements EventSourceOptionCannotReceive
 {
     private static final long serialVersionUID = -5628734383363442943L;
     static final UUID START_ID = UUID.fromString("647594b0-498f-4042-933f-855682095c6c");

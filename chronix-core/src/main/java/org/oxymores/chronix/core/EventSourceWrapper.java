@@ -32,7 +32,8 @@ import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
-import org.oxymores.chronix.core.source.api.EventSourceOptionSelfTriggered;
+import org.oxymores.chronix.core.source.api.EventSourceSelfTriggered;
+import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
@@ -182,7 +183,7 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        EventSourceRunResult esrr = this.eventSource.run(cb, jd);
+        EventSourceRunResult esrr = this.checkEngineTriggered().run(cb, jd);
         if (esrr != null)
         {
             return new RunResult(jd, esrr);
@@ -192,12 +193,21 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult forceOK(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.eventSource.runForceOk(cb, jd));
+        return new RunResult(jd, this.checkEngineTriggered().runForceOk(cb, jd));
     }
 
     public RunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.eventSource.runDisabled(cb, jd));
+        return new RunResult(jd, this.checkEngineTriggered().runDisabled(cb, jd));
+    }
+
+    public EventSourceTriggered checkEngineTriggered()
+    {
+        if (this.eventSource == null || !this.isEngineTriggered())
+        {
+            throw new IllegalStateException("trying to trigger a source that cannot be run by the engine");
+        }
+        return (EventSourceTriggered) this.eventSource;
     }
 
     //
@@ -208,7 +218,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isSelfTriggered()
     {
-        return this.eventSource instanceof EventSourceOptionSelfTriggered;
+        return this.eventSource instanceof EventSourceSelfTriggered;
     }
 
     public boolean isHiddenFromHistory()
@@ -219,6 +229,11 @@ public class EventSourceWrapper implements Serializable
     public boolean isContainer()
     {
         return this.eventSource instanceof EventSourceContainer;
+    }
+
+    public boolean isEngineTriggered()
+    {
+        return this.eventSource instanceof EventSourceTriggered;
     }
 
     //

@@ -4,12 +4,12 @@ import java.util.UUID;
 
 import org.oxymore.chronix.source.NoopBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
-public class DTONoop extends EventSource
+public class DTONoop extends EventSourceTriggered
 {
     private static final long serialVersionUID = -1686612421751399022L;
 

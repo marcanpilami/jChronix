@@ -3,13 +3,11 @@ package org.oxymores.chronix.core.source.api;
 import org.joda.time.DateTime;
 
 /**
- * An event source which creates events on its own - without being triggered by events created by other event sources. For example, an event
- * source may run every minute.<br>
- * An event source implementing this interface is not expected to actually implement the various "run" methods - it can just throw an
- * NotImplementedException.
- * 
+ * An event source which creates events on its own - without being triggered by events created by other event sources or by an external
+ * system. For example, such an event source may run every minute.<br>
  */
-public interface EventSourceOptionSelfTriggered
+@SuppressWarnings("serial")
+public abstract class EventSourceSelfTriggered extends EventSource
 {
     /**
      * This is the main method of a self-triggered event source. It is responsible for actually creating events.<br>
@@ -21,5 +19,5 @@ public interface EventSourceOptionSelfTriggered
      * returned by the previous call (and not an approximation by at least a few milliseconds as would have been the case if system time was
      * used).
      */
-    public DateTime selfTrigger();
+    public abstract DateTime selfTrigger();
 }

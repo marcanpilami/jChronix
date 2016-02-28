@@ -16,7 +16,21 @@ import java.util.UUID;
  * Event sources are expected to behave like <strong>Data Transfer Objects (DTO)</strong> - that is, they should be as stable as possible
  * between versions, easy to create, easy to serialise (no complex graph).<br>
  * Note this is not an interface but a base abstract class, so as to allow easier ascending compatibility in the event of an evolution of
- * the core model.
+ * the core model.<br>
+ * <br>
+ * This class should not be used directly - rather, one of its subclasses should be subclassed. Each expose a different set of event source
+ * capabilities:
+ * <ul>
+ * <li>{@link EventSourceTriggered} is the most common type of event source: it denotes something that is launched by the engine when it has
+ * decided it should run (due to events coming from other sources).</li>
+ * <li>{@link EventSourceContainer} is a special type of {@link EventSourceTriggered} that can contain other elements.</li>
+ * <li>{@link EventSourceSelfTriggered} is an uncommon type of event sources which are hosted by the engine and which create events when
+ * they want to. Typical examples are sources which regularly (every minute, ...) create events.</li>
+ * <li>{@link EventSourceExternalyTriggered} denotes events that are directly created by external systems without any intervention of the
+ * engine. An example would be a file transfer middleware which signals the engine a file has just arrived.</li>
+ * </ul>
+ * 
+ * 
  */
 public abstract class EventSource implements Serializable
 {
@@ -42,47 +56,6 @@ public abstract class EventSource implements Serializable
      * The {@link EventSourceProvider} that should be used for persistence.
      */
     public abstract Class<? extends EventSourceProvider> getProvider();
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Run methods
-
-    /**
-     * The main method of an event source plugin. It is called by the engine when it has determined the event source should actually run.
-     * This method can do pretty much anything it needs: run Java code locally, call the runner agent (and one of its own plugins), ... <br>
-     * <br>
-     * This method is expected to run <strong>synchronously</strong> by default. In that case, it is expected to return quickly (less than a
-     * second on most platforms).<br>
-     * To run <strong>asynchronously</strong>, this method can create its own thread (or call an external system, or any asynchronous system
-     * available...) and then return a null RunResult. In that case, the true RunResult is expected to arrive later on the RUNNER queue.
-     * 
-     * @return
-     */
-    public abstract EventSourceRunResult run(EngineCallback cb, JobDescription jd);
-
-    /**
-     * This method simulates the result that a job would have had if it has ended OK, without actually running the job. (this is needed
-     * because the interpretation of "OK" depends of the plugin)
-     */
-    public EventSourceRunResult runForceOk(EngineCallback cb, JobDescription jd)
-    {
-        EventSourceRunResult rr = new EventSourceRunResult();
-        rr.returnCode = 0;
-        rr.logStart = "Source forced OK";
-
-        return rr;
-    }
-
-    public EventSourceRunResult runDisabled(EngineCallback cb, JobDescription jd)
-    {
-        EventSourceRunResult rr = new EventSourceRunResult();
-        rr.returnCode = 0;
-        rr.logStart = "Source disabled - doing as if it had ended OK";
-
-        return rr;
-    }
-
-    // Run methods
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Event analysis
