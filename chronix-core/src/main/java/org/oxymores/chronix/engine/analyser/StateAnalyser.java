@@ -28,13 +28,13 @@ import java.util.UUID;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
-import org.oxymores.chronix.engine.ChronixEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -72,7 +72,7 @@ public class StateAnalyser
      *            The application scoping the analysis
      */
     public StateAnalyser(Application2 application, State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
-            ChronixEngine engine)
+            ExecutionNode localNode)
     {
         this.state = s;
         this.application = application;
@@ -150,7 +150,7 @@ public class StateAnalyser
             this.consumeEvents(s, this.consumedEvents, places, conn);
             for (Place p : places)
             {
-                if (p.getNode().getComputingNode() == engine.getLocalNode())
+                if (p.getNode().getComputingNode() == localNode)
                 {
                     s.runFromEngine(p, conn, pjProducer, session, evt);
                 }

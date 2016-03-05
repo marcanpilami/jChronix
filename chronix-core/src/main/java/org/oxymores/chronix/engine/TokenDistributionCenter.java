@@ -30,50 +30,67 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-class TokenDistributionCenter extends BaseListener implements Runnable
+class TokenDistributionCenter implements Runnable, MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(TokenDistributionCenter.class);
-
-    private MessageProducer jmsProducer;
 
     private boolean running = true;
     private Semaphore mainLoop, localResource;
     private List<TokenReservation> shouldRenew;
 
-    void startListening(Broker broker) throws JMSException
-    {
-        this.init(broker);
-        log.debug(String.format("Initializing TokenDistributionCenter"));
+    private Session threadSession;
+    private MessageProducer threadProducer;
 
-        // Sync
+    private ChronixContextMeta ctxMeta;
+    private ChronixContextTransient ctxDb;
+    private ExecutionNode localNode;
+
+    TokenDistributionCenter(MessageListenerService broker, ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb,
+            ExecutionNode localNode)
+    {
+        this.ctxDb = ctxDb;
+        this.ctxMeta = ctxMeta;
+        this.localNode = localNode;
+        
         mainLoop = new Semaphore(0);
         localResource = new Semaphore(1);
         this.shouldRenew = new ArrayList<>();
 
-        // Register current object as a listener on ORDER queue
-        qName = String.format(Constants.Q_TOKEN, brokerName);
-        this.subscribeTo(qName);
-        this.jmsProducer = this.jmsSession.createProducer(null);
-
         // Start thread
         new Thread(this).start();
+
+        threadSession = broker.getNewSession();
+        try
+        {
+            threadProducer = threadSession.createProducer(null);
+        }
+        catch (JMSException e)
+        {
+            throw new ChronixInitializationException("Could not init TDC", e);
+        }
     }
 
-    @Override
     void stopListening()
     {
         running = false;
@@ -87,11 +104,10 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             // Don't care
             log.debug("interruption");
         }
-        super.stopListening();
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         TokenRequest request;
@@ -105,15 +121,13 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             else
             {
                 log.warn("An object was received on the token queue but was not a token request or token request ack! Ignored.");
-                jmsCommit();
                 return;
             }
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during token reception. BAD. Message will stay in queue and will be analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during token reception. BAD. Message will stay in queue and will be analysed later", e);
         }
 
         // Check.
@@ -121,7 +135,6 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         if (a == null)
         {
             log.warn("A token for an application that does not run locally was received. Ignored.");
-            jmsCommit();
             return;
         }
 
@@ -160,13 +173,11 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, brokerName);
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getBrokerName());
             }
             catch (JMSException e)
             {
-                log.error(e.getMessage(), e);
-                jmsRollback();
-                return;
+                throw new ListenerRollbackException("could not send token request", e);
             }
             request.local = true;
         }
@@ -192,13 +203,11 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, brokerName);
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getBrokerName());
             }
             catch (JMSException e)
             {
-                log.error(e.getMessage(), e);
-                jmsRollback();
-                return;
+                throw new ListenerRollbackException("could not send token request", e);
             }
             request.local = true;
         }
@@ -209,7 +218,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 log.debug(String.format("Analysing token request for PJ %s", request.pipelineJobID));
-                processRequest(request, conn);
+                processRequest(request, conn, jmsSession, jmsProducer);
                 conn.commit();
             }
         }
@@ -256,16 +265,14 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qNameDest = String.format(Constants.Q_PJ, this.broker.getEngine().getLocalNode().getComputingNode().getBrokerName());
+                String qNameDest = String.format(Constants.Q_PJ, this.localNode.getComputingNode().getBrokerName());
                 Destination d = jmsSession.createQueue(qNameDest);
                 log.debug(String.format("A message will be sent to queue %s", qNameDest));
                 jmsProducer.send(d, response);
             }
             catch (JMSException e)
             {
-                log.error(e.getMessage(), e);
-                jmsRollback();
-                return;
+                throw new ListenerRollbackException("could not send token agrreement to pipeline", e);
             }
         }
 
@@ -305,15 +312,11 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 for (TokenReservation tr : q)
                 {
                     log.debug(String.format("Re-analysing token request for PJ %s", tr.getPipelineJobId()));
-                    processRequest(tr, conn);
+                    processRequest(tr, conn, jmsSession, jmsProducer);
                 }
             }
             conn.commit();
         }
-
-        // The end: commit JMS
-        jmsCommit();
-        log.debug("Commit successful");
     }
 
     private TokenReservation getTR(TokenRequest request, Connection conn)
@@ -322,7 +325,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 .addParameter("pjId", request.pipelineJobID).addParameter("local", false).executeAndFetchFirst(TokenReservation.class);
     }
 
-    private void processRequest(TokenRequest request, Connection conn)
+    private void processRequest(TokenRequest request, Connection conn, Session jmsSession, MessageProducer jmsProducer)
     {
         // Get data
         Application2 a = ctxMeta.getApplication(request.applicationID);
@@ -331,10 +334,11 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         org.oxymores.chronix.core.State s = a.getState(request.stateID);
 
         // Process
-        processRequest(conn, a, tk, p, request.requestedAt, s, null, request.pipelineJobID, request.requestingNodeID);
+        processRequest(conn, a, tk, p, request.requestedAt, s, null, request.pipelineJobID, request.requestingNodeID, jmsSession,
+                jmsProducer);
     }
 
-    private void processRequest(TokenReservation tr, Connection conn)
+    private void processRequest(TokenReservation tr, Connection conn, Session jmsSession, MessageProducer jmsProducer)
     {
         // Get data
         Application2 a = ctxMeta.getApplication(tr.getApplicationId());
@@ -343,11 +347,12 @@ class TokenDistributionCenter extends BaseListener implements Runnable
         org.oxymores.chronix.core.State s = a.getState(tr.getStateId());
 
         // Process
-        processRequest(conn, a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy());
+        processRequest(conn, a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy(), jmsSession,
+                jmsProducer);
     }
 
     private void processRequest(Connection conn, Application2 a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
-            TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId)
+            TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId, Session jmsSession, MessageProducer jmsProducer)
     {
         // Locate all the currently allocated tokens on this Token/Place
         int i;
@@ -443,8 +448,7 @@ class TokenDistributionCenter extends BaseListener implements Runnable
             }
             catch (JMSException e)
             {
-                log.error(e.getMessage(), e);
-                jmsRollback();
+                throw new ListenerRollbackException("could not send token answer", e);
             }
         }
     }
@@ -475,7 +479,8 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                     try
                     {
                         log.debug("Sending a renewal request for token state");
-                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctxMeta, jmsSession, jmsProducer, false, brokerName);
+                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctxMeta, threadSession, threadProducer, false,
+                                localNode.getBrokerName());
                     }
                     catch (JMSException e)
                     {
@@ -484,7 +489,14 @@ class TokenDistributionCenter extends BaseListener implements Runnable
                 }
             }
 
-            jmsCommit();
+            try
+            {
+                threadSession.commit();
+            }
+            catch (JMSException e1)
+            {
+                log.error("could not validate token renewal JKMS session", e1);
+            }
 
             // Sync
             localResource.release();

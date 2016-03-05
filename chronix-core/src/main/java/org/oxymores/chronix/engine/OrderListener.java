@@ -24,13 +24,18 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
@@ -43,29 +48,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-class OrderListener extends BaseListener
+class OrderListener implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(OrderListener.class);
 
-    private MessageProducer jmsProducer;
+    private ChronixContextTransient ctxDb;
+    private ChronixContextMeta ctxMeta;
+    private String localNodeName;
+    private ChronixEngine e;
 
-    void startListening(Broker broker) throws JMSException
+    OrderListener(ChronixEngine e, ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb, String localNodeName)
     {
-        this.init(broker);
-        log.debug(String.format("Initializing OrderListener"));
-
-        // Register current object as a listener on ORDER queue
-        this.qName = String.format(Constants.Q_ORDER, brokerName);
-        this.jmsProducer = this.jmsSession.createProducer(null);
-        this.subscribeTo(qName);
-        if (broker.getEngine().getLocalNode() == this.ctxMeta.getEnvironment().getConsoleNode())
-        {
-            this.subscribeTo(Constants.Q_BOOTSTRAP);
-        }
+        this.ctxDb = ctxDb;
+        this.ctxMeta = ctxMeta;
+        this.localNodeName = localNodeName;
+        this.e = e;
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         // Metadata
         try
@@ -73,15 +74,13 @@ class OrderListener extends BaseListener
             if (msg.getStringProperty("BS") != null)
             {
                 log.info("Received a metadata send order");
-                orderSendMeta(((TextMessage) msg).getText(), msg.getJMSReplyTo(), msg.getJMSCorrelationID());
-                jmsCommit();
+                orderSendMeta(((TextMessage) msg).getText(), msg.getJMSReplyTo(), msg.getJMSCorrelationID(), jmsSession, jmsProducer);
                 return;
             }
         }
         catch (JMSException ex)
         {
             log.error("could not read a text message", ex);
-            jmsRollback();
             return;
         }
 
@@ -94,39 +93,35 @@ class OrderListener extends BaseListener
             if (!(o instanceof Order))
             {
                 log.warn("An object was received on the order queue but was not an order! Ignored.");
-                jmsCommit();
                 return;
             }
             order = (Order) o;
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during order reception. Message will stay in queue and will be analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during order reception. Message will stay in queue and will be analysed later", e);
         }
 
         log.info(String.format("An order was received. Type: %s", order.type));
 
         if (order.type == OrderType.RESTARTPJ)
         {
-            orderRestart(order);
+            orderRestart(order, jmsSession, jmsProducer);
         }
 
         else if (order.type == OrderType.FORCEOK)
         {
-            orderForceOk(order);
+            orderForceOk(order, jmsSession, jmsProducer);
         }
 
         else if (order.type == OrderType.EXTERNAL)
         {
             // orderExternal(order);
         }
-
-        jmsCommit();
     }
 
-    private void orderRestart(Order order)
+    private void orderRestart(Order order, Session jmsSession, MessageProducer jmsProducer)
     {
         // Find the PipelineJob
         PipelineJob pj;
@@ -139,9 +134,9 @@ class OrderListener extends BaseListener
         // Put the pipeline job inside the local pipeline
         try
         {
-            String qName = String.format(Constants.Q_PJ, brokerName);
+            String qName = String.format(Constants.Q_PJ, localNodeName);
             log.info(String.format("A relaunch PJ will be sent for execution on queue %s", qName));
-            Destination destination = this.jmsSession.createQueue(qName);
+            Destination destination = jmsSession.createQueue(qName);
             ObjectMessage m = jmsSession.createObjectMessage(pj);
             jmsProducer.send(destination, m);
         }
@@ -151,10 +146,10 @@ class OrderListener extends BaseListener
         }
     }
 
-    private void orderForceOk(Order order)
+    private void orderForceOk(Order order, Session jmsSession, MessageProducer jmsProducer)
     {
         // Find the PipelineJob
-        PipelineJob pj;
+        PipelineJob pj = null;
         try (Connection conn = this.ctxDb.getTransacDataSource().open())
         {
             pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data)
@@ -167,7 +162,7 @@ class OrderListener extends BaseListener
             try
             {
                 EventSourceWrapper a = pj.getActive(ctxMeta);
-                RunResult rr = a.forceOK(new EngineCbRun(this.broker.getEngine(), this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
+                RunResult rr = a.forceOK(new EngineCbRun(e, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
                 Event e = pj.createEvent(rr, pj.getVirtualTime());
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);
 
@@ -228,7 +223,7 @@ class OrderListener extends BaseListener
      * "Could not create the events triggered by an external event. It will be ignored.", e1); } } } }
      */
 
-    private void orderSendMeta(String nodeName, Destination replyTo, String corelId)
+    private void orderSendMeta(String nodeName, Destination replyTo, String corelId, Session jmsSession, MessageProducer jmsProducer)
     {
         // Does the node really exist?
         Environment n = this.ctxMeta.getEnvironment();

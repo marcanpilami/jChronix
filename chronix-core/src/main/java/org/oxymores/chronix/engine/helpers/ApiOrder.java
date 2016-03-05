@@ -26,7 +26,6 @@ public class ApiOrder implements OrderService
 
     // The service works under an independent context.
     private String ctxMetaPath, ctxDbHistoryPath, ctxDbTransacPath;
-    private String localNodeName;
 
     @Activate
     private void activate(ComponentContext cc)
@@ -35,7 +34,6 @@ public class ApiOrder implements OrderService
         ctxMetaPath = "C:\\TEMP\\db1";
         ctxDbHistoryPath = "C:\\TEMP\\db1\\db_history\\db";
         ctxDbTransacPath = "C:\\TEMP\\db1\\db_transac\\db";
-        localNodeName = "local";
     }
 
     private ChronixContextTransient getCtxDb()
@@ -55,8 +53,7 @@ public class ApiOrder implements OrderService
         {
             RunLog rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId)
                     .executeAndFetchFirst(RunLog.class);
-            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.getMetaDb().getEnvironment(),
-                    this.localNodeName);
+            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.getMetaDb().getEnvironment());
         }
         catch (ChronixException e)
         {
@@ -79,12 +76,12 @@ public class ApiOrder implements OrderService
             {
                 try (Connection o = this.getCtxDb().getTransacDataSource().beginTransaction())
                 {
-                    SenderHelpers.runStateInsidePlan(s, p, o, this.localNodeName);
+                    SenderHelpers.runStateInsidePlan(s, p, o);
                 }
             }
             else
             {
-                SenderHelpers.runStateAlone(s, p, this.localNodeName);
+                SenderHelpers.runStateAlone(s, p);
             }
         }
         catch (Exception e)

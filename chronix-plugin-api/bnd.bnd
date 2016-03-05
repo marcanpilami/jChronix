@@ -3,6 +3,7 @@
 	org.oxymores.chronix.engine.modularity.web, \
 	org.oxymores.chronix.core.engine.api, \
 	org.oxymores.chronix.core.source.api, \
+	org.oxymores.chronix.api.agent, \
 	org.oxymores.chronix.dto
 -sources: true
 #-includeresource: target/lib

@@ -44,7 +44,7 @@ public class EngineCbRun implements EngineCallback
 
         try
         {
-            SenderHelpers.sendRunResult(rr, this.e.getLocalNode());
+            SenderHelpers.sendRunResult(rr, this.e.getLocalNode().getName());
         }
         catch (JMSException e)
         {
@@ -61,8 +61,7 @@ public class EngineCbRun implements EngineCallback
     @Override
     public void launchState(DTOState s)
     {
-        try (Connection o = this.e.getContextTransient().getTransacDataSource().beginTransaction();
-                JmsSendData d = new JmsSendData(e.getLocalNode().getBrokerName()))
+        try (Connection o = this.e.getContextTransient().getTransacDataSource().beginTransaction(); JmsSendData d = new JmsSendData())
         {
             a.getState(s.getId()).runInsidePlan(o, d.jmsProducer, d.jmsSession, pj.getId(), null, pj.getVirtualTime());
             d.jmsSession.commit();

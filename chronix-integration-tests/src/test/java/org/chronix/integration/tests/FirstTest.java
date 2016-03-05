@@ -6,10 +6,9 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -17,8 +16,11 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -27,7 +29,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymore.chronix.chain.dto.DTOChain;
@@ -56,16 +57,26 @@ public class FirstTest
     @Inject
     OrderService order;
 
+    static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
+
     @Configuration
-    public Option[] config()
+    public Option[] config() throws IOException
     {
+        try
+        {
+            FileUtils.cleanDirectory(new File(configPath));
+        }
+        catch (Exception e)
+        {
+        }
+
         return options(junitBundles(), systemPackage("sun.misc"),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
-                systemProperty("felix.cm.dir").value(Paths.get("./target/felix-config").toAbsolutePath().normalize().toString()),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"), mavenBundle("org.slf4j", "slf4j-api", "1.7.14"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"), mavenBundle("ch.qos.logback", "logback-core", "1.1.3"),
-                mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"), mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
+                systemProperty("felix.cm.dir").value(configPath), mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
+                mavenBundle("org.slf4j", "slf4j-api", "1.7.14"), mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"),
+                mavenBundle("ch.qos.logback", "logback-core", "1.1.3"), mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"),
+                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-core", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-nonosgilibs", "0.9.2-SNAPSHOT"),
@@ -85,15 +96,20 @@ public class FirstTest
     protected Map<String, ChronixEngine> engines;
 
     @Before
-    public void before()
+    public void before() throws Exception
     {
+        // Sanity check
         Assert.assertNotNull(meta);
         Assert.assertNotNull(order);
 
-        noop = new DTONoop();
+        // Clear directories
+        FileUtils.cleanDirectory(new File("C:/TEMP/db1"));
 
-        //
+        // Maps
         engines = new HashMap<>();
+
+        // base elements
+        noop = new DTONoop();
 
         // Environment
         envt = meta.createMinimalEnvironment(); // node is called "local"
@@ -109,6 +125,41 @@ public class FirstTest
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
 
         // App is not saved here - it will be by the test
+
+        // Allow the broker to start (and clear remaining messages if any)
+        try
+        {
+            org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
+            Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
+            props.put("org.oxymores.chronix.network.dbpath", "C:/TEMP/amq");
+            props.put("org.oxymores.chronix.network.clear", "true");
+            props.put("org.oxymores.chronix.network.nodeid", "3654654");
+            cfg.update(props);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @After
+    public void after() throws Exception
+    {
+        // Stop all services after each test (including the host)
+        for (org.osgi.service.cm.Configuration cfg : conf.listConfigurations(null))
+        {
+            cfg.delete();
+        }
+
+        // Wait for end of all engines
+        ServiceTracker<ChronixEngine, ChronixEngine> tracker = new ServiceTracker<>(bc,
+                bc.createFilter("(objectClass=" + ChronixEngine.class.getCanonicalName() + ")"), null);
+        tracker.open();
+        while (tracker.getServices() != null && tracker.getServices().length > 0)
+        {
+            Thread.sleep(100);
+        }
+        tracker.close();
     }
 
     protected void save()
@@ -184,10 +235,8 @@ public class FirstTest
         Assert.assertTrue(found);
 
         addAndStartEngine("local");
-        System.out.println(c.getStart().getId());
         order.orderLaunch(a2.getId(), s.getId(), envt.getPlace("local").getId(), true);
 
         Thread.sleep(3000);
-        // e.stop();
     }
 }

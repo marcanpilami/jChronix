@@ -30,6 +30,7 @@ import javax.jms.Session;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -75,12 +76,12 @@ class SelfTriggerAgent extends Thread
         loop.release();
     }
 
-    public void startAgent(ChronixEngine engine) throws JMSException
+    public void startAgent(ChronixEngine engine, MessageListenerService broker) throws JMSException
     {
-        this.startAgent(engine, DateTime.now());
+        this.startAgent(engine, DateTime.now(), broker);
     }
 
-    private void startAgent(ChronixEngine engine, DateTime startTime) throws JMSException
+    private void startAgent(ChronixEngine engine, DateTime startTime, MessageListenerService broker) throws JMSException
     {
         log.debug(String.format("Agent responsible for clocks and other active sources will start"));
 
@@ -89,7 +90,7 @@ class SelfTriggerAgent extends Thread
         this.ctxMeta = engine.getContextMeta();
         this.ctxDb = engine.getContextTransient();
         this.localNode = engine.getLocalNode();
-        this.jmsSession = engine.getBroker().getConnection().createSession(true, Session.SESSION_TRANSACTED);
+        this.jmsSession = broker.getNewSession();
         this.producerEvents = jmsSession.createProducer(null);
         this.triggering = new Semaphore(1);
         this.nextLoopVirtualTime = startTime;
@@ -173,11 +174,10 @@ class SelfTriggerAgent extends Thread
                     try
                     {
                         // TODO
-                        /* tmp = n.selfTrigger(producerEvents, jmsSession, ctxMeta, conn, loopVirtualTime);
-                        if (tmp.compareTo(this.nextLoopVirtualTime) < 0)
-                        {
-                            this.nextLoopVirtualTime = tmp;
-                        }*/
+                        /*
+                         * tmp = n.selfTrigger(producerEvents, jmsSession, ctxMeta, conn, loopVirtualTime); if
+                         * (tmp.compareTo(this.nextLoopVirtualTime) < 0) { this.nextLoopVirtualTime = tmp; }
+                         */
                     }
                     catch (Exception e)
                     {

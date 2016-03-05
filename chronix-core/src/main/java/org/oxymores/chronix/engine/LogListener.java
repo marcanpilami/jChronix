@@ -13,10 +13,15 @@ package org.oxymores.chronix.engine;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
 import org.slf4j.Logger;
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 import org.slf4j.LoggerFactory;
@@ -27,23 +32,19 @@ import org.sql2o.Connection;
  * necessary is handled at the source (cf. <code>SenderHelpers</code>).
  *
  */
-class LogListener extends BaseListener
+class LogListener implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(LogListener.class);
 
-    void startListening(Broker b) throws JMSException
-    {
-        // Base initialization
-        this.init(b);
-        log.debug(String.format("Initializing LogListener"));
+    private ChronixContextTransient ctxDb;
 
-        // Register current object as a listener on LOG queue
-        qName = String.format(Constants.Q_LOG, brokerName);
-        this.subscribeTo(qName);
+    LogListener(ChronixContextTransient ctxDb)
+    {
+        this.ctxDb = ctxDb;
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         RunLog rlog;
@@ -53,16 +54,14 @@ class LogListener extends BaseListener
             if (!(o instanceof RunLog))
             {
                 log.warn("An object was received on the log queue but was not a log! Ignored.");
-                jmsCommit();
                 return;
             }
             rlog = (RunLog) o;
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during log reception. Message will stay in queue and will be re-analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during log reception. Message will stay in queue and will be re-analysed later", e);
         }
 
         try (Connection connHistory = this.ctxDb.getHistoryDataSource().beginTransaction();
@@ -79,10 +78,9 @@ class LogListener extends BaseListener
             connHistory.commit();
             connTransac.commit();
         }
-        jmsCommit();
 
-        // TODO: merge this with above transaction (only one test)
-        if (!this.broker.getEngine().isSimulator() && rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
+        // TODO: remove simulated results
+        if (rlog.getStoppedRunningAt() != null && rlog.getResultCode() == 0)
         {
             try (Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction())
             {

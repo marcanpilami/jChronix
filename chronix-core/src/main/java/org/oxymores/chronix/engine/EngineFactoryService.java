@@ -8,6 +8,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +19,36 @@ public class EngineFactoryService implements ChronixEngine
 {
     private static final Logger log = LoggerFactory.getLogger(EngineFactoryService.class);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // FIELDS
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////
+    // Private fields
     private org.oxymores.chronix.engine.ChronixEngine e;
     private String name;
     private Map<String, String> configuration;
+
+    ///////////////////////////////////////////////////////////
+    // Magic OSGI fields
+    private MessageListenerService broker;
+
+    @Reference
+    private void setBroker(MessageListenerService b)
+    {
+        log.debug("Setting broker inside engine factory");
+        this.broker = b;
+    }
+
+    private void unsetBroker()
+    {
+        log.debug("Removing broker from engine factory");
+        this.broker = null;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // LIFE CYCLE METHODS
+    ///////////////////////////////////////////////////////////////////////////
 
     @Activate
     public synchronized void activate(Map<String, String> config)
@@ -52,7 +81,7 @@ public class EngineFactoryService implements ChronixEngine
     {
         String nodeName = configuration.getOrDefault("chronix.cluster.node.name", "local");
         String metabase = configuration.getOrDefault("chronix.repository.path", "./metabase");
-        e = new org.oxymores.chronix.engine.ChronixEngine(metabase, nodeName, metabase);
+        e = new org.oxymores.chronix.engine.ChronixEngine(metabase, nodeName, metabase, broker);
         try
         {
             e.start();
@@ -86,4 +115,5 @@ public class EngineFactoryService implements ChronixEngine
     {
         e.waitForStopEnd();
     }
+
 }

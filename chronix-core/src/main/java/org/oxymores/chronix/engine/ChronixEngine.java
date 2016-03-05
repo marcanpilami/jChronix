@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -45,12 +46,17 @@ public class ChronixEngine extends Thread
 
     protected ChronixContextMeta ctxMeta;
     protected ChronixContextTransient ctxDb;
-    protected String dbPath, brokerPath, logPath;
+    protected String dbPath, logPath;
 
     protected String localNodeName;
 
-    protected Broker broker;
+    protected MessageListenerService broker;
+
+    // Threads in need of a specific "stop"
     protected SelfTriggerAgent stAgent;
+    protected TokenDistributionCenter tdc;
+
+    protected List<Object> listeners = new ArrayList<>();
 
     protected Semaphore stop, stopped, engineStops, engineStarts;
     protected boolean run = true;
@@ -58,18 +64,21 @@ public class ChronixEngine extends Thread
     // ///////////////////////////////////////////////////////////////
     // Construction
 
-    public ChronixEngine(String dbPath, String nodeName, String logPath)
+    public ChronixEngine(String dbPath, String nodeName, String logPath, MessageListenerService broker)
     {
-        this(dbPath, nodeName, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"),
-                FilenameUtils.concat(dbPath, "broker/amq"), logPath);
+        this(dbPath, nodeName, FilenameUtils.concat(dbPath, "db_history/db"), FilenameUtils.concat(dbPath, "db_transac/db"), logPath,
+                broker);
     }
 
-    public ChronixEngine(String dbPath, String nodeName, String historyDBPath, String transacDbPath, String brokerDataPath, String logPath)
+    public ChronixEngine(String dbPath, String nodeName, String historyDBPath, String transacDbPath, String logPath,
+            MessageListenerService broker)
     {
+        MDC.put("node", nodeName);
+
         this.dbPath = dbPath;
-        this.brokerPath = brokerDataPath;
         this.localNodeName = nodeName;
         this.logPath = logPath;
+        this.broker = broker;
 
         // preContextLoad();
 
@@ -91,6 +100,8 @@ public class ChronixEngine extends Thread
         this.engineStops = new Semaphore(0);
         // Will receive one token after each successful or failed start
         this.engineStarts = new Semaphore(0);
+
+        MDC.remove("node");
     }
 
     //
@@ -107,16 +118,31 @@ public class ChronixEngine extends Thread
          * "Could not fetch environment from remote node. Will not be able to start. See errors above for details."); } }
          */
 
-        // Broker with all the consumer threads
-        if (this.broker == null)
-        {
-            this.broker = new Broker(this, this.brokerPath, false, true, true);
-        }
-        this.broker.registerListeners(this);
+        // Register the message listeners (basically the main parts of the engine)
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_EVENT, localNodeName),
+                new EventListener(ctxMeta, ctxDb, getLocalNode()), localNodeName));
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_LOG, localNodeName), new LogListener(ctxDb), localNodeName));
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_META, localNodeName), new MetadataListener(this, ctxMeta),
+                localNodeName));
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_ORDER, localNodeName),
+                new OrderListener(this, ctxMeta, ctxDb, localNodeName), localNodeName));
+        listeners.add(
+                broker.addMessageCallback(Constants.Q_BOOTSTRAP, new OrderListener(this, ctxMeta, ctxDb, localNodeName), localNodeName));
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_PJ, localNodeName), new Pipeline(ctxMeta, ctxDb, getLocalNode()),
+                localNodeName));
+        listeners.add(broker.addMessageCallback(
+                String.format(Constants.Q_LOGFILE, localNodeName) + "," + String.format(Constants.Q_ENDOFJOB, localNodeName) + ","
+                        + String.format(Constants.Q_RUNNERMGR, localNodeName),
+                new RunnerManager(this, ctxMeta, ctxDb, this.logPath), localNodeName));
+
+        tdc = new TokenDistributionCenter(broker, ctxMeta, ctxDb, getLocalNode());
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_TOKEN, localNodeName), tdc, localNodeName));
+        listeners.add(broker.addMessageCallback(String.format(Constants.Q_CALENDARPOINTER, localNodeName),
+                new TranscientListener(ctxMeta, ctxDb, localNodeName), localNodeName));
 
         // Active sources agent
         this.stAgent = new SelfTriggerAgent();
-        this.stAgent.startAgent(this);
+        this.stAgent.startAgent(this, broker);
 
         // Done
         log.info("Engine has finished its boot sequence");
@@ -168,16 +194,14 @@ public class ChronixEngine extends Thread
             {
                 this.stAgent.stopAgent();
             }
-            this.broker.stopEngineListeners();
-
-            // TCP port release is not immediate, sad.
-            try
+            if (this.tdc != null)
             {
-                Thread.sleep(Constants.BROKER_PORT_FREEING_MS);
+                this.tdc.stopListening();
             }
-            catch (InterruptedException e)
+
+            for (Object o : this.listeners)
             {
-                log.info("Interruption while waiting for port freeing");
+                this.broker.removeMessageCallback(o);
             }
 
             this.engineStops.release(1);
@@ -185,8 +209,6 @@ public class ChronixEngine extends Thread
         }
 
         // Stop every thread, not only the event engine threads.
-        this.broker.stopRunnerAgents();
-        this.broker.stopBroker();
         this.ctxDb.close();
         this.stopped.release();
         log.info("The scheduler has stopped");
@@ -229,12 +251,6 @@ public class ChronixEngine extends Thread
         log.info(this.localNodeName + " main engine has received a stop request");
         this.run = false;
         this.stop.release();
-    }
-
-    /** Test method only */
-    void stopOutgoingJms()
-    {
-        this.broker.stopAllOutgoingLinks();
     }
 
     protected void preContextLoad()
@@ -318,11 +334,6 @@ public class ChronixEngine extends Thread
         ExecutionNode local = this.getLocalNode();
         return local.getConnectsTo(ExecutionNodeConnectionAmq.class);
 
-    }
-
-    public Broker getBroker()
-    {
-        return this.broker;
     }
 
     public boolean isSimulator()

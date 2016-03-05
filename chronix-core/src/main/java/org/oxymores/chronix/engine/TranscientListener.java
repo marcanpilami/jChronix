@@ -22,44 +22,42 @@ package org.oxymores.chronix.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
 import org.apache.commons.lang.StringUtils;
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-class TranscientListener extends BaseListener
+class TranscientListener implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(TranscientListener.class);
 
-    private MessageProducer producerEvent;
+    private ChronixContextMeta ctxMeta;
+    private ChronixContextTransient ctxDb;
+    private String localNodeName;
 
-    void startListening(Broker broker) throws JMSException
+    TranscientListener(ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb, String localNodeName)
     {
-        this.init(broker);
-        log.debug(String.format("Initializing TranscientListener"));
-
-        // Register current object as a listener on LOG queue
-        qName = String.format(Constants.Q_CALENDARPOINTER, brokerName);
-        this.subscribeTo(qName);
-
-        // Producers
-        String qEventName = String.format(Constants.Q_EVENT, brokerName);
-        Destination d = this.jmsSession.createQueue(qEventName);
-        this.producerEvent = this.jmsSession.createProducer(d);
+        this.ctxDb = ctxDb;
+        this.ctxMeta = ctxMeta;
+        this.localNodeName = localNodeName;
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         // Read message (don't commit yet)
         ObjectMessage omsg = (ObjectMessage) msg;
@@ -71,9 +69,8 @@ class TranscientListener extends BaseListener
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during transcient reception. Message will stay in queue and will be analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during transcient reception. Message will stay in queue and will be analysed later", e);
         }
 
         // ////////////////////////////////////////
@@ -88,8 +85,7 @@ class TranscientListener extends BaseListener
             ca = cp.getCalendar(ctxMeta);
             if (ca == null)
             {
-                log.error("A calendar pointer was received that was unrelated to a locally known calendar - it was ignored");
-                jmsRollback();
+                log.warn("A calendar pointer was received that was unrelated to a locally known calendar - it was ignored");
                 return;
             }
             if (cp.getPlaceID() != null)
@@ -97,8 +93,7 @@ class TranscientListener extends BaseListener
                 ss = cp.getState(ctxMeta);
                 if (ss == null)
                 {
-                    log.error("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
-                    jmsRollback();
+                    log.warn("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
                     return;
                 }
             }
@@ -161,8 +156,7 @@ class TranscientListener extends BaseListener
                 List<Event> events = conn.createQuery("SELECT * from Event e WHERE e.stateID IN (" + StringUtils.join(ids, ",") + ")")
                         .executeAndFetch(Event.class);
 
-                // Send these events for analysis (local only - every execution node
-                // has also received this pointer)
+                // Send these events for analysis (local only - every execution node has also received this pointer)
                 log.info(String.format("The updated calendar pointer may have impacts on %s events that will have to be reanalysed",
                         events.size()));
                 for (Event e : events)
@@ -170,19 +164,16 @@ class TranscientListener extends BaseListener
                     try
                     {
                         ObjectMessage om = jmsSession.createObjectMessage(e);
-                        producerEvent.send(om);
+                        jmsProducer.send(jmsSession.createQueue(String.format(Constants.Q_EVENT, localNodeName)), om);
                     }
                     catch (JMSException e1)
                     {
-                        log.error("Impossible to send an event locally... Will be attempted next reboot");
-                        jmsRollback();
-                        return;
+                        throw new ListenerRollbackException("Impossible to send an event locally... Will be attempted next reboot", e1);
                     }
                 }
 
                 conn.commit();
             }
-            jmsCommit();
             log.debug("Saved correctly");
 
             // Some jobs may now be late (or later than before). Signal them (log only).

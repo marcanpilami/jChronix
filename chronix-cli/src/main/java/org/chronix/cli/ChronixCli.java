@@ -26,28 +26,17 @@ public class ChronixCli
         new ChronixCli().doMain(args);
     }
 
-    @Option(name = "-n", aliases =
-    {
-        "--name", "--eventsource"
-    }, usage = "for sending events from this source", required = true)
+    @Option(name = "-n", aliases = { "--name", "--eventsource" }, usage = "for sending events from this source", required = true)
     private String source;
 
-    @Option(name = "-p", aliases =
-    {
-        "--port"
-    }, usage = "port of the Chronix server to connect to. Default is 1789. ", required = false)
+    @Option(name = "-p", aliases = { "--port" }, usage = "port of the Chronix server to connect to. Default is 1789. ", required = false)
     private Integer port = 1789;
 
-    @Option(name = "-s", aliases =
-    {
-        "--server", "--broker"
-    }, usage = "Chronix server to connect to. Default is localhost", required = false)
+    @Option(name = "-s", aliases = { "--server",
+            "--broker" }, usage = "Chronix server to connect to. Default is localhost", required = false)
     private String server = "localhost";
 
-    @Option(name = "-d", aliases =
-    {
-        "--data", "--eventdata"
-    }, usage = "data associated to the event", required = false)
+    @Option(name = "-d", aliases = { "--data", "--eventdata" }, usage = "data associated to the event", required = false)
     private String filepath = "";
 
     @Argument
@@ -78,7 +67,7 @@ public class ChronixCli
 
         try
         {
-            SenderHelpers.sendOrderExternalEvent(source, filepath, server.toUpperCase() + port, "tcp://" + server + ":" + port);
+            SenderHelpers.sendOrderExternalEvent(source, filepath, server.toUpperCase());
         }
         catch (JMSException e)
         {

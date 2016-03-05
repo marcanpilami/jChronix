@@ -30,11 +30,17 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
+import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -43,11 +49,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-class Pipeline extends BaseListener implements Runnable
+class Pipeline implements Runnable, MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(Pipeline.class);
-
-    private MessageProducer jmsJRProducer;
 
     private LinkedBlockingQueue<PipelineJob> entering;
     private List<PipelineJob> waitingSequence;
@@ -59,14 +63,17 @@ class Pipeline extends BaseListener implements Runnable
     private Boolean run = true;
     private Semaphore analyze;
 
-    void startListening(Broker broker) throws JMSException
+    private ChronixContextMeta ctxMeta;
+    private ChronixContextTransient ctxDb;
+    private ExecutionNode localNode;
+
+    Pipeline(ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb, ExecutionNode localNode)
     {
-        this.init(broker);
+        this.ctxDb = ctxDb;
+        this.ctxMeta = ctxMeta;
+        this.localNode = localNode;
 
         this.analyze = new Semaphore(1);
-
-        // Outgoing producer for job runner
-        this.jmsJRProducer = this.jmsSession.createProducer(null);
 
         // Create analysis queues
         entering = new LinkedBlockingQueue<>();
@@ -85,38 +92,15 @@ class Pipeline extends BaseListener implements Runnable
         }
         entering.addAll(old);
 
-        // Register on incoming queue
-        qName = String.format(Constants.Q_PJ, brokerName);
-        this.subscribeTo(qName);
-
         // Start thread
-        (new Thread(this)).start();
+        // (new Thread(this)).start();
     }
 
-    @Override
-    void stopListening()
-    {
-        try
-        {
-            // wait for end of analysis
-            this.analyze.acquire();
-        }
-        catch (InterruptedException e)
-        {
-            // Do nothing
-        }
-        super.stopListening();
-        this.run = false;
-        try
-        {
-            this.jmsJRProducer.close();
-        }
-        catch (JMSException e)
-        {
-            log.warn("An error occurred while closing the Pipleine. Not a real issue, but please report it", e);
-        }
-        this.analyze.release();
-    }
+    /*
+     * @Override void stopListening() { try { // wait for end of analysis this.analyze.acquire(); } catch (InterruptedException e) { // Do
+     * nothing } super.stopListening(); this.run = false; try { this.jmsJRProducer.close(); } catch (JMSException e) { log.warn(
+     * "An error occurred while closing the Pipeline. Not a real issue, but please report it", e); } this.analyze.release(); }
+     */
 
     @Override
     public void run()
@@ -187,7 +171,7 @@ class Pipeline extends BaseListener implements Runnable
             toAnalyse.addAll(waitingToken);
             for (PipelineJob j : toAnalyse)
             {
-                anToken(j);
+                // anToken(j);
             }
 
             toAnalyse.clear();
@@ -201,14 +185,14 @@ class Pipeline extends BaseListener implements Runnable
             toAnalyse.addAll(waitingRun);
             for (PipelineJob j : toAnalyse)
             {
-                runPJ(j);
+                // runPJ(j);
             }
             this.analyze.release();
         }
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         ObjectMessage omsg = (ObjectMessage) msg;
         PipelineJob pj = null;
@@ -227,16 +211,14 @@ class Pipeline extends BaseListener implements Runnable
             else
             {
                 log.warn("An object was received on the pipeline queue but was not a job or a token request answer! Ignored.");
-                jmsCommit();
                 return;
             }
 
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during job reception. BAD. Message will stay in queue and will be analysed later", e);
         }
 
         if (pj != null)
@@ -250,8 +232,9 @@ class Pipeline extends BaseListener implements Runnable
                 conn.commit();
             }
             log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
-            jmsCommit();
-            entering.add(pj);
+            // TODO: reactivate the pipeline with a correct structure
+            // entering.add(pj);
+            runPJ(pj, jmsSession, jmsProducer);
         }
 
         if (rq != null)
@@ -278,7 +261,6 @@ class Pipeline extends BaseListener implements Runnable
             {
                 log.warn("A token was given to an unexisting PJ. Ignored");
                 this.analyze.release();
-                jmsCommit();
                 return;
             }
 
@@ -287,7 +269,6 @@ class Pipeline extends BaseListener implements Runnable
             log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
 
             this.analyze.release();
-            jmsCommit();
             entering.add(new PipelineJob()); // TODO: why?
         }
     }
@@ -300,7 +281,7 @@ class Pipeline extends BaseListener implements Runnable
         log.debug(String.format("Job %s has finished sequence analysis - on to token analysis", pj.getId()));
     }
 
-    private void anToken(PipelineJob pj)
+    private void anToken(PipelineJob pj, Session jmsSession, MessageProducer jmsProducer)
     {
         org.oxymores.chronix.core.State s = pj.getState(ctxMeta);
         if (s.getTokens().size() > 0)
@@ -312,7 +293,7 @@ class Pipeline extends BaseListener implements Runnable
                 tr.local = true;
                 tr.placeID = pj.getPlaceID();
                 tr.requestedAt = new DateTime();
-                tr.requestingNodeID = this.broker.getEngine().getLocalNode().getComputingNode().getId();
+                tr.requestingNodeID = this.localNode.getComputingNode().getId();
                 tr.stateID = pj.getStateID();
                 tr.tokenID = tk.getId();
                 tr.type = TokenRequestType.REQUEST;
@@ -320,12 +301,11 @@ class Pipeline extends BaseListener implements Runnable
 
                 try
                 {
-                    SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, jmsJRProducer, true, this.brokerName);
+                    SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, jmsProducer, true, this.localNode.getBrokerName());
                 }
                 catch (JMSException e)
                 {
-                    log.error("Could not send a token request. This will likely block the plan.", e);
-                    jmsRollback();
+                    throw new ListenerRollbackException("Could not send a token request. This will likely block the plan.", e);
                 }
 
                 waitingToken.remove(pj);
@@ -349,22 +329,21 @@ class Pipeline extends BaseListener implements Runnable
         log.debug(String.format("Job %s has finished exclusion analysis - on to run", pj.getId()));
     }
 
-    private void runPJ(PipelineJob pj)
+    private void runPJ(PipelineJob pj, Session jmsSession, MessageProducer jmsProducer)
     {
         // Remove from queue
         waitingRun.remove(pj);
 
-        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctxMeta).getNode().getComputingNode().getBrokerName());
+        String qName = String.format(Constants.Q_RUNNERMGR, pj.getPlace(ctxMeta).getNode().getComputingNode().getName());
         try
         {
             Destination d = jmsSession.createQueue(qName);
             ObjectMessage om = jmsSession.createObjectMessage(pj);
-            jmsJRProducer.send(d, om);
+            jmsProducer.send(d, om);
         }
         catch (JMSException e1)
         {
             log.error("Could not launch a job! Probable bug. Job request will be ignored to allow resuming the scheduler", e1);
-            jmsCommit();
             return;
         }
 
@@ -376,7 +355,6 @@ class Pipeline extends BaseListener implements Runnable
             conn.commit();
         }
 
-        jmsCommit();
         log.debug(String.format("Job %s was given to the runner queue %s", pj.getId(), qName));
     }
 }

@@ -27,11 +27,17 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.EventSourceWrapper;
+import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.analyser.StateAnalyser;
 import org.slf4j.Logger;
@@ -39,25 +45,23 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 
-class EventListener extends BaseListener
+class EventListener implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(EventListener.class);
 
-    private MessageProducer producerPJ;
+    private ChronixContextMeta ctxMeta;
+    private ChronixContextTransient ctxDb;
+    private ExecutionNode localNode;
 
-    void startListening(Broker broker) throws JMSException
+    EventListener(ChronixContextMeta ctx1, ChronixContextTransient ctx2, ExecutionNode localNode)
     {
-        this.init(broker);
-        log.info(String.format("Starting an event engine"));
-
-        this.qName = String.format(Constants.Q_EVENT, brokerName);
-        this.subscribeTo(qName);
-
-        this.producerPJ = this.jmsSession.createProducer(null);
+        this.ctxDb = ctx2;
+        this.ctxMeta = ctx1;
+        this.localNode = localNode;
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         // For commits: remember an event can be analyzed multiple times without problems.
         ObjectMessage omsg = (ObjectMessage) msg;
@@ -68,16 +72,14 @@ class EventListener extends BaseListener
             if (!(o instanceof Event))
             {
                 log.warn("An object was received on the event queue but was not an event! Ignored.");
-                jmsSession.commit();
                 return;
             }
             evt = (Event) o;
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during event reception. BAD. Message will stay in queue and will be analysed later", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException(
+                    "An error occurred during event reception. BAD. Message will stay in queue and will be analysed later", e);
         }
 
         //
@@ -94,7 +96,6 @@ class EventListener extends BaseListener
         catch (Exception e)
         {
             log.error("An event was received that was not related to a local application. Discarded.");
-            jmsCommit();
             return;
         }
         log.debug(String.format("Event %s (from application %s / active node %s) was received and will be analysed", evt.getId(),
@@ -111,7 +112,6 @@ class EventListener extends BaseListener
                 log.info(String.format(
                         "Event %s (from application %s / active node %s) was discarded because it was too old according to its 'best before' date",
                         evt.getId(), a.getName(), active.getName()));
-                jmsCommit();
                 return;
             }
 
@@ -122,17 +122,17 @@ class EventListener extends BaseListener
             ArrayList<State> localConsumers = new ArrayList<>();
             for (State st : clientStates)
             {
-                if (st.getRunsOnPhysicalNodes().contains(this.broker.getEngine().getLocalNode()))
+                if (st.getRunsOnPhysicalNodes().contains(this.localNode))
                 {
                     localConsumers.add(st);
                 }
             }
 
-            // Analyze on every local consumer
+            // Analyse on every local consumer
             for (State st : localConsumers)
             {
-                StateAnalyser ana = new StateAnalyser(a, st, evt, conn, producerPJ, jmsSession, this.broker.getEngine());
-                toCheck.addAll(ana.consumedEvents);                
+                StateAnalyser ana = new StateAnalyser(a, st, evt, conn, jmsProducer, jmsSession, localNode);
+                toCheck.addAll(ana.consumedEvents);
             }
 
             // Ack
@@ -140,7 +140,7 @@ class EventListener extends BaseListener
 
             evt.insertOrUpdate(conn);
             conn.commit();
-            jmsCommit();
+            // jmsCommit done in handler
             log.debug(String.format("Event id %s was received, analysed and acked all right", evt.getId()));
         }
 
@@ -169,7 +169,7 @@ class EventListener extends BaseListener
                     for (Place p : cs.getRunsOn().getPlaces())
                     {
                         // Don't purge if place is local & event no consumed on that place
-                        if (p.getNode().getComputingNode() == this.broker.getEngine().getLocalNode() && !e.wasConsumedOnPlace(p, cs, conn))
+                        if (p.getNode().getComputingNode() == this.localNode && !e.wasConsumedOnPlace(p, cs, conn))
                         {
                             shouldPurge = false;
                             break;

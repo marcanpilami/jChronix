@@ -21,34 +21,33 @@ package org.oxymores.chronix.engine;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
+import org.oxymores.chronix.api.agent.ListenerRollbackException;
+import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MetadataListener extends BaseListener
+class MetadataListener implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(MetadataListener.class);
     private ChronixEngine engine;
+    private ChronixContextMeta ctxMeta;
 
-    void startListening(Broker b, ChronixEngine engine) throws JMSException
+    MetadataListener(ChronixEngine e, ChronixContextMeta ctxMeta)
     {
-        this.init(b);
-        log.debug(String.format("Initializing MetadataListener"));
-
-        // Pointers
-        this.engine = engine;
-
-        // Listen for applications
-        this.qName = String.format(Constants.Q_META, brokerName);
-        this.subscribeTo(qName);
+        this.ctxMeta = ctxMeta;
+        this.engine = e;
     }
 
     @Override
-    public void onMessageAction(Message msg)
+    public void onMessage(Message msg, Session jmsSession, MessageProducer jmsProducer)
     {
         log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;
@@ -70,7 +69,6 @@ class MetadataListener extends BaseListener
             if (!(o instanceof Application2) && !(o instanceof Environment))
             {
                 log.warn("An object was received on the metadata queue but was not an app or an environment specification! Ignored.");
-                jmsCommit();
                 return;
             }
 
@@ -85,9 +83,8 @@ class MetadataListener extends BaseListener
         }
         catch (JMSException e)
         {
-            log.error("An error occurred during metadata message reception. This message will be retried later.", e);
-            jmsRollback();
-            return;
+            throw new ListenerRollbackException("An error occurred during metadata message reception. This message will be retried later.",
+                    e);
         }
 
         // Application
@@ -104,7 +101,6 @@ class MetadataListener extends BaseListener
                 log.error(
                         "Issue while trying to commit to disk an application received from another node. The application sent will be thrown out.",
                         e1);
-                jmsCommit();
             }
         }
 
@@ -121,9 +117,6 @@ class MetadataListener extends BaseListener
                 log.error("Could not store received environment specification. It will be ignored.", ex);
             }
         }
-
-        // Data storage done - ack the queue.
-        jmsCommit();
 
         // Recycle engine.
         if (restart)

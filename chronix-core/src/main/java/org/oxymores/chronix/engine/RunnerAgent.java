@@ -19,37 +19,8 @@
  */
 package org.oxymores.chronix.engine;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.util.tracker.ServiceTracker;
-import org.oxymores.chronix.engine.modularity.runner.RunDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
-import org.oxymores.chronix.engine.modularity.runner.RunnerApi;
-import org.slf4j.LoggerFactory;
-
+/*
 class RunnerAgent extends BaseListener
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerAgent.class);
@@ -261,3 +232,4 @@ class RunnerAgent extends BaseListener
         jmsCommit();
     }
 }
+*/
