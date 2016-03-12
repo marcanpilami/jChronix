@@ -28,7 +28,7 @@ import java.util.UUID;
 
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 import org.sql2o.Connection;
@@ -42,7 +42,7 @@ class TransitionAnalyser
 
     private boolean parallelAnalysis;
 
-    TransitionAnalyser(Application2 app, DTOTransition tr, List<Event> events, Connection conn)
+    TransitionAnalyser(Application app, DTOTransition tr, List<Event> events, Connection conn)
     {
         parallelAnalysis = isTransitionParallelEnabled(app, tr);
 
@@ -77,7 +77,7 @@ class TransitionAnalyser
         }
     }
 
-    private Boolean isTransitionParallelEnabled(Application2 app, DTOTransition tr)
+    private Boolean isTransitionParallelEnabled(Application app, DTOTransition tr)
     {
         State from = app.getState(tr.getFrom());
         State to = app.getState(tr.getTo());

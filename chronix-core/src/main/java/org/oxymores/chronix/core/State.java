@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EventSource;
@@ -77,7 +77,7 @@ public class State extends ApplicationObject
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application2 app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState,
+    public State(Application app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState,
             List<DTOTransition> trToState)
     {
         super();

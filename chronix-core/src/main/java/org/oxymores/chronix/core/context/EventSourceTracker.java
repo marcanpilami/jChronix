@@ -43,10 +43,10 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
                 + ref.getBundle().getSymbolicName());
 
         // Each application may have data created by this plugin - load that data
-        Collection<Application2> apps = new ArrayList<>();
+        Collection<Application> apps = new ArrayList<>();
         apps.addAll(this.ctx.getApplications());
         apps.addAll(this.ctx.getDrafts());
-        for (Application2 app : apps)
+        for (Application app : apps)
         {
             File appDir = this.ctx.getRootApplication(app.getId());
             if (!appDir.isDirectory())
@@ -80,7 +80,7 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
         log.info("Source event plugin is going away: " + ref.getClass().getCanonicalName() + ". It was from bundle "
                 + ref.getBundle().getSymbolicName());
 
-        for (Application2 app : this.ctx.getApplications())
+        for (Application app : this.ctx.getApplications())
         {
             for (EventSource o : app.getEventSources(service))
             {

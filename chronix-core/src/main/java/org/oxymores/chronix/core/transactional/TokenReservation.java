@@ -28,7 +28,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -220,7 +220,7 @@ public class TokenReservation implements Serializable
 
     //
     // ///////////////////////////////////////////
-    public Application2 getApplication(ChronixContextMeta ctx)
+    public Application getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.applicationId);
     }

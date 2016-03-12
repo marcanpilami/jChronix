@@ -34,7 +34,7 @@ import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.RunResult;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
@@ -250,7 +250,7 @@ class OrderListener implements MessageCallback
         {
             int nbApps = this.ctxMeta.getApplications().size();
             int nbSent = 0;
-            for (Application2 a : this.ctxMeta.getApplications())
+            for (Application a : this.ctxMeta.getApplications())
             {
                 nbSent++;
                 SenderHelpers.sendApplication(a, en, jmsProducer, jmsSession, false, nbSent != nbApps);

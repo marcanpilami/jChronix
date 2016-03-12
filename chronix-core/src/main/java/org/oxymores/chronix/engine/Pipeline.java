@@ -38,7 +38,7 @@ import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -121,7 +121,7 @@ class Pipeline implements Runnable, MessageCallback
             {
                 Place p = null;
                 org.oxymores.chronix.core.State s = null;
-                Application2 a;
+                Application a;
                 try
                 {
                     a = pj.getApplication(ctxMeta);

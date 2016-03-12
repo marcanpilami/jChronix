@@ -27,7 +27,7 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.sql2o.Connection;
 
@@ -206,12 +206,12 @@ public class CalendarPointer implements Serializable
         return this.calendarID;
     }
 
-    public Application2 getApplication(ChronixContextMeta ctx)
+    public Application getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.appID);
     }
 
-    public void setApplication(Application2 a)
+    public void setApplication(Application a)
     {
         this.appID = a == null ? null : a.getId();
     }

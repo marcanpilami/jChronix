@@ -24,9 +24,9 @@ public class EngineCbRun implements EngineCallback
     private ChronixEngine e;
     private ChronixContextMeta ctxMeta;
     private PipelineJob pj;
-    private Application2 a;
+    private Application a;
 
-    public EngineCbRun(ChronixEngine e, ChronixContextMeta ctx, Application2 a, PipelineJob pj)
+    public EngineCbRun(ChronixEngine e, ChronixContextMeta ctx, Application a, PipelineJob pj)
     {
         this.e = e;
         this.ctxMeta = ctx;

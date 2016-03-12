@@ -50,7 +50,7 @@ import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
@@ -363,7 +363,7 @@ public class RunnerManager implements MessageCallback
 
         State s = null;
         Place p = null;
-        Application2 a = null;
+        Application a = null;
         if (!rr.outOfPlan)
         {
             s = pj.getState(ctxMeta);
@@ -430,7 +430,7 @@ public class RunnerManager implements MessageCallback
         this.recvRR(new RunResult(pj, esrr), jmsSession);
     }
 
-    private void updateCalendar(PipelineJob pj, Application2 a, State s, Place p)
+    private void updateCalendar(PipelineJob pj, Application a, State s, Place p)
     {
         Calendar c = a.getCalendar(pj.getCalendarID());
         CalendarDay justDone = c.getDay(pj.getCalendarOccurrenceID());

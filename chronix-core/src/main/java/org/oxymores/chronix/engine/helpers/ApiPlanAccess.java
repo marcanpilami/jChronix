@@ -22,7 +22,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
@@ -112,7 +112,7 @@ public class ApiPlanAccess implements PlanAccessService
          */
     }
 
-    private DTOApplicationShort appToDtoShort(Application2 a)
+    private DTOApplicationShort appToDtoShort(Application a)
     {
         DTOApplicationShort t = new DTOApplicationShort();
         t.setDescription(a.getDescription());
@@ -130,13 +130,13 @@ public class ApiPlanAccess implements PlanAccessService
     {
         Map<UUID, DTOApplicationShort> res = new HashMap<>();
 
-        for (Application2 a : this.getMetaDb().getApplications())
+        for (Application a : this.getMetaDb().getApplications())
         {
             DTOApplicationShort s = appToDtoShort(a);
             s.setDraft(false);
             res.put(a.getId(), s);
         }
-        for (Application2 a : this.getMetaDb().getDrafts())
+        for (Application a : this.getMetaDb().getDrafts())
         {
             DTOApplicationShort s = appToDtoShort(a);
             s.setDraft(true);
@@ -149,7 +149,7 @@ public class ApiPlanAccess implements PlanAccessService
     public DTOApplication2 getApplication(UUID id)
     {
         boolean active = false;
-        Application2 app = this.getMetaDb().getApplicationDraft(id);
+        Application app = this.getMetaDb().getApplicationDraft(id);
         if (app == null)
         {
             active = true;
@@ -214,7 +214,7 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public void saveApplicationDraft(DTOApplication2 app)
     {
-        Application2 a = new Application2();
+        Application a = new Application();
         a.setDescription(app.getDescription());
         a.setName(app.getName());
         a.setId(app.getId());

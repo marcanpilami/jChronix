@@ -35,7 +35,7 @@ import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.transactional.Event;
@@ -84,7 +84,7 @@ class EventListener implements MessageCallback
 
         //
         // Check event is OK while getting data from event
-        Application2 a;
+        Application a;
         State s;
         EventSourceWrapper active;
         try

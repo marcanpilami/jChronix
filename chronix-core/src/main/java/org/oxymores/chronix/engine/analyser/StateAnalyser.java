@@ -31,7 +31,7 @@ import javax.jms.Session;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
@@ -54,7 +54,7 @@ public class StateAnalyser
     /**
      * The application scoping the analysis
      */
-    private Application2 application;
+    private Application application;
 
     private Map<UUID, TransitionAnalyser> analysis = new HashMap<>();
 
@@ -71,7 +71,7 @@ public class StateAnalyser
      * @param application
      *            The application scoping the analysis
      */
-    public StateAnalyser(Application2 application, State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
+    public StateAnalyser(Application application, State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
             ExecutionNode localNode)
     {
         this.state = s;

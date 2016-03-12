@@ -26,7 +26,7 @@ import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
@@ -49,7 +49,7 @@ public class EventSourceWrapper implements Serializable
     @NotNull
     protected ArrayList<Parameter> parameters;
 
-    private Application2 application;
+    private Application application;
 
     // A simple indication - only used when a plugin is missing and we need its name to help the user.
     private String pluginName;
@@ -60,7 +60,7 @@ public class EventSourceWrapper implements Serializable
 
     private boolean enabled = true;
 
-    public EventSourceWrapper(Application2 app, EventSource source, String pluginSymbolicName)
+    public EventSourceWrapper(Application app, EventSource source, String pluginSymbolicName)
     {
         super();
         this.application = app;

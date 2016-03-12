@@ -27,7 +27,7 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ class TransitionOnSinglePlaceAnalyser
      */
     List<Event> consumedEvents = new ArrayList<Event>();
 
-    TransitionOnSinglePlaceAnalyser(Application2 application, DTOTransition tr, EventSourceWrapper src, List<Event> events, Place p,
+    TransitionOnSinglePlaceAnalyser(Application application, DTOTransition tr, EventSourceWrapper src, List<Event> events, Place p,
             Connection conn)
     {
         for (Event e : events)

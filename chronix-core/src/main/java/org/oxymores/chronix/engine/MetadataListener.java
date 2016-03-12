@@ -28,7 +28,7 @@ import javax.jms.Session;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ class MetadataListener implements MessageCallback
     {
         log.debug("A metadata object was received");
         ObjectMessage omsg = (ObjectMessage) msg;
-        Application2 a = null;
+        Application a = null;
         Environment n = null;
         boolean restart = true;
         try
@@ -66,15 +66,15 @@ class MetadataListener implements MessageCallback
         try
         {
             Object o = omsg.getObject();
-            if (!(o instanceof Application2) && !(o instanceof Environment))
+            if (!(o instanceof Application) && !(o instanceof Environment))
             {
                 log.warn("An object was received on the metadata queue but was not an app or an environment specification! Ignored.");
                 return;
             }
 
-            if (o instanceof Application2)
+            if (o instanceof Application)
             {
-                a = (Application2) o;
+                a = (Application) o;
             }
             else
             {

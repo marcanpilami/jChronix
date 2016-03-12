@@ -39,7 +39,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -189,7 +189,7 @@ public class SenderHelpers
             String localNodeName) throws JMSException
     {
         // Always send both to local node and to the supervisor
-        Application2 a = ctx.getApplication(rl.getApplicationId());
+        Application a = ctx.getApplication(rl.getApplicationId());
 
         String qName = String.format(Constants.Q_LOG, localNodeName);
         log.info(String.format("A scheduler log will be sent to the responsible engine on queue %s (%s)", qName, rl.getActiveNodeName()));
@@ -219,7 +219,7 @@ public class SenderHelpers
     ///////////////////////////////////////////////////////////////////////////
     // Application
     // Should only be used by tests (poor performances)
-    public static void sendApplication(Application2 a, ExecutionNode target) throws JMSException
+    public static void sendApplication(Application a, ExecutionNode target) throws JMSException
     {
         // Connect to a broker
         try (JmsSendData d = new JmsSendData())
@@ -228,7 +228,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendApplication(Application2 a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession,
+    public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession,
             boolean commit, boolean dontRestart) throws JMSException
     {
         String qName = String.format(Constants.Q_META, target.getName());
@@ -245,7 +245,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendApplicationToAllClients(Application2 a, ChronixContextMeta ctx) throws JMSException
+    public static void sendApplicationToAllClients(Application a, ChronixContextMeta ctx) throws JMSException
     {
         try (JmsSendData d = new JmsSendData())
         {
@@ -609,7 +609,7 @@ public class SenderHelpers
             boolean commit, String brokerName) throws JMSException
     {
         String qName;
-        Application2 a = ctx.getApplication(tr.applicationID);
+        Application a = ctx.getApplication(tr.applicationID);
         Place p = ctx.getEnvironment().getPlace(tr.placeID);
         if (tr.local)
         {

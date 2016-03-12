@@ -34,7 +34,7 @@ import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -303,7 +303,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     public RunLog getEventLog(ChronixContextMeta ctx, RunResult rr)
     {
         RunLog rlog = new RunLog();
-        Application2 a = ctx.getApplication(this.appID);
+        Application a = ctx.getApplication(this.appID);
         Place p = ctx.getEnvironment().getPlace(this.placeID);
         EventSourceWrapper act = this.getActive(ctx);
 

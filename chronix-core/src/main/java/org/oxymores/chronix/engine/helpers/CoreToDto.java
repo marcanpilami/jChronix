@@ -12,7 +12,7 @@ import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOCalendar;
@@ -27,7 +27,7 @@ import org.oxymores.chronix.dto.DTORunLog;
 public class CoreToDto
 {
 
-    public static DTOApplication getApplication(Application2 a)
+    public static DTOApplication getApplication(Application a)
     {
         DTOApplication res = new DTOApplication();
 

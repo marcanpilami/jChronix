@@ -45,8 +45,8 @@ public class ChronixContextMeta
     private ServiceTracker<EventSourceProvider, EventSourceProvider> tracker;
 
     // all known applications
-    private Map<UUID, Application2> applications = new HashMap<>();
-    private Map<UUID, Application2> drafts = new HashMap<>();
+    private Map<UUID, Application> applications = new HashMap<>();
+    private Map<UUID, Application> drafts = new HashMap<>();
 
     // The one and only environment
     private Environment envt, envtDraft;
@@ -107,17 +107,17 @@ public class ChronixContextMeta
 
         for (File appDir : appsDir.listFiles())
         {
-            Application2 app = deserializeApp(new File(FilenameUtils.concat(appDir.getAbsolutePath(), "current")), xmlUtility);
+            Application app = deserializeApp(new File(FilenameUtils.concat(appDir.getAbsolutePath(), "current")), xmlUtility);
             this.applications.put(app.getId(), app);
         }
         for (File appDir : draftDir.listFiles())
         {
-            Application2 app = deserializeApp(appDir, xmlUtility);
+            Application app = deserializeApp(appDir, xmlUtility);
             this.drafts.put(app.getId(), app);
         }
     }
 
-    private Application2 deserializeApp(File appDir, XStream xmlUtility)
+    private Application deserializeApp(File appDir, XStream xmlUtility)
     {
         if (!appDir.isDirectory())
         {
@@ -133,10 +133,10 @@ public class ChronixContextMeta
             throw new ChronixInitializationException("Cannot access file in RW mode " + appFile.getAbsolutePath());
         }
 
-        Application2 app;
+        Application app;
         try
         {
-            app = (Application2) xmlUtility.fromXML(appFile);
+            app = (Application) xmlUtility.fromXML(appFile);
         }
         catch (XStreamException e)
         {
@@ -198,7 +198,7 @@ public class ChronixContextMeta
     /**
      * Get an active application (not a draft). Null if not found.
      */
-    public Application2 getApplication(UUID id)
+    public Application getApplication(UUID id)
     {
         return this.applications.get(id);
     }
@@ -206,7 +206,7 @@ public class ChronixContextMeta
     /**
      * Only active applications
      */
-    public Collection<Application2> getApplications()
+    public Collection<Application> getApplications()
     {
         return this.applications.values();
     }
@@ -234,7 +234,7 @@ public class ChronixContextMeta
     /**
      * Get an application draft. Null if not found.
      */
-    public Application2 getApplicationDraft(UUID id)
+    public Application getApplicationDraft(UUID id)
     {
         return this.drafts.get(id);
     }
@@ -259,7 +259,7 @@ public class ChronixContextMeta
     /**
      * Only draft applications, not active ones
      */
-    public Collection<Application2> getDrafts()
+    public Collection<Application> getDrafts()
     {
         return this.drafts.values();
     }
@@ -267,11 +267,11 @@ public class ChronixContextMeta
     /**
      * This method is called whenever an API user wants to update a draft. All it does is store it to disk and add the draft to the context.
      */
-    public void saveApplicationDraft(Application2 app)
+    public void saveApplicationDraft(Application app)
     {
         XStream xmlUtility = new XStream(new StaxDriver());
         xmlUtility.setClassLoader(ChronixContextMeta.class.getClassLoader());
-        xmlUtility.processAnnotations(Application2.class);
+        xmlUtility.processAnnotations(Application.class);
 
         if (app.getId() == null)
         {
@@ -335,7 +335,7 @@ public class ChronixContextMeta
     public void activateApplicationDraft(UUID appId, String commitComment)
     {
         log.info("Activating a draft");
-        Application2 a = this.getApplicationDraft(appId);
+        Application a = this.getApplicationDraft(appId);
         if (a == null)
         {
             throw new ChronixPlanStorageException("No draft for application " + appId);
@@ -344,7 +344,7 @@ public class ChronixContextMeta
         saveApplicationDraft(a);
 
         // Move the current app to an archive directory
-        Application2 old = getApplication(appId);
+        Application old = getApplication(appId);
         File activeDir = getRootApplication(appId);
         if (old != null)
         {

@@ -30,7 +30,7 @@ import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.sql2o.Connection;
 
@@ -219,12 +219,12 @@ public class TranscientBase implements Serializable
         this.appID = appID;
     }
 
-    public Application2 getApplication(ChronixContextMeta ctx)
+    public Application getApplication(ChronixContextMeta ctx)
     {
         return ctx.getApplication(this.appID);
     }
 
-    public void setApplication(Application2 application)
+    public void setApplication(Application application)
     {
         if (application != null)
         {

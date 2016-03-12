@@ -7,7 +7,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application2;
+import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.ContextHandler;
@@ -69,7 +69,7 @@ public class ApiOrder implements OrderService
     {
         try
         {
-            Application2 a = this.getMetaDb().getApplication(appId);
+            Application a = this.getMetaDb().getApplication(appId);
             Place p = this.getMetaDb().getEnvironment().getPlace(placeId);
             State s = a.getState(stateId);
             if (insidePlan)

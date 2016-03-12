@@ -34,11 +34,11 @@ import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Application2 implements IMetaSource, Serializable
+public class Application implements IMetaSource, Serializable
 {
     private static final long serialVersionUID = -7565792688611748679L;
-    private static final Logger log = LoggerFactory.getLogger(Application2.class);
-    static final BundleContext osgiCtx = FrameworkUtil.getBundle(Application2.class).getBundleContext();
+    private static final Logger log = LoggerFactory.getLogger(Application.class);
+    static final BundleContext osgiCtx = FrameworkUtil.getBundle(Application.class).getBundleContext();
 
     static final int currentModelVersion = 1;
     static final int compatibleUpToBackwards = 0;
@@ -73,7 +73,7 @@ public class Application2 implements IMetaSource, Serializable
     // Construction
     ///////////////////////////////////////////////////////////////////////////
 
-    public Application2()
+    public Application()
     {
         this.versions.add(new ApplicationVersion(0, "application creation"));
     }
@@ -231,7 +231,7 @@ public class Application2 implements IMetaSource, Serializable
                 + plugins.toString());
 
         ServiceTracker<EventSourceProvider, EventSourceProvider> tracker = new ServiceTracker<EventSourceProvider, EventSourceProvider>(
-                FrameworkUtil.getBundle(Application2.class).getBundleContext(), EventSourceProvider.class, null);
+                FrameworkUtil.getBundle(Application.class).getBundleContext(), EventSourceProvider.class, null);
         int maxWaitSec = 60;
         int waitedSec = 0;
         int waitStepSec = 1;
