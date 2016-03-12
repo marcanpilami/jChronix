@@ -20,7 +20,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -33,6 +32,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymore.chronix.chain.dto.DTONoop;
+import org.oxymore.chronix.chain.dto.DTOPlan;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
@@ -223,7 +223,7 @@ public class FirstTest
         c.connect(c.getStart(), n1);
         c.connect(n1, c.getEnd());
 
-        DTOChain p = new DTOChain("plan", "integration test plan", app.getGroup("local"));
+        DTOPlan p = new DTOPlan("plan", "integration test plan");
         app.addEventSource(p);
         DTOState s = p.addState(c, app.getGroup("local"));
 
