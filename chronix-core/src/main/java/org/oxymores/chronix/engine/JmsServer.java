@@ -57,6 +57,7 @@ public class JmsServer implements MessageListenerService
     private File dbPath;
     private boolean clear = false;
     private Set<String> channels = new HashSet<>();
+    private int maxMemMb, maxStoreMb, maxTempMb;
 
     //////////////////////////////////////
     // AMQ elements
@@ -172,6 +173,11 @@ public class JmsServer implements MessageListenerService
         // Clear?
         clear = Boolean.parseBoolean(config.getOrDefault("org.oxymores.chronix.network.clear", "false"));
 
+        // System usage
+        maxMemMb = Integer.parseInt(config.getOrDefault("org.oxymores.chronix.network.usage.memory", "20"));
+        maxStoreMb = Integer.parseInt(config.getOrDefault("org.oxymores.chronix.network.usage.store", "38"));
+        maxTempMb = Integer.parseInt(config.getOrDefault("org.oxymores.chronix.network.usage.temp", "38"));
+
         // Config is OK - go!
         startup();
     }
@@ -199,13 +205,13 @@ public class JmsServer implements MessageListenerService
 
         // System resources
         MemoryUsage mu = new MemoryUsage();
-        mu.setLimit(Constants.DEFAULT_BROKER_MEM_USAGE);
+        mu.setLimit(maxMemMb * Constants.MB);
 
         StoreUsage stu = new StoreUsage();
-        stu.setLimit(Constants.DEFAULT_BROKER_STORE_USAGE);
+        stu.setLimit(maxStoreMb * Constants.MB);
 
         TempUsage tu = new TempUsage();
-        tu.setLimit(Constants.DEFAULT_BROKER_TEMP_USAGE);
+        tu.setLimit(maxTempMb * Constants.MB);
 
         SystemUsage su = broker.getSystemUsage();
         su.setMemoryUsage(mu);
