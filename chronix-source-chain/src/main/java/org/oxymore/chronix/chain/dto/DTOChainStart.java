@@ -15,16 +15,11 @@ public class DTOChainStart extends EventSourceTriggered implements EventSourceOp
     private static final long serialVersionUID = -5628734383363442943L;
     static final UUID START_ID = UUID.fromString("647594b0-498f-4042-933f-855682095c6c");
 
-    @Override
-    public UUID getId()
+    public DTOChainStart()
     {
-        return START_ID;
-    }
-
-    @Override
-    public String getName()
-    {
-        return "START";
+        this.name = "START";
+        this.description = "start of a chain";
+        this.id = START_ID;
     }
 
     @Override

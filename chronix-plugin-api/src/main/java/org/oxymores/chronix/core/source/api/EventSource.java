@@ -37,6 +37,7 @@ public abstract class EventSource implements Serializable
     private static final long serialVersionUID = -1239160226415660389L;
 
     protected UUID id = UUID.randomUUID();
+    protected String name, description;
 
     /**
      * Every event source instance has an unique ID. We use statistically unique UUID since this is an easy solution for uniqueness in
@@ -50,7 +51,28 @@ public abstract class EventSource implements Serializable
     /**
      * A name, less than 20 characters.
      */
-    public abstract String getName();
+    public String getName()
+    {
+        return this.name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    /**
+     * A free text description, less than 255 characters.
+     */
+    public String getDescription()
+    {
+        return this.description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 
     /**
      * The {@link EventSourceProvider} that should be used for persistence.

@@ -18,7 +18,6 @@ public class ShellCommand extends EventSourceTriggered
 {
     private static final long serialVersionUID = 8506663160948904408L;
 
-    private String name;
     private String runnerCapability;
     private Map<String, String> pluginParameters = new HashMap<>();
 
@@ -71,17 +70,6 @@ public class ShellCommand extends EventSourceTriggered
     ///////////////////////////////////////////////////////////////////////////
     // STUPID ACCESSORS
     ///////////////////////////////////////////////////////////////////////////
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
-    }
 
     public String getRunnerCapability()
     {

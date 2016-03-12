@@ -15,16 +15,11 @@ public class DTOChainEnd extends EventSourceTriggered implements EventSourceOpti
     private static final long serialVersionUID = -3859771632110912194L;
     static final UUID END_ID = UUID.fromString("8235272c-b78d-4350-a887-aed0dcdfb215");
 
-    @Override
-    public UUID getId()
+    public DTOChainEnd()
     {
-        return END_ID;
-    }
-
-    @Override
-    public String getName()
-    {
-        return "END";
+        this.name = "END";
+        this.description = "end of chain";
+        this.id = END_ID;
     }
 
     @Override

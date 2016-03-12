@@ -19,10 +19,6 @@ public class DTOChain extends EventSourceContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
-    private String name;
-    private String description;
-    private UUID id;
-
     private List<DTOState> states = new ArrayList<DTOState>();
     private List<DTOTransition> transitions = new ArrayList<DTOTransition>();
 
@@ -55,15 +51,16 @@ public class DTOChain extends EventSourceContainer
         this.states.add(s1);
         this.states.add(s2);
     }
-    
+
     /**
      * Creates a ready to use plan (a chain without start or end that cannot be a subscope)
+     * 
      * @param name
      * @param description
      */
     public DTOChain(String name, String description)
     {
-        
+
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -151,38 +148,6 @@ public class DTOChain extends EventSourceContainer
     }
 
     // Stupid GET/SET
-    @Override
-    public String getName()
-    {
-        return name;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    @Override
-    public UUID getId()
-    {
-        return id;
-    }
-
-    public void setId(UUID id)
-    {
-        this.id = id;
-    }
-
     public List<DTOState> getStates()
     {
         return states;
