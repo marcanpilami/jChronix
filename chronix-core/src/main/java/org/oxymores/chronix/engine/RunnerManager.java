@@ -46,20 +46,21 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.RunDescription;
+import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
-import org.oxymores.chronix.engine.modularity.runner.RunDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,6 +135,13 @@ public class RunnerManager implements MessageCallback
                 {
                     RunResult rr = (RunResult) o;
                     recvRR(rr, jmsSession);
+                    return;
+                }
+                else if (o instanceof EventSourceRunResult)
+                {
+                    EventSourceRunResult esrr = (EventSourceRunResult) o;
+                    UUID launchId = UUID.fromString((String) msg.getObjectProperty("launchId"));
+                    recvESRR(esrr, jmsSession, launchId);
                     return;
                 }
                 else
@@ -236,7 +244,8 @@ public class RunnerManager implements MessageCallback
         // Update the parameter with its value
         try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
-            resolvedJob.setParamValue(paramIndex, res);
+            // TODO
+            // resolvedJob.setParamValue(paramIndex, res);
             conn.commit();
         }
 
@@ -408,6 +417,17 @@ public class RunnerManager implements MessageCallback
 
         // End
         resolving.remove(pj);
+    }
+
+    private void recvESRR(EventSourceRunResult esrr, Session jmsSession, UUID launchId) throws JMSException
+    {
+        PipelineJob pj = null;
+        try (Connection conn = ctxDb.getTransacDataSource().beginTransaction())
+        {
+            pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", launchId)
+                    .executeAndFetchFirst(PipelineJob.class);
+        }
+        this.recvRR(new RunResult(pj, esrr), jmsSession);
     }
 
     private void updateCalendar(PipelineJob pj, Application2 a, State s, Place p)

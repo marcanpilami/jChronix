@@ -1,13 +1,16 @@
 package org.oxymores.chronix.core.source.api;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-public class EventSourceRunResult
+public class EventSourceRunResult implements Serializable
 {
+    private static final long serialVersionUID = -8309267933217251096L;
+
     /**
      * A maximum of 255 characters giving a summary (or the beginning) of the log file. Null if no log file.
      */

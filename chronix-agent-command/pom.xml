@@ -8,8 +8,8 @@
 		<artifactId>chronix-parent</artifactId>
 		<version>0.9.2-SNAPSHOT</version>
 	</parent>
-	<artifactId>chronix-runner-shell</artifactId>
-	<name>chronix-runner-shell</name>
+	<artifactId>chronix-agent-command</artifactId>
+	<name>chronix-agent-shell</name>
 	<url>http://maven.apache.org</url>
 
 	<build>
@@ -38,18 +38,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>${commonio.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>6.0.0</version>
@@ -61,5 +49,30 @@
 			<artifactId>org.osgi.compendium</artifactId>
 			<version>5.0.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.13</version>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${joda.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${commonio.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>${xstream.version}</version>
+		</dependency>
 	</dependencies>
+
 </project>

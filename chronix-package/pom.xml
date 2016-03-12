@@ -131,7 +131,7 @@
 				<exclusion>
 					<groupId>org.apache.activemq</groupId>
 					<artifactId>*</artifactId>
-				</exclusion>				
+				</exclusion>
 				<exclusion>
 					<groupId>backport-util-concurrent</groupId>
 					<artifactId>backport-util-concurrent</artifactId>
@@ -171,6 +171,18 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>chronix-source-chain</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-agent-command</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-agent-command-shell</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

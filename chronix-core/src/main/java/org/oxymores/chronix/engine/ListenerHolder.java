@@ -80,7 +80,7 @@ class ListenerHolder implements MessageListener
 
         // This allows the message broker to actually see the classes behind MessageObject messages.
         // It is needed if the broker classes are inside another OSGI bundle.
-        Thread.currentThread().setContextClassLoader(Pipeline.class.getClassLoader());
+        Thread.currentThread().setContextClassLoader(this.callback.getClass().getClassLoader());
 
         // The actual actions.
         try

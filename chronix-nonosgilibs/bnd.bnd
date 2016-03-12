@@ -4,7 +4,8 @@ Export-Package: \
 		org.fusesource.hawtbuf, org.fusesource.hawtbuf.codec, \
 		org.apache.activemq, org.apache.activemq.broker, org.apache.activemq.network, org.apache.activemq.usage, org.apache.activemq.wireformat, \
 		org.hsqldb.cmdline,org.hsqldb.cmdline.sqltool, \
-		org.sql2o, org.sql2o.quirks, \
+		org.sql2o, org.sql2o.quirks, org.sql2o.converters, \
 		org.xmlpull.v1, org.xmlpull.mxp1
 # Joda is needed to enable SQL2O magical Joda integration
-Import-Package: *;resolution:=optional, javax.net, org.joda.time
+Import-Package: *;resolution:=optional, javax.net 
+#, org.joda.time

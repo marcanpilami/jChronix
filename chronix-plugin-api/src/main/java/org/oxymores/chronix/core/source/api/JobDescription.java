@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.source.api;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -40,4 +41,10 @@ public interface JobDescription
      */
     public boolean isOutOfPlan();
 
+    /**
+     * Every event source is associated to an optional (sorted) set of parameters. What to do with them is left to the event source. For
+     * example, the shell command event source will use them as arguments to the shell command line. These can use interpolation (use of
+     * other variables or parameters) or be the result of another job - they are presented here fully resolved. The Map is ordered.
+     */
+    public Map<String, String> getParameters();
 }

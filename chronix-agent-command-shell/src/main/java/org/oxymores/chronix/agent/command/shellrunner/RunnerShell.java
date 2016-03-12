@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.engine.modularity.runnerimpl;
+package org.oxymores.chronix.agent.command.shellrunner;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -39,30 +39,29 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.engine.modularity.runner.RunDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
-import org.oxymores.chronix.engine.modularity.runner.RunnerApi;
-import org.oxymores.chronix.engine.modularity.runner.RunnerConstants;
-import org.oxymores.chronix.engine.modularity.runnerimpl.WinRegistry;
+import org.oxymores.chronix.agent.command.api.CommandDescription;
+import org.oxymores.chronix.agent.command.api.CommandResult;
+import org.oxymores.chronix.agent.command.api.CommandRunner;
+import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(property = { "target=" + RunnerConstants.SHELL_POWERSHELL, "target=" + RunnerConstants.SHELL_WINCMD,
         "target=" + RunnerConstants.SHELL_BASH, "target=" + RunnerConstants.SHELL_KSH,
         "target=" + RunnerConstants.SHELL_SH }, immediate = false)
-public final class RunnerShell implements RunnerApi
+public final class RunnerShell implements CommandRunner
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerShell.class);
 
     @Override
-    public RunResult run(RunDescription rd)
+    public CommandResult run(CommandDescription rd)
     {
-        RunResult res = new RunResult();
+        CommandResult res = new CommandResult();
         Process p;
         String nl = System.getProperty("line.separator");
         Pattern setVarPattern = Pattern.compile("^set ([a-zA-Z]+[a-zA-Z0-9]*)=(.+)");
         Matcher setVarMatcher = setVarPattern.matcher("Testing123Testing");
-        String logFileEncoding = getEncoding(rd);
+        String logFileEncoding = getEncoding();
         log.debug("Encoding is " + logFileEncoding);
 
         // ///////////////////////////
@@ -78,9 +77,9 @@ public final class RunnerShell implements RunnerApi
 
         // Create array containing environment
         Map<String, String> env = pb.environment();
-        for (int i = 0; i < rd.getEnvNames().size(); i++)
+        for (Map.Entry<String, String> var : rd.getEnvironmentVariables().entrySet())
         {
-            env.put(rd.getEnvNames().get(i), rd.getEnvValues().get(i));
+            env.put(var.getKey(), var.getValue());
         }
 
         BufferedReader br = null;
@@ -129,23 +128,20 @@ public final class RunnerShell implements RunnerApi
                     res.logStart += nl + line;
                 }
 
-                // Scheduler internal log gets first line only
+                // Scheduler internal log (stored in database) gets first line only
                 if (i == 1)
                 {
-                    log.debug(String.format("Job running. First line of output is: %s", line));
+                    log.debug(String.format("Job %s running. First line of output is: %s", rd.getLaunchId(), line));
                 }
 
                 // Fuller log gets first 10k lines, then last 1k lines.
-                if (rd.isReturnFullerLog())
+                if (i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES)
                 {
-                    if (i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES)
-                    {
-                        res.fullerLog += line;
-                    }
-                    else
-                    {
-                        endBuffer.put(i, line);
-                    }
+                    res.fullerLog += line;
+                }
+                else
+                {
+                    endBuffer.put(i, line);
                 }
 
                 // Analysis: there may be a new variable definition in the line
@@ -161,12 +157,11 @@ public final class RunnerShell implements RunnerApi
             IOUtils.closeQuietly(br);
 
             if (i > RunnerConstants.MAX_RETURNED_BIG_LOG_LINES
-                    && i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES
-                    && rd.isReturnFullerLog())
+                    && i < RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES)
             {
                 res.fullerLog += Arrays.toString(endBuffer.entrySet().toArray());
             }
-            if (i >= RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES && rd.isReturnFullerLog())
+            if (i >= RunnerConstants.MAX_RETURNED_BIG_LOG_LINES + RunnerConstants.MAX_RETURNED_BIG_LOG_END_LINES)
             {
                 res.fullerLog += "\n\n\n*******\n LOG TRUNCATED - See full log on server\n********\n\n\n"
                         + Arrays.toString(endBuffer.entrySet().toArray());
@@ -202,11 +197,11 @@ public final class RunnerShell implements RunnerApi
         {
             res.envtServer = "unknown";
         }
-        log.info(String.format("Job ended, RC is %s", res.returnCode));
+        log.info(String.format("Job %s ended, RC is %s", rd.getLaunchId(), res.returnCode));
         return res;
     }
 
-    private static String getEncoding(RunDescription rd)
+    private static String getEncoding()
     {
         String encoding = System.getProperty("file.encoding");
         if (System.getProperty("os.name").startsWith("Windows"))
@@ -224,12 +219,12 @@ public final class RunnerShell implements RunnerApi
         return encoding;
     }
 
-    private static List<String> buildCommand(RunDescription rd)
+    private static List<String> buildCommand(CommandDescription rd)
     {
         ArrayList<String> argsStrings = new ArrayList<>();
 
         // Depending on the shell, we may have to add shell start parameters to allow batch processing
-        switch (rd.getPluginSelector())
+        switch (rd.getRunnerCapability())
         {
         case RunnerConstants.SHELL_WINCMD:
             argsStrings.add("cmd.exe");
@@ -263,10 +258,10 @@ public final class RunnerShell implements RunnerApi
         argsStrings.add(rd.getPluginParameters().get("COMMAND"));
 
         // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
-        for (int i = 0; i < rd.getParamNames().size(); i++)
+        for (Map.Entry<String, String> prm : rd.getParameters().entrySet())
         {
-            String key = rd.getParamNames().get(i);
-            String value = rd.getParamValues().get(i);
+            String key = prm.getKey();
+            String value = prm.getValue();
             String arg = "";
             if (key != null && !"".equals(key))
             {

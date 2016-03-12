@@ -181,11 +181,7 @@ public class JmsServer implements MessageListenerService
         log.info("Starting configuration of a message broker with unique ID " + this.brokerId);
 
         // Class white listing (see http://activemq.apache.org/objectmessage.html)
-        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
-                "java.util,java.lang,org.joda.time," + "org.oxymores.chronix.core," + "org.oxymores.chronix.core.active,"
-                        + "org.oxymores.chronix.core.timedata," + "org.oxymores.chronix.core.transactional,"
-                        + "org.oxymores.chronix.engine.data," + "org.oxymores.chronix.engine.helpers,"
-                        + "org.oxymores.chronix.engine.modularity.runner");
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
 
         // Create broker service
         broker = new BrokerService();

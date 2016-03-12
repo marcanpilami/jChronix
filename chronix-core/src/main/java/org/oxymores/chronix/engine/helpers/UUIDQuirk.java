@@ -8,6 +8,8 @@ package org.oxymores.chronix.engine.helpers;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
+
+import org.joda.time.DateTime;
 import org.sql2o.quirks.NoQuirks;
 
 /**
@@ -16,6 +18,11 @@ import org.sql2o.quirks.NoQuirks;
  */
 public class UUIDQuirk extends NoQuirks
 {
+    public UUIDQuirk()
+    {
+        super();
+        this.converters.put(DateTime.class, new Sql2oJodaConverter());
+    }
 
     @Override
     public void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException
@@ -26,7 +33,7 @@ public class UUIDQuirk extends NoQuirks
         }
         else
         {
-            super.setParameter(statement, paramIdx, value); //To change body of generated methods, choose Tools | Templates.
+            super.setParameter(statement, paramIdx, value);
         }
     }
 

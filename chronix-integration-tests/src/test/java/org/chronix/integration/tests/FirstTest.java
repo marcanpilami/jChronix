@@ -33,6 +33,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymore.chronix.chain.dto.DTOChain;
 import org.oxymore.chronix.chain.dto.DTONoop;
+import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication2;
 import org.oxymores.chronix.core.engine.api.OrderService;
@@ -40,6 +41,7 @@ import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOEnvironment;
+import org.oxymores.chronix.source.command.dto.ShellCommand;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -78,6 +80,8 @@ public class FirstTest
                 mavenBundle("ch.qos.logback", "logback-core", "1.1.3"), mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
+                mavenBundle("org.oxymores.chronix", "chronix-agent-command", "0.9.2-SNAPSHOT"),
+                mavenBundle("org.oxymores.chronix", "chronix-agent-command-shell", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-core", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-nonosgilibs", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-plugin-api", "0.9.2-SNAPSHOT"), mavenBundle("org.hsqldb", "hsqldb", "2.3.3"),
@@ -148,6 +152,11 @@ public class FirstTest
         // Stop all services after each test (including the host)
         for (org.osgi.service.cm.Configuration cfg : conf.listConfigurations(null))
         {
+            if (cfg.getFactoryPid() != null && cfg.getFactoryPid().contains("agent"))
+            {
+                // These elements self-destruct. No need to remove them.
+                continue;
+            }
             cfg.delete();
         }
 
@@ -205,9 +214,12 @@ public class FirstTest
     public void testCreatePlan() throws InterruptedException
     {
         // Application content
+        ShellCommand sc = new ShellCommand("c1", "c1", "echo aa", RunnerConstants.SHELL_WINCMD);
+        app.addEventSource(sc);
+
         DTOChain c = new DTOChain("first chain", "integration test chain", app.getGroup("local"));
         app.addEventSource(c);
-        DTOState n1 = c.addState(noop);
+        DTOState n1 = c.addState(sc);
         c.connect(c.getStart(), n1);
         c.connect(n1, c.getEnd());
 
@@ -222,7 +234,7 @@ public class FirstTest
         DTOApplication2 a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
-        Assert.assertEquals(5, a2.getEventSources().size());
+        Assert.assertEquals(6, a2.getEventSources().size());
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {

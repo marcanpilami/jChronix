@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.source.api;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -9,19 +10,17 @@ import java.util.UUID;
 public interface EngineCallback
 {
     /**
-     * Sends a JMS message to another Chronix Component.
-     * 
-     * @param msg
-     *            the object that will be serialised inside a JMS ObjectMessage.
-     * @param destinationQueue
-     *            the name of the destination JMS queue.
+     * Launch asynchronously (the method returns at once) another state. This launch will occur in the scope of the current run (i.e. all
+     * the calls to this method will take place in the same dedicated scope).
      */
-    public void sendMessageXCXXXXX(Object msg, String destinationQueue);
+    public void launchState(DTOState s);
 
     /**
      * Relays the result of an execution to the engine. Mostly used by asynchronous launches (as synchronous launches can directly return
      * their {@link EventSourceRunResult} as a result of the run method) even if it can be used in all cases (for example to create two
-     * results in a single launch).
+     * results in a single launch).<br>
+     * <br>
+     * Behind the scenes, this is a composition of {@link #getResultQueueName()} and {@link #sendMessage(Serializable, String)})
      */
     public void sendRunResult(EventSourceRunResult r);
 
@@ -35,8 +34,27 @@ public interface EngineCallback
     public EventSource getEventSource(UUID id);
 
     /**
-     * Launch asynchronously (the method returns at once) another state. This launch will occur in the scope of the current run (i.e. all
-     * the calls to this method will take place in the same dedicated scope).
+     * The name of the queue that receives {@link EventSourceRunResult}s for the local engine. Needed when a plugin needs to directly send a
+     * result to the engine (when it cannot directly use {@link #sendRunResult(EventSourceRunResult)}, for example because the result is
+     * actually created on another JVM)
      */
-    public void launchState(DTOState s);
+    public String getResultQueueName();
+
+    /**
+     * Sends a JMS message to another Chronix Component. The message is sent in an independent transaction.<br>
+     * This is only a helper method to avoid some plugins the hassle of directly interacting with the JMS API.
+     * 
+     * @param msg
+     *            the object that will be serialised inside a JMS ObjectMessage.
+     * @param destinationQueue
+     *            the name of the destination JMS queue.
+     * @param replyTo
+     *            name of the reply queue. Can be null.
+     */
+    public void sendMessage(Serializable msg, String destinationQueue, String replyTo);
+
+    /**
+     * The name of the node associated to the current call stack.
+     */
+    public String getNodeName();
 }

@@ -1,18 +1,21 @@
 package org.oxymores.chronix.core.context;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
 
+import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.ChronixEngine;
+import org.oxymores.chronix.engine.Constants;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.engine.helpers.SenderHelpers.JmsSendData;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.sql2o.Connection;
 
@@ -32,9 +35,19 @@ public class EngineCbRun implements EngineCallback
     }
 
     @Override
-    public void sendMessageXCXXXXX(Object msg, String destinationQueue)
+    public void sendMessage(Serializable msg, String destinationQueue, String replyQueue)
     {
-        // TODO Auto-generated method stub
+        try (JmsSendData d = new JmsSendData())
+        {
+            ObjectMessage omsg = d.jmsSession.createObjectMessage(msg);
+            omsg.setJMSReplyTo(d.jmsSession.createQueue(replyQueue));
+            d.jmsProducer.send(d.jmsSession.createQueue(destinationQueue), omsg);
+        }
+        catch (Exception e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -70,5 +83,17 @@ public class EngineCbRun implements EngineCallback
         {
             throw new ChronixException("could not launch a state", e1);
         }
+    }
+
+    @Override
+    public String getResultQueueName()
+    {
+        return String.format(Constants.Q_RUNNERMGR, e.getLocalNode().getName());
+    }
+
+    @Override
+    public String getNodeName()
+    {
+        return e.getLocalNode().getName();
     }
 }

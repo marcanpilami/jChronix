@@ -39,7 +39,6 @@ import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 

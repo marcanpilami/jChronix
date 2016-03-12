@@ -1,4 +1,4 @@
-package org.oxymores.chronix.engine.modularity.runner;
+package org.oxymores.chronix.agent.command.api;
 
 /**
  * A set of constants that can be used by runner plug-ins.

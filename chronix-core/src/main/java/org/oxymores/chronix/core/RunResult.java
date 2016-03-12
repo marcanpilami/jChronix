@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.engine.modularity.runner;
+package org.oxymores.chronix.core;
 
 import java.io.Serializable;
 import java.util.HashMap;

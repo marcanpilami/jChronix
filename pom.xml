@@ -115,11 +115,12 @@
 		<!-- <module>chronix-launcher</module> -->
 		<module>chronix-cli</module>
 		<module>chronix-plugin-api</module>
-		<!-- <module>chronix-runner-shell</module> -->
 		<module>chronix-source-chain</module>
 		<module>chronix-nonosgilibs</module>
 		<!-- <module>chronix-web-core</module> -->
 		<module>chronix-package</module>
 		<module>chronix-integration-tests</module>
+		<module>chronix-agent-command</module>
+		<module>chronix-agent-command-shell</module>
 	</modules>
 </project>

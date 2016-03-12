@@ -20,7 +20,7 @@
 package org.oxymores.chronix.core.transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,13 +32,13 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.Parameter;
 import org.oxymores.chronix.core.Place;
+import org.oxymores.chronix.core.RunDescription;
+import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.context.Application2;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
-import org.oxymores.chronix.engine.modularity.runner.RunDescription;
-import org.oxymores.chronix.engine.modularity.runner.RunResult;
 import org.sql2o.Connection;
 
 public class PipelineJob extends TranscientBase implements JobDescription
@@ -59,7 +59,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     Integer resultCode = -1;
 
-    private final Map<Integer, String> resolvedParameters = new HashMap<>();
+    private final Map<String, String> resolvedParameters = new LinkedHashMap<>();
 
     public PipelineJob()
     {
@@ -90,17 +90,17 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     // /////////////
     // Params
-    public void setParamValue(Integer index, String value)
+    public void setParamValue(String name, String value)
     {
-        resolvedParameters.put(index, value);
+        resolvedParameters.put(name, value);
     }
 
-    public String getParamValue(int index)
+    public String getParamValue(String name)
     {
-        return resolvedParameters.get(index);
+        return resolvedParameters.get(name);
     }
 
-    protected Map<Integer, String> getParamValues()
+    protected Map<String, String> getParamValues()
     {
         return resolvedParameters;
     }
@@ -430,5 +430,11 @@ public class PipelineJob extends TranscientBase implements JobDescription
     public boolean isOutOfPlan()
     {
         return this.outOfPlan;
+    }
+
+    @Override
+    public Map<String, String> getParameters()
+    {
+        return this.resolvedParameters;
     }
 }
