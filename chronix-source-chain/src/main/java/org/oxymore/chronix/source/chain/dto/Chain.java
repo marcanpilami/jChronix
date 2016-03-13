@@ -17,7 +17,7 @@ public class Chain extends EventSourceContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
-    public Chain()
+    protected Chain()
     {
         // For serialisation
     }

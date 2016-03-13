@@ -3,7 +3,6 @@ package org.chronix.integration.tests;
 import org.junit.Assert;
 import org.junit.Test;
 import org.oxymore.chronix.source.chain.dto.Chain;
-import org.oxymore.chronix.source.chain.dto.Plan;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.source.api.DTOState;
@@ -25,9 +24,7 @@ public class TestFullPlanOneNode extends BaseIT
         c.connect(c.getStart(), n1);
         c.connect(n1, c.getEnd());
 
-        Plan p = new Plan("plan", "integration test plan");
-        app.addEventSource(p);
-        DTOState s = p.addState(c, app.getGroup("local"));
+        DTOState s = plan1.addState(c, app.getGroup("local"));
 
         save();
 
@@ -36,7 +33,7 @@ public class TestFullPlanOneNode extends BaseIT
         DTOApplication a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
-        Assert.assertEquals(8, a2.getEventSources().size());
+        Assert.assertEquals(9, a2.getEventSources().size());
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {

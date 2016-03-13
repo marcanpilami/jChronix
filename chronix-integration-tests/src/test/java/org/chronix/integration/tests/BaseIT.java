@@ -20,7 +20,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
@@ -30,6 +29,7 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.oxymore.chronix.source.chain.dto.Plan;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.HistoryService;
@@ -38,6 +38,7 @@ import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.HistoryQuery;
 import org.oxymores.chronix.source.basic.dto.And;
+import org.oxymores.chronix.source.basic.dto.Failure;
 import org.oxymores.chronix.source.basic.dto.Noop;
 import org.oxymores.chronix.source.basic.dto.Or;
 
@@ -62,9 +63,11 @@ public class BaseIT
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
+    protected Plan plan1;
     protected Noop noop;
     protected And and;
     protected Or or;
+    protected Failure failure;
     protected Map<String, ChronixEngine> engines;
 
     protected static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
@@ -121,6 +124,7 @@ public class BaseIT
         noop = new Noop();
         and = new And();
         or = new Or();
+        failure = new Failure();
 
         // Environment
         envt = meta.createMinimalEnvironment(); // node is called "local"
@@ -131,6 +135,8 @@ public class BaseIT
         app.setName("test app");
         app.setDescription("This app was created by integration tests");
         app.addEventSource(noop);
+        plan1 = new Plan("plan", "integration test plan");
+        app.addEventSource(plan1);
 
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
@@ -219,6 +225,11 @@ public class BaseIT
 
     protected void waitForOk(int count, int maxSeconds)
     {
+        waitForOk(count, maxSeconds, 0);
+    }
+
+    protected void waitForOk(int count, int maxSeconds, int waitForExcessMs)
+    {
         int waitedMs = 0;
         HistoryQuery q = new HistoryQuery();
         q.setResultCode(0);
@@ -235,6 +246,17 @@ public class BaseIT
                 e.printStackTrace();
             }
             history.query(q);
+        }
+        if (q.getRes().size() == count)
+        {
+            try
+            {
+                Thread.sleep(waitForExcessMs);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
