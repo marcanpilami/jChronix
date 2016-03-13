@@ -32,6 +32,7 @@ import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
+import org.oxymores.chronix.core.source.api.EventSourceOptionOr;
 import org.oxymores.chronix.core.source.api.EventSourceSelfTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
@@ -233,6 +234,16 @@ public class EventSourceWrapper implements Serializable
     public boolean isEngineTriggered()
     {
         return this.eventSource instanceof EventSourceTriggered;
+    }
+
+    public boolean isAnd()
+    {
+        return !this.isOr();
+    }
+
+    public boolean isOr()
+    {
+        return this.eventSource instanceof EventSourceOptionOr;
     }
 
     //

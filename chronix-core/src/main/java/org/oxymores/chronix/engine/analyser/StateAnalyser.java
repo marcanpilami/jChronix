@@ -21,8 +21,10 @@ package org.oxymores.chronix.engine.analyser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jms.MessageProducer;
@@ -107,14 +109,11 @@ public class StateAnalyser
         // Check every incoming transition: are they allowed?
         for (DTOTransition tr : s.getTransitionsReceivedHere())
         {
-            log.debug(String.format("State %s (%s - chain %s) analysis with %s events", s.getId(), s.getRepresents().getName(),
-                    s.getContainerName(), scopeEvents.size()));
-
             TransitionAnalyser tar = new TransitionAnalyser(application, tr, scopeEvents, conn);
 
-            if (tar.totallyBlocking()) // we do an AND by default
+            if (tar.blockedOnAllPlaces() && s.getRepresentsContainer().isAnd())
             {
-                // No need to go further - one transition will block everything for all places
+                // No need to go further - at least one transition will block everything for all places
                 log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
                         s.getRepresents().getName(), s.getContainerName(),
                         this.application.getState(tr.getFrom()).getRepresents().getName()));
@@ -167,39 +166,37 @@ public class StateAnalyser
         ArrayList<Place> res = new ArrayList<>();
         places: for (Place p : state.getRunsOn().getPlaces())
         {
-            ArrayList<Event> ce = new ArrayList<>();
+            Set<Event> ce = new HashSet<>();
 
-            for (TransitionAnalyser tra : this.analysis.values())
+            if (state.getRepresentsContainer().isAnd())
             {
-                if (!tra.allowedOnPlace(p))
+                for (TransitionAnalyser tra : this.analysis.values())
                 {
-                    ce.clear();
-                    continue places;
+                    if (!tra.allowedOnPlace(p))
+                    {
+                        ce.clear();
+                        continue places;
+                    }
+                    ce.addAll(tra.eventsConsumedOnPlace(p));
                 }
-                ce.addAll(tra.eventsConsumedOnPlace(p));
+                res.add(p);
             }
-            res.add(p);
 
-            /*
-             * if (state.getRepresents().multipleTransitionHandling() == MultipleTransitionsHandlingMode.OR) { for (TransitionAnalysisResult
-             * tra : this.analysis.values()) { if (tra.allowedOnPlace(p)) { ce.addAll(tra.eventsConsumedOnPlace(p)); res.add(p); break; } }
-             * }
-             */
+            if (state.getRepresentsContainer().isOr())
+            {
+                for (TransitionAnalyser tra : this.analysis.values())
+                {
+                    if (tra.allowedOnPlace(p))
+                    {
+                        ce.addAll(tra.eventsConsumedOnPlace(p));
+                        res.add(p);
+                        break;
+                    }
+                }
+            }
 
             this.consumedEvents.addAll(ce);
         }
-
-        // Remove event doubles
-        // TODO: it's costly so do it another way.
-        List<Event> rr = new ArrayList<>();
-        for (Event e : this.consumedEvents)
-        {
-            if (!rr.contains(e))
-            {
-                rr.add(e);
-            }
-        }
-        this.consumedEvents = rr;
 
         return res;
     }

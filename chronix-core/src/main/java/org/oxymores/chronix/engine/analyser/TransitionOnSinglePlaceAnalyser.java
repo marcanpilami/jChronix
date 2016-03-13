@@ -20,8 +20,8 @@
 
 package org.oxymores.chronix.engine.analyser;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.EventSourceWrapper;
@@ -46,9 +46,9 @@ class TransitionOnSinglePlaceAnalyser
     /**
      * The events that have been consumed (only if transition is possible, empty otherwise)
      */
-    List<Event> consumedEvents = new ArrayList<Event>();
+    Set<Event> consumedEvents = new HashSet<Event>();
 
-    TransitionOnSinglePlaceAnalyser(Application application, DTOTransition tr, EventSourceWrapper src, List<Event> events, Place p,
+    TransitionOnSinglePlaceAnalyser(Application application, DTOTransition tr, EventSourceWrapper src, Set<Event> events, Place p,
             Connection conn)
     {
         for (Event e : events)

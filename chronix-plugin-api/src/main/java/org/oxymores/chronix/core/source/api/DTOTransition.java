@@ -8,7 +8,7 @@ public class DTOTransition
     private Integer guard1;
     private String guard2, guard3;
     private UUID guard4;
-    private UUID id;
+    private UUID id = UUID.randomUUID();
     private boolean calendarAware;
     private Integer calendarShift;
 

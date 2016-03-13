@@ -87,10 +87,20 @@ public class ApiHistory implements HistoryService
                 rc = " AND resultCode = :rc ";
             }
 
+            String ended = "";
+            if (q.hasEnded() != null && q.hasEnded())
+            {
+                ended = " AND stoppedRunningAt IS NOT NULL ";
+            }
+            if (q.hasEnded() != null && !q.hasEnded())
+            {
+                ended = " AND stoppedRunningAt IS NULL ";
+            }
+
             Query qu = conn
                     .createQuery(
                             "SELECT * FROM RunLog r WHERE r.visible = 1 AND r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
-                                    + rc + sort + pagination)
+                                    + rc + ended + sort + pagination)
                     .addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
             if (q.getResultCode() != null)
             {

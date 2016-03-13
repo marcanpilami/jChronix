@@ -24,7 +24,6 @@ import org.sql2o.Connection;
 public class RunLog implements Serializable
 {
     private static final long serialVersionUID = 154654512882124L;
-    private static final int UUID_LENGTH = 36;
     private static final int DESCR_LENGTH = 100;
     private static final int PATH_LENGTH = 1024;
     private static final int LOG_LENGTH = 10000;
@@ -129,31 +128,32 @@ public class RunLog implements Serializable
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
     public static String getTitle()
     {
-        String res = String
-                .format("%-36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %-14s | %-14s | %-14s | %-14s | %-15s | %-15s | %-10s | %-5s | %36s",
-                        "ID", "placename", "execnodename", "chainName", "applicationName", "activeNodeName", "osAccount", "whatWasRun",
-                        "RC", "enteredPipeAt ", "beganRunningAt", "stoppedRunning", "markedForUnAt ", "calendarName", "calendar occr",
-                        "logPath", "visib", "chainLaunchId");
+        String res = String.format(
+                "%-36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %-14s | %-14s | %-14s | %-14s | %-15s | %-15s | %-10s | %-5s | %36s",
+                "ID", "placename", "execnodename", "chainName", "applicationName", "activeNodeName", "osAccount", "whatWasRun", "RC",
+                "enteredPipeAt ", "beganRunningAt", "stoppedRunning", "markedForUnAt ", "calendarName", "calendar occr", "logPath", "visib",
+                "chainLaunchId");
         return res;
     }
 
     public String getLine()
     {
 
-        String res = String
-                .format("%36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %-14s | %-14s | %-14s | %-14s | %-15s | %-15s | %-10s | %-5s | %36s",
-                        this.id, this.placeName.substring(0, Math.min(19, placeName.length())), this.executionNodeName, chainName
-                        .substring(0, Math.min(19, chainName.length())), applicationName.substring(0,
-                                Math.min(19, applicationName.length())),
-                        activeNodeName.substring(0, Math.min(19, activeNodeName.length())), osAccount == null ? "" : osAccount.substring(0, Math.min(10, osAccount.length())),
-                        whatWasRun == null ? "" : whatWasRun.substring(0, Math.min(29, whatWasRun.length())), resultCode,
-                        enteredPipeAt == null ? null : enteredPipeAt.toString(JODA_FORMATTER), beganRunningAt == null ? null
-                                : beganRunningAt.toString(JODA_FORMATTER),
-                        stoppedRunningAt == null ? null : stoppedRunningAt.toString(JODA_FORMATTER),
-                        markedForUnAt == null ? null : markedForUnAt.toString(JODA_FORMATTER), calendarName == null ? null
-                                : calendarName.substring(0, Math.min(14, calendarName.length())), calendarOccurrence == null ? null
-                                : calendarOccurrence.substring(0, Math.min(19, calendarOccurrence.length())), logPath == null ? null
-                                : logPath.substring(0, Math.min(9, logPath.length())), visible, chainLaunchId);
+        String res = String.format(
+                "%36s | %-20s | %-20s | %-20s | %-20s | %-20s | %-10s | %-30s | %-3s | %-14s | %-14s | %-14s | %-14s | %-15s | %-15s | %-10s | %-5s | %36s",
+                this.id, this.placeName.substring(0, Math.min(19, placeName.length())), this.executionNodeName,
+                chainName.substring(0, Math.min(19, chainName.length())),
+                applicationName.substring(0, Math.min(19, applicationName.length())),
+                activeNodeName.substring(0, Math.min(19, activeNodeName.length())),
+                osAccount == null ? "" : osAccount.substring(0, Math.min(10, osAccount.length())),
+                whatWasRun == null ? "" : whatWasRun.substring(0, Math.min(29, whatWasRun.length())), resultCode,
+                enteredPipeAt == null ? null : enteredPipeAt.toString(JODA_FORMATTER),
+                beganRunningAt == null ? null : beganRunningAt.toString(JODA_FORMATTER),
+                stoppedRunningAt == null ? null : stoppedRunningAt.toString(JODA_FORMATTER),
+                markedForUnAt == null ? null : markedForUnAt.toString(JODA_FORMATTER),
+                calendarName == null ? null : calendarName.substring(0, Math.min(14, calendarName.length())),
+                calendarOccurrence == null ? null : calendarOccurrence.substring(0, Math.min(19, calendarOccurrence.length())),
+                logPath == null ? null : logPath.substring(0, Math.min(9, logPath.length())), visible, chainLaunchId);
         return res;
     }
 
@@ -508,8 +508,7 @@ public class RunLog implements Serializable
                     + "chainLev1Name, activeNodeName, placeName, executionNodeName, dns, osAccount, "
                     + "whatWasRun, resultCode, lastKnownStatus, shortLog, logPath, dataIn, dataOut, calendarName, "
                     + "calendarOccurrence, sequence, enteredPipeAt, markedForUnAt, beganRunningAt, stoppedRunningAt, "
-                    + "lastLocallyModified)"
-                    + "VALUES (:id, :visible, :applicationId, :chainId, :stateId, :activeNodeId, "
+                    + "lastLocallyModified)" + "VALUES (:id, :visible, :applicationId, :chainId, :stateId, :activeNodeId, "
                     + ":chainLev1Id, :executionNodeId, :placeId, :chainLaunchId, :chainName, :applicationName, "
                     + ":chainLev1Name, :activeNodeName, :placeName, :executionNodeName, :dns, :osAccount, "
                     + ":whatWasRun, :resultCode, :lastKnownStatus, :shortLog, :logPath, :dataIn, :dataOut, :calendarName, "

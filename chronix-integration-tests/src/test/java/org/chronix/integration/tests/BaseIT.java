@@ -260,6 +260,38 @@ public class BaseIT
         }
     }
 
+    protected void waitForEnded(int count, int maxSeconds, int waitForExcessMs)
+    {
+        int waitedMs = 0;
+        HistoryQuery q = new HistoryQuery();
+        q.hasEnded(true);
+        history.query(q);
+        while (q.getRes().size() < count && waitedMs < maxSeconds * 1000)
+        {
+            try
+            {
+                Thread.sleep(50);
+                waitedMs += 50;
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            history.query(q);
+        }
+        if (q.getRes().size() == count)
+        {
+            try
+            {
+                Thread.sleep(waitForExcessMs);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
     protected void checkHistory(int nbOk, int nbKo)
     {
         HistoryQuery q = new HistoryQuery();

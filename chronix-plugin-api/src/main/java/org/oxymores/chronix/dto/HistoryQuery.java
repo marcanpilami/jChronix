@@ -12,6 +12,7 @@ public class HistoryQuery
 {
     private Date startedBefore, startedAfter, markedForRunBefore, markedForRunAfter;
     private Integer startLine = 0, pageSize = 100, resultCode = null;
+    private Boolean ended = null;
 
     // Sort fields
     @XmlElementWrapper(name = "sortby")
@@ -163,5 +164,15 @@ public class HistoryQuery
     public void setResultCode(Integer resultCode)
     {
         this.resultCode = resultCode;
+    }
+
+    public Boolean hasEnded()
+    {
+        return ended;
+    }
+
+    public void hasEnded(Boolean ended)
+    {
+        this.ended = ended;
     }
 }
