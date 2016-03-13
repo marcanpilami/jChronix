@@ -1,8 +1,8 @@
-package org.oxymore.chronix.chain.dto;
+package org.oxymore.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymore.chronix.source.ChainStartBehaviour;
+import org.oxymore.chronix.source.chain.reg.ChainStartBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceOptionCannotReceive;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
@@ -10,12 +10,12 @@ import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
-public class DTOChainStart extends EventSourceTriggered implements EventSourceOptionCannotReceive
+public class ChainStart extends EventSourceTriggered implements EventSourceOptionCannotReceive
 {
     private static final long serialVersionUID = -5628734383363442943L;
     static final UUID START_ID = UUID.fromString("647594b0-498f-4042-933f-855682095c6c");
 
-    public DTOChainStart()
+    public ChainStart()
     {
         this.name = "START";
         this.description = "start of a chain";

@@ -30,9 +30,9 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-import org.oxymore.chronix.chain.dto.DTOChain;
-import org.oxymore.chronix.chain.dto.DTONoop;
-import org.oxymore.chronix.chain.dto.DTOPlan;
+import org.oxymore.chronix.source.chain.dto.Chain;
+import org.oxymore.chronix.source.chain.dto.Noop;
+import org.oxymore.chronix.source.chain.dto.Plan;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
@@ -97,7 +97,7 @@ public class FirstTest
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
-    protected DTONoop noop;
+    protected Noop noop;
     protected Map<String, ChronixEngine> engines;
 
     @Before
@@ -114,7 +114,7 @@ public class FirstTest
         engines = new HashMap<>();
 
         // base elements
-        noop = new DTONoop();
+        noop = new Noop();
 
         // Environment
         envt = meta.createMinimalEnvironment(); // node is called "local"
@@ -218,13 +218,13 @@ public class FirstTest
         ShellCommand sc = new ShellCommand("c1", "c1", "echo aa", RunnerConstants.SHELL_WINCMD);
         app.addEventSource(sc);
 
-        DTOChain c = new DTOChain("first chain", "integration test chain", app.getGroup("local"));
+        Chain c = new Chain("first chain", "integration test chain", app.getGroup("local"));
         app.addEventSource(c);
         DTOState n1 = c.addState(sc);
         c.connect(c.getStart(), n1);
         c.connect(n1, c.getEnd());
 
-        DTOPlan p = new DTOPlan("plan", "integration test plan");
+        Plan p = new Plan("plan", "integration test plan");
         app.addEventSource(p);
         DTOState s = p.addState(c, app.getGroup("local"));
 
@@ -239,7 +239,7 @@ public class FirstTest
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {
-            if (d instanceof DTOChain && "first chain".equals(((DTOChain) d).getName()))
+            if (d instanceof Chain && "first chain".equals(((Chain) d).getName()))
             {
                 found = true;
                 break;

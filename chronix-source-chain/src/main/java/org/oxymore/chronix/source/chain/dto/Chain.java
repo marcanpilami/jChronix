@@ -1,8 +1,8 @@
-package org.oxymore.chronix.chain.dto;
+package org.oxymore.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymore.chronix.source.ChainBehaviour;
+import org.oxymore.chronix.source.chain.reg.ChainBehaviour;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
@@ -13,11 +13,11 @@ import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOChain extends EventSourceContainer
+public class Chain extends EventSourceContainer
 {
     private static final long serialVersionUID = -5008049889665310849L;
 
-    public DTOChain()
+    public Chain()
     {
         // For serialisation
     }
@@ -25,20 +25,20 @@ public class DTOChain extends EventSourceContainer
     /**
      * Helper constructor that creates a ready to use chain.
      */
-    public DTOChain(String name, String description, DTOPlaceGroup runsOn)
+    public Chain(String name, String description, DTOPlaceGroup runsOn)
     {
         this.name = name;
         this.description = description;
         this.id = UUID.randomUUID();
 
         DTOState s1 = new DTOState();
-        s1.setEventSourceId(DTOChainStart.START_ID);
+        s1.setEventSourceId(ChainStart.START_ID);
         s1.setX(50);
         s1.setY(50);
         s1.setRunsOnId(runsOn.getId());
 
         DTOState s2 = new DTOState();
-        s2.setEventSourceId(DTOChainEnd.END_ID);
+        s2.setEventSourceId(ChainEnd.END_ID);
         s2.setX(50);
         s2.setY(200);
         s2.setRunsOnId(runsOn.getId());
@@ -91,7 +91,7 @@ public class DTOChain extends EventSourceContainer
     {
         for (DTOState s : this.states)
         {
-            if (s.getEventSourceId().equals(DTOChainStart.START_ID))
+            if (s.getEventSourceId().equals(ChainStart.START_ID))
             {
                 return s;
             }
@@ -103,7 +103,7 @@ public class DTOChain extends EventSourceContainer
     {
         for (DTOState s : this.states)
         {
-            if (s.getEventSourceId().equals(DTOChainEnd.END_ID))
+            if (s.getEventSourceId().equals(ChainEnd.END_ID))
             {
                 return s;
             }

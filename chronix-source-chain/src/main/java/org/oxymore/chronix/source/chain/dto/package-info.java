@@ -1,2 +1,2 @@
 @org.osgi.annotation.versioning.Version("1.0.0")
-package org.oxymore.chronix.chain.dto;
+package org.oxymore.chronix.source.chain.dto;

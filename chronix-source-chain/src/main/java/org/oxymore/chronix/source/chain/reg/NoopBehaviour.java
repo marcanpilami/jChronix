@@ -1,9 +1,9 @@
-package org.oxymore.chronix.source;
+package org.oxymore.chronix.source.chain.reg;
 
 import java.io.File;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymore.chronix.chain.dto.DTONoop;
+import org.oxymore.chronix.source.chain.dto.Noop;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
 
@@ -25,7 +25,7 @@ public class NoopBehaviour extends EventSourceProvider
     @Override
     public void deserialise(File sourceFile, EventSourceRegistry reg)
     {
-        DTONoop n = new DTONoop();
+        Noop n = new Noop();
         reg.registerSource(n);
     }
 }

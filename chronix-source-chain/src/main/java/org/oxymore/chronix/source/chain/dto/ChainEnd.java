@@ -1,8 +1,8 @@
-package org.oxymore.chronix.chain.dto;
+package org.oxymore.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymore.chronix.source.ChainEndBehaviour;
+import org.oxymore.chronix.source.chain.reg.ChainEndBehaviour;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSourceOptionCannotEmit;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
@@ -10,12 +10,12 @@ import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 
-public class DTOChainEnd extends EventSourceTriggered implements EventSourceOptionCannotEmit
+public class ChainEnd extends EventSourceTriggered implements EventSourceOptionCannotEmit
 {
     private static final long serialVersionUID = -3859771632110912194L;
     static final UUID END_ID = UUID.fromString("8235272c-b78d-4350-a887-aed0dcdfb215");
 
-    public DTOChainEnd()
+    public ChainEnd()
     {
         this.name = "END";
         this.description = "end of chain";
