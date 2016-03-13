@@ -35,7 +35,7 @@ import org.oxymore.chronix.chain.dto.DTONoop;
 import org.oxymore.chronix.chain.dto.DTOPlan;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
-import org.oxymores.chronix.core.engine.api.DTOApplication2;
+import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.source.api.DTOState;
@@ -95,7 +95,7 @@ public class FirstTest
     }
 
     protected DTOEnvironment envt;
-    protected DTOApplication2 app;
+    protected DTOApplication app;
     protected DTONoop noop;
     protected Map<String, ChronixEngine> engines;
 
@@ -231,7 +231,7 @@ public class FirstTest
 
         // Tests
         meta.resetCache();
-        DTOApplication2 a2 = meta.getApplication(app.getId());
+        DTOApplication a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
         Assert.assertEquals(6, a2.getEventSources().size());

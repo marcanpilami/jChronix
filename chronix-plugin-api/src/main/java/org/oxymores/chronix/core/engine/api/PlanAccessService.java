@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.oxymores.chronix.dto.DTOApplication;
 import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOValidationError;
@@ -22,7 +21,7 @@ public interface PlanAccessService
      * The new application is not saved anywhere by this method so it will be lost if the returned object is not explicitly saved (for
      * example with {@link #saveApplicationDraft(DTOApplication)}).
      */
-    public DTOApplication2 createMinimalApplication();
+    public DTOApplication createMinimalApplication();
 
     /**
      * Returns a new demo application. For demo & documentation purposes. For all other purposes, use {@link #createMinimalApplication()}
@@ -32,7 +31,7 @@ public interface PlanAccessService
      * No client should ever rely on the result of this method being something it expects. A modification of this method does not change the
      * version of the overall service.
      */
-    public DTOApplication2 createTestApplication();
+    public DTOApplication createTestApplication();
 
     /**
      * Get a short description of all the applications which exist in the local node context.<br>
@@ -54,7 +53,7 @@ public interface PlanAccessService
      *            must be a valid UUID
      * @return
      */
-    public DTOApplication2 getApplication(UUID id);
+    public DTOApplication getApplication(UUID id);
 
     /**
      * The environment contains all the metadata that is not directly inside an application: the network, the places, ...
@@ -72,7 +71,7 @@ public interface PlanAccessService
      * version of the application, it is left untouched. Next call to getApplication will retrieve the running version (if any), and next
      * call to {@link #saveApplicationDraft(DTOApplication)} will create a new draft.
      */
-    public void resetApplicationDraft(DTOApplication2 app);
+    public void resetApplicationDraft(DTOApplication app);
 
     /**
      * Will save the application object to disk, inside a special "next version draft" file. Subsequent calls to
@@ -81,7 +80,7 @@ public interface PlanAccessService
      * The draft file is not versioned, and is always fully replaced on each call to this method: <strong>the last call to this method
      * always win - there is no concurrent editing of an application</strong>
      */
-    public void saveApplicationDraft(DTOApplication2 app);
+    public void saveApplicationDraft(DTOApplication app);
 
     /**
      * Sends the draft of an application to all scheduler nodes. It becomes active as soon as the nodes receive it. <br>
@@ -120,7 +119,7 @@ public interface PlanAccessService
     /**
      * Checks for errors inside an application object.
      */
-    public List<DTOValidationError> validateApplication(DTOApplication2 app);
+    public List<DTOValidationError> validateApplication(DTOApplication app);
 
     /**
      * Checks for errors inside an environment object.

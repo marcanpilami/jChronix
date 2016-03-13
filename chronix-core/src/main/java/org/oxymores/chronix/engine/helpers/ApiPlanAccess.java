@@ -25,7 +25,7 @@ import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
-import org.oxymores.chronix.core.engine.api.DTOApplication2;
+import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOApplicationShort;
@@ -60,9 +60,9 @@ public class ApiPlanAccess implements PlanAccessService
     }
 
     @Override
-    public DTOApplication2 createMinimalApplication()
+    public DTOApplication createMinimalApplication()
     {
-        DTOApplication2 app = new DTOApplication2();
+        DTOApplication app = new DTOApplication();
         app.setId(UUID.randomUUID());
 
         // Create one group per place inside the environment
@@ -80,7 +80,7 @@ public class ApiPlanAccess implements PlanAccessService
     }
 
     @Override
-    public DTOApplication2 createTestApplication()
+    public DTOApplication createTestApplication()
     {
         throw new NotImplementedException();
         /*
@@ -146,7 +146,7 @@ public class ApiPlanAccess implements PlanAccessService
     }
 
     @Override
-    public DTOApplication2 getApplication(UUID id)
+    public DTOApplication getApplication(UUID id)
     {
         boolean active = false;
         Application app = this.getMetaDb().getApplicationDraft(id);
@@ -160,7 +160,7 @@ public class ApiPlanAccess implements PlanAccessService
             }
         }
 
-        DTOApplication2 res = new DTOApplication2();
+        DTOApplication res = new DTOApplication();
         res.setActive(active);
         res.setDescription(app.getDescription());
         res.setEventSources(app.getEventSources());
@@ -206,13 +206,13 @@ public class ApiPlanAccess implements PlanAccessService
      */
 
     @Override
-    public void resetApplicationDraft(DTOApplication2 app)
+    public void resetApplicationDraft(DTOApplication app)
     {
         this.getMetaDb().resetApplicationDraft(app.getId());
     }
 
     @Override
-    public void saveApplicationDraft(DTOApplication2 app)
+    public void saveApplicationDraft(DTOApplication app)
     {
         Application a = new Application();
         a.setDescription(app.getDescription());
@@ -300,7 +300,7 @@ public class ApiPlanAccess implements PlanAccessService
     }
 
     @Override
-    public List<DTOValidationError> validateApplication(DTOApplication2 app)
+    public List<DTOValidationError> validateApplication(DTOApplication app)
     {
         throw new NotImplementedException();
         /*

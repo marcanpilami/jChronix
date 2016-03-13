@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOApplication2
+public class DTOApplication
 {
     private String name;
     private String description;
