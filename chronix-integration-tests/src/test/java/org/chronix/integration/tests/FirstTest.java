@@ -80,6 +80,7 @@ public class FirstTest
                 mavenBundle("ch.qos.logback", "logback-core", "1.1.3"), mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
+                mavenBundle("org.oxymores.chronix", "chronix-source-basic", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command-shell", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-core", "0.9.2-SNAPSHOT"),
@@ -234,7 +235,7 @@ public class FirstTest
         DTOApplication a2 = meta.getApplication(app.getId());
         Assert.assertEquals("test app", a2.getName());
 
-        Assert.assertEquals(6, a2.getEventSources().size());
+        Assert.assertEquals(8, a2.getEventSources().size());
         boolean found = false;
         for (EventSource d : a2.getEventSources())
         {

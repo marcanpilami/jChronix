@@ -1,0 +1,4 @@
+-exportcontents: \
+	org.oxymore.chronix.source.basic.dto	
+-sources: true
+-dsannotations: *
