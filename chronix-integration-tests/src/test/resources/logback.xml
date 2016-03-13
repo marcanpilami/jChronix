@@ -1,7 +1,7 @@
 <configuration>
 	<appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%-6relative %-5level %-35.35logger{35} %-25.25thread %-11mdc{node} - %message%exception%n</pattern>
+			<pattern>%-6relative %-5level %-35.35logger{35} %-15.15thread %-11mdc{node} - %message%exception%n</pattern>
 		</encoder>
 	</appender>
 

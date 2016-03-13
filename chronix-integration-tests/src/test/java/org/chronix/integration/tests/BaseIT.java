@@ -30,36 +30,44 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-import org.oxymore.chronix.source.chain.dto.Chain;
 import org.oxymore.chronix.source.chain.dto.Noop;
-import org.oxymore.chronix.source.chain.dto.Plan;
-import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
+import org.oxymores.chronix.core.engine.api.HistoryService;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
-import org.oxymores.chronix.core.source.api.DTOState;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOEnvironment;
-import org.oxymores.chronix.source.command.dto.ShellCommand;
+import org.oxymores.chronix.dto.HistoryQuery;
+import org.oxymores.chronix.source.basic.dto.And;
+import org.oxymores.chronix.source.basic.dto.Or;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class FirstTest
+public class BaseIT
 {
     @Inject
-    private BundleContext bc;
+    protected BundleContext bc;
 
     @Inject
-    ConfigurationAdmin conf;
+    protected ConfigurationAdmin conf;
 
     @Inject
-    PlanAccessService meta;
+    protected PlanAccessService meta;
 
     @Inject
-    OrderService order;
+    protected HistoryService history;
 
-    static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
+    @Inject
+    protected OrderService order;
+
+    protected DTOEnvironment envt;
+    protected DTOApplication app;
+    protected Noop noop;
+    protected And and;
+    protected Or or;
+    protected Map<String, ChronixEngine> engines;
+
+    protected static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
 
     @Configuration
     public Option[] config() throws IOException
@@ -95,17 +103,13 @@ public class FirstTest
                 mavenBundle("javax.validation", "validation-api", "1.1.0.Final"));
     }
 
-    protected DTOEnvironment envt;
-    protected DTOApplication app;
-    protected Noop noop;
-    protected Map<String, ChronixEngine> engines;
-
     @Before
     public void before() throws Exception
     {
         // Sanity check
         Assert.assertNotNull(meta);
         Assert.assertNotNull(order);
+        Assert.assertNotNull(conf);
 
         // Clear directories
         FileUtils.cleanDirectory(new File("C:/TEMP/db1"));
@@ -115,6 +119,8 @@ public class FirstTest
 
         // base elements
         noop = new Noop();
+        and = new And();
+        or = new Or();
 
         // Environment
         envt = meta.createMinimalEnvironment(); // node is called "local"
@@ -211,45 +217,39 @@ public class FirstTest
         }
     }
 
-    @Test
-    public void testCreatePlan() throws InterruptedException
+    protected void waitForOk(int count, int maxSeconds)
     {
-        // Application content
-        ShellCommand sc = new ShellCommand("c1", "c1", "echo aa", RunnerConstants.SHELL_WINCMD);
-        app.addEventSource(sc);
-
-        Chain c = new Chain("first chain", "integration test chain", app.getGroup("local"));
-        app.addEventSource(c);
-        DTOState n1 = c.addState(sc);
-        c.connect(c.getStart(), n1);
-        c.connect(n1, c.getEnd());
-
-        Plan p = new Plan("plan", "integration test plan");
-        app.addEventSource(p);
-        DTOState s = p.addState(c, app.getGroup("local"));
-
-        save();
-
-        // Tests
-        meta.resetCache();
-        DTOApplication a2 = meta.getApplication(app.getId());
-        Assert.assertEquals("test app", a2.getName());
-
-        Assert.assertEquals(8, a2.getEventSources().size());
-        boolean found = false;
-        for (EventSource d : a2.getEventSources())
+        int waitedMs = 0;
+        HistoryQuery q = new HistoryQuery();
+        q.setResultCode(0);
+        history.query(q);
+        while (q.getRes().size() < count && waitedMs < maxSeconds * 1000)
         {
-            if (d instanceof Chain && "first chain".equals(((Chain) d).getName()))
+            try
             {
-                found = true;
-                break;
+                Thread.sleep(50);
+                waitedMs += 50;
             }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            history.query(q);
         }
-        Assert.assertTrue(found);
+    }
 
-        addAndStartEngine("local");
-        order.orderLaunch(a2.getId(), s.getId(), envt.getPlace("local").getId(), true);
+    protected void checkHistory(int nbOk, int nbKo)
+    {
+        HistoryQuery q = new HistoryQuery();
 
-        Thread.sleep(3000);
+        q.setResultCode(0);
+        history.query(q);
+        int ok = q.getRes().size();
+        Assert.assertEquals(nbOk, ok);
+
+        q.setResultCode(null);
+        history.query(q);
+        int all = q.getRes().size();
+        Assert.assertEquals(nbKo, all - ok);
     }
 }

@@ -2,10 +2,10 @@ package org.oxymores.chronix.source.basic.reg;
 
 import java.io.File;
 
-import org.chronix.chronix.source.basic.dto.And;
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.source.basic.dto.And;
 
 @Component(immediate = true, service = EventSourceProvider.class)
 public class AndBehaviour extends EventSourceProvider

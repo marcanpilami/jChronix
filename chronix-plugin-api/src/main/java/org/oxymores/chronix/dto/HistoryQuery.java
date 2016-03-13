@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class HistoryQuery
 {
     private Date startedBefore, startedAfter, markedForRunBefore, markedForRunAfter;
-    private Integer startLine = 0, pageSize = 100;
+    private Integer startLine = 0, pageSize = 100, resultCode = null;
 
     // Sort fields
     @XmlElementWrapper(name = "sortby")
@@ -153,5 +153,15 @@ public class HistoryQuery
     protected void setSorts(List<SortSpec> sorts)
     {
         this.sorts = sorts;
+    }
+
+    public Integer getResultCode()
+    {
+        return resultCode;
+    }
+
+    public void setResultCode(Integer resultCode)
+    {
+        this.resultCode = resultCode;
     }
 }

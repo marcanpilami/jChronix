@@ -1,4 +1,4 @@
-package org.chronix.chronix.source.basic.dto;
+package org.oxymores.chronix.source.basic.dto;
 
 import java.util.UUID;
 import java.util.regex.Matcher;

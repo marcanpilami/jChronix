@@ -81,11 +81,21 @@ public class ApiHistory implements HistoryService
                 pagination += " OFFSET " + q.getStartLine();
             }
 
+            String rc = "";
+            if (q.getResultCode() != null)
+            {
+                rc = " AND resultCode = :rc ";
+            }
+
             Query qu = conn
                     .createQuery(
                             "SELECT * FROM RunLog r WHERE r.visible = 1 AND r.markedForUnAt >= :markedAfter AND r.markedForUnAt <= :markedBefore "
-                                    + sort + pagination)
+                                    + rc + sort + pagination)
                     .addParameter("markedAfter", q.getMarkedForRunAfter()).addParameter("markedBefore", q.getMarkedForRunBefore());
+            if (q.getResultCode() != null)
+            {
+                qu.addParameter("rc", q.getResultCode());
+            }
 
             List<DTORunLog> res = new ArrayList<>();
             for (RunLog rl : qu.executeAndFetch(RunLog.class))
@@ -96,7 +106,6 @@ public class ApiHistory implements HistoryService
             q.setTotalLogs((long) conn.createQuery("SELECT COUNT(1) FROM RunLog").executeScalar(Long.class));
         }
 
-        log.debug("End of call to getLog - returning " + q.getRes().size() + " logs out of a total of " + q.getTotalLogs());
         return q;
     }
 
