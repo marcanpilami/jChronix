@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.osgi.annotation.versioning.ProviderType;
-import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOValidationError;
 

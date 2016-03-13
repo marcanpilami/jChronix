@@ -1,4 +1,4 @@
-package org.oxymores.chronix.dto;
+package org.oxymores.chronix.core.engine.api;
 
 import java.util.Date;
 
