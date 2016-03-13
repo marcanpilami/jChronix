@@ -1,11 +1,11 @@
-package org.oxymore.chronix.source.chain.reg;
+package org.oxymores.chronix.source.basic.reg;
 
 import java.io.File;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymore.chronix.source.chain.dto.Noop;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.source.basic.dto.Noop;
 
 @Component(immediate = true, service = EventSourceProvider.class)
 public class NoopBehaviour extends EventSourceProvider
