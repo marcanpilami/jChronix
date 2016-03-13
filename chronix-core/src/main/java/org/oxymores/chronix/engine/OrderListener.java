@@ -55,14 +55,14 @@ class OrderListener implements MessageCallback
     private ChronixContextTransient ctxDb;
     private ChronixContextMeta ctxMeta;
     private String localNodeName;
-    private ChronixEngine e;
+    private ChronixEngine engine;
 
     OrderListener(ChronixEngine e, ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb, String localNodeName)
     {
         this.ctxDb = ctxDb;
         this.ctxMeta = ctxMeta;
         this.localNodeName = localNodeName;
-        this.e = e;
+        this.engine = e;
     }
 
     @Override
@@ -154,15 +154,20 @@ class OrderListener implements MessageCallback
         {
             pj = conn.createQuery("SELECT * FROM PipelineJob WHERE id=:id").addParameter("id", order.data)
                     .executeAndFetchFirst(PipelineJob.class);
+            if (pj == null)
+            {
+                log.error("Job does not exist - cannot be forced!");
+                return;
+            }
             pj.getEnvValues(conn);
         }
 
-        if (pj != null && pj.getStatus().equals(Constants.JI_STATUS_DONE))
+        if (pj.getStatus().equals(Constants.JI_STATUS_DONE))
         {
             try
             {
                 EventSourceWrapper a = pj.getActive(ctxMeta);
-                RunResult rr = a.forceOK(new EngineCbRun(e, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
+                RunResult rr = a.forceOK(new EngineCbRun(engine, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
                 Event e = pj.createEvent(rr, pj.getVirtualTime());
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);
 
@@ -190,14 +195,7 @@ class OrderListener implements MessageCallback
         }
         else
         {
-            if (pj == null)
-            {
-                log.error("Job does not exist - cannot be forced!");
-            }
-            else
-            {
-                log.error("The job cannot be forced: it is not in state DONE (current state: " + pj.getStatus() + ")");
-            }
+            log.error("The job cannot be forced: it is not in state DONE (current state: " + pj.getStatus() + ")");
         }
     }
 

@@ -46,7 +46,6 @@ public class CommandAgent implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(CommandAgent.class);
 
-    // private static final DateTimeFormatter JODA_LOG_FORMATTER = DateTimeFormat.forPattern("dd/MM HH:mm:ss");
     private static final DateTimeFormatter JODA_DIR_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd");
     private static final DateTimeFormatter JODA_FILE_FORMATTER = DateTimeFormat.forPattern("yyyyMMddhhmmssSSS");
 
@@ -62,7 +61,7 @@ public class CommandAgent implements MessageCallback
     private MessageListenerService broker;
 
     @Reference
-    private void setBroker(MessageListenerService b)
+    protected void setBroker(MessageListenerService b)
     {
         log.debug("Setting broker inside command agent");
         this.broker = b;
@@ -81,7 +80,6 @@ public class CommandAgent implements MessageCallback
         String metabase = configuration.getOrDefault("chronix.repository.path", "./metabase");
         logDbPath = FilenameUtils.concat(metabase, "AGENTJOBLOG");
 
-        System.out.println("OSGI activation for command runner agent " + nodeName);
         startListening();
     }
 
@@ -101,7 +99,7 @@ public class CommandAgent implements MessageCallback
 
     private void startListening()
     {
-        log.info(String.format("Starting a runner agent"));
+        log.info("Starting a runner agent");
 
         // Log repository
         if (!(new File(this.logDbPath)).exists())
@@ -158,7 +156,7 @@ public class CommandAgent implements MessageCallback
         cd.setLogFilePath(logFilePath);
 
         // Run the command according to its method
-        CommandRunner runner = null;
+        CommandRunner runner;
 
         // Get or create the tracker
         ServiceTracker<CommandRunner, CommandRunner> tracker = runnerTrackers.get(cd.getRunnerCapability());
@@ -228,10 +226,13 @@ public class CommandAgent implements MessageCallback
                     response = jmsSession.createBytesMessage();
                     byte[] bytes = new byte[(int) (long) res.logSizeBytes]; // Erk. But res.logSizeBytes <= 500000 so it's OK.
                     is = new FileInputStream(res.logPath);
-                    is.read(bytes);
+                    int readBytes = is.read(bytes);
                     IOUtils.closeQuietly(is);
 
-                    ((BytesMessage) response).writeBytes(bytes);
+                    if (readBytes > 0)
+                    {
+                        ((BytesMessage) response).writeBytes(bytes, 0, readBytes);
+                    }
                     response.setJMSCorrelationID(msg.getJMSCorrelationID());
                     response.setStringProperty("FileName", logFileName);
                     jmsProducer.send(msg.getJMSReplyTo(), response);

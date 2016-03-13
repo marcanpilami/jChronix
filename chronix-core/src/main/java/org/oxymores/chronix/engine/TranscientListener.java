@@ -91,11 +91,11 @@ class TranscientListener implements MessageCallback
             if (cp.getPlaceID() != null)
             {
                 ss = cp.getState(ctxMeta);
-                if (ss == null)
-                {
-                    log.warn("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
-                    return;
-                }
+            }
+            if (ss == null)
+            {
+                log.warn("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
+                return;
             }
 
             // Save it/update it. Beware, id are not the same throughout the network, so query the logical key
@@ -184,6 +184,7 @@ class TranscientListener implements MessageCallback
             catch (NullPointerException e1)
             {
                 // Pointer updates cannot happen on states without calendars... just ignore it.
+                log.debug("Attempt at updating a pointer on a state without calendar", e1);
                 return;
             }
         }

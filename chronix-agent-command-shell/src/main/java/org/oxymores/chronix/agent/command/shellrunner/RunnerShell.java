@@ -22,10 +22,8 @@ package org.oxymores.chronix.agent.command.shellrunner;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -38,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.agent.command.api.CommandDescription;
 import org.oxymores.chronix.agent.command.api.CommandResult;
@@ -83,7 +82,7 @@ public final class RunnerShell implements CommandRunner
         }
 
         BufferedReader br = null;
-        Writer output = null;
+        Writer output = null, subWriter = null;
         try
         {
             // Start!
@@ -108,7 +107,8 @@ public final class RunnerShell implements CommandRunner
 
             if (rd.isStoreLogFile())
             {
-                output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rd.getLogFilePath()), "UTF-8"));
+                subWriter = new FileWriterWithEncoding(rd.getLogFilePath(), "UTF-8");
+                output = new BufferedWriter(subWriter);
             }
             line = br.readLine();
             while (line != null)
@@ -180,9 +180,13 @@ public final class RunnerShell implements CommandRunner
             log.error("error occurred while running job", e);
             res.logStart = e.getMessage();
             res.returnCode = -1;
+            return res;
+        }
+        finally
+        {
             IOUtils.closeQuietly(br);
             IOUtils.closeQuietly(output);
-            return res;
+            IOUtils.closeQuietly(subWriter);
         }
 
         // Return
@@ -195,6 +199,7 @@ public final class RunnerShell implements CommandRunner
         }
         catch (UnknownHostException e)
         {
+            log.debug("cannot find host - 'unknown' will be used instead", e);
             res.envtServer = "unknown";
         }
         log.info(String.format("Job %s ended, RC is %s", rd.getLaunchId(), res.returnCode));

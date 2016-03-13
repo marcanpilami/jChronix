@@ -81,7 +81,7 @@ public class RunnerManager implements MessageCallback
     private String logDbPath;
     private ChronixContextMeta ctxMeta;
     private ChronixContextTransient ctxDb;
-    private ChronixEngine e;
+    private ChronixEngine engine;
 
     // The list of jobs waiting for parameter resolution
     private List<PipelineJob> resolving;
@@ -92,7 +92,7 @@ public class RunnerManager implements MessageCallback
     {
         this.ctxDb = ctxDb;
         this.ctxMeta = ctxMeta;
-        this.e = e;
+        this.engine = e;
 
         // Log repository
         this.logDbPath = FilenameUtils.normalize(FilenameUtils.concat(logPath, "GLOBALJOBLOG"));
@@ -276,7 +276,7 @@ public class RunnerManager implements MessageCallback
         }
         catch (Exception e)
         {
-            log.error("A pipeline job was received but was invalid - thrown out");
+            log.error("A pipeline job was received but was invalid - thrown out", e);
             return;
         }
         if (s == null)
@@ -300,12 +300,12 @@ public class RunnerManager implements MessageCallback
             log.debug("Job execution request of a disabled element.");
             // recvRR(j.getDisabledResult());
         }
-        else if (!this.e.isSimulator())
+        else if (!this.engine.isSimulator())
         {
             // Run - either sync or async.
             log.debug(String.format("Job execution request %s corresponds to an element (%s - %s) that should run async or sync", j.getId(),
                     toRun.getName(), toRun.getSourceClass()));
-            RunResult res = toRun.run(new EngineCbRun(this.e, this.ctxMeta, j.getApplication(ctxMeta), j), j);
+            RunResult res = toRun.run(new EngineCbRun(this.engine, this.ctxMeta, j.getApplication(ctxMeta), j), j);
 
             if (res != null)
             {
@@ -369,12 +369,12 @@ public class RunnerManager implements MessageCallback
             s = pj.getState(ctxMeta);
             p = pj.getPlace(ctxMeta);
             a = pj.getApplication(ctxMeta);
-            if (s == null)
-            {
-                log.error("A result was received for a pipeline job without state - thrown out");
-                resolving.remove(pj);
-                return;
-            }
+        }
+        if (s == null)
+        {
+            log.error("A result was received for a pipeline job without state - thrown out");
+            resolving.remove(pj);
+            return;
         }
 
         try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
@@ -401,7 +401,7 @@ public class RunnerManager implements MessageCallback
 
         // Send history
         SenderHelpers.sendHistory(pj.getEventLog(ctxMeta, rr), ctxMeta, this.jmsProducer, jmsSession, true,
-                this.e.getLocalNode().getName());
+                this.engine.getLocalNode().getName());
 
         // Calendar progress
         if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating())
@@ -410,7 +410,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // Free tokens
-        if (!rr.outOfPlan && s.getTokens().size() > 0)
+        if (!rr.outOfPlan && !s.getTokens().isEmpty())
         {
             releaseTokens(s, pj, jmsSession);
         }
@@ -466,13 +466,13 @@ public class RunnerManager implements MessageCallback
             tr.local = true;
             tr.placeID = pj.getPlaceID();
             tr.requestedAt = new DateTime();
-            tr.requestingNodeID = this.e.getLocalNode().getComputingNode().getId();
+            tr.requestingNodeID = this.engine.getLocalNode().getComputingNode().getId();
             tr.stateID = pj.getStateID();
             tr.tokenID = tk.getId();
             tr.type = TokenRequestType.RELEASE;
             tr.pipelineJobID = pj.getId();
 
-            SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, this.jmsProducer, true, this.e.getLocalNode().getBrokerName());
+            SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, this.jmsProducer, true, this.engine.getLocalNode().getBrokerName());
         }
     }
 
