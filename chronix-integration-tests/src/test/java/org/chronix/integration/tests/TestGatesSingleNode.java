@@ -1,8 +1,8 @@
 package org.chronix.integration.tests;
 
 import org.junit.Test;
-import org.oxymore.chronix.source.chain.dto.Chain;
 import org.oxymores.chronix.core.source.api.DTOState;
+import org.oxymores.chronix.source.chain.dto.Chain;
 
 public class TestGatesSingleNode extends BaseIT
 {

@@ -1,8 +1,7 @@
-package org.oxymore.chronix.source.chain.dto;
+package org.oxymores.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymore.chronix.source.chain.reg.ChainBehaviour;
 import org.oxymores.chronix.core.source.api.DTOState;
 import org.oxymores.chronix.core.source.api.EngineCallback;
 import org.oxymores.chronix.core.source.api.EventSource;
@@ -12,6 +11,7 @@ import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.source.chain.prv.ChainBehaviour;
 
 public class Chain extends EventSourceContainer
 {

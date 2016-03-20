@@ -9,7 +9,7 @@ import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.source.basic.reg.FailureBehaviour;
+import org.oxymores.chronix.source.basic.prv.FailureBehaviour;
 
 public class Failure extends EventSourceTriggered
 {

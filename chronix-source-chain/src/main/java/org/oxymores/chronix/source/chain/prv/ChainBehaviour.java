@@ -1,4 +1,4 @@
-package org.oxymore.chronix.source.chain.reg;
+package org.oxymores.chronix.source.chain.prv;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -7,47 +7,47 @@ import java.util.Collection;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymore.chronix.source.chain.dto.Plan;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.source.chain.dto.Chain;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 
 @Component(immediate = true, service = EventSourceProvider.class)
-public class PlanBehaviour extends EventSourceProvider
+public class ChainBehaviour extends EventSourceProvider
 {
     @Override
     public String getSourceName()
     {
-        return "plan";
+        return "chain";
     }
 
     @Override
     public String getSourceDescription()
     {
-        return "the base container of a production plan";
+        return "a reusable piece of production plan";
     }
 
     @Override
     public List<Class<? extends EventSource>> getExposedDtoClasses()
     {
         List<Class<? extends EventSource>> res = new ArrayList<>();
-        res.add(Plan.class);
+        res.add(Chain.class);
         return res;
     }
 
     @Override
     public void serialise(File targetFile, Collection<? extends EventSource> instances)
     {
-        List<Plan> chains = new ArrayList<>();
+        List<Chain> chains = new ArrayList<>();
         for (EventSource d : instances)
         {
-            chains.add((Plan) d);
+            chains.add((Chain) d);
         }
         XStream xmlUtility = new XStream(new StaxDriver());
-        File target = new File(targetFile.getAbsolutePath() + "/plans.xml");
+        File target = new File(targetFile.getAbsolutePath() + "/chains.xml");
 
         try (FileOutputStream fos = new FileOutputStream(target))
         {
@@ -55,7 +55,7 @@ public class PlanBehaviour extends EventSourceProvider
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Could not save plans to file", e);
+            throw new RuntimeException("Could not save chains to file", e);
         }
     }
 
@@ -66,12 +66,12 @@ public class PlanBehaviour extends EventSourceProvider
         {
             return;
         }
-        File file = new File(sourceFile.getAbsolutePath() + "/plans.xml");
+        File file = new File(sourceFile.getAbsolutePath() + "/chains.xml");
         XStream xmlUtility = new XStream(new StaxDriver());
-        xmlUtility.setClassLoader(PlanBehaviour.class.getClassLoader());
+        xmlUtility.setClassLoader(ChainBehaviour.class.getClassLoader());
 
-        List<Plan> res = (List<Plan>) xmlUtility.fromXML(file);
-        for (Plan c : res)
+        List<Chain> res = (List<Chain>) xmlUtility.fromXML(file);
+        for (Chain c : res)
         {
             cb.registerSource(c);
         }

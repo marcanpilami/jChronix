@@ -8,7 +8,7 @@ import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.source.basic.reg.AndBehaviour;
+import org.oxymores.chronix.source.basic.prv.AndBehaviour;
 
 public class And extends EventSourceTriggered implements EventSourceOptionAnd
 {

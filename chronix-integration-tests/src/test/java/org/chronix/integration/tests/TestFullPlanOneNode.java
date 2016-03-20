@@ -2,11 +2,11 @@ package org.chronix.integration.tests;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.oxymore.chronix.source.chain.dto.Chain;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOEventSource;
 import org.oxymores.chronix.core.source.api.DTOState;
+import org.oxymores.chronix.source.chain.dto.Chain;
 import org.oxymores.chronix.source.command.dto.ShellCommand;
 
 public class TestFullPlanOneNode extends BaseIT

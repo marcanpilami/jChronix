@@ -7,7 +7,7 @@ import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.source.basic.reg.NoopBehaviour;
+import org.oxymores.chronix.source.basic.prv.NoopBehaviour;
 
 public class Noop extends EventSourceTriggered
 {

@@ -9,7 +9,7 @@ import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
 import org.oxymores.chronix.core.source.api.JobDescription;
-import org.oxymores.chronix.source.command.reg.ShellCommandRegistry;
+import org.oxymores.chronix.source.command.prv.ShellCommandRegistry;
 
 /**
  * The persistence and DTO object describing a command to be run through a given plugin.

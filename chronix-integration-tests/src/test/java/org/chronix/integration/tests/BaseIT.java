@@ -29,7 +29,6 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
-import org.oxymore.chronix.source.chain.dto.Plan;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.HistoryService;
@@ -41,6 +40,7 @@ import org.oxymores.chronix.source.basic.dto.And;
 import org.oxymores.chronix.source.basic.dto.Failure;
 import org.oxymores.chronix.source.basic.dto.Noop;
 import org.oxymores.chronix.source.basic.dto.Or;
+import org.oxymores.chronix.source.chain.dto.Plan;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)

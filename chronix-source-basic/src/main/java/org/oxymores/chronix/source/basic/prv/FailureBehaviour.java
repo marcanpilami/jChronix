@@ -1,31 +1,31 @@
-package org.oxymores.chronix.source.basic.reg;
+package org.oxymores.chronix.source.basic.prv;
 
 import java.io.File;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
 import org.oxymores.chronix.core.source.api.EventSourceRegistry;
-import org.oxymores.chronix.source.basic.dto.Noop;
+import org.oxymores.chronix.source.basic.dto.Failure;
 
 @Component(immediate = true, service = EventSourceProvider.class)
-public class NoopBehaviour extends EventSourceProvider
+public class FailureBehaviour extends EventSourceProvider
 {
     @Override
     public String getSourceName()
     {
-        return "no-operation";
+        return "failure";
     }
 
     @Override
     public String getSourceDescription()
     {
-        return "an event source that does nothing. Used as placeholder or for tests.";
+        return "An event source that always fails. A helper for tests.";
     }
 
     @Override
     public void deserialise(File sourceFile, EventSourceRegistry reg)
     {
-        Noop n = new Noop();
+        Failure n = new Failure();
         reg.registerSource(n);
     }
 }

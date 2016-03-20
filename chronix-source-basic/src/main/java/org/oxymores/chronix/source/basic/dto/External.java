@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 import org.oxymores.chronix.core.source.api.EventSourceExternalyTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.source.basic.reg.ExternalBehaviour;
+import org.oxymores.chronix.source.basic.prv.ExternalBehaviour;
 
 public class External extends EventSourceExternalyTriggered
 {
