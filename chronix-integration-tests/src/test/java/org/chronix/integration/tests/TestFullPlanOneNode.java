@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.oxymore.chronix.source.chain.dto.Chain;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
+import org.oxymores.chronix.core.engine.api.DTOEventSource;
 import org.oxymores.chronix.core.source.api.DTOState;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.source.command.dto.ShellCommand;
 
 public class TestFullPlanOneNode extends BaseIT
@@ -35,9 +35,9 @@ public class TestFullPlanOneNode extends BaseIT
 
         Assert.assertEquals(9, a2.getEventSources().size());
         boolean found = false;
-        for (EventSource d : a2.getEventSources())
+        for (DTOEventSource d : a2.getEventSources())
         {
-            if (d instanceof Chain && "first chain".equals(((Chain) d).getName()))
+            if (d.getSource() instanceof Chain && "first chain".equals(((Chain) d.getSource()).getName()))
             {
                 found = true;
                 break;

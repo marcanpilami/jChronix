@@ -18,6 +18,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.Place;
@@ -27,8 +28,8 @@ import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOApplicationShort;
+import org.oxymores.chronix.core.engine.api.DTOEventSource;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
-import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
@@ -163,11 +164,15 @@ public class ApiPlanAccess implements PlanAccessService
         DTOApplication res = new DTOApplication();
         res.setActive(active);
         res.setDescription(app.getDescription());
-        res.setEventSources(app.getEventSources());
         res.setId(app.getId());
         res.setLatestVersionComment(app.getCommitComment());
         res.setName(app.getName());
         res.setVersion(app.getVersion());
+
+        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+        {
+            res.addEventSource(esw.getSource());
+        }
 
         for (PlaceGroup pg : app.getGroupsList())
         {
@@ -219,9 +224,9 @@ public class ApiPlanAccess implements PlanAccessService
         a.setName(app.getName());
         a.setId(app.getId());
 
-        for (EventSource d : app.getEventSources())
+        for (DTOEventSource d : app.getEventSources())
         {
-            a.registerSource(d, FrameworkUtil.getBundle(d.getClass()).getSymbolicName());
+            a.registerSource(d.getSource(), FrameworkUtil.getBundle(d.getSource().getClass()).getSymbolicName());
         }
 
         for (DTOPlaceGroup pg : app.getGroups())

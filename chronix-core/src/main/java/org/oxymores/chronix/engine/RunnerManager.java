@@ -24,7 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.BytesMessage;
@@ -41,10 +42,11 @@ import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
+import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.Parameter;
+import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
@@ -84,7 +86,7 @@ public class RunnerManager implements MessageCallback
     private ChronixEngine engine;
 
     // The list of jobs waiting for parameter resolution
-    private List<PipelineJob> resolving;
+    private Map<UUID, PipelineJob> resolving;
 
     private MessageProducer jmsProducer;
 
@@ -110,7 +112,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // Internal queue
-        resolving = new ArrayList<>();
+        resolving = new HashMap<>();
     }
 
     @Override
@@ -144,6 +146,15 @@ public class RunnerManager implements MessageCallback
                     recvESRR(esrr, jmsSession, launchId);
                     return;
                 }
+                else if (o instanceof AsyncParameterResult)
+                {
+                    AsyncParameterResult apr = (AsyncParameterResult) o;
+                    String[] prmLaunchId = ((String) msg.getObjectProperty("prmLaunchId")).split("_");
+                    UUID launchId = UUID.fromString(prmLaunchId[0]);
+                    UUID prmId = UUID.fromString(prmLaunchId[1]);
+
+                    recvAPR(launchId, prmId, apr, jmsSession);
+                }
                 else
                 {
                     log.warn("An object was received by the Runner that was not of a valid type. It will be ignored.");
@@ -155,19 +166,6 @@ public class RunnerManager implements MessageCallback
             {
                 throw new ListenerRollbackException(
                         "An error occurred during job reception. Message will stay in queue and will be analysed later", e);
-            }
-        }
-        else if (msg instanceof TextMessage)
-        {
-            TextMessage tmsg = (TextMessage) msg;
-            try
-            {
-                recvTextMessage(tmsg, jmsSession);
-            }
-            catch (JMSException e)
-            {
-                log.error("An error occurred during parameter resolution. Element will be ignored.", e);
-                return;
             }
         }
         else if (msg instanceof BytesMessage)
@@ -199,62 +197,57 @@ public class RunnerManager implements MessageCallback
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Parameter resolution
+    ///////////////////////////////////////////////////////////////////////////
+
     // Called within JMS transaction. Don't commit here.
-    private void recvTextMessage(TextMessage tmsg, Session jmsSession) throws JMSException
+    private void recvAPR(UUID launchId, UUID prmId, AsyncParameterResult res, Session jmsSession) throws JMSException
     {
-        String res = tmsg.getText();
-        String cid = tmsg.getJMSCorrelationID();
-
-        String pjid = cid.split("\\|")[0];
-        String paramid = cid.split("\\|")[1];
-
         // Get the PipelineJob
-        PipelineJob resolvedJob = null;
-        for (PipelineJob pj : this.resolving)
-        {
-            if (pj.getId().toString().equals(pjid))
-            {
-                resolvedJob = pj;
-                break;
-            }
-        }
+        PipelineJob resolvedJob = this.resolving.get(launchId);
         if (resolvedJob == null)
         {
             log.error("received a param resolution for a job that is not in queue - ignored");
             return;
         }
 
+        recvAPR(resolvedJob, prmId, res.result, jmsSession);
+    }
+
+    // Called within JMS transaction. Don't commit here.
+    private void recvAPR(PipelineJob pj, UUID prmId, String res, Session jmsSession) throws JMSException
+    {
         // Get the parameter awaiting resolution
-        int paramIndex = -1;
-        ArrayList<Parameter> prms = resolvedJob.getActive(ctxMeta).getParameters();
-        for (int i = 0; i < prms.size(); i++)
+        ParameterHolder h = null;
+        ArrayList<ParameterHolder> prms = pj.getActive(ctxMeta).getParameters();
+        for (ParameterHolder hh : prms)
         {
-            if (prms.get(i).getId().toString().equals(paramid))
+            if (hh.getId().equals(prmId))
             {
-                paramIndex = i;
+                h = hh;
                 break;
             }
         }
-        if (paramIndex == -1)
+        if (h == null)
         {
             log.error("received a param resolution for a job that has no such parameter - ignored");
             return;
         }
 
         // Update the parameter with its value
-        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
-        {
-            // TODO
-            // resolvedJob.setParamValue(paramIndex, res);
-            conn.commit();
-        }
+        pj.setParamValue(h.getKey(), res);
 
         // Perhaps launch the job
-        if (resolvedJob.isReady(ctxMeta))
+        if (pj.isReady(ctxMeta))
         {
-            this.sendRunDescription(resolvedJob.getRD(ctxMeta), resolvedJob.getPlace(ctxMeta), resolvedJob, jmsSession);
+            launch(pj, jmsSession);
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // New job handling
+    ///////////////////////////////////////////////////////////////////////////
 
     // Called within a JMS transaction - don't commit it.
     private void recvPJ(PipelineJob job, Session jmsSession) throws JMSException
@@ -292,11 +285,12 @@ public class RunnerManager implements MessageCallback
             j.insertOrUpdate(conn);
             conn.commit();
         }
-        resolving.add(j);
+        resolving.put(j.getId(), j);
 
         if (!toRun.isEnabled() || !s.isEnabled())
         {
             // Disabled => don't run it for real
+            // TODO: call disabled methods
             log.debug("Job execution request of a disabled element.");
             // recvRR(j.getDisabledResult());
         }
@@ -305,19 +299,27 @@ public class RunnerManager implements MessageCallback
             // Run - either sync or async.
             log.debug(String.format("Job execution request %s corresponds to an element (%s - %s) that should run async or sync", j.getId(),
                     toRun.getName(), toRun.getSourceClass()));
-            RunResult res = toRun.run(new EngineCbRun(this.engine, this.ctxMeta, j.getApplication(ctxMeta), j), j);
 
-            if (res != null)
+            // Parameter resolution
+            if (!toRun.getParameters().isEmpty())
             {
-                // Synchronous execution - go on to result analysis at once in the current thread.
-                recvRR(res, jmsSession);
+                // In this case, actual run actually occurs at the end of all parameter resolution
+                for (ParameterHolder h : toRun.getParameters())
+                {
+                    String paramValue = h.getValue(String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()),
+                            j.getId().toString() + "_" + h.getId().toString());
+                    if (paramValue != null)
+                    {
+                        // Sync result => analyse at once.
+                        recvAPR(j, h.getId(), paramValue, jmsSession);
+                    }
+                }
             }
             else
             {
-                // Asynchronous execution - we need to wait for a RunResult in the JMS queue.
+                // In this case, direct run
+                launch(j, jmsSession);
             }
-
-            // TODO: parameters
         }
         else
         {
@@ -329,6 +331,25 @@ public class RunnerManager implements MessageCallback
             }
         }
     }
+
+    private void launch(PipelineJob pj, Session jmsSession) throws JMSException
+    {
+        RunResult res = pj.getActive(ctxMeta).run(new EngineCbRun(this.engine, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
+
+        if (res != null)
+        {
+            // Synchronous execution - go on to result analysis at once in the current thread.
+            recvRR(res, jmsSession);
+        }
+        else
+        {
+            // Asynchronous execution - we need to wait for a RunResult in the JMS queue.
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Job result handling
+    ///////////////////////////////////////////////////////////////////////////
 
     private void recvRR(RunResult rr, Session jmsSession) throws JMSException
     {
@@ -346,15 +367,7 @@ public class RunnerManager implements MessageCallback
 
         rr.logPath = FilenameUtils.concat(this.logDbPath, rr.logFileName);
 
-        PipelineJob pj = null;
-        for (PipelineJob pj2 : this.resolving)
-        {
-            if (pj2.getId().equals(rr.id1))
-            {
-                pj = pj2;
-                break;
-            }
-        }
+        PipelineJob pj = this.resolving.get(rr.id1);
         if (pj == null)
         {
             log.error("A result was received that was not waited for - thrown out");

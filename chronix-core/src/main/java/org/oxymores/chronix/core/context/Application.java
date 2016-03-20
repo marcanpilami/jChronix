@@ -169,6 +169,11 @@ public class Application implements IMetaSource, Serializable
         return res;
     }
 
+    public Map<UUID, EventSourceWrapper> getEventSourceWrappers()
+    {
+        return this.sources;
+    }
+
     @Override
     public <T extends EventSource & Serializable> void registerSource(T source, String pluginSymbolicName)
     {

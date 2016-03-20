@@ -16,7 +16,7 @@ public class DTOApplication
     private int version = 0;
     private String latestVersionComment = "";
 
-    private List<EventSource> eventSources = new ArrayList<>();
+    private List<DTOEventSource> eventSources = new ArrayList<>();
     private List<DTOPlaceGroup> groups = new ArrayList<>();
 
     public DTOPlaceGroup getGroup(String name)
@@ -91,19 +91,21 @@ public class DTOApplication
         this.latestVersionComment = latestVersionComment;
     }
 
-    public List<EventSource> getEventSources()
+    public List<DTOEventSource> getEventSources()
     {
         return eventSources;
     }
 
-    public void setEventSources(List<EventSource> eventSources)
+    void setEventSources(List<DTOEventSource> eventSources)
     {
         this.eventSources = eventSources;
     }
 
-    public void addEventSource(EventSource source)
+    public DTOEventSource addEventSource(EventSource source)
     {
-        this.eventSources.add(source);
+        DTOEventSource es = new DTOEventSource(source);
+        this.eventSources.add(es);
+        return es;
     }
 
     public List<DTOPlaceGroup> getGroups()

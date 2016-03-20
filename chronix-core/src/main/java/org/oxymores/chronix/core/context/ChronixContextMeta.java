@@ -3,6 +3,7 @@ package org.oxymores.chronix.core.context;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,11 @@ import org.joda.time.DateTime;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
+import org.oxymores.chronix.api.prm.Parameter;
+import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.EventSourceWrapper;
+import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceProvider;
@@ -42,7 +47,8 @@ public class ChronixContextMeta
     private File rootDir;
 
     // Source tracker
-    private ServiceTracker<EventSourceProvider, EventSourceProvider> tracker;
+    private ServiceTracker<EventSourceProvider, EventSourceProvider> trackerES;
+    private ServiceTracker<ParameterProvider, ParameterProvider> trackerPRM;
 
     // all known applications
     private Map<UUID, Application> applications = new HashMap<>();
@@ -77,10 +83,16 @@ public class ChronixContextMeta
     {
         log.debug("Registering source event plugin tracker");
         Bundle bd = FrameworkUtil.getBundle(ChronixContextMeta.class);
-        tracker = new ServiceTracker<EventSourceProvider, EventSourceProvider>(bd.getBundleContext(), EventSourceProvider.class,
+        trackerES = new ServiceTracker<EventSourceProvider, EventSourceProvider>(bd.getBundleContext(), EventSourceProvider.class,
                 new EventSourceTracker(this));
-        tracker.open();
+        trackerES.open();
         log.debug("Source event plugin tracker is open");
+
+        log.debug("Registering parameter plugin tracker");
+        trackerPRM = new ServiceTracker<ParameterProvider, ParameterProvider>(bd.getBundleContext(), ParameterProvider.class,
+                new ParameterTracker(this));
+        trackerPRM.open();
+        log.debug("Parameter plugin tracker is open");
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -286,6 +298,8 @@ public class ChronixContextMeta
         }
 
         log.info("Saving application draft to disk " + app.getId() + " inside " + this.getRootApplicationDraft(app.getId()));
+
+        // Save (directly) the shared application structure
         try (FileOutputStream fos = new FileOutputStream(this.getRootApplicationDraft(app.getId()) + "/app.xml"))
         {
             xmlUtility.toXML(app, fos);
@@ -295,7 +309,8 @@ public class ChronixContextMeta
             throw new ChronixPlanStorageException("Could not save application to file", e);
         }
 
-        for (Object ob : this.getAllKnownBehaviours())
+        // Save (by a source plugin) the event sources (without their parameters)
+        for (Object ob : this.getAllKnownSourceProviders())
         {
             if (ob == null)
             {
@@ -318,8 +333,40 @@ public class ChronixContextMeta
                 {
                     continue;
                 }
-                getProviderForClass(p.get(0).getProvider()).serialise(targetBundleDir, p);
+                getSourceProviderForClass(p.get(0).getProvider()).serialise(targetBundleDir, p);
             }
+        }
+
+        // Save (by a parameter plugin) the parameters of all event sources
+        Map<Class<? extends ParameterProvider>, List<Parameter>> prms = new HashMap<>();
+        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+        {
+            for (ParameterHolder ph : esw.getParameters())
+            {
+                Class<? extends ParameterProvider> cl = ph.getProviderClass();
+                List<Parameter> l = prms.get(cl);
+                if (l == null)
+                {
+                    l = new ArrayList<>();
+                    prms.put(cl, l);
+                }
+                l.add(ph.getDto());
+            }
+        }
+        for (Class<? extends ParameterProvider> cl : prms.keySet())
+        {
+            List<Parameter> ps = prms.get(cl);
+            ParameterProvider prv = this.getParameterProviderForClass(cl);
+
+            String f = FrameworkUtil.getBundle(cl).getSymbolicName();
+            File targetBundleDir = new File(FilenameUtils.concat(targetDir.getAbsolutePath(), f));
+            if (!targetBundleDir.exists() && !targetBundleDir.mkdir())
+            {
+                throw new ChronixPlanStorageException(
+                        "plugin directory does not exist and cannot be created: " + targetBundleDir.getAbsolutePath());
+            }
+
+            prv.serialise(targetBundleDir, ps);
         }
 
         // Make the draft available
@@ -491,9 +538,9 @@ public class ChronixContextMeta
     // MISC GET/SET
     ///////////////////////////////////////////////////////////////////////////
 
-    public Object[] getAllKnownBehaviours()
+    private Object[] getAllKnownSourceProviders()
     {
-        while (tracker.getServices() == null)
+        while (trackerES.getServices() == null)
         {
             log.info("No known event sources! Engine will wait for a plugin to register and retry");
             try
@@ -505,14 +552,44 @@ public class ChronixContextMeta
                 // Nothing to do
             }
         }
-        return tracker.getServices();
+        return trackerES.getServices();
     }
 
-    public EventSourceProvider getProviderForClass(Class<? extends EventSourceProvider> klass)
+    private EventSourceProvider getSourceProviderForClass(Class<? extends EventSourceProvider> klass)
     {
-        for (Object o : getAllKnownBehaviours())
+        for (Object o : getAllKnownSourceProviders())
         {
             EventSourceProvider pr = (EventSourceProvider) o;
+            if (pr.getClass().isAssignableFrom(klass))
+            {
+                return pr;
+            }
+        }
+        throw new ChronixException("no such provider");
+    }
+
+    private Object[] getAllKnownParameterProviders()
+    {
+        while (trackerPRM.getServices() == null)
+        {
+            log.info("No known parameter plugins! Engine will wait for a plugin to register and retry");
+            try
+            {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e)
+            {
+                // Nothing to do
+            }
+        }
+        return trackerPRM.getServices();
+    }
+
+    private ParameterProvider getParameterProviderForClass(Class<? extends ParameterProvider> klass)
+    {
+        for (Object o : getAllKnownParameterProviders())
+        {
+            ParameterProvider pr = (ParameterProvider) o;
             if (pr.getClass().isAssignableFrom(klass))
             {
                 return pr;

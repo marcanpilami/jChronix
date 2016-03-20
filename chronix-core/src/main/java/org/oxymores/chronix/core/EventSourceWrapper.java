@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
+import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.source.api.EngineCallback;
@@ -48,7 +49,7 @@ public class EventSourceWrapper implements Serializable
     private static final long serialVersionUID = 2317281646089939267L;
 
     @NotNull
-    protected ArrayList<Parameter> parameters;
+    protected ArrayList<ParameterHolder> parameters;
 
     private Application application;
 
@@ -131,12 +132,12 @@ public class EventSourceWrapper implements Serializable
     ///////////////////////////////////////////////////////////////////////////
     // Parameter handling
 
-    public ArrayList<Parameter> getParameters()
+    public ArrayList<ParameterHolder> getParameters()
     {
         return this.parameters;
     }
 
-    public void addParameter(Parameter parameter)
+    public void addParameter(ParameterHolder parameter)
     {
         if (!parameters.contains(parameter))
         {
@@ -144,12 +145,12 @@ public class EventSourceWrapper implements Serializable
         }
     }
 
-    public void addParameter(String key, String value, String description)
+    public void addParameter(String key, String description, Parameter prm)
     {
-        Parameter p = new Parameter();
+        ParameterHolder p = new ParameterHolder();
         p.setDescription(description);
         p.setKey(key);
-        p.setValue(value);
+        p.setDto(prm);
         addParameter(p);
     }
 

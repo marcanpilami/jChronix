@@ -19,18 +19,19 @@
  */
 package org.oxymores.chronix.core;
 
+import java.util.UUID;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.oxymores.chronix.api.prm.Parameter;
+import org.oxymores.chronix.api.prm.ParameterProvider;
 
 /**
- A base implementation (simple key/value pair) for parameters. Can be use directly or overloaded.
+ * A wrapper for a {@link Parameter} object.
  */
-public class Parameter extends ChronixObject
+public class ParameterHolder extends ChronixObject
 {
-    private static final Logger log = LoggerFactory.getLogger(Parameter.class);
     private static final long serialVersionUID = 8017529181151172909L;
 
     @NotNull
@@ -39,11 +40,15 @@ public class Parameter extends ChronixObject
 
     @NotNull
     @Size(min = 1, max = 255)
-    protected String value;
+    protected String description;
 
     @NotNull
-    @Size(min = 1, max = 255)
-    protected String description;
+    protected transient Parameter prm;
+
+    private UUID dtoId;
+
+    // A simple indication - only used when a plugin is missing and we need its name to help the user.
+    private String pluginName;
 
     public String getKey()
     {
@@ -55,14 +60,9 @@ public class Parameter extends ChronixObject
         this.key = key;
     }
 
-    public String getValue()
+    public String getValue(String replyQueueName, String prmLaunchId)
     {
-        return value;
-    }
-
-    public void setValue(String value)
-    {
-        this.value = value;
+        return this.prm.getValue(replyQueueName, prmLaunchId);
     }
 
     public String getDescription()
@@ -75,15 +75,34 @@ public class Parameter extends ChronixObject
         this.description = description;
     }
 
-   /* public void resolveValue(ChronixContext ctx, RunnerManager sender, PipelineJob pj)
+    public void setDto(Parameter dto)
     {
-        try
-        {
-            sender.sendParameterValue(this.getValue(), this.getId(), pj);
-        }
-        catch (JMSException e)
-        {
-            log.error("Could not send dynamic parameter value", e);
-        }
-    } */
+        this.prm = dto;
+        this.dtoId = dto.getId();
+    }
+
+    public String getPluginName()
+    {
+        return pluginName;
+    }
+
+    public void setPluginName(String pluginName)
+    {
+        this.pluginName = pluginName;
+    }
+
+    public UUID getParameterId()
+    {
+        return this.dtoId;
+    }
+
+    public Class<? extends ParameterProvider> getProviderClass()
+    {
+        return this.prm.getProvider();
+    }
+
+    public Parameter getDto()
+    {
+        return this.prm;
+    }
 }

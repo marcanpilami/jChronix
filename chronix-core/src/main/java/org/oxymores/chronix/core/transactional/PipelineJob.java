@@ -30,7 +30,7 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.Parameter;
+import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
@@ -227,7 +227,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         rd.setId2(this.getActive(ctx).getId());
 
         // All resolved parameters should be described
-        ArrayList<Parameter> prms = this.getActive(ctx).getParameters();
+        ArrayList<ParameterHolder> prms = this.getActive(ctx).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
             rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));
