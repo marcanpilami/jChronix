@@ -23,8 +23,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -220,10 +220,10 @@ public class RunnerManager implements MessageCallback
     {
         // Get the parameter awaiting resolution
         ParameterHolder h = null;
-        ArrayList<ParameterHolder> prms = pj.getActive(ctxMeta).getParameters();
+        List<ParameterHolder> prms = pj.getActive(ctxMeta).getParameters();
         for (ParameterHolder hh : prms)
         {
-            if (hh.getId().equals(prmId))
+            if (hh.getParameterId().equals(prmId))
             {
                 h = hh;
                 break;
@@ -303,15 +303,15 @@ public class RunnerManager implements MessageCallback
             // Parameter resolution
             if (!toRun.getParameters().isEmpty())
             {
-                // In this case, actual run actually occurs at the end of all parameter resolution
+                // In this case, actual run actually occurs at the end of all parameter resolutions
                 for (ParameterHolder h : toRun.getParameters())
                 {
                     String paramValue = h.getValue(String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()),
-                            j.getId().toString() + "_" + h.getId().toString());
+                            j.getId().toString() + "_" + h.getParameterId().toString());
                     if (paramValue != null)
                     {
                         // Sync result => analyse at once.
-                        recvAPR(j, h.getId(), paramValue, jmsSession);
+                        recvAPR(j, h.getParameterId(), paramValue, jmsSession);
                     }
                 }
             }

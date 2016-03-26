@@ -59,6 +59,10 @@ public class ExternalBehaviour extends EventSourceProvider
             return;
         }
         File file = new File(sourceFile.getAbsolutePath() + "/external.xml");
+        if (!file.exists())
+        {
+            return;
+        }
         XStream xmlUtility = new XStream(new StaxDriver());
         xmlUtility.setClassLoader(this.getClass().getClassLoader());
 

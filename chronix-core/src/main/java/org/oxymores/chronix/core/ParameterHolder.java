@@ -19,6 +19,7 @@
  */
 package org.oxymores.chronix.core;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
@@ -30,24 +31,42 @@ import org.oxymores.chronix.api.prm.ParameterProvider;
 /**
  * A wrapper for a {@link Parameter} object.
  */
-public class ParameterHolder extends ChronixObject
+public class ParameterHolder implements Serializable
 {
     private static final long serialVersionUID = 8017529181151172909L;
 
+    /**
+     * The parameter name as seen by the source plugins. For example, a key for a shell parameter can be "-c" or "--file" or...<br>
+     * An empty or null string is considered as "no key required".
+     */
     @NotNull
     @Size(min = 0, max = 50)
     protected String key;
 
+    /**
+     * A short description that tells a human user what the parameter stands for.
+     */
     @NotNull
     @Size(min = 1, max = 255)
     protected String description;
 
+    /**
+     * The holder for the parameter DTO object.
+     */
     @NotNull
     protected transient Parameter prm;
 
+    /**
+     * The ID of the parameter. Unique throughout the application.
+     */
+    @NotNull
     private UUID dtoId;
 
-    // A simple indication - only used when a plugin is missing and we need its name to help the user.
+    /**
+     * A simple indication - only used when a plugin is missing and we need its name to help the user.
+     **/
+    @NotNull
+    @Size(min = 2)
     private String pluginName;
 
     public String getKey()

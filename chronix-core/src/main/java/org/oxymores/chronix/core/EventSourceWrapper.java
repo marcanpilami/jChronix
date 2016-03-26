@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.source.api.DTOTransition;
@@ -34,9 +32,9 @@ import org.oxymores.chronix.core.source.api.EventSource;
 import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.source.api.EventSourceOptionInvisible;
 import org.oxymores.chronix.core.source.api.EventSourceOptionOr;
+import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.EventSourceSelfTriggered;
 import org.oxymores.chronix.core.source.api.EventSourceTriggered;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
 import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -48,12 +46,12 @@ public class EventSourceWrapper implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
 
-    @NotNull
-    protected ArrayList<ParameterHolder> parameters;
-
+    // TODO: really used?
     private Application application;
 
-    // A simple indication - only used when a plugin is missing and we need its name to help the user.
+    /**
+     * A simple indication - only used when a plugin is missing and we need its name to help the user.
+     **/
     private String pluginName;
 
     // The real event source description. Must NOT be XML-serialised. Each plugin is responsible for its own serialisation.
@@ -62,19 +60,36 @@ public class EventSourceWrapper implements Serializable
 
     private boolean enabled = true;
 
+    private List<ParameterHolder> parameters = new ArrayList<>();
+
     public EventSourceWrapper(Application app, EventSource source, String pluginSymbolicName)
     {
         super();
         this.application = app;
         this.eventSource = source;
         this.pluginName = pluginSymbolicName;
-        parameters = new ArrayList<>();
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s (%s)", eventSource.getName(), pluginName);
+        if (eventSource != null)
+        {
+            return String.format("%s (%s)", eventSource.getName(), pluginName);
+        }
+        else
+        {
+            return String.format("Event source from plugin %s (notloaded yet)", this.pluginName);
+        }
+    }
+
+    private Object readResolve()
+    {
+        if (parameters == null)
+        {
+            parameters = new ArrayList<>();
+        }
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -105,6 +120,12 @@ public class EventSourceWrapper implements Serializable
         return this.eventSource;
     }
 
+    public void setSource(EventSource s, String pluginName)
+    {
+        this.eventSource = s;
+        this.pluginName = pluginName;
+    }
+
     public boolean isEnabled()
     {
         return enabled;
@@ -132,7 +153,7 @@ public class EventSourceWrapper implements Serializable
     ///////////////////////////////////////////////////////////////////////////
     // Parameter handling
 
-    public ArrayList<ParameterHolder> getParameters()
+    public List<ParameterHolder> getParameters()
     {
         return this.parameters;
     }

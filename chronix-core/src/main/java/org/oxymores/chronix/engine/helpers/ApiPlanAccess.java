@@ -17,6 +17,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -227,6 +228,10 @@ public class ApiPlanAccess implements PlanAccessService
         for (DTOEventSource d : app.getEventSources())
         {
             a.registerSource(d.getSource(), FrameworkUtil.getBundle(d.getSource().getClass()).getSymbolicName());
+            for (Map.Entry<String, Parameter> prm : d.getParameters().entrySet())
+            {
+                a.getEventSourceContainer(d.getSource().getId()).addParameter(prm.getKey(), "", prm.getValue());
+            }
         }
 
         for (DTOPlaceGroup pg : app.getGroups())

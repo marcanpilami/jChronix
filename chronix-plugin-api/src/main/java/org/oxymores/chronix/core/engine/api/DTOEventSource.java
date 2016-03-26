@@ -2,7 +2,9 @@ package org.oxymores.chronix.core.engine.api;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.core.source.api.EventSource;
@@ -12,16 +14,17 @@ public class DTOEventSource implements Serializable
     private static final long serialVersionUID = 6642907973807378024L;
 
     EventSource source;
-    List<Parameter> parameters = new ArrayList<>();
+    Map<String, Parameter> parameters = new HashMap<>();
 
     DTOEventSource(EventSource src)
     {
         this.setSource(src);
     }
 
-    public void addParameter(Parameter prm)
+    public DTOEventSource addParameter(String key, Parameter prm)
     {
-        this.parameters.add(prm);
+        this.parameters.put(key, prm);
+        return this;
     }
 
     public EventSource getSource()
@@ -34,12 +37,12 @@ public class DTOEventSource implements Serializable
         this.source = source;
     }
 
-    public List<Parameter> getParameters()
+    public Map<String, Parameter> getParameters()
     {
-        return new ArrayList<>(parameters);
+        return new HashMap<>(parameters);
     }
 
-    protected void setParameters(List<Parameter> parameters)
+    protected void setParameters(Map<String, Parameter> parameters)
     {
         this.parameters = parameters;
     }

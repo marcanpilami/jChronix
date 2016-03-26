@@ -19,8 +19,8 @@
  */
 package org.oxymores.chronix.core.transactional;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -227,7 +227,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         rd.setId2(this.getActive(ctx).getId());
 
         // All resolved parameters should be described
-        ArrayList<ParameterHolder> prms = this.getActive(ctx).getParameters();
+        List<ParameterHolder> prms = this.getActive(ctx).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
             rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));

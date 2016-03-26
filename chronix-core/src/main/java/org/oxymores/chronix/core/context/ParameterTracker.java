@@ -1,8 +1,6 @@
 package org.oxymores.chronix.core.context;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
@@ -46,47 +44,55 @@ class ParameterTracker implements ServiceTrackerCustomizer<ParameterProvider, Pa
                 "Parameter plugin registering: " + srv.getClass().getCanonicalName() + " from bundle " + ref.getBundle().getSymbolicName());
 
         // Each application may have data created by this plugin - load that data
-        Collection<Application> apps = new ArrayList<>();
-        apps.addAll(this.ctx.getApplications());
-        apps.addAll(this.ctx.getDrafts());
-        for (Application app : apps)
+        for (Application app : this.ctx.getApplications())
         {
             File appDir = this.ctx.getRootApplication(app.getId());
-            if (!appDir.isDirectory())
-            {
-                throw new ChronixInitializationException("Configuration directory " + appDir.getAbsolutePath() + " cannot be opened");
-            }
-
-            File bundleDir = new File(FilenameUtils.concat(appDir.getAbsolutePath(), ref.getBundle().getSymbolicName()));
-            if (!bundleDir.isDirectory() && !bundleDir.mkdir())
-            {
-                throw new ChronixInitializationException(
-                        "Configuration directory " + bundleDir.getAbsolutePath() + " does not exist and could not be created");
-            }
-
-            log.trace("Asking plugin " + ref.getBundle().getSymbolicName() + " to read directory " + bundleDir.getAbsolutePath());
-            Set<? extends Parameter> prms = srv.deserialise(bundleDir);
-
-            // Inflate the parameters inside event sources
-            for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
-            {
-                ph: for (ParameterHolder ph : esw.getParameters())
-                {
-                    for (Parameter prm : prms)
-                    {
-                        if (prm.getId().equals(ph.getParameterId()))
-                        {
-                            ph.setDto(prm);
-                            continue ph;
-                        }
-                    }
-                    // throw new ChronixInitializationException(
-                    // "A parameter is defined inside the plan but was not found inside the plugin results. Check plugins are all present");
-                }
-            }
+            loadAppParameters(app, appDir, ref, srv);
+        }
+        for (Application app : this.ctx.getDrafts())
+        {
+            File appDir = this.ctx.getRootApplicationDraft(app.getId());
+            loadAppParameters(app, appDir, ref, srv);
         }
 
         return srv;
+    }
+
+    private void loadAppParameters(Application app, File appDir, ServiceReference<ParameterProvider> ref, ParameterProvider srv)
+    {
+        if (!appDir.isDirectory())
+        {
+            throw new ChronixInitializationException("Configuration directory " + appDir.getAbsolutePath() + " cannot be opened");
+        }
+
+        File bundleDir = new File(FilenameUtils.concat(appDir.getAbsolutePath(), ref.getBundle().getSymbolicName()));
+        if (!bundleDir.isDirectory() && !bundleDir.mkdir())
+        {
+            throw new ChronixInitializationException(
+                    "Configuration directory " + bundleDir.getAbsolutePath() + " does not exist and could not be created");
+        }
+
+        Set<? extends Parameter> prms = srv.deserialise(bundleDir);
+        log.trace("Asking parameter plugin " + ref.getBundle().getSymbolicName() + "/" + srv.getClass().getSimpleName()
+                + " to read directory " + bundleDir.getAbsolutePath() + " - " + prms.size() + " parameters found.");
+
+        // Inflate the parameters inside event sources
+        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+        {
+            ph: for (ParameterHolder ph : esw.getParameters())
+            {
+                for (Parameter prm : prms)
+                {
+                    if (prm.getId().equals(ph.getParameterId()))
+                    {
+                        ph.setDto(prm);
+                        continue ph;
+                    }
+                }
+                // throw new ChronixInitializationException(
+                // "A parameter is defined inside the plan but was not found inside the plugin results. Check plugins are all present");
+            }
+        }
     }
 
     @Override

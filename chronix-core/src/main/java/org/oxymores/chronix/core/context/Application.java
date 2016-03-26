@@ -177,10 +177,22 @@ public class Application implements IMetaSource, Serializable
     @Override
     public <T extends EventSource & Serializable> void registerSource(T source, String pluginSymbolicName)
     {
+        if (source.getId() == null)
+        {
+            throw new IllegalArgumentException("event source must have a non null ID");
+        }
         log.trace("Registering event source with ID " + source.getId() + " from plugin " + pluginSymbolicName + " of class "
                 + source.getClass().getSimpleName() + " - " + this.toString());
-        EventSourceWrapper esc = new EventSourceWrapper(this, source, pluginSymbolicName);
-        sources.put(source.getId(), esc);
+        EventSourceWrapper esc = this.sources.get(source.getId());
+        if (esc == null)
+        {
+            esc = new EventSourceWrapper(this, source, pluginSymbolicName);
+            sources.put(source.getId(), esc);
+        }
+        else
+        {
+            esc.setSource(source, pluginSymbolicName);
+        }
     }
 
     @Override

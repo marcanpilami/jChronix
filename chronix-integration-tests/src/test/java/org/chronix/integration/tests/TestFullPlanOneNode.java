@@ -6,6 +6,7 @@ import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOEventSource;
 import org.oxymores.chronix.core.source.api.DTOState;
+import org.oxymores.chronix.prm.basic.dto.StringParameter;
 import org.oxymores.chronix.source.chain.dto.Chain;
 import org.oxymores.chronix.source.command.dto.ShellCommand;
 
@@ -15,8 +16,8 @@ public class TestFullPlanOneNode extends BaseIT
     public void testPlan() throws InterruptedException
     {
         // Application content
-        ShellCommand sc = new ShellCommand("c1", "c1", "echo aa", RunnerConstants.SHELL_WINCMD);
-        app.addEventSource(sc);
+        ShellCommand sc = new ShellCommand("c1", "c1", "echo", RunnerConstants.SHELL_WINCMD);
+        app.addEventSource(sc).addParameter("", new StringParameter("test message"));
 
         Chain c = new Chain("first chain", "integration test chain", app.getGroup("local"));
         app.addEventSource(c);

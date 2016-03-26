@@ -148,6 +148,7 @@ public class ChronixContextMeta
         Application app;
         try
         {
+            xmlUtility.setClassLoader(this.getClass().getClassLoader());
             app = (Application) xmlUtility.fromXML(appFile);
         }
         catch (XStreamException e)
@@ -238,7 +239,7 @@ public class ChronixContextMeta
     /**
      * The directory containing all the metadata pertaining to a specific active application
      */
-    private File getRootApplicationDraft(UUID id)
+    public File getRootApplicationDraft(UUID id)
     {
         return new File(FilenameUtils.concat(this.getRootApplicationDraft().getAbsolutePath(), id.toString()));
     }
