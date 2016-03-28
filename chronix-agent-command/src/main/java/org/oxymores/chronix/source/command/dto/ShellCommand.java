@@ -47,7 +47,7 @@ public class ShellCommand extends EventSourceTriggered
         cd.setLaunchId(jd.getLaunchId());
         cd.setRunnerCapability(runnerCapability);
         cd.setStoreLogFile(true);
-        for (Map.Entry<String, String> prm : jd.getParameters().entrySet())
+        for (Map.Entry<String, String> prm : jd.getParameters())
         {
             cd.addParameter(prm.getKey(), prm.getValue());
         }

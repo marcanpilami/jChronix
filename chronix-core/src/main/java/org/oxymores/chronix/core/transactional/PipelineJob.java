@@ -19,6 +19,8 @@
  */
 package org.oxymores.chronix.core.transactional;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,14 +61,15 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     Integer resultCode = -1;
 
-    private final Map<String, String> resolvedParameters = new LinkedHashMap<>();
+    // Format is : parameter UUID, parameter key, parameter value. Order is preserved (LinkedHashMap).
+    private transient Map<UUID, Map.Entry<String, String>> resolvedParameters;
 
     public PipelineJob()
     {
         super();
     }
 
-    // ///////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
     // Set/Get
     public Integer getResultCode()
     {
@@ -88,24 +91,24 @@ public class PipelineJob extends TranscientBase implements JobDescription
         this.outOfPlan = outOfPlan;
     }
 
-    // /////////////
+    ///////////////
     // Params
-    public void setParamValue(String name, String value)
+    public void setParamValue(UUID prmId, String value)
     {
-        resolvedParameters.put(name, value);
+        resolvedParameters.get(prmId).setValue(value);
     }
 
-    public String getParamValue(String name)
+    // Note: taking toRun (and not resolve this.source) because only called from RunnerManager which has already resolved it.
+    public void initParamResolution(EventSourceWrapper toRun)
     {
-        return resolvedParameters.get(name);
+        resolvedParameters = new LinkedHashMap<>();
+        for (ParameterHolder ph : toRun.getParameters())
+        {
+            resolvedParameters.put(ph.getParameterId(), new AbstractMap.SimpleEntry<String, String>(ph.getKey(), (String) null));
+        }
     }
 
-    protected Map<String, String> getParamValues()
-    {
-        return resolvedParameters;
-    }
-
-    // ///////////////////
+    /////////////////////
     // Misc.
     public String getStatus()
     {
@@ -211,7 +214,8 @@ public class PipelineJob extends TranscientBase implements JobDescription
     }
 
     //
-    // //////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
     public RunDescription getRD(ChronixContextMeta ctx)
     {
         RunDescription rd = new RunDescription();
@@ -230,7 +234,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         List<ParameterHolder> prms = this.getActive(ctx).getParameters();
         for (int i = 0; i < prms.size(); i++)
         {
-            rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));
+            // rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));
         }
 
         // All environment variables should be included
@@ -433,8 +437,14 @@ public class PipelineJob extends TranscientBase implements JobDescription
     }
 
     @Override
-    public Map<String, String> getParameters()
+    public List<Map.Entry<String, String>> getParameters()
     {
-        return this.resolvedParameters;
+        List<Map.Entry<String, String>> res = new ArrayList<>();
+
+        for (Map.Entry<UUID, Map.Entry<String, String>> e : this.resolvedParameters.entrySet())
+        {
+            res.add(e.getValue());
+        }
+        return res;
     }
 }

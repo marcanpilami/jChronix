@@ -236,7 +236,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // Update the parameter with its value
-        pj.setParamValue(h.getKey(), res);
+        pj.setParamValue(prmId, res);
 
         // Perhaps launch the job
         if (pj.isReady(ctxMeta))
@@ -303,6 +303,8 @@ public class RunnerManager implements MessageCallback
             // Parameter resolution
             if (!toRun.getParameters().isEmpty())
             {
+                j.initParamResolution(toRun);
+
                 // In this case, actual run actually occurs at the end of all parameter resolutions
                 for (ParameterHolder h : toRun.getParameters())
                 {

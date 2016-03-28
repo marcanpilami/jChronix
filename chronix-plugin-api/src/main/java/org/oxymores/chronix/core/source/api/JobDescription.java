@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.source.api;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,7 +45,9 @@ public interface JobDescription
     /**
      * Every event source is associated to an optional (sorted) set of parameters. What to do with them is left to the event source. For
      * example, the shell command event source will use them as arguments to the shell command line. These can use interpolation (use of
-     * other variables or parameters) or be the result of another job - they are presented here fully resolved. The Map is ordered.
+     * other variables or parameters) or be the result of another job - they are presented here fully resolved.<br>
+     * The order of the list may be important to respect depending on the plugin.<br>
+     * Note that this is an <code>Entry</code> list and not a Map: keys can be empty or non-unique.
      */
-    public Map<String, String> getParameters();
+    public List<Map.Entry<String, String>> getParameters();
 }
