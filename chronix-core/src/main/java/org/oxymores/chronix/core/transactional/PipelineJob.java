@@ -34,7 +34,6 @@ import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -216,53 +215,6 @@ public class PipelineJob extends TranscientBase implements JobDescription
     //
     ////////////////////////////////////////////////////////////////////////
 
-    public RunDescription getRD(ChronixContextMeta ctx)
-    {
-        RunDescription rd = new RunDescription();
-
-        // Misc.
-        rd.setOutOfPlan(this.outOfPlan);
-        rd.setPlaceName(this.getPlace(ctx).getName());
-        rd.setActiveSourceName(this.getActive(ctx).getName());
-        rd.setAppID(this.appID);
-
-        // The IDs that will allow to find the PJ at the end
-        rd.setId1(this.getId());
-        rd.setId2(this.getActive(ctx).getId());
-
-        // All resolved parameters should be described
-        List<ParameterHolder> prms = this.getActive(ctx).getParameters();
-        for (int i = 0; i < prms.size(); i++)
-        {
-            // rd.addParameter(prms.get(i).getKey(), this.resolvedParameters.get(i));
-        }
-
-        // All environment variables should be included
-        for (EnvironmentValue ev : this.envValues)
-        {
-            rd.addEnvVar(ev.getKey(), ev.getValue());
-        }
-
-        // Execution method is determined by the source
-        // rd.setPluginSelector(this.getActive(ctx).getPlugin());
-
-        // Actual command to run is determined by the plugin from the parameter map
-        /*
-         * for (Map.Entry<String, String> e : this.getActive(ctx).getPluginParameters().entrySet()) { rd.addPluginParameter(e.getKey(),
-         * e.getValue()); }
-         */
-
-        // Run description is complete, on to the actual execution!
-        return rd;
-    }
-
-    public Event createEvent()
-    {
-        RunResult rr = new RunResult();
-        rr.returnCode = this.resultCode;
-        return createEvent(rr, this.virtualTime);
-    }
-
     public Event createEvent(RunResult rr, DateTime virtualTime)
     {
         Event e = new Event();
@@ -346,20 +298,6 @@ public class PipelineJob extends TranscientBase implements JobDescription
         }
 
         return rlog;
-    }
-
-    public RunResult getDisabledResult()
-    {
-        RunResult res = new RunResult();
-        res.returnCode = 0;
-        res.id1 = this.id;
-        res.outOfPlan = this.outOfPlan;
-        res.logStart = "was not run as it was marked as disabled";
-
-        res.start = this.getVirtualTime();
-        res.end = this.getVirtualTime();
-
-        return res;
     }
 
     public RunResult getSimulatedResult(Connection connTransac)

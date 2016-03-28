@@ -29,13 +29,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.BytesMessage;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -48,7 +46,6 @@ import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.RunDescription;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
@@ -79,7 +76,6 @@ public class RunnerManager implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(RunnerManager.class);
 
-    private Destination destEndJob;
     private String logDbPath;
     private ChronixContextMeta ctxMeta;
     private ChronixContextTransient ctxDb;
@@ -491,47 +487,8 @@ public class RunnerManager implements MessageCallback
         }
     }
 
-    public void sendRunDescription(RunDescription rd, Place p, PipelineJob pj, Session jmsSession) throws JMSException
-    {
-        // Always send to the node, not its hosting node.
-        String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
-        Destination destination = jmsSession.createQueue(qName);
-
-        ObjectMessage m = jmsSession.createObjectMessage(rd);
-        m.setJMSReplyTo(destEndJob);
-        m.setJMSCorrelationID(pj.getId().toString());
-        this.jmsProducer.send(destination, m);
-        jmsSession.commit();
-    }
-
     public void sendCalendarPointer(CalendarPointer cp, Calendar ca, Session jmsSession) throws JMSException
     {
         SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.jmsProducer, true, this.ctxMeta.getEnvironment());
-    }
-
-    public void getParameterValue(RunDescription rd, PipelineJob pj, UUID paramId, Session jmsSession) throws JMSException
-    {
-        // Always send to the node, not its hosting node.
-        Place p = pj.getPlace(ctxMeta);
-        String qName = String.format(Constants.Q_RUNNER, p.getNode().getBrokerName());
-        log.info(String.format("A command for parameter resolution will be sent for execution on queue %s", qName));
-        Destination destination = jmsSession.createQueue(qName);
-
-        ObjectMessage m = jmsSession.createObjectMessage(rd);
-        m.setJMSReplyTo(destEndJob);
-        m.setJMSCorrelationID(pj.getId() + "|" + paramId);
-        this.jmsProducer.send(destination, m);
-        jmsSession.commit();
-    }
-
-    public void sendParameterValue(String value, UUID paramID, PipelineJob pj, Session jmsSession) throws JMSException
-    {
-        // This is a loopback send (used by static parameter value mostly)
-        log.debug(String.format("A param value resolved locally (static) will be sent to the local engine ( value is %s)", value));
-
-        TextMessage m = jmsSession.createTextMessage(value);
-        m.setJMSCorrelationID(pj.getId() + "|" + paramID.toString());
-        this.jmsProducer.send(destEndJob, m);
-        jmsSession.commit();
     }
 }
