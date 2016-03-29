@@ -1,5 +1,6 @@
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.core.context.api;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -14,9 +15,9 @@ import javax.validation.Path.Node;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
@@ -35,7 +36,10 @@ import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
+import org.oxymores.chronix.engine.helpers.CoreToDto;
+import org.oxymores.chronix.engine.helpers.DtoToCore;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +55,15 @@ public class ApiPlanAccess implements PlanAccessService
     private String ctxMetaPath;
 
     @Activate
-    private void activate(ComponentContext cc)
+    @Modified
+    private void activate(Map<String, String> configuration)
     {
-        ctxMetaPath = "C:\\TEMP\\db1";
+        ctxMetaPath = configuration.getOrDefault("chronix.repository.path", "./target/nodes/local");
+        if (!(new File(ctxMetaPath).exists()))
+        {
+            throw new ChronixInitializationException(
+                    "cannot create api service - directory " + ctxMetaPath + " does not exist. Check service configuration.");
+        }
     }
 
     private ChronixContextMeta getMetaDb()

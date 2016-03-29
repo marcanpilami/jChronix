@@ -56,6 +56,10 @@ public class ContextHandler
         }
         synchronized (allDb)
         {
+            for (ChronixContextTransient ctx : allDb.values())
+            {
+                ctx.close();
+            }
             allDb.clear();
         }
     }

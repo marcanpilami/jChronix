@@ -1,19 +1,24 @@
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.core.context.api;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.io.FilenameUtils;
 import org.joda.time.DateTime;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.HistoryService;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.HistoryQuery;
+import org.oxymores.chronix.engine.helpers.CoreToDto;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -24,25 +29,24 @@ public class ApiHistory implements HistoryService
 {
     private static final Logger log = LoggerFactory.getLogger(ApiHistory.class);
 
-    // The service works under an independent context.
-    private ChronixContextTransient ctxDb;
+    private String ctxMetaPath, ctxDbHistoryPath;
 
     @Activate
-    private void activate(ComponentContext cc)
+    @Modified
+    private void activate(Map<String, String> configuration)
     {
-        // TODO: use configuration.
-        ctxDb = new ChronixContextTransient("C:\\TEMP\\db1\\db_history\\db", "C:\\TEMP\\db1\\db_transac\\db");
+        ctxMetaPath = configuration.getOrDefault("chronix.repository.path", "./target/nodes/local");
+        if (!(new File(ctxMetaPath).exists()))
+        {
+            throw new ChronixInitializationException(
+                    "cannot create api service - directory " + ctxMetaPath + " does not exist. Check service configuration.");
+        }
+        ctxDbHistoryPath = FilenameUtils.concat(ctxMetaPath, "db_history/db");
     }
 
-    public ApiHistory()
+    private ChronixContextTransient getCtxDb()
     {
-        // Default constructor for OSGI injection
-    }
-
-    public ApiHistory(ChronixContextTransient ctx)
-    {
-        // Specific constructor for non-OSGI environments
-        this.ctxDb = ctx;
+        return ContextHandler.getDb(ctxDbHistoryPath, "_");
     }
 
     @Override
@@ -58,7 +62,7 @@ public class ApiHistory implements HistoryService
         }
 
         // TODO: direct to DTO attempt!
-        try (Connection conn = ctxDb.getHistoryDataSource().open())
+        try (Connection conn = getCtxDb().getHistoryDataSource().open())
         {
             String sort = "";
             if (q.getSorts().size() > 0)
@@ -124,7 +128,7 @@ public class ApiHistory implements HistoryService
     {
         String res;
 
-        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
+        try (Connection conn = this.getCtxDb().getHistoryDataSource().open())
         {
             res = conn.createQuery("SELECT shortLog FROM RunLog WHERE id=:id").addParameter("id", id).executeScalar(String.class);
         }
@@ -145,7 +149,7 @@ public class ApiHistory implements HistoryService
     public File getLogFile(UUID launchId)
     {
         String path;
-        try (Connection conn = this.ctxDb.getHistoryDataSource().open())
+        try (Connection conn = this.getCtxDb().getHistoryDataSource().open())
         {
             path = conn.createQuery("SELECT logPath FROM RunLog WHERE id=:id").addParameter("id", launchId).executeScalar(String.class);
         }

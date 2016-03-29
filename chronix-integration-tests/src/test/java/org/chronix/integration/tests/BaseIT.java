@@ -17,15 +17,17 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -43,7 +45,7 @@ import org.oxymores.chronix.source.basic.dto.Or;
 import org.oxymores.chronix.source.chain.dto.Plan;
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
+@ExamReactorStrategy(PerClass.class)
 public class BaseIT
 {
     @Inject
@@ -71,10 +73,23 @@ public class BaseIT
     protected Map<String, ChronixEngine> engines;
 
     protected static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
+    protected static String tmpPath = Paths.get("./target/felix-tmp").toAbsolutePath().normalize().toString();
+    protected static String tmpAmqPath = Paths.get("./target/amq-tmp").toAbsolutePath().normalize().toString();
+    protected static String nodesPath = Paths.get("./target/nodes").toAbsolutePath().normalize().toString();
 
-    @Configuration
-    public Option[] config() throws IOException
+    protected static String localNodeMetaPath = Paths.get("./target/nodes/local").toAbsolutePath().normalize().toString();
+
+    @BeforeClass
+    public static void init()
     {
+        // Must be set before Felix startup: temporary storage. (Windows users: add AV exception)
+        new File(tmpPath).mkdirs();
+        System.setProperty("org.osgi.framework.storage", tmpPath);
+
+        // The "local" node metabase is created to allow playing with it before starting any node.
+        new File(localNodeMetaPath).mkdirs();
+
+        // No service should start from a remaining configuration
         try
         {
             FileUtils.cleanDirectory(new File(configPath));
@@ -82,14 +97,18 @@ public class BaseIT
         catch (Exception e)
         {
         }
+    }
 
+    @Configuration
+    public Option[] config() throws IOException
+    {
         return options(junitBundles(), systemPackage("sun.misc"),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
-                systemProperty("felix.cm.dir").value(configPath), mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.14"), mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"),
-                mavenBundle("ch.qos.logback", "logback-core", "1.1.3"), mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
+                systemProperty("felix.cm.dir").value(configPath), systemProperty("org.osgi.framework.storage").value(tmpPath),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"), mavenBundle("org.slf4j", "slf4j-api", "1.7.14"),
+                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"), mavenBundle("ch.qos.logback", "logback-core", "1.1.3"),
+                mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"), mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-basic", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command", "0.9.2-SNAPSHOT"),
@@ -114,8 +133,15 @@ public class BaseIT
         Assert.assertNotNull(order);
         Assert.assertNotNull(conf);
 
-        // Clear directories
-        FileUtils.cleanDirectory(new File("C:/TEMP/db1"));
+        // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
+        meta.resetCache();
+        try
+        {
+            FileUtils.cleanDirectory(new File(localNodeMetaPath));
+        }
+        catch (Exception e)
+        {
+        }
 
         // Maps
         engines = new HashMap<>();
@@ -148,7 +174,7 @@ public class BaseIT
         {
             org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
             Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
-            props.put("org.oxymores.chronix.network.dbpath", "C:/TEMP/amq");
+            props.put("org.oxymores.chronix.network.dbpath", tmpAmqPath);
             props.put("org.oxymores.chronix.network.clear", "true");
             props.put("org.oxymores.chronix.network.nodeid", "3654654");
             cfg.update(props);
@@ -195,11 +221,23 @@ public class BaseIT
 
     protected void addAndStartEngine(String name)
     {
+        addAndStartEngine(name, false);
+    }
+
+    protected void addAndStartEngine(String name, boolean purge)
+    {
         try
         {
+            File nodePath = new File(FilenameUtils.concat(nodesPath, name));
+            nodePath.mkdirs();
+            if (purge)
+            {
+                FileUtils.cleanDirectory(nodePath);
+            }
+
             org.osgi.service.cm.Configuration cfg = conf.getConfiguration("scheduler", null);
             Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
-            props.put("chronix.repository.path", "C:/TEMP/db1");
+            props.put("chronix.repository.path", nodePath.getAbsolutePath());
             props.put("chronix.cluster.node.name", "local");
             cfg.update(props);
 

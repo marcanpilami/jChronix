@@ -1,10 +1,13 @@
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.core.context.api;
 
+import java.io.File;
+import java.util.Map;
 import java.util.UUID;
 
-import org.osgi.service.component.ComponentContext;
+import org.apache.commons.io.FilenameUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application;
@@ -14,7 +17,9 @@ import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.ResOrder;
+import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
+import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -28,12 +33,17 @@ public class ApiOrder implements OrderService
     private String ctxMetaPath, ctxDbHistoryPath, ctxDbTransacPath;
 
     @Activate
-    private void activate(ComponentContext cc)
+    @Modified
+    private void activate(Map<String, String> configuration)
     {
-        // TODO: use configuration. Especially, we need a correct LOCAL NODE for JMS connections to work.
-        ctxMetaPath = "C:\\TEMP\\db1";
-        ctxDbHistoryPath = "C:\\TEMP\\db1\\db_history\\db";
-        ctxDbTransacPath = "C:\\TEMP\\db1\\db_transac\\db";
+        ctxMetaPath = configuration.getOrDefault("chronix.repository.path", "./target/nodes/local");
+        if (!(new File(ctxMetaPath).exists()))
+        {
+            throw new ChronixInitializationException(
+                    "cannot create api service - directory " + ctxMetaPath + " does not exist. Check service configuration.");
+        }
+        ctxDbHistoryPath = FilenameUtils.concat(ctxMetaPath, "db_history/db");
+        ctxDbTransacPath = FilenameUtils.concat(ctxMetaPath, "db_transac/db");
     }
 
     private ChronixContextTransient getCtxDb()
