@@ -6,8 +6,8 @@ import java.util.Set;
 
 import org.oxymores.chronix.api.exception.ModelUpdateException;
 import org.oxymores.chronix.api.exception.SerializationException;
-import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.api.source.EventSource;
+import org.oxymores.chronix.api.source.EventSourceRegistry;
 
 public interface ParameterProvider
 {

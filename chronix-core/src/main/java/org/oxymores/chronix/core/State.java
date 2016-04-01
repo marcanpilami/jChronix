@@ -32,11 +32,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.source.DTOState;
+import org.oxymores.chronix.api.source.DTOTransition;
+import org.oxymores.chronix.api.source.EventSource;
+import org.oxymores.chronix.api.source.EventSourceContainer;
 import org.oxymores.chronix.core.context.Application;
-import org.oxymores.chronix.core.source.api.DTOState;
-import org.oxymores.chronix.core.source.api.DTOTransition;
-import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceContainer;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
 import org.oxymores.chronix.core.transactional.Event;

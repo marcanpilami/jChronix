@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core.source.api;
+package org.oxymores.chronix.api.source;
 
 /**
  * By implementing this interface (which is empty) an {@link EventSource} signals the engine that its results should not appear inside the

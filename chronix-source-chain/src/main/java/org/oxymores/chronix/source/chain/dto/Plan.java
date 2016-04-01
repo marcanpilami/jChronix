@@ -2,12 +2,12 @@ package org.oxymores.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceContainer;
-import org.oxymores.chronix.core.source.api.EventSourceOptionNoState;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceContainer;
+import org.oxymores.chronix.api.source.EventSourceOptionNoState;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.source.chain.prv.PlanBehaviour;
 
 public class Plan extends EventSourceContainer implements EventSourceOptionNoState

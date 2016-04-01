@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.JobDescription;
 
 public class RunResult implements Serializable
 {

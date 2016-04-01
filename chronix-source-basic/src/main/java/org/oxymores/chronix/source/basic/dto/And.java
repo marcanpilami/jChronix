@@ -2,12 +2,12 @@ package org.oxymores.chronix.source.basic.dto;
 
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceOptionAnd;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.EventSourceTriggered;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceOptionAnd;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.EventSourceTriggered;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.source.basic.prv.AndBehaviour;
 
 public class And extends EventSourceTriggered implements EventSourceOptionAnd

@@ -37,7 +37,7 @@ import org.oxymores.chronix.agent.command.api.CommandRunner;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.agent.MessageListenerService;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

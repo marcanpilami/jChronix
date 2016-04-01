@@ -3,8 +3,8 @@ package org.oxymores.chronix.core.context;
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSource;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 
 public interface IMetaSource
 {

@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core.source.api;
+package org.oxymores.chronix.api.source;
 
 /**
  * The most common type of {@link EventSource}.<br>

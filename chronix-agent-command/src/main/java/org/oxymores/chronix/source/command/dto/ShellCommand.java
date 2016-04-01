@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.oxymores.chronix.agent.command.api.CommandDescription;
-import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.EventSourceTriggered;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.EventSourceTriggered;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.source.command.prv.ShellCommandRegistry;
 
 /**

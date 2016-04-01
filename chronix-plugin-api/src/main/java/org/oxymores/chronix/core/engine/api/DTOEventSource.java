@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.oxymores.chronix.api.prm.Parameter;
-import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.api.source.EventSource;
 
 public class DTOEventSource implements Serializable
 {

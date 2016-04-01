@@ -7,9 +7,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.core.source.api.EventSource;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.api.source.EventSource;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRegistry;
 import org.oxymores.chronix.source.chain.dto.Chain;
 
 import com.thoughtworks.xstream.XStream;

@@ -2,12 +2,12 @@ package org.oxymores.chronix.source.chain.dto;
 
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceOptionCannotEmit;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.EventSourceTriggered;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceOptionCannotEmit;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.EventSourceTriggered;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.source.chain.prv.ChainEndBehaviour;
 
 public class ChainEnd extends EventSourceTriggered implements EventSourceOptionCannotEmit

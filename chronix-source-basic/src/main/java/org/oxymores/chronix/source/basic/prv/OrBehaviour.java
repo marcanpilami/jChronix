@@ -3,8 +3,8 @@ package org.oxymores.chronix.source.basic.prv;
 import java.io.File;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRegistry;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRegistry;
 import org.oxymores.chronix.source.basic.dto.Or;
 
 @Component(immediate = true, service = EventSourceProvider.class)

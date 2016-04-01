@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.EventSource;
+import org.oxymores.chronix.api.source.EventSource;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOApplication

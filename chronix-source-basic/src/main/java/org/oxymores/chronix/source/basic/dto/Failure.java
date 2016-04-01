@@ -2,13 +2,13 @@ package org.oxymores.chronix.source.basic.dto;
 
 import java.util.UUID;
 
-import org.oxymores.chronix.core.source.api.DTOEvent;
-import org.oxymores.chronix.core.source.api.DTOTransition;
-import org.oxymores.chronix.core.source.api.EngineCallback;
-import org.oxymores.chronix.core.source.api.EventSourceProvider;
-import org.oxymores.chronix.core.source.api.EventSourceRunResult;
-import org.oxymores.chronix.core.source.api.EventSourceTriggered;
-import org.oxymores.chronix.core.source.api.JobDescription;
+import org.oxymores.chronix.api.source.DTOEvent;
+import org.oxymores.chronix.api.source.DTOTransition;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.EventSourceTriggered;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.source.basic.prv.FailureBehaviour;
 
 public class Failure extends EventSourceTriggered

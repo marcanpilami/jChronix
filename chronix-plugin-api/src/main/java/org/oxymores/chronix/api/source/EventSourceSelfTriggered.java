@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core.source.api;
+package org.oxymores.chronix.api.source;
 
 import org.joda.time.DateTime;
 

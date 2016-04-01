@@ -30,11 +30,11 @@ import java.util.UUID;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.core.ExecutionNode;
 import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.context.Application;
-import org.oxymores.chronix.core.source.api.DTOTransition;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.slf4j.Logger;

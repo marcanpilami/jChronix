@@ -30,6 +30,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;
@@ -37,7 +38,6 @@ import org.oxymores.chronix.core.Place;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
-import org.oxymores.chronix.core.source.api.JobDescription;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
 import org.sql2o.Connection;
