@@ -8,8 +8,8 @@ import javax.jms.ObjectMessage;
 
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSource;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source2.DTOEventSource;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.ChronixEngine;
@@ -66,7 +66,7 @@ public class EngineCbRun implements EngineCallback
     }
 
     @Override
-    public EventSource getEventSource(UUID id)
+    public DTOEventSource getEventSource(UUID id)
     {
         return this.a.getEventSource(id);
     }

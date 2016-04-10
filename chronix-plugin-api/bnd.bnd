@@ -2,6 +2,7 @@
 	org.oxymores.chronix.engine.modularity.web, \
 	org.oxymores.chronix.core.engine.api, \
 	org.oxymores.chronix.api.source, \
+	org.oxymores.chronix.api.source2, \
 	org.oxymores.chronix.api.exception, \
 	org.oxymores.chronix.api.agent, \
 	org.oxymores.chronix.api.prm, \

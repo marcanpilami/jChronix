@@ -133,7 +133,7 @@ class TranscientListener implements MessageCallback
                 String represents = "a calendar";
                 if (cp.getPlaceID() != null)
                 {
-                    represents = ss.getRepresents().getName();
+                    represents = ss.getRepresentsContainer().getName();
                 }
                 log.debug(String.format(
                         "The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]",

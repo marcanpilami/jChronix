@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
 
 /**
  * A JobDescription gives all which is needed to run a job: the source that should run, the different ID...
@@ -50,4 +51,11 @@ public interface JobDescription
      * Note that this is an <code>Entry</code> list and not a Map: keys can be empty or non-unique.
      */
     public List<Map.Entry<String, String>> getParameters();
+
+    /**
+     * The resolved values corresponding to the fields of event source, as described by {@link EventSourceProvider#getFields()} <br>
+     * The values have already been validated.<br>
+     * This is a <code>Map</code> as field keys are unique and order is not important (fields should always be accessed by key).
+     */
+    public Map<String, String> getFields();
 }

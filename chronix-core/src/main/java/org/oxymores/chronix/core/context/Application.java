@@ -21,9 +21,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceContainer;
-import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.PlaceGroup;
@@ -34,7 +34,7 @@ import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Application implements IMetaSource, Serializable
+public class Application implements Serializable
 {
     private static final long serialVersionUID = -7565792688611748679L;
     private static final Logger log = LoggerFactory.getLogger(Application.class);
@@ -123,8 +123,7 @@ public class Application implements IMetaSource, Serializable
     // Source handling
     ///////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public EventSource getEventSource(UUID id)
+    public DTOEventSource getEventSource(UUID id)
     {
         if (!this.containsSource(id))
         {
@@ -142,71 +141,9 @@ public class Application implements IMetaSource, Serializable
         return this.sources.get(id);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends EventSource> List<T> getEventSources(Class<T> klass)
-    {
-        List<T> res = new ArrayList<>();
-        for (EventSourceWrapper d : this.sources.values())
-        {
-            if (d != null && klass.isInstance(d.getSource()))
-            {
-                res.add((T) d.getSource());
-            }
-        }
-        return res;
-    }
-
-    /**
-     * Returns a copy of the event source list.
-     */
-    public List<EventSource> getEventSources()
-    {
-        List<EventSource> res = new ArrayList<>();
-        for (EventSourceWrapper s : this.sources.values())
-        {
-            res.add(s.getSource());
-        }
-        return res;
-    }
-
     public Map<UUID, EventSourceWrapper> getEventSourceWrappers()
     {
         return this.sources;
-    }
-
-    @Override
-    public <T extends EventSource & Serializable> void registerSource(T source, String pluginSymbolicName)
-    {
-        if (source.getId() == null)
-        {
-            throw new IllegalArgumentException("event source must have a non null ID");
-        }
-        log.trace("Registering event source with ID " + source.getId() + " from plugin " + pluginSymbolicName + " of class "
-                + source.getClass().getSimpleName() + " - " + this.toString());
-        EventSourceWrapper esc = this.sources.get(source.getId());
-        if (esc == null)
-        {
-            esc = new EventSourceWrapper(this, source, pluginSymbolicName);
-            sources.put(source.getId(), esc);
-        }
-        else
-        {
-            esc.setSource(source, pluginSymbolicName);
-        }
-    }
-
-    @Override
-    public <T extends EventSource> void unregisterSource(T source)
-    {
-        if (this.sources.containsKey(source.getId()))
-        {
-            this.sources.remove(source.getId());
-        }
-    }
-
-    public boolean containsSource(EventSource source)
-    {
-        return this.containsSource(source.getId());
     }
 
     public boolean containsSource(UUID id)
@@ -214,27 +151,28 @@ public class Application implements IMetaSource, Serializable
         return this.sources.containsKey(id);
     }
 
-    public Set<Class<? extends EventSource>> getAllEventSourceClasses()
+    public List<DTOEventSource> getEventSources(EventSourceProvider pr)
     {
-        Set<Class<? extends EventSource>> res = new HashSet<>();
-        for (EventSourceWrapper es : this.sources.values())
-        {
-            res.add(es.getSource().getClass());
-        }
-        return res;
-    }
-
-    public List<EventSource> getEventSources(EventSourceProvider pr)
-    {
-        List<EventSource> res = new ArrayList<>();
+        List<DTOEventSource> res = new ArrayList<>();
         for (EventSourceWrapper s : this.sources.values())
         {
-            if (s.getSource().getProvider().equals(pr.getClass()))
+            if (s.isInstanceOf(pr.getClass()))
             {
                 res.add(s.getSource());
             }
         }
         return res;
+    }
+
+    public void removeSource(DTOEventSource src)
+    {
+        this.sources.remove(src.getId());
+    }
+
+    public void addSource(DTOEventSource src, EventSourceProvider prv)
+    {
+        EventSourceWrapper w = new EventSourceWrapper(src, prv);
+        this.sources.put(src.getId(), w);
     }
 
     void waitForAllPlugins()
@@ -459,7 +397,7 @@ public class Application implements IMetaSource, Serializable
     // STATES
     ///////////////////////////////////////////////////////////////////////////
 
-    private State dto2state(DTOState d, EventSourceContainer parent)
+    private State dto2state(DTOState d, DTOEventSourceContainer parent)
     {
         List<DTOTransition> trFromState = new ArrayList<>(), trToState = new ArrayList<>();
         for (DTOTransition tr : parent.getContainedTransitions())
@@ -483,7 +421,7 @@ public class Application implements IMetaSource, Serializable
         {
             if (d.isContainer())
             {
-                EventSourceContainer c = (EventSourceContainer) d.getSource();
+                DTOEventSourceContainer c = (DTOEventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())
                 {
                     if (s.getId().equals(id))
@@ -504,7 +442,7 @@ public class Application implements IMetaSource, Serializable
         {
             if (d.isContainer())
             {
-                EventSourceContainer c = (EventSourceContainer) d.getSource();
+                DTOEventSourceContainer c = (DTOEventSourceContainer) d.getSource();
                 for (DTOState s : c.getContainedStates())
                 {
                     if (s.getEventSourceId() == sourceId)

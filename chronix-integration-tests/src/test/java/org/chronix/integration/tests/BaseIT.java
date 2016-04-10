@@ -13,6 +13,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -31,6 +32,10 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.oxymores.chronix.api.source.DTOState;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
 import org.oxymores.chronix.core.engine.api.ChronixEngine;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.HistoryService;
@@ -38,11 +43,6 @@ import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.HistoryQuery;
-import org.oxymores.chronix.source.basic.dto.And;
-import org.oxymores.chronix.source.basic.dto.Failure;
-import org.oxymores.chronix.source.basic.dto.Noop;
-import org.oxymores.chronix.source.basic.dto.Or;
-import org.oxymores.chronix.source.chain.dto.Plan;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -63,13 +63,15 @@ public class BaseIT
     @Inject
     protected OrderService order;
 
+    protected EventSourceProvider chainPrv, planPrv;
+
     protected DTOEnvironment envt;
     protected DTOApplication app;
-    protected Plan plan1;
-    protected Noop noop;
-    protected And and;
-    protected Or or;
-    protected Failure failure;
+    protected DTOEventSource plan1;
+    protected DTOEventSource noop;
+    protected DTOEventSource and;
+    protected DTOEventSource or;
+    protected DTOEventSource failure;
     protected Map<String, ChronixEngine> engines;
 
     protected static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
@@ -125,6 +127,29 @@ public class BaseIT
                 mavenBundle("javax.validation", "validation-api", "1.1.0.Final"));
     }
 
+    private EventSourceProvider getProvider(String implementationClassName)
+    {
+        ServiceTracker<EventSourceProvider, EventSourceProvider> st = null;
+        try
+        {
+            st = new ServiceTracker<>(bc, bc.createFilter("(component.name=" + implementationClassName + ")"), null);
+            st.open();
+            st.waitForService(2000);
+            return st.getService();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            if (st != null)
+            {
+                st.close();
+            }
+        }
+    }
+
     @Before
     public void before() throws Exception
     {
@@ -132,6 +157,12 @@ public class BaseIT
         Assert.assertNotNull(meta);
         Assert.assertNotNull(order);
         Assert.assertNotNull(conf);
+
+        // Factories
+        chainPrv = getProvider("org.oxymores.chronix.source.chain.prv.ChainProvider");
+        Assert.assertNotNull(chainPrv);
+        planPrv = getProvider("org.oxymores.chronix.source.chain.prv.PlanProvider");
+        Assert.assertNotNull(planPrv);
 
         // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
         meta.resetCache();
@@ -146,12 +177,6 @@ public class BaseIT
         // Maps
         engines = new HashMap<>();
 
-        // base elements
-        noop = new Noop();
-        and = new And();
-        or = new Or();
-        failure = new Failure();
-
         // Environment
         envt = meta.createMinimalEnvironment(); // node is called "local"
         meta.saveEnvironmentDraft(envt);
@@ -160,9 +185,14 @@ public class BaseIT
         app = meta.createMinimalApplication(); // also creates placegroup "local"
         app.setName("test app");
         app.setDescription("This app was created by integration tests");
-        app.addEventSource(noop);
-        plan1 = new Plan("plan", "integration test plan");
-        app.addEventSource(plan1);
+        // app.addEventSource(noop);
+        plan1 = planPrv.newInstance("plan", "integration test plan", app);
+
+        // base elements
+        noop = getProvider("org.oxymores.chronix.source.basic.prv.NoopProvider").newInstance("", "", app);
+        and = getProvider("org.oxymores.chronix.source.basic.prv.AndProvider").newInstance("", "", app);
+        or = getProvider("org.oxymores.chronix.source.basic.prv.OrProvider").newInstance("", "", app);
+        failure = getProvider("org.oxymores.chronix.source.basic.prv.FailureProvider").newInstance("", "", app);
 
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
@@ -343,5 +373,29 @@ public class BaseIT
         history.query(q);
         int all = q.getRes().size();
         Assert.assertEquals(nbKo, all - ok);
+    }
+
+    protected DTOState getChainStart(DTOEventSourceContainer c)
+    {
+        for (DTOState s : c.getContainedStates())
+        {
+            if (s.getEventSourceId().equals(UUID.fromString("647594b0-498f-4042-933f-855682095c6c")))
+            {
+                return s;
+            }
+        }
+        throw new RuntimeException("invalid chain");
+    }
+
+    protected DTOState getChainEnd(DTOEventSourceContainer c)
+    {
+        for (DTOState s : c.getContainedStates())
+        {
+            if (s.getEventSourceId().equals(UUID.fromString("8235272c-b78d-4350-a887-aed0dcdfb215")))
+            {
+                return s;
+            }
+        }
+        throw new RuntimeException("invalid chain");
     }
 }

@@ -115,8 +115,8 @@ public class StateAnalyser
             {
                 // No need to go further - at least one transition will block everything for all places
                 log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
-                        s.getRepresents().getName(), s.getContainerName(),
-                        this.application.getState(tr.getFrom()).getRepresents().getName()));
+                        s.getRepresentsContainer().getName(), s.getContainerName(),
+                        this.application.getState(tr.getFrom()).getRepresentsContainer().getName()));
                 this.analysis.clear();
                 return;
             }
@@ -126,7 +126,7 @@ public class StateAnalyser
 
         List<Place> places = this.getPossiblePlaces();
         log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places",
-                s.getRepresents().getName(), s.getContainerName(), places.size()));
+                s.getRepresentsContainer().getName(), s.getContainerName(), places.size()));
 
         // Check calendar
         for (Place p : places.toArray(new Place[0]))
@@ -137,14 +137,14 @@ public class StateAnalyser
             }
         }
         log.debug(String.format("After taking calendar conditions into account, the state [%s] in chain [%s] could run on %s places",
-                s.getRepresents().getName(), s.getContainerName(), places.size()));
+                s.getRepresentsContainer().getName(), s.getContainerName(), places.size()));
 
         // Go
         if (!places.isEmpty())
         {
             log.debug(String.format(
                     "State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
-                    s.getRepresents().getName(), s.getContainerName(), places.size(), this.consumedEvents.size()));
+                    s.getRepresentsContainer().getName(), s.getContainerName(), places.size(), this.consumedEvents.size()));
 
             this.consumeEvents(s, this.consumedEvents, places, conn);
             for (Place p : places)

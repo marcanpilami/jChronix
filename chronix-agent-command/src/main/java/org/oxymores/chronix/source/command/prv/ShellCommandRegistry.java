@@ -1,72 +1,80 @@
 package org.oxymores.chronix.source.command.prv;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceProvider;
-import org.oxymores.chronix.api.source.EventSourceRegistry;
-import org.oxymores.chronix.source.command.dto.ShellCommand;
+import org.oxymores.chronix.agent.command.api.CommandDescription;
+import org.oxymores.chronix.api.source.DTOEvent;
+import org.oxymores.chronix.api.source.DTOTransition;
+import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceRunResult;
+import org.oxymores.chronix.api.source.JobDescription;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.EventSourceField;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
+import org.oxymores.chronix.api.source2.OptionAllowsAdditionalFields;
+import org.oxymores.chronix.api.source2.RunModeTriggered;
+import org.oxymores.chronix.core.engine.api.DTOApplication;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
-
-@Component(immediate = false, service = EventSourceProvider.class)
-public class ShellCommandRegistry extends EventSourceProvider
+@Component
+public class ShellCommandRegistry implements EventSourceProvider, RunModeTriggered, OptionAllowsAdditionalFields
 {
     @Override
-    public String getSourceName()
+    public String getName()
     {
         return "Shell command";
     }
 
     @Override
-    public String getSourceDescription()
+    public String getDescription()
     {
         return "a command that can be run against a variety of Unix and Windows shells";
     }
 
     @Override
-    public void deserialise(File sourceFile, EventSourceRegistry reg)
+    public List<EventSourceField> getFields()
     {
-        if (!sourceFile.isDirectory() || sourceFile.list().length == 0)
-        {
-            return;
-        }
-        File file = new File(sourceFile.getAbsolutePath() + "/commands.xml");
-        XStream xmlUtility = new XStream(new StaxDriver());
-        xmlUtility.setClassLoader(ShellCommandRegistry.class.getClassLoader());
-
-        @SuppressWarnings("unchecked")
-        List<ShellCommand> res = (List<ShellCommand>) xmlUtility.fromXML(file);
-        for (ShellCommand c : res)
-        {
-            reg.registerSource(c);
-        }
+        List<EventSourceField> res = new ArrayList<EventSourceField>(3);
+        res.add(new EventSourceField("runnerCapability", "the type of runner which should run this command", null, true));
+        return res;
     }
 
     @Override
-    public void serialise(File targetFile, Collection<? extends EventSource> instances)
+    public EventSourceRunResult run(DTOEventSource source, EngineCallback cb, JobDescription jd)
     {
-        List<ShellCommand> sources = new ArrayList<>();
-        for (EventSource d : instances)
+        // Just send the command to the command agent
+        CommandDescription cd = new CommandDescription();
+        cd.setLaunchId(jd.getLaunchId());
+        cd.setRunnerCapability(jd.getFields().get("runnerCapability"));
+        cd.setStoreLogFile(true);
+        for (Map.Entry<String, String> prm : jd.getParameters())
         {
-            sources.add((ShellCommand) d);
+            cd.addParameter(prm.getKey(), prm.getValue());
         }
-        XStream xmlUtility = new XStream(new StaxDriver());
-        File target = new File(targetFile.getAbsolutePath() + "/commands.xml");
+        for (Map.Entry<String, String> prm : jd.getFields().entrySet())
+        {
+            cd.addPluginParameter(prm.getKey(), prm.getValue());
+        }
+        cb.sendMessage(cd, "Q." + cb.getNodeName() + ".RUNNER", cb.getResultQueueName());
 
-        try (FileOutputStream fos = new FileOutputStream(target))
-        {
-            xmlUtility.toXML(sources, fos);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Could not save commands to file", e);
-        }
+        // This plugin is always asynchronous.
+        return null;
     }
+
+    @Override
+    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... parameters)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isTransitionPossible(DTOEventSource source, DTOTransition tr, DTOEvent event)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

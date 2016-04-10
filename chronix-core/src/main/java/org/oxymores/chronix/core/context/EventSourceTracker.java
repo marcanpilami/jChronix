@@ -1,17 +1,15 @@
 package org.oxymores.chronix.core.context;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.io.FilenameUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceProvider;
-import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
+import org.oxymores.chronix.core.EventSourceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,21 +46,17 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
         apps.addAll(this.ctx.getDrafts());
         for (Application app : apps)
         {
-            File appDir = this.ctx.getRootApplication(app.getId());
-            if (!appDir.isDirectory())
+            int i = 0;
+            for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
             {
-                throw new ChronixInitializationException("Configuration directory " + appDir.getAbsolutePath() + " cannot be opened");
+                if (esw.getPluginSymbolicName().equals(ref.getBundle().getSymbolicName()))
+                {
+                    esw.setProvider(srv);
+                    i++;
+                }
             }
 
-            File bundleDir = new File(FilenameUtils.concat(appDir.getAbsolutePath(), ref.getBundle().getSymbolicName()));
-            if (!bundleDir.isDirectory() && !bundleDir.mkdir())
-            {
-                throw new ChronixInitializationException(
-                        "Configuration directory " + bundleDir.getAbsolutePath() + " does not exist and could not be created");
-            }
-
-            log.trace("Asking plugin " + ref.getBundle().getSymbolicName() + " to read directory " + bundleDir.getAbsolutePath());
-            srv.deserialise(bundleDir, new EngineCb(app, srv, ref.getBundle().getSymbolicName()));
+            log.trace("Plugin " + ref.getBundle().getSymbolicName() + " has " + i + " event sources in application " + app.getName());
         }
 
         return srv;
@@ -82,9 +76,9 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
 
         for (Application app : this.ctx.getApplications())
         {
-            for (EventSource o : app.getEventSources(service))
+            for (DTOEventSource o : app.getEventSources(service))
             {
-                app.unregisterSource(o);
+                app.removeSource(o);
             }
         }
     }

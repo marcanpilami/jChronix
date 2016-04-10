@@ -1,5 +1,4 @@
 -exportcontents: \
-	org.oxymores.chronix.source.basic.dto, \
 	org.oxymores.chronix.prm.basic.dto
 -sources: true
 -dsannotations: *

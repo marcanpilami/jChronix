@@ -1,5 +1,5 @@
 package org.chronix.integration.tests;
-
+/*
 import org.junit.Test;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.source.chain.dto.Chain;
@@ -97,3 +97,4 @@ public class TestGatesSingleNode extends BaseIT
         checkHistory(5, 1);
     }
 }
+*/

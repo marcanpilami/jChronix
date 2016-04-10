@@ -14,11 +14,10 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Path.Node;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.oxymores.chronix.api.prm.Parameter;
+import org.oxymores.chronix.api.source2.DTOEventSource;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;
@@ -30,7 +29,6 @@ import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOApplicationShort;
-import org.oxymores.chronix.core.engine.api.DTOEventSource;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOPlace;
@@ -237,11 +235,7 @@ public class ApiPlanAccess implements PlanAccessService
 
         for (DTOEventSource d : app.getEventSources())
         {
-            a.registerSource(d.getSource(), FrameworkUtil.getBundle(d.getSource().getClass()).getSymbolicName());
-            for (Map.Entry<String, Parameter> prm : d.getParameters().entrySet())
-            {
-                a.getEventSourceContainer(d.getSource().getId()).addParameter(prm.getKey(), "", prm.getValue());
-            }
+            a.addSource(d, this.getMetaDb().getSourceProvider(d.getBehaviourClassName()));
         }
 
         for (DTOPlaceGroup pg : app.getGroups())

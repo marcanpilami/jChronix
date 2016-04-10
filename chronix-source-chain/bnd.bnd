@@ -1,4 +1,2 @@
--exportcontents: \
-	org.oxymores.chronix.source.chain.dto	
 -sources: true
 -dsannotations: *

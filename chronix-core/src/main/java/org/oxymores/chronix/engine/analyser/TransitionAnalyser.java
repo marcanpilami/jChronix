@@ -55,7 +55,8 @@ class TransitionAnalyser
         State to = app.getState(tr.getTo());
 
         log.debug(String.format("Transition from State %s (%s) to State %s (%s - chain %s) analysis with %s events", from.getId(),
-                from.getRepresents().getName(), to.getId(), to.getRepresents().getName(), to.getContainerName(), events.size()));
+                from.getRepresentsContainer().getName(), to.getId(), to.getRepresentsContainer().getName(), to.getContainerName(),
+                events.size()));
 
         this.analysisPlaces = from.getRunsOnPlaces();
         for (Place p : analysisPlaces)

@@ -34,8 +34,7 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceContainer;
+import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
 import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
@@ -60,7 +59,7 @@ public class State extends ApplicationObject
 
     // The container it belongs to
     @NotNull
-    protected EventSourceContainer container;
+    protected DTOEventSourceContainer container;
 
     // Transitions
     @NotNull
@@ -77,7 +76,7 @@ public class State extends ApplicationObject
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application app, DTOState state, EventSourceContainer container, List<DTOTransition> trFromState,
+    public State(Application app, DTOState state, DTOEventSourceContainer container, List<DTOTransition> trFromState,
             List<DTOTransition> trToState)
     {
         super();
@@ -204,11 +203,6 @@ public class State extends ApplicationObject
     public List<DTOTransition> getTransitionsReceivedHere()
     {
         return this.trReceivedHere;
-    }
-
-    public EventSource getRepresents()
-    {
-        return this.application.getEventSource(this.dto.getEventSourceId());
     }
 
     public EventSourceWrapper getRepresentsContainer()
@@ -409,7 +403,7 @@ public class State extends ApplicationObject
         pj.addEnvValueToCache("CHR_STATEID", this.id.toString());
         pj.addEnvValueToCache("CHR_CONTAINERID", this.container == null ? "" : this.container.getId().toString());
         pj.addEnvValueToCache("CHR_LAUNCHID", pj.getId().toString());
-        pj.addEnvValueToCache("CHR_JOBNAME", this.getRepresents().getName());
+        pj.addEnvValueToCache("CHR_JOBNAME", this.getRepresentsContainer().getName());
         pj.addEnvValueToCache("CHR_PLACEID", p.id.toString());
         pj.addEnvValueToCache("CHR_PLACENAME", p.name);
         pj.addEnvValueToCache("CHR_PLACEGROUPID", this.getRunsOn().getId().toString());
@@ -451,7 +445,7 @@ public class State extends ApplicationObject
         }
 
         // Done
-        log.debug(String.format("State (%s - chain %s) was enqueued for launch on place %s", this.getRepresents().getName(),
+        log.debug(String.format("State (%s - chain %s) was enqueued for launch on place %s", this.getRepresentsContainer().getName(),
                 this.getContainerName(), p.name));
     }
 
@@ -514,8 +508,8 @@ public class State extends ApplicationObject
 
         if (i != 0)
         {
-            log.debug(String.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id, this.getRepresents().getName(),
-                    this.getContainerName(), i));
+            log.debug(String.format("State %s (%s - chain %s) has created %s calendar pointer(s).", this.id,
+                    this.getRepresentsContainer().getName(), this.getContainerName(), i));
         }
         // Commit is done by the calling method
     }
@@ -531,7 +525,7 @@ public class State extends ApplicationObject
         Calendar cal = this.getCalendar();
 
         log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id,
-                this.getRepresents().getName(), this.getContainerName()));
+                this.getRepresentsContainer().getName(), this.getContainerName()));
 
         // Get the pointer (on the given place)
         /*
@@ -543,7 +537,7 @@ public class State extends ApplicationObject
         if (cp == null)
         {
             log.error(String.format("State %s (%s - chain %s): CalendarPointer is null - should not be possible. It's a bug.", this.id,
-                    this.getRepresents().getName(), this.getContainerName()));
+                    this.getRepresentsContainer().getName(), this.getContainerName()));
             return false;
         }
 
@@ -588,8 +582,8 @@ public class State extends ApplicationObject
         }
 
         // If here, alles gut.
-        log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id, this.getRepresents().getName(),
-                this.getContainerName()));
+        log.debug(String.format("State %s (%s - chain %s) can run according to its calendar.", this.id,
+                this.getRepresentsContainer().getName(), this.getContainerName()));
         return true;
     }
 

@@ -18,8 +18,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.prm.ParameterProvider;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceProvider;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;
@@ -310,34 +309,6 @@ public class ChronixContextMeta
             throw new ChronixPlanStorageException("Could not save application to file", e);
         }
 
-        // Save (by a source plugin) the event sources (without their parameters)
-        for (Object ob : this.getAllKnownSourceProviders())
-        {
-            if (ob == null)
-            {
-                continue;
-            }
-
-            for (Class<? extends EventSource> c : app.getAllEventSourceClasses())
-            {
-                String f = FrameworkUtil.getBundle(c).getSymbolicName();
-                File targetBundleDir = new File(FilenameUtils.concat(targetDir.getAbsolutePath(), f));
-
-                if (!targetBundleDir.exists() && !targetBundleDir.mkdir())
-                {
-                    throw new ChronixPlanStorageException(
-                            "plugin directory does not exist and cannot be created: " + targetBundleDir.getAbsolutePath());
-                }
-
-                List<? extends EventSource> p = app.getEventSources(c);
-                if (p.size() == 0)
-                {
-                    continue;
-                }
-                getSourceProviderForClass(p.get(0).getProvider()).serialise(targetBundleDir, p);
-            }
-        }
-
         // Save (by a parameter plugin) the parameters of all event sources
         Map<Class<? extends ParameterProvider>, List<Parameter>> prms = new HashMap<>();
         for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
@@ -567,6 +538,26 @@ public class ChronixContextMeta
             }
         }
         throw new ChronixException("no such provider");
+    }
+
+    /**
+     * Throws an exception if nothing found. Does not wait for a provider.
+     * 
+     * @param className
+     *            - canonical class name
+     * @return
+     */
+    public EventSourceProvider getSourceProvider(String className)
+    {
+        for (Object o : this.getAllKnownSourceProviders())
+        {
+            EventSourceProvider res = (EventSourceProvider) o;
+            if (res.getClass().getCanonicalName().equals(className))
+            {
+                return res;
+            }
+        }
+        throw new ChronixPlanStorageException("no provider of class " + className);
     }
 
     private Object[] getAllKnownParameterProviders()

@@ -136,7 +136,7 @@ public class TranscientBase implements Serializable
         if (state != null)
         {
             this.stateID = state.getId();
-            this.setActiveID(state.getRepresents().getId());
+            this.setActiveID(state.getRepresentsContainer().getId());
             this.setApplication(state.getApplication());
         }
         else

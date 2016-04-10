@@ -21,6 +21,7 @@ package org.oxymores.chronix.core.transactional;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,8 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     // Format is : parameter UUID, parameter key, parameter value. Order is preserved (LinkedHashMap).
     private transient Map<UUID, Map.Entry<String, String>> resolvedParameters;
+
+    private transient Map<String, String> resolvedFields = new HashMap<>();
 
     public PipelineJob()
     {
@@ -105,6 +108,20 @@ public class PipelineJob extends TranscientBase implements JobDescription
         {
             resolvedParameters.put(ph.getParameterId(), new AbstractMap.SimpleEntry<String, String>(ph.getKey(), (String) null));
         }
+    }
+
+    ///////////////
+    // Fields
+
+    public void setFieldValue(String key, String value)
+    {
+        this.resolvedFields.put(key, value);
+    }
+
+    @Override
+    public Map<String, String> getFields()
+    {
+        return new HashMap<>(this.resolvedFields);
     }
 
     /////////////////////

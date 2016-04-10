@@ -34,9 +34,10 @@ public class DTOState
         return x;
     }
 
-    public void setX(Integer x)
+    public DTOState setX(Integer x)
     {
         this.x = x;
+        return this;
     }
 
     public Integer getY()
@@ -44,9 +45,10 @@ public class DTOState
         return y;
     }
 
-    public void setY(Integer y)
+    public DTOState setY(Integer y)
     {
         this.y = y;
+        return this;
     }
 
     public Boolean getParallel()

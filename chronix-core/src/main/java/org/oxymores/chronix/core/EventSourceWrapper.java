@@ -24,50 +24,59 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSource;
-import org.oxymores.chronix.api.source.EventSourceContainer;
 import org.oxymores.chronix.api.source.EventSourceOptionInvisible;
 import org.oxymores.chronix.api.source.EventSourceOptionOr;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source.EventSourceSelfTriggered;
-import org.oxymores.chronix.api.source.EventSourceTriggered;
 import org.oxymores.chronix.api.source.JobDescription;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source2.EventSourceProvider;
+import org.oxymores.chronix.api.source2.RunModeDisabled;
+import org.oxymores.chronix.api.source2.RunModeExternalyTriggered;
+import org.oxymores.chronix.api.source2.RunModeForced;
+import org.oxymores.chronix.api.source2.RunModeTriggered;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
 
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
-
 public class EventSourceWrapper implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
-
-    // TODO: really used?
-    private Application application;
 
     /**
      * A simple indication - only used when a plugin is missing and we need its name to help the user.
      **/
     private String pluginName;
 
-    // The real event source description. Must NOT be XML-serialised. Each plugin is responsible for its own serialisation.
-    @XStreamOmitField
-    private EventSource eventSource;
+    /**
+     * The real event source description.
+     */
+    private DTOEventSource eventSource;
 
+    /**
+     * The provider associated to the event source. Not serialised ever. Duplicate from the DTO - this way, the DTO does not expose the
+     * provider.
+     */
+    private transient EventSourceProvider provider;
+
+    /**
+     * Whether the source should run enabled or disabled.
+     */
     private boolean enabled = true;
 
     private List<ParameterHolder> parameters = new ArrayList<>();
 
-    public EventSourceWrapper(Application app, EventSource source, String pluginSymbolicName)
+    public EventSourceWrapper(DTOEventSource source, EventSourceProvider provider)
     {
         super();
-        this.application = app;
         this.eventSource = source;
-        this.pluginName = pluginSymbolicName;
+        this.provider = provider;
+        this.eventSource.setBehaviour(provider);
+        this.pluginName = FrameworkUtil.getBundle(provider.getClass()).getBundleContext().getBundle().getSymbolicName();
     }
 
     @Override
@@ -90,6 +99,17 @@ public class EventSourceWrapper implements Serializable
             parameters = new ArrayList<>();
         }
         return this;
+    }
+
+    public boolean isInstanceOf(Class<? extends EventSourceProvider> prv)
+    {
+        return prv.isInstance(this.provider);
+    }
+
+    public void setProvider(EventSourceProvider prv)
+    {
+        this.eventSource.setBehaviour(prv);
+        this.provider = prv;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -115,12 +135,12 @@ public class EventSourceWrapper implements Serializable
         return this.pluginName;
     }
 
-    public EventSource getSource()
+    public DTOEventSource getSource()
     {
         return this.eventSource;
     }
 
-    public void setSource(EventSource s, String pluginName)
+    public void setSource(DTOEventSource s, String pluginName)
     {
         this.eventSource = s;
         this.pluginName = pluginName;
@@ -137,17 +157,6 @@ public class EventSourceWrapper implements Serializable
     }
 
     // stupid get/set
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Relationship traversing
-
-    public List<State> getClientStates()
-    {
-        return this.application.getStatesClientOfSource(getId());
-    }
-
-    // Relationship traversing
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
@@ -183,7 +192,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isTransitionPossible(DTOTransition tr, Event evt)
     {
-        return this.eventSource.isTransitionPossible(tr, evt);
+        return this.provider.isTransitionPossible(this.eventSource, tr, evt);
     }
 
     //
@@ -205,7 +214,7 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        EventSourceRunResult esrr = this.checkEngineTriggered().run(cb, jd);
+        EventSourceRunResult esrr = this.checkEngineTriggered().run(this.eventSource, cb, jd);
         if (esrr != null)
         {
             return new RunResult(jd, esrr);
@@ -215,21 +224,37 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult forceOK(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.checkEngineTriggered().runForceOk(cb, jd));
+        if (this.hasSpecificForceOkMethod())
+        {
+            return new RunResult(jd, ((RunModeForced) this.provider).runForceOk(this.eventSource, cb, jd));
+        }
+        RunResult res = new RunResult(jd);
+        res.end = jd.getVirtualTimeStart();
+        res.logStart = "forced OK";
+        res.returnCode = 0;
+        return res;
     }
 
     public RunResult runDisabled(EngineCallback cb, JobDescription jd)
     {
-        return new RunResult(jd, this.checkEngineTriggered().runDisabled(cb, jd));
+        if (this.hasSpecificDisabledMethod())
+        {
+            return new RunResult(jd, ((RunModeDisabled) this.provider).runDisabled(this.eventSource, cb, jd));
+        }
+        RunResult res = new RunResult(jd);
+        res.end = jd.getVirtualTimeStart();
+        res.logStart = "disabled";
+        res.returnCode = 0;
+        return res;
     }
 
-    public EventSourceTriggered checkEngineTriggered()
+    public RunModeTriggered checkEngineTriggered()
     {
         if (this.eventSource == null || !this.isEngineTriggered())
         {
             throw new IllegalStateException("trying to trigger a source that cannot be run by the engine");
         }
-        return (EventSourceTriggered) this.eventSource;
+        return (RunModeTriggered) this.provider;
     }
 
     //
@@ -240,22 +265,32 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isSelfTriggered()
     {
-        return this.eventSource instanceof EventSourceSelfTriggered;
+        return this.provider instanceof RunModeExternalyTriggered;
+    }
+
+    public boolean hasSpecificDisabledMethod()
+    {
+        return this.provider instanceof RunModeDisabled;
+    }
+
+    public boolean hasSpecificForceOkMethod()
+    {
+        return this.provider instanceof RunModeForced;
     }
 
     public boolean isHiddenFromHistory()
     {
-        return this.eventSource instanceof EventSourceOptionInvisible;
+        return this.provider instanceof EventSourceOptionInvisible;
     }
 
     public boolean isContainer()
     {
-        return this.eventSource instanceof EventSourceContainer;
+        return this.eventSource instanceof DTOEventSourceContainer;
     }
 
     public boolean isEngineTriggered()
     {
-        return this.eventSource instanceof EventSourceTriggered;
+        return this.provider instanceof RunModeTriggered;
     }
 
     public boolean isAnd()
@@ -265,7 +300,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isOr()
     {
-        return this.eventSource instanceof EventSourceOptionOr;
+        return this.provider instanceof EventSourceOptionOr;
     }
 
     //

@@ -1,5 +1,4 @@
 -exportcontents: \
-	org.oxymores.chronix.source.command.dto, \
 	org.oxymores.chronix.agent.command.api
 -sources: true
 -dsannotations: *

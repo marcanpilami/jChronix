@@ -3,6 +3,8 @@ package org.oxymores.chronix.api.source;
 import java.io.Serializable;
 import java.util.UUID;
 
+import org.oxymores.chronix.api.source2.DTOEventSource;
+
 /**
  * A few methods useful to Event Sources.
  *
@@ -31,7 +33,7 @@ public interface EngineCallback
      * @param id
      * @return
      */
-    public EventSource getEventSource(UUID id);
+    public DTOEventSource getEventSource(UUID id);
 
     /**
      * The name of the queue that receives {@link EventSourceRunResult}s for the local engine. Needed when a plugin needs to directly send a

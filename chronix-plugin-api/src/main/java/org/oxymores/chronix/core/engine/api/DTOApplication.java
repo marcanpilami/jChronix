@@ -1,10 +1,13 @@
 package org.oxymores.chronix.core.engine.api;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import org.oxymores.chronix.api.source.EventSource;
+import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source2.DTOParameter;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOApplication
@@ -18,6 +21,8 @@ public class DTOApplication
 
     private List<DTOEventSource> eventSources = new ArrayList<>();
     private List<DTOPlaceGroup> groups = new ArrayList<>();
+
+    private Map<UUID, DTOParameter> sharedParameters = new HashMap<>();
 
     public DTOPlaceGroup getGroup(String name)
     {
@@ -101,11 +106,10 @@ public class DTOApplication
         this.eventSources = eventSources;
     }
 
-    public DTOEventSource addEventSource(EventSource source)
+    public DTOEventSource addEventSource(DTOEventSource source)
     {
-        DTOEventSource es = new DTOEventSource(source);
-        this.eventSources.add(es);
-        return es;
+        this.eventSources.add(source);
+        return source;
     }
 
     public List<DTOPlaceGroup> getGroups()
@@ -118,6 +122,10 @@ public class DTOApplication
         this.groups = groups;
     }
 
+    public DTOParameter getSharedParameter(UUID id)
+    {
+        return this.sharedParameters.get(id);
+    }
     // private List<DTOParameter> parameters;
 
 }
