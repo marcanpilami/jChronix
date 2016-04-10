@@ -1,8 +1,4 @@
-package org.oxymores.chronix.api.source2;
-
-import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source.JobDescription;
+package org.oxymores.chronix.api.source;
 
 /**
  * The most common type of {@link EventSourceProvider}.<br>

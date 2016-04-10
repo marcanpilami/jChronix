@@ -6,10 +6,10 @@ import java.util.UUID;
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 
+import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.EngineCallback;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source2.DTOEventSource;
 import org.oxymores.chronix.core.RunResult;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.ChronixEngine;

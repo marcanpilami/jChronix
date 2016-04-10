@@ -18,7 +18,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.prm.ParameterProvider;
-import org.oxymores.chronix.api.source2.EventSourceProvider;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;

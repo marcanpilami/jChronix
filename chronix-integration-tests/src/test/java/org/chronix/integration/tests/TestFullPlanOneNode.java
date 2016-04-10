@@ -2,7 +2,7 @@ package org.chronix.integration.tests;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 

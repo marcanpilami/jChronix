@@ -1,8 +1,4 @@
-package org.oxymores.chronix.api.source2;
-
-import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source.JobDescription;
+package org.oxymores.chronix.api.source;
 
 /**
  * A {@link RunModeTriggered} may implement this to control what will be run when the engine runs the source as "disabled". If not

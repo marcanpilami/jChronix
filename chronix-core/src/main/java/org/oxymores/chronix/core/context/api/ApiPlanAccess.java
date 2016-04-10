@@ -17,7 +17,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.oxymores.chronix.api.source2.DTOEventSource;
+import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ExecutionNode;

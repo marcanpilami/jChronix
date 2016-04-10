@@ -26,19 +26,19 @@ import java.util.UUID;
 
 import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.api.prm.Parameter;
+import org.oxymores.chronix.api.source.DTOEventSource;
+import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceOptionInvisible;
-import org.oxymores.chronix.api.source.EventSourceOptionOr;
+import org.oxymores.chronix.api.source.OptionInvisible;
+import org.oxymores.chronix.api.source.OptionOr;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.api.source.JobDescription;
-import org.oxymores.chronix.api.source2.DTOEventSource;
-import org.oxymores.chronix.api.source2.DTOEventSourceContainer;
-import org.oxymores.chronix.api.source2.EventSourceProvider;
-import org.oxymores.chronix.api.source2.RunModeDisabled;
-import org.oxymores.chronix.api.source2.RunModeExternalyTriggered;
-import org.oxymores.chronix.api.source2.RunModeForced;
-import org.oxymores.chronix.api.source2.RunModeTriggered;
+import org.oxymores.chronix.api.source.RunModeDisabled;
+import org.oxymores.chronix.api.source.RunModeExternalyTriggered;
+import org.oxymores.chronix.api.source.RunModeForced;
+import org.oxymores.chronix.api.source.RunModeTriggered;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
@@ -125,9 +125,9 @@ public class EventSourceWrapper implements Serializable
         return this.eventSource.getId();
     }
 
-    public String getSourceClass()
+    public String getSourceTypeName()
     {
-        return this.eventSource.getClass().getCanonicalName();
+        return this.provider.getName();
     }
 
     public String getPluginSymbolicName()
@@ -154,6 +154,11 @@ public class EventSourceWrapper implements Serializable
     public void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
+    }
+
+    public String getPluginClassName()
+    {
+        return this.eventSource.getBehaviourClassName();
     }
 
     // stupid get/set
@@ -280,7 +285,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isHiddenFromHistory()
     {
-        return this.provider instanceof EventSourceOptionInvisible;
+        return this.provider instanceof OptionInvisible;
     }
 
     public boolean isContainer()
@@ -300,7 +305,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isOr()
     {
-        return this.provider instanceof EventSourceOptionOr;
+        return this.provider instanceof OptionOr;
     }
 
     //

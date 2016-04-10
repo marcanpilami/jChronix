@@ -1,8 +1,4 @@
-package org.oxymores.chronix.api.source2;
-
-import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source.JobDescription;
+package org.oxymores.chronix.api.source;
 
 /**
  * Implementing this interface tells the engine that an event source has a specific way of running a "force OK" order. If not implemented,

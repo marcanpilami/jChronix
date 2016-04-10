@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.api.source2.EventSourceProvider;
 
 /**
  * A JobDescription gives all which is needed to run a job: the source that should run, the different ID...

@@ -1,10 +1,10 @@
-package org.oxymores.chronix.api.source2.validators;
+package org.oxymores.chronix.api.source.validators;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.oxymores.chronix.api.source2.EventSourceFieldValidator;
-import org.oxymores.chronix.api.source2.ValidationFailure;
+import org.oxymores.chronix.api.source.EventSourceFieldValidator;
+import org.oxymores.chronix.api.source.ValidationFailure;
 
 public class NotNull implements EventSourceFieldValidator
 {

@@ -3,8 +3,6 @@ package org.oxymores.chronix.api.source;
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.oxymores.chronix.api.source2.DTOEventSource;
-
 /**
  * A few methods useful to Event Sources.
  *

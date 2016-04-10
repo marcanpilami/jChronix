@@ -294,7 +294,7 @@ public class RunnerManager implements MessageCallback
         {
             // Run - either sync or async.
             log.debug(String.format("Job execution request %s corresponds to an element (%s - %s) that should run async or sync", j.getId(),
-                    toRun.getName(), toRun.getSourceClass()));
+                    toRun.getName(), toRun.getSourceTypeName()));
 
             // Parameter resolution
             if (!toRun.getParameters().isEmpty())

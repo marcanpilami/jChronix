@@ -6,19 +6,19 @@ import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.api.source.DTOEvent;
+import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceOptionOr;
+import org.oxymores.chronix.api.source.EventSourceField;
+import org.oxymores.chronix.api.source.OptionOr;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.api.source.JobDescription;
-import org.oxymores.chronix.api.source2.DTOEventSource;
-import org.oxymores.chronix.api.source2.EventSourceField;
-import org.oxymores.chronix.api.source2.EventSourceProvider;
-import org.oxymores.chronix.api.source2.RunModeTriggered;
+import org.oxymores.chronix.api.source.RunModeTriggered;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 @Component
-public class OrProvider implements EventSourceProvider, RunModeTriggered, EventSourceOptionOr
+public class OrProvider implements EventSourceProvider, RunModeTriggered, OptionOr
 {
     private static transient DTOEventSource _instance = null;
     static final UUID OR_ID = UUID.fromString("152cf589-f0ca-42ab-b25a-ffc1d03fd579");

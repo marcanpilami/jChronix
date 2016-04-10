@@ -1,8 +1,4 @@
-package org.oxymores.chronix.api.source2;
-
-import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.api.source.JobDescription;
+package org.oxymores.chronix.api.source;
 
 /**
  * An event source that comes from an external system (this is the only type of event source for which the trigger is not done by the

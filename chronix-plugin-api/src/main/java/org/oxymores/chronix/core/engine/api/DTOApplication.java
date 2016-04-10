@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.oxymores.chronix.api.source2.DTOEventSource;
-import org.oxymores.chronix.api.source2.DTOParameter;
+import org.oxymores.chronix.api.source.DTOEventSource;
+import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOApplication

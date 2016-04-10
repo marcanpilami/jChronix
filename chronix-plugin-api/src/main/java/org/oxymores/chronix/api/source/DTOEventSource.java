@@ -1,4 +1,4 @@
-package org.oxymores.chronix.api.source2;
+package org.oxymores.chronix.api.source;
 
 import java.io.Serializable;
 import java.util.ArrayList;

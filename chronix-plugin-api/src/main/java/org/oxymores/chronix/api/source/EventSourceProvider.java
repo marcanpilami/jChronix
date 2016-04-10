@@ -1,95 +1,70 @@
 package org.oxymores.chronix.api.source;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import org.oxymores.chronix.core.engine.api.DTOApplication;
+
 /**
- * The base class to extend for all event source plugins. It contains some metadata and allows to store and fetch event source instances.
- * <br>
- * All event source providers (classes extending this one) should be exposed as an OSGI service implementing contract EventSourceProvider.
- * <br>
- * <br>
- * Note this is not an interface but a base abstract class, so as to allow easier ascending compatibility in the event of an evolution of
- * the core model.
+ * The main class of an event source plugin. It defines both a factory to create event source instances and the behaviour of said event
+ * sources.<br>
+ * It is intended to be completed with different options, each defined with another interface.
  */
-public abstract class EventSourceProvider
+public interface EventSourceProvider
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Identity Card
-    /**
-     * The name of this event source type, as it should appear in the log and the web pages.<br>
-     * If the result is expected to be stable with time, it is not used anywhere but in user interfaces so a change is not catastrophic.
-     */
-    public abstract String getSourceName();
-
-    // TODO: a localised variant.
-
-    /**
-     * The description of this event source type, as it should appear in the log and the web pages. See {@link #getSourceName()} for
-     * stability.
-     */
-    public abstract String getSourceDescription();
-    // Identity Card
+    // Self description
     ///////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Serialisation
     /**
-     * This method is called when the production plan is being serialised to disk. The implementation is required to write one and only one
-     * file at the designated path. If the file already exists, it must be overwritten.<br>
-     * The implementation is free to use any serialisation method. The use of XStream is however recommended as this bundle is always
-     * present for the engine needs.<br>
-     * <br>
-     * Also, see DDDDDDDDD interface to ease serialisation.
+     * The name of the source, as will be displayed in the different UI. Only used for display purposes.
      * 
-     * @param targetFile
+     * @return the name
      */
-    public void serialise(File targetFile, Collection<? extends EventSource> instances)
-    {
-
-    }
+    public String getName();
 
     /**
-     * The reverse method of {@link #serialise(File)}. <br>
-     * <br>
-     * <strong>This method is supposed to cope with model version upgrades</strong>. That is, if the given <code>File</code> contains
-     * serialised objects related to a previous version of the model, this method will either successfully convert them to the latest
-     * version or throw a runtime exception.<br>
-     * <br>
-     * If any, the deserialised sources should be converted to an object implementing {@link EventSource} and registered through the
-     * {@link EngineCallback}
+     * A short (< 255 characters) description for "details" panels in the UI. Describes what the event source does.
      * 
-     * @param sourceFile
-     *            a directory containing the serialised data.
-     * @param reg
-     *            for registering the deserialised items inside the engine.
+     * @return the description
+     */
+    public String getDescription();
+
+    /**
+     * The description of what the {@link DTOEventSource} created by this behaviour should/may contain.
+     */
+    public List<EventSourceField> getFields();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Factory
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The only way to create event source instances. The created object is added to the application passed in parameter.
+     * 
+     * @param name
+     *            the name to give to the instance
+     * @param description
+     *            a short description (255 characters max)
+     * @param app
+     *            the application that the new source is added to
+     * @param parameters
+     *            an array of elements expected by the provider to create an instance. This depends on the provider. Usually will be an
+     *            array of {@link DTOParameter}s.
      * @return
      */
-    public abstract void deserialise(File sourceFile, EventSourceRegistry reg);
-    // Serialisation
-    ///////////////////////////////////////////////////////////////////////////
+    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... parameters);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Construction
+    // Event analysis
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * As the plugins can declare any DTO they like, this can cause issues to frameworks that rely on class discovery inside some class
-     * loaders. This method actually returns all the Class objects that can be used outside the plugin so to allow to explicitly register
-     * them inside these frameworks.<br>
-     * Default is an empty list. <br>
-     * Marked for deprecation - we hope we won't need this in this end.
-     * 
-     * @return
+     * The engine calls this method to get the correct interpretation of an event and a transition definition. This is the one method that
+     * "gives meaning" to event data (the very same data that was created by the source).<br>
+     * It is given a transition originating from this source, the event (created by this source) to analyse, and the place on which it
+     * should be analysed.<br>
+     * The method must focus on giving meaning to the event and transition data - it should not take anything else into account (such as
+     * calendars, tokens...)
      */
-    @Deprecated
-    public List<Class<? extends EventSource>> getExposedDtoClasses()
-    {
-        return new ArrayList<>();
-    }
-
-    // Construction
-    ///////////////////////////////////////////////////////////////////////////
-
+    public boolean isTransitionPossible(DTOEventSource source, DTOTransition tr, DTOEvent event);
 }

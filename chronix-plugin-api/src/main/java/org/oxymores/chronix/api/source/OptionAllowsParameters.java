@@ -1,4 +1,4 @@
-package org.oxymores.chronix.api.source2;
+package org.oxymores.chronix.api.source;
 
 /**
  * An {@link EventSourceProvider} can implement this (empty) interface to signal that it allows its event source to receive arbitrary

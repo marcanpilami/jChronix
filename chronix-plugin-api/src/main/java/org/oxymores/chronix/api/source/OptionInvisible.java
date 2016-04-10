@@ -5,7 +5,7 @@ package org.oxymores.chronix.api.source;
  * main history table. This is useful for highly technical event sources: for example, an AND door will never create any interesting log for
  * the end user.
  */
-public interface EventSourceOptionInvisible
+public interface OptionInvisible
 {
 
 }

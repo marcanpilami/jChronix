@@ -6,15 +6,15 @@ import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.api.source.DTOEvent;
+import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
+import org.oxymores.chronix.api.source.EventSourceField;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.api.source.JobDescription;
-import org.oxymores.chronix.api.source2.DTOEventSource;
-import org.oxymores.chronix.api.source2.EventSourceField;
-import org.oxymores.chronix.api.source2.EventSourceProvider;
-import org.oxymores.chronix.api.source2.RunModeDisabled;
-import org.oxymores.chronix.api.source2.RunModeTriggered;
+import org.oxymores.chronix.api.source.RunModeDisabled;
+import org.oxymores.chronix.api.source.RunModeTriggered;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 @Component
