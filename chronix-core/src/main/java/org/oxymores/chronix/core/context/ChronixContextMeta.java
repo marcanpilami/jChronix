@@ -552,4 +552,17 @@ public class ChronixContextMeta
         }
         throw new ChronixException("no such provider");
     }
+
+    public ParameterProvider getParameterProvider(String className)
+    {
+        for (Object o : this.getAllKnownParameterProviders())
+        {
+            ParameterProvider res = (ParameterProvider) o;
+            if (res.getClass().getCanonicalName().equals(className))
+            {
+                return res;
+            }
+        }
+        throw new ChronixPlanStorageException("no provider of class " + className);
+    }
 }

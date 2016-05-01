@@ -66,6 +66,7 @@ public final class RunnerShell implements CommandRunner
         // ///////////////////////////
         // Build command
         List<String> argsStrings = buildCommand(rd);
+        log.debug("Runner shell will run " + argsStrings);
 
         // /////////////////////////////////////////////////////////////////////////
         // Create a process builder with the command line contained in the array
@@ -263,7 +264,7 @@ public final class RunnerShell implements CommandRunner
         argsStrings.add(rd.getPluginParameters().get("COMMAND"));
 
         // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
-        for (Map.Entry<String, String> prm : rd.getParameters().entrySet())
+        for (Map.Entry<String, String> prm : rd.getParameters())
         {
             String key = prm.getKey();
             String value = prm.getValue();

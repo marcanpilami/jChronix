@@ -14,9 +14,9 @@ public class DTOEventSource implements Serializable
 {
     private static final long serialVersionUID = 7742416960083543767L;
 
-    protected UUID id;
-    protected String name;
-    protected String description;
+    protected final UUID id;
+    protected final String name;
+    protected final String description;
 
     protected Map<String, DTOParameter> fields = new HashMap<>(10);
     protected List<DTOParameter> additionalParameters = new ArrayList<>(10);

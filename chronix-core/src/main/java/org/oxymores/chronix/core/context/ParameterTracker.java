@@ -47,19 +47,16 @@ class ParameterTracker implements ServiceTrackerCustomizer<ParameterProvider, Pa
             // TODO: shared parameters
             // for (DTOParameter prm : app.getO)
 
-            for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+            for (EventSourceWrapper esw : app.getEventSources().values())
             {
-                for (ParameterHolder prm : esw.getParameters())
+                for (ParameterHolder prm : esw.getSubParametersOfType(srv.getClass().getCanonicalName()))
                 {
-                    if (prm.getProviderClassName() != null && prm.getProviderClassName().equals(srv.getClass().getCanonicalName()))
-                    {
-                        prm.setProvider(srv);
-                        i++;
-                    }
+                    prm.setProvider(srv);
+                    i++;
                 }
             }
         }
-        log.debug("Provider " + srv.getClass().getCanonicalName() + " is uesed by " + i
+        log.debug("Provider " + srv.getClass().getCanonicalName() + " is used by " + i
                 + " distinct parameters in all applications including drafts.");
 
         return srv;

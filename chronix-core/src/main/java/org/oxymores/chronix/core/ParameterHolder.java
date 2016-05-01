@@ -20,14 +20,22 @@
 package org.oxymores.chronix.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.api.prm.ParameterProvider;
-import org.oxymores.chronix.api.prm.ParameterResolutionRequest;
 import org.oxymores.chronix.api.source.DTOParameter;
+import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.transactional.ParameterResolutionRequest;
 
 /**
  * A wrapper for a {@link Parameter} object.
@@ -36,11 +44,41 @@ public class ParameterHolder implements Serializable
 {
     private static final long serialVersionUID = 8017529181151172909L;
 
+    /////////////////////////////////
+    // Identity
+
     /**
-     * The holder for the parameter DTO object.
+     * Unique ID
      */
-    @NotNull
-    private DTOParameter prm;
+    private final UUID id;
+
+    /**
+     * Optional for additional parameters. The "applicative key" of the parameter".
+     */
+    private String key;
+
+    /////////////////////////////////
+    // Direct value fields
+
+    private String value;
+
+    /////////////////////////////////
+    // Reference fields
+
+    /**
+     * Note that we store the reference here - it is resolved at runtime. This simplifies deserialisation.
+     */
+    private UUID prmReference = null;
+
+    /////////////////////////////////
+    // Dynamically resolved fields
+
+    private String providerClassName;
+    private Map<String, ParameterHolder> fields = null;
+    private List<ParameterHolder> additionalParameters = null;
+
+    /////////////////////////////////
+    // Engine helpers
 
     /**
      * A simple indication - only used when a plugin is missing and we need its name to help the user.
@@ -54,47 +92,34 @@ public class ParameterHolder implements Serializable
      */
     private transient ParameterProvider provider;
 
-    public String getKey()
-    {
-        return prm.getKey();
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Construction & Deserialisation
+    ///////////////////////////////////////////////////////////////////////////
 
-    public String getValue(ParameterResolutionRequest request)
+    public ParameterHolder(DTOParameter dto, Application a, ChronixContextMeta ctx)
     {
-        return this.provider.getValue(request);
-    }
+        this.id = dto.getId();
+        this.key = dto.getKey();
+        this.value = dto.getDirectValue();
+        this.prmReference = dto.getReference();
+        this.providerClassName = dto.getProviderName();
+        if (this.providerClassName != null)
+        {
+            this.fields = new HashMap<>(dto.getFields().size());
+            for (DTOParameter subPrm : dto.getFields().values())
+            {
+                this.fields.put(dto.getKey(), new ParameterHolder(subPrm, a, ctx));
+            }
 
-    public void setDto(DTOParameter dto)
-    {
-        this.prm = dto;
-    }
+            this.additionalParameters = new ArrayList<>(dto.getAdditionalParameters().size());
+            for (DTOParameter subPrm : dto.getAdditionalParameters())
+            {
+                this.additionalParameters.add(new ParameterHolder(subPrm, a, ctx));
+            }
 
-    public String getPluginName()
-    {
-        return pluginName;
-    }
-
-    public void setPluginName(String pluginName)
-    {
-        this.pluginName = pluginName;
-    }
-
-    public UUID getParameterId()
-    {
-        return prm.getId();
-    }
-
-    /**
-     * Should only be used inside the parameter request. TODO: check if can go inside right package to scope it more precisely.
-     */
-    public DTOParameter getRawParameter()
-    {
-        return this.prm;
-    }
-
-    public ParameterProvider getProvider()
-    {
-        return provider;
+            this.provider = ctx.getParameterProvider(this.providerClassName);
+            this.pluginName = FrameworkUtil.getBundle(this.provider.getClass()).getBundleContext().getBundle().getSymbolicName();
+        }
     }
 
     public void setProvider(ParameterProvider provider)
@@ -102,8 +127,161 @@ public class ParameterHolder implements Serializable
         this.provider = provider;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // DTO
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DTOParameter getDTO()
+    {
+        if (this.value != null)
+        {
+            return new DTOParameter(key, value).setId(id);
+        }
+        else if (this.prmReference != null)
+        {
+            return new DTOParameter(key, prmReference).setId(id);
+        }
+        else
+        {
+            DTOParameter res = new DTOParameter(key, provider).setId(id);
+            for (ParameterHolder p : this.additionalParameters)
+            {
+                res.addAdditionalarameter(p.getDTO());
+            }
+            for (ParameterHolder p : this.fields.values())
+            {
+                res.setField(p.key, p.getDTO());
+            }
+            return res;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Engine methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    public String getValue(ParameterResolutionRequest request)
+    {
+        if (request.getReferencedValue() != null)
+        {
+            return request.getReferencedValue();
+        }
+        return this.provider.getValue(request);
+    }
+
+    public ParameterProvider getProvider()
+    {
+        return provider;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parameter access
+    ///////////////////////////////////////////////////////////////////////////
+
+    public List<ParameterHolder> getAllParameters()
+    {
+        List<ParameterHolder> res = new ArrayList<>(this.additionalParameters);
+        res.addAll(this.fields.values());
+        return res;
+    }
+
+    public List<ParameterHolder> getAdditionalParameters()
+    {
+        return this.additionalParameters;
+    }
+
+    public Collection<ParameterHolder> getFields()
+    {
+        return this.fields.values();
+    }
+
+    /**
+     * null if not found.
+     * 
+     * @param key
+     * @return
+     */
+    public ParameterHolder getField(UUID key)
+    {
+        for (ParameterHolder ph : this.fields.values())
+        {
+            if (ph.getParameterId().equals(key))
+            {
+                return ph;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * null if not found.
+     * 
+     * @param key
+     * @return
+     */
+    public ParameterHolder getAdditionalParameter(UUID key)
+    {
+        for (ParameterHolder ph : this.additionalParameters)
+        {
+            if (ph.getParameterId().equals(key))
+            {
+                return ph;
+            }
+        }
+        return null;
+    }
+
+    public List<ParameterHolder> getSubParametersOfType(String serviceClassName)
+    {
+        List<ParameterHolder> res = new ArrayList<>();
+
+        if (this.providerClassName != null)
+        {
+            if (this.providerClassName.equals(serviceClassName))
+            {
+                res.add(this);
+            }
+
+            for (ParameterHolder ph : this.getAllParameters())
+            {
+                res.addAll(ph.getSubParametersOfType(serviceClassName));
+            }
+            return res;
+        }
+        return res;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Stupid get/set
+    ///////////////////////////////////////////////////////////////////////////
+
+    public String getKey()
+    {
+        return this.key;
+    }
+
+    public String getPluginName()
+    {
+        return pluginName;
+    }
+
+    public UUID getParameterId()
+    {
+        return this.id;
+    }
+
     public String getProviderClassName()
     {
-        return this.prm.getProviderName();
+        return this.providerClassName;
+    }
+
+    public String getDirectValue()
+    {
+        return this.value;
+    }
+
+    public UUID getReference()
+    {
+        return this.prmReference;
     }
 }

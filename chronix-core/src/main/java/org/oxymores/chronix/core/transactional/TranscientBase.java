@@ -136,7 +136,7 @@ public class TranscientBase implements Serializable
         if (state != null)
         {
             this.stateID = state.getId();
-            this.setActiveID(state.getRepresentsContainer().getId());
+            this.setActiveID(state.getEventSourceDefinition().getId());
             this.setApplication(state.getApplication());
         }
         else
@@ -171,7 +171,7 @@ public class TranscientBase implements Serializable
 
     public EventSourceWrapper getActive(ChronixContextMeta ctx)
     {
-        return this.getApplication(ctx).getEventSourceContainer(this.activeID);
+        return this.getApplication(ctx).getEventSource(this.activeID);
     }
 
     //

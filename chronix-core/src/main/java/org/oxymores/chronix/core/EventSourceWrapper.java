@@ -21,12 +21,17 @@ package org.oxymores.chronix.core;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source.DTOParameter;
+import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
 import org.oxymores.chronix.api.source.EventSourceProvider;
@@ -38,13 +43,43 @@ import org.oxymores.chronix.api.source.RunModeDisabled;
 import org.oxymores.chronix.api.source.RunModeExternalyTriggered;
 import org.oxymores.chronix.api.source.RunModeForced;
 import org.oxymores.chronix.api.source.RunModeTriggered;
+import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
+import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
 public class EventSourceWrapper implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
+
+    /////////////////////////////
+    // Identity
+
+    private UUID id;
+    private String name;
+    private String description;
+
+    /////////////////////////////
+    // Hydrated parameters
+
+    private Map<String, ParameterHolder> fields = new HashMap<>(10);
+    private List<ParameterHolder> additionalParameters = new ArrayList<>();
+
+    /////////////////////////////
+    // Sub elements if any
+
+    protected List<State> states = null;
+    protected List<DTOTransition> transitions = null;
+
+    /////////////////////////////
+    // Plugin identification
+
+    /**
+     * The unique key identifying the service responsible for this source
+     */
+    protected String behaviourClassName;
 
     /**
      * A simple indication - only used when a plugin is missing and we need its name to help the user.
@@ -52,76 +87,116 @@ public class EventSourceWrapper implements Serializable
     private String pluginName;
 
     /**
-     * The real event source description.
-     */
-    private DTOEventSource eventSource;
-
-    /**
-     * The provider associated to the event source. Not serialised ever. Duplicate from the DTO - this way, the DTO does not expose the
-     * provider.
+     * The provider associated to the event source. Not serialised ever (and likely not serialisable anyway)
      */
     private transient EventSourceProvider provider;
+
+    /////////////////////////////
+    // Engine misc
 
     /**
      * Whether the source should run enabled or disabled.
      */
     private boolean enabled = true;
 
-    private List<ParameterHolder> parameters = new ArrayList<>();
+    /**
+     * True if contains other sources
+     */
+    private boolean container = false;
 
-    public EventSourceWrapper(DTOEventSource source, EventSourceProvider provider)
+    public EventSourceWrapper(DTOEventSource source, ChronixContextMeta ctx, Application a)
     {
         super();
-        this.eventSource = source;
-        this.provider = provider;
-        this.eventSource.setBehaviour(provider);
-        this.pluginName = FrameworkUtil.getBundle(provider.getClass()).getBundleContext().getBundle().getSymbolicName();
+
+        this.behaviourClassName = source.getBehaviourClassName();
+        this.provider = ctx.getSourceProvider(this.behaviourClassName);
+        this.pluginName = FrameworkUtil.getBundle(this.provider.getClass()).getBundleContext().getBundle().getSymbolicName();
+
+        this.name = source.getName();
+        this.description = source.getDescription();
+        this.id = source.getId();
+        this.container = source instanceof DTOEventSourceContainer;
+        if (this.container)
+        {
+            this.transitions = new ArrayList<>(((DTOEventSourceContainer) source).getContainedTransitions());
+            this.states = new ArrayList<>(((DTOEventSourceContainer) source).getContainedStates().size());
+            for (DTOState s : ((DTOEventSourceContainer) source).getContainedStates())
+            {
+                this.states.add(dto2state(a, s, this));
+            }
+        }
+
+        for (DTOParameter prm : source.getAdditionalParameters())
+        {
+            this.additionalParameters.add(new ParameterHolder(prm, a, ctx));
+        }
+
+        for (DTOParameter prm : source.getFields())
+        {
+            this.fields.put(prm.getKey(), new ParameterHolder(prm, a, ctx));
+        }
     }
 
     @Override
     public String toString()
     {
-        if (eventSource != null)
-        {
-            return String.format("%s (%s)", eventSource.getName(), pluginName);
-        }
-        else
-        {
-            return String.format("Event source from plugin %s (notloaded yet)", this.pluginName);
-        }
+        return String.format("%s (%s)", name, pluginName);
     }
 
     private Object readResolve()
     {
-        if (parameters == null)
+        if (fields == null)
         {
-            parameters = new ArrayList<>();
+            fields = new HashMap<>();
+        }
+        if (additionalParameters == null)
+        {
+            additionalParameters = new ArrayList<>();
         }
         return this;
     }
 
-    public boolean isInstanceOf(Class<? extends EventSourceProvider> prv)
+    public boolean isProvidedBy(Class<? extends EventSourceProvider> prv)
     {
         return prv.isInstance(this.provider);
     }
 
     public void setProvider(EventSourceProvider prv)
     {
-        this.eventSource.setBehaviour(prv);
         this.provider = prv;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // DTO
+
+    public DTOEventSource getDTO()
+    {
+        if (this.isContainer())
+        {
+            DTOEventSourceContainer res = new DTOEventSourceContainer(provider, name, description, id);
+            return res;
+        }
+        else
+        {
+            DTOEventSource res = new DTOEventSource(provider, name, description, id);
+            return res;
+        }
+    }
+
+    // DTO
+    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // stupid get/set
 
     public String getName()
     {
-        return this.eventSource.getName();
+        return this.name;
     }
 
     public UUID getId()
     {
-        return this.eventSource.getId();
+        return this.id;
     }
 
     public String getSourceTypeName()
@@ -132,17 +207,6 @@ public class EventSourceWrapper implements Serializable
     public String getPluginSymbolicName()
     {
         return this.pluginName;
-    }
-
-    public DTOEventSource getSource()
-    {
-        return this.eventSource;
-    }
-
-    public void setSource(DTOEventSource s, String pluginName)
-    {
-        this.eventSource = s;
-        this.pluginName = pluginName;
     }
 
     public boolean isEnabled()
@@ -157,26 +221,119 @@ public class EventSourceWrapper implements Serializable
 
     public String getPluginClassName()
     {
-        return this.eventSource.getBehaviourClassName();
+        return this.behaviourClassName;
     }
 
     // stupid get/set
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
-    // Parameter handling
+    // Container
 
-    public List<ParameterHolder> getParameters()
+    public boolean isContainer()
     {
-        return this.parameters;
+        return this.container;
     }
 
-    public void addParameter(ParameterHolder parameter)
+    public List<State> getContainedStates()
     {
-        if (!parameters.contains(parameter))
+        if (!this.isContainer())
         {
-            parameters.add(parameter);
+            throw new ChronixPlanStorageException("a non-container event source has no states");
         }
+        return this.states;
+    }
+
+    private List<DTOTransition> getContainedTransitions()
+    {
+        return this.transitions;
+    }
+
+    private State dto2state(Application a, DTOState d, EventSourceWrapper parent)
+    {
+        List<DTOTransition> trFromState = new ArrayList<>(), trToState = new ArrayList<>();
+        for (DTOTransition tr : parent.getContainedTransitions())
+        {
+            if (tr.getFrom().equals(d.getId()))
+            {
+                trFromState.add(tr);
+            }
+            if (tr.getTo().equals(d.getId()))
+            {
+                trToState.add(tr);
+            }
+        }
+
+        return new State(a, d, parent, trFromState, trToState);
+    }
+
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parameter handling
+
+    public List<ParameterHolder> getAdditionalParameters()
+    {
+        return this.additionalParameters;
+    }
+
+    public Collection<ParameterHolder> getFields()
+    {
+        return this.fields.values();
+    }
+
+    public List<ParameterHolder> getAllParameters()
+    {
+        List<ParameterHolder> res = new ArrayList<>(this.additionalParameters);
+        res.addAll(this.fields.values());
+        return res;
+    }
+
+    public List<ParameterHolder> getSubParametersOfType(String serviceClassName)
+    {
+        List<ParameterHolder> res = new ArrayList<>();
+        for (ParameterHolder ph : this.getAllParameters())
+        {
+            res.addAll(ph.getSubParametersOfType(serviceClassName));
+        }
+        return res;
+    }
+
+    /**
+     * null if not found.
+     * 
+     * @param key
+     * @return
+     */
+    public ParameterHolder getField(UUID key)
+    {
+        for (ParameterHolder ph : this.fields.values())
+        {
+            if (ph.getParameterId().equals(key))
+            {
+                return ph;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * null if not found.
+     * 
+     * @param key
+     * @return
+     */
+    public ParameterHolder getAdditionalParameter(UUID key)
+    {
+        for (ParameterHolder ph : this.additionalParameters)
+        {
+            if (ph.getParameterId().equals(key))
+            {
+                return ph;
+            }
+        }
+        return null;
     }
 
     // Parameter handling
@@ -187,7 +344,7 @@ public class EventSourceWrapper implements Serializable
 
     public boolean isTransitionPossible(DTOTransition tr, Event evt)
     {
-        return this.provider.isTransitionPossible(this.eventSource, tr, evt);
+        return this.provider.isTransitionPossible(this.getDTO(), tr, evt);
     }
 
     //
@@ -209,7 +366,7 @@ public class EventSourceWrapper implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        EventSourceRunResult esrr = this.checkEngineTriggered().run(this.eventSource, cb, jd);
+        EventSourceRunResult esrr = this.checkEngineTriggered().run(this.getDTO(), cb, jd);
         if (esrr != null)
         {
             return new RunResult(jd, esrr);
@@ -221,7 +378,7 @@ public class EventSourceWrapper implements Serializable
     {
         if (this.hasSpecificForceOkMethod())
         {
-            return new RunResult(jd, ((RunModeForced) this.provider).runForceOk(this.eventSource, cb, jd));
+            return new RunResult(jd, ((RunModeForced) this.provider).runForceOk(this.getDTO(), cb, jd));
         }
         RunResult res = new RunResult(jd);
         res.end = jd.getVirtualTimeStart();
@@ -234,7 +391,7 @@ public class EventSourceWrapper implements Serializable
     {
         if (this.hasSpecificDisabledMethod())
         {
-            return new RunResult(jd, ((RunModeDisabled) this.provider).runDisabled(this.eventSource, cb, jd));
+            return new RunResult(jd, ((RunModeDisabled) this.provider).runDisabled(this.getDTO(), cb, jd));
         }
         RunResult res = new RunResult(jd);
         res.end = jd.getVirtualTimeStart();
@@ -245,7 +402,7 @@ public class EventSourceWrapper implements Serializable
 
     public RunModeTriggered checkEngineTriggered()
     {
-        if (this.eventSource == null || !this.isEngineTriggered())
+        if (!this.isEngineTriggered())
         {
             throw new IllegalStateException("trying to trigger a source that cannot be run by the engine");
         }
@@ -276,11 +433,6 @@ public class EventSourceWrapper implements Serializable
     public boolean isHiddenFromHistory()
     {
         return this.provider instanceof OptionInvisible;
-    }
-
-    public boolean isContainer()
-    {
-        return this.eventSource instanceof DTOEventSourceContainer;
     }
 
     public boolean isEngineTriggered()

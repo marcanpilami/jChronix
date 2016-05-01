@@ -144,7 +144,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         ExecutionNode en = ctxMeta.getEnvironment().getNode(request.requestingNodeID);
 
         log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
-                request.type, tk.getName(), p.getName(), s.getRepresentsContainer().getName(), a.getName(), en.getBrokerName(),
+                request.type, tk.getName(), p.getName(), s.getEventSourceDefinition().getName(), a.getName(), en.getBrokerName(),
                 request.local));
 
         // Case 1: TDC proxy: local request.
@@ -229,7 +229,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         {
             // Log
             log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresentsContainer().getName()));
+                    p.getName(), a.getName(), en.getBrokerName(), s.getEventSourceDefinition().getName()));
 
             // Find the element
             try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
@@ -245,7 +245,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         {
             // Log
             log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getRepresentsContainer().getName()));
+                    p.getName(), a.getName(), en.getBrokerName(), s.getEventSourceDefinition().getName()));
 
             try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
@@ -297,7 +297,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                     ExecutionNode enn = ctxMeta.getEnvironment().getNode(tr.getRequestedBy());
                     log.warn(String.format(
                             "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
-                            pp.getName(), aa.getName(), enn.getBrokerName(), ss.getRepresentsContainer().getName()));
+                            pp.getName(), aa.getName(), enn.getBrokerName(), ss.getEventSourceDefinition().getName()));
 
                     // Remove from database
                     tr.delete(conn);

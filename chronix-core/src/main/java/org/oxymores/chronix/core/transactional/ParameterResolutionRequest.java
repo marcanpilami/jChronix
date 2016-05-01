@@ -35,9 +35,9 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         this.parentParameterRequest = parentParameterRequest;
         this.parentSourceRequest = parentSourceRequest;
 
-        if (this.prm.getRawParameter().getAdditionalParameters() != null && this.prm.getRawParameter().getAdditionalParameters().size() > 0)
+        if (this.prm.getAdditionalParameters() != null && this.prm.getAdditionalParameters().size() > 0)
         {
-            this.additionalParameters = new String[this.prm.getRawParameter().getAdditionalParameters().size()];
+            this.additionalParameters = new String[this.prm.getAdditionalParameters().size()];
         }
         else
         {
@@ -54,7 +54,12 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
     @Override
     public DTOParameter getParameter()
     {
-        return this.prm.getRawParameter();
+        return this.prm.getDTO();
+    }
+
+    public UUID getParameterId()
+    {
+        return this.prm.getParameterId();
     }
 
     public ParameterHolder getParameterHolder()
@@ -78,7 +83,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         }
         int i = 0;
         List<Entry<String, String>> res = new ArrayList<>();
-        for (DTOParameter prm : this.prm.getRawParameter().getAdditionalParameters())
+        for (ParameterHolder prm : this.prm.getAdditionalParameters())
         {
             res.add(new AbstractMap.SimpleEntry<String, String>(prm.getKey(), this.additionalParameters[i]));
             i++;
@@ -109,11 +114,10 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
      */
     public boolean isReady()
     {
-        return this.prm.getRawParameter().getDirectValue() != null
-                || (this.prm.getRawParameter().getReference() != null && this.prm.getRawParameter().getProviderName() == null)
-                || (this.prm.getRawParameter().getProviderName() != null
-                        && resolvedAdditionalPrm() == this.prm.getRawParameter().getAdditionalParameters().size()
-                        && this.fields.size() == this.prm.getRawParameter().getFields().size());
+        return this.prm.getDirectValue() != null
+                || (this.prm.getReference() != null && this.referencedValue != null && this.prm.getProviderClassName() == null)
+                || (this.prm.getProviderClassName() != null && resolvedAdditionalPrm() == this.prm.getAdditionalParameters().size()
+                        && this.fields.size() == this.prm.getFields().size());
     }
 
     private int resolvedAdditionalPrm()
@@ -134,13 +138,12 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
      */
     public boolean isReference()
     {
-        return this.prm.getRawParameter().getDirectValue() == null && this.prm.getRawParameter().getProviderName() == null
-                && this.prm.getRawParameter().getReference() != null;
+        return this.prm.getDirectValue() == null && this.prm.getProviderClassName() == null && this.prm.getReference() != null;
     }
 
     public boolean isDynamic()
     {
-        return !this.isReference() && this.prm.getRawParameter().getDirectValue() == null;
+        return !this.isReference() && this.prm.getDirectValue() == null;
     }
 
     /**
@@ -148,51 +151,49 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
      */
     public UUID getReference()
     {
-        return this.prm.getRawParameter().getReference();
+        return this.prm.getReference();
+    }
+
+    public String getReferencedValue()
+    {
+        return this.referencedValue;
     }
 
     /**
      * For dynamically resolved parameters only. Sets the result of the resolution of a field.
+     * 
+     * @param rq
+     *            the request made for a parameter of this parameter. (field or additional)
      */
-    public void setFieldValue(AsyncParameterResult res, ParameterResolutionRequest rq)
+    public void setFieldOrParamValue(AsyncParameterResult res, ParameterResolutionRequest rq)
     {
-        if (this.prm.getRawParameter().getProviderName() == null)
+        if (this.isReference())
+        {
+            this.referencedValue = res.result;
+            return;
+        }
+
+        if (this.prm.getProviderClassName() == null)
         {
             throw new IllegalStateException("cannot resolve fields for a non dynamic parameter");
         }
 
-        DTOParameter targetPrm = this.prm.getRawParameter().getFields().get(rq.getParameter().getKey());
-        if (targetPrm == null)
+        ParameterHolder targetPrm = this.prm.getField(rq.getParameter().getId());
+        if (targetPrm != null)
         {
-            throw new IllegalArgumentException(
-                    "this parameter request is not waiting for a field value with key " + rq.getParameter().getKey());
+            this.fields.put(rq.getParameter().getKey(), res.result);
+            return;
         }
 
-        this.fields.put(rq.getParameter().getKey(), res.result);
-    }
-
-    public void setPrmValue(UUID dtoPrmId, String childValue)
-    {
-        // Value can be either a field or an additional parameter.
-        for (DTOParameter field : this.prm.getRawParameter().getFields().values())
+        targetPrm = this.prm.getAdditionalParameter(rq.getParameter().getId());
+        if (targetPrm != null)
         {
-            if (field.getId().equals(dtoPrmId))
-            {
-                this.fields.put(field.getKey(), childValue);
-                return;
-            }
+            this.fields.put(rq.getParameter().getKey(), res.result);
+            return;
         }
 
-        int i = 0;
-        for (DTOParameter field : this.prm.getRawParameter().getAdditionalParameters())
-        {
-            if (field.getId().equals(dtoPrmId))
-            {
-                this.additionalParameters[i] = childValue;
-                return;
-            }
-            i++;
-        }
+        throw new IllegalArgumentException(
+                "this parameter request is not waiting for a field value with key " + rq.getParameter().getKey());
     }
 
     public UUID getParentParameterRequest()
@@ -207,19 +208,6 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
 
     public String getDirectValue()
     {
-        return this.prm.getRawParameter().getDirectValue();
-    }
-
-    public String getNonDynamicValue()
-    {
-        if (this.prm.getRawParameter().getDirectValue() != null)
-        {
-            return this.prm.getRawParameter().getDirectValue();
-        }
-        if (this.referencedValue != null)
-        {
-            return this.referencedValue;
-        }
-        return null;
+        return this.prm.getDirectValue();
     }
 }

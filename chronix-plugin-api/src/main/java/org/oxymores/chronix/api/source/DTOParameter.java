@@ -111,6 +111,12 @@ public class DTOParameter
         return id;
     }
 
+    public DTOParameter setId(UUID id)
+    {
+        this.id = id;
+        return this;
+    }
+
     /**
      * This key is either the name of a field (in which case it must be non-null and non-empty) or the "modifier" for an optional argument
      * (for example, the name "--file" for a shell command argument). In this latter case, it can be null or empty (ignored in both cases).

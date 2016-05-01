@@ -178,9 +178,9 @@ public class ApiPlanAccess implements PlanAccessService
         res.setName(app.getName());
         res.setVersion(app.getVersion());
 
-        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+        for (EventSourceWrapper esw : app.getEventSources().values())
         {
-            res.addEventSource(esw.getSource());
+            res.addEventSource(esw.getDTO());
         }
 
         for (PlaceGroup pg : app.getGroupsList())
@@ -235,7 +235,7 @@ public class ApiPlanAccess implements PlanAccessService
 
         for (DTOEventSource d : app.getEventSources())
         {
-            a.addSource(d, this.getMetaDb().getSourceProvider(d.getBehaviourClassName()));
+            a.addSource(d, this.getMetaDb());
         }
 
         for (DTOPlaceGroup pg : app.getGroups())

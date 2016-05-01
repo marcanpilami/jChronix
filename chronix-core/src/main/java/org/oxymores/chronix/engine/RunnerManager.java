@@ -24,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -197,50 +196,6 @@ public class RunnerManager implements MessageCallback
     // Parameter resolution
     ///////////////////////////////////////////////////////////////////////////
 
-    // Called within JMS transaction. Don't commit here.
-    private void recvAPR(UUID launchId, UUID prmId, AsyncParameterResult res, Session jmsSession) throws JMSException
-    {
-        // Get the PipelineJob
-        PipelineJob resolvedJob = this.resolvingPJ.get(launchId);
-        if (resolvedJob == null)
-        {
-            log.error("received a param resolution for a job that is not in queue - ignored");
-            return;
-        }
-
-        recvAPR(resolvedJob, prmId, res.result, jmsSession);
-    }
-
-    // Called within JMS transaction. Don't commit here.
-    private void recvAPR(PipelineJob pj, UUID prmId, String res, Session jmsSession) throws JMSException
-    {
-        // Get the parameter awaiting resolution
-        ParameterHolder h = null;
-        List<ParameterHolder> prms = pj.getActive(ctxMeta).getParameters();
-        for (ParameterHolder hh : prms)
-        {
-            if (hh.getParameterId().equals(prmId))
-            {
-                h = hh;
-                break;
-            }
-        }
-        if (h == null)
-        {
-            log.error("received a param resolution for a job that has no such parameter - ignored");
-            return;
-        }
-
-        // Update the parameter with its value
-        pj.setParamValue(prmId, res);
-
-        // Perhaps launch the job
-        if (pj.isReady(ctxMeta))
-        {
-            launch(pj, jmsSession);
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // New job handling
     ///////////////////////////////////////////////////////////////////////////
@@ -301,12 +256,12 @@ public class RunnerManager implements MessageCallback
                     toRun.getName(), toRun.getSourceTypeName()));
 
             // Parameter resolution
-            if (!toRun.getParameters().isEmpty())
+            if (!toRun.getAdditionalParameters().isEmpty() || !toRun.getFields().isEmpty())
             {
                 // There are parameters to solve. In this case, actual run actually occurs at the end of all parameter resolutions.
                 j.initParamResolution(toRun);
 
-                for (ParameterHolder h : toRun.getParameters())
+                for (ParameterHolder h : toRun.getAllParameters())
                 {
                     this.resolveParameter(h, j.getId(), null, String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), a,
                             jmsSession);
@@ -370,7 +325,7 @@ public class RunnerManager implements MessageCallback
             else
             {
                 // Parameter needs a resolution but first we need to resolve its own parameters
-                for (ParameterHolder childPh : rq.getParameterHolder().getRawParameter().ddd())
+                for (ParameterHolder childPh : rq.getParameterHolder().getAllParameters())
                 {
                     resolveParameter(childPh, null, rq.getRequestId(), targetNodeName, a, jmsSession);
                 }
@@ -402,7 +357,7 @@ public class RunnerManager implements MessageCallback
                 log.error("inconsistent parameter resolution requests. Plan may go awry.");
                 return;
             }
-            parentRequest.setFieldValue(res, rq);
+            parentRequest.setFieldOrParamValue(res, rq);
 
             if (parentRequest.isReady())
             {
@@ -429,7 +384,7 @@ public class RunnerManager implements MessageCallback
             }
 
             // Update the parameter with its value
-            pj.setParamValue(rq.getParameter().getId(), res.result);
+            pj.setParamOrFieldValue(res, rq);
 
             // Perhaps launch the job
             if (pj.isReady(ctxMeta))
@@ -582,7 +537,7 @@ public class RunnerManager implements MessageCallback
             cp.insertOrUpdate(conn);
             log.debug(String.format(
                     "At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
-                    s.getRepresentsContainer().getName(), s.getContainerName(), cp.getLastEndedOccurrenceCd(ctxMeta).getValue(),
+                    s.getEventSourceDefinition().getName(), s.getContainerName(), cp.getLastEndedOccurrenceCd(ctxMeta).getValue(),
                     cp.getLastEndedOkOccurrenceCd(ctxMeta).getValue(), cp.getLastStartedOccurrenceCd(ctxMeta).getValue(),
                     cp.getNextRunOccurrenceCd(ctxMeta).getValue(), cp.getLatestFailed(), cp.getRunning()));
             conn.commit();

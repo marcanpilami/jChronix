@@ -334,7 +334,7 @@ public class Calendar extends NamedApplicationObject
         {
             log.warn(String.format(
                     "State %s on place %s (in chain %s) is now late according to its calendar: it has only finished %s while it should be ready to run %s shifted by %s",
-                    i.s.getRepresentsContainer().getName(), i.p.name, "chain name", i.s.getCurrentCalendarOccurrence(conn, i.p).seq, d.seq,
+                    i.s.getEventSourceDefinition().getName(), i.p.name, "chain name", i.s.getCurrentCalendarOccurrence(conn, i.p).seq, d.seq,
                     i.s.getCalendarShift()));
         }
     }

@@ -22,6 +22,7 @@ package org.oxymores.chronix.core.transactional;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
@@ -41,10 +43,13 @@ import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 public class PipelineJob extends TranscientBase implements JobDescription
 {
+    private static final Logger log = LoggerFactory.getLogger(PipelineJob.class);
     private static final long serialVersionUID = -3301527645931127170L;
 
     @NotNull
@@ -62,9 +67,9 @@ public class PipelineJob extends TranscientBase implements JobDescription
     Integer resultCode = -1;
 
     // Format is : parameter UUID, parameter key, parameter value. Order is preserved (LinkedHashMap).
-    private transient Map<UUID, Map.Entry<String, String>> resolvedParameters;
-
-    private transient Map<String, String> resolvedFields = new HashMap<>();
+    private transient Map<UUID, String> resolvedParameters;
+    private transient Map<String, String> resolvedFields;
+    private transient EventSourceWrapper source;
 
     public PipelineJob()
     {
@@ -93,35 +98,59 @@ public class PipelineJob extends TranscientBase implements JobDescription
         this.outOfPlan = outOfPlan;
     }
 
-    ///////////////
-    // Params
-    public void setParamValue(UUID prmId, String value)
+    ////////////////////////
+    // Params & fields
+
+    public void setParamOrFieldValue(AsyncParameterResult res, ParameterResolutionRequest rq)
     {
-        resolvedParameters.get(prmId).setValue(value);
+        log.trace("Pipelinejob has received a parameter - prm id is " + rq.getParameterId() + " - key is " + rq.getParameter().getKey()
+                + " - value " + res.result);
+        ParameterHolder targetPrm = this.source.getField(rq.getParameter().getId());
+        if (targetPrm != null)
+        {
+            this.resolvedFields.put(rq.getParameter().getKey(), res.result);
+            return;
+        }
+
+        targetPrm = this.source.getAdditionalParameter(rq.getParameter().getId());
+        if (targetPrm != null)
+        {
+            this.resolvedParameters.put(rq.getParameter().getId(), res.result);
+            return;
+        }
+
+        throw new IllegalArgumentException("this pipeline job is not waiting for a field value with key " + rq.getParameter().getKey());
     }
 
-    // Note: taking toRun (and not resolve this.source) because only called from RunnerManager which has already resolved it.
+    // Note: taking toRun (and not resolving this.source) because only called from RunnerManager which has already resolved it.
     public void initParamResolution(EventSourceWrapper toRun)
     {
+        this.source = toRun;
         resolvedParameters = new LinkedHashMap<>();
-        for (ParameterHolder ph : toRun.getParameters())
+        for (ParameterHolder ph : toRun.getAdditionalParameters())
         {
-            resolvedParameters.put(ph.getParameterId(), new AbstractMap.SimpleEntry<String, String>(ph.getKey(), (String) null));
+            resolvedParameters.put(ph.getParameterId(), (String) null);
         }
-    }
-
-    ///////////////
-    // Fields
-
-    public void setFieldValue(String key, String value)
-    {
-        this.resolvedFields.put(key, value);
+        resolvedFields = new HashMap<>();
     }
 
     @Override
     public Map<String, String> getFields()
     {
         return new HashMap<>(this.resolvedFields);
+    }
+
+    private int resolvedAdditionalPrm()
+    {
+        int res = 0;
+        for (String s : this.resolvedParameters.values())
+        {
+            if (s != null)
+            {
+                res++;
+            }
+        }
+        return res;
     }
 
     /////////////////////
@@ -225,8 +254,9 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     public boolean isReady(ChronixContextMeta ctx)
     {
+        // TODO: check if fields are really resolved?
         EventSourceWrapper a = this.getActive(ctx);
-        return a.getParameters().size() == this.resolvedParameters.size();
+        return a.getAdditionalParameters().size() == resolvedAdditionalPrm() && a.getFields().size() == this.resolvedFields.size();
     }
 
     //
@@ -396,9 +426,10 @@ public class PipelineJob extends TranscientBase implements JobDescription
     {
         List<Map.Entry<String, String>> res = new ArrayList<>();
 
-        for (Map.Entry<UUID, Map.Entry<String, String>> e : this.resolvedParameters.entrySet())
+        Iterator<ParameterHolder> prmDefs = this.source.getAdditionalParameters().iterator();
+        for (Map.Entry<UUID, String> e : this.resolvedParameters.entrySet())
         {
-            res.add(e.getValue());
+            res.add(new AbstractMap.SimpleImmutableEntry<String, String>(prmDefs.next().getKey(), e.getValue()));
         }
         return res;
     }

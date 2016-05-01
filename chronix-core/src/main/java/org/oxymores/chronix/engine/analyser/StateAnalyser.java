@@ -111,12 +111,12 @@ public class StateAnalyser
         {
             TransitionAnalyser tar = new TransitionAnalyser(application, tr, scopeEvents, conn);
 
-            if (tar.blockedOnAllPlaces() && s.getRepresentsContainer().isAnd())
+            if (tar.blockedOnAllPlaces() && s.getEventSourceDefinition().isAnd())
             {
                 // No need to go further - at least one transition will block everything for all places
                 log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
-                        s.getRepresentsContainer().getName(), s.getContainerName(),
-                        this.application.getState(tr.getFrom()).getRepresentsContainer().getName()));
+                        s.getEventSourceDefinition().getName(), s.getContainerName(),
+                        this.application.getState(tr.getFrom()).getEventSourceDefinition().getName()));
                 this.analysis.clear();
                 return;
             }
@@ -126,7 +126,7 @@ public class StateAnalyser
 
         List<Place> places = this.getPossiblePlaces();
         log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places",
-                s.getRepresentsContainer().getName(), s.getContainerName(), places.size()));
+                s.getEventSourceDefinition().getName(), s.getContainerName(), places.size()));
 
         // Check calendar
         for (Place p : places.toArray(new Place[0]))
@@ -137,14 +137,14 @@ public class StateAnalyser
             }
         }
         log.debug(String.format("After taking calendar conditions into account, the state [%s] in chain [%s] could run on %s places",
-                s.getRepresentsContainer().getName(), s.getContainerName(), places.size()));
+                s.getEventSourceDefinition().getName(), s.getContainerName(), places.size()));
 
         // Go
         if (!places.isEmpty())
         {
             log.debug(String.format(
                     "State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
-                    s.getRepresentsContainer().getName(), s.getContainerName(), places.size(), this.consumedEvents.size()));
+                    s.getEventSourceDefinition().getName(), s.getContainerName(), places.size(), this.consumedEvents.size()));
 
             this.consumeEvents(s, this.consumedEvents, places, conn);
             for (Place p : places)
@@ -168,7 +168,7 @@ public class StateAnalyser
         {
             Set<Event> ce = new HashSet<>();
 
-            if (state.getRepresentsContainer().isAnd())
+            if (state.getEventSourceDefinition().isAnd())
             {
                 for (TransitionAnalyser tra : this.analysis.values())
                 {
@@ -182,7 +182,7 @@ public class StateAnalyser
                 res.add(p);
             }
 
-            if (state.getRepresentsContainer().isOr())
+            if (state.getEventSourceDefinition().isOr())
             {
                 for (TransitionAnalyser tra : this.analysis.values())
                 {

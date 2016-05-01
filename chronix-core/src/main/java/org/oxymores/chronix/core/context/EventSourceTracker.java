@@ -7,7 +7,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
         for (Application app : apps)
         {
             int i = 0;
-            for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
+            for (EventSourceWrapper esw : app.getEventSources().values())
             {
                 if (esw.getPluginSymbolicName().equals(ref.getBundle().getSymbolicName())
                         && esw.getPluginClassName().equals(srv.getClass().getCanonicalName()))
@@ -77,9 +76,9 @@ class EventSourceTracker implements ServiceTrackerCustomizer<EventSourceProvider
 
         for (Application app : this.ctx.getApplications())
         {
-            for (DTOEventSource o : app.getEventSources(service))
+            for (EventSourceWrapper o : app.getEventSources(service))
             {
-                app.removeSource(o);
+                app.removeSource(o.getId());
             }
         }
     }

@@ -91,7 +91,7 @@ class EventListener implements MessageCallback
         {
             a = evt.getApplication(ctxMeta);
             s = evt.getState(ctxMeta);
-            active = a.getEventSourceContainer(evt.getActiveID());
+            active = a.getEventSource(evt.getActiveID());
         }
         catch (Exception e)
         {

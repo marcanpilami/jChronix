@@ -68,7 +68,7 @@ public class EngineCbRun implements EngineCallback
     @Override
     public DTOEventSource getEventSource(UUID id)
     {
-        return this.a.getEventSource(id);
+        return this.a.getEventSource(id).getDTO();
     }
 
     @Override

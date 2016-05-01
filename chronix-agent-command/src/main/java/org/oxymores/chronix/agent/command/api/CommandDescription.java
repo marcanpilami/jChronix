@@ -1,8 +1,11 @@
 package org.oxymores.chronix.agent.command.api;
 
 import java.io.Serializable;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,7 +17,7 @@ public class CommandDescription implements Serializable
     private static final long serialVersionUID = 4046958802809857415L;
 
     private Map<String, String> pluginParameters = new LinkedHashMap<>();
-    private Map<String, String> parameters = new LinkedHashMap<>();
+    private List<Map.Entry<String, String>> parameters = new ArrayList<>();
     private Map<String, String> environmentVariables = new HashMap<>();
 
     private String runnerCapability;
@@ -27,7 +30,7 @@ public class CommandDescription implements Serializable
 
     public void addParameter(String name, String value)
     {
-        this.getParameters().put(name, value);
+        this.parameters.add(new AbstractMap.SimpleImmutableEntry<String, String>(name, value));
     }
 
     public void addEnvVar(String name, String value)
@@ -75,7 +78,7 @@ public class CommandDescription implements Serializable
         this.runnerCapability = runnerCapability;
     }
 
-    public Map<String, String> getParameters()
+    public List<Map.Entry<String, String>> getParameters()
     {
         return parameters;
     }

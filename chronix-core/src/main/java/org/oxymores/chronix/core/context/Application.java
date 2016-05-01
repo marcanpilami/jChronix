@@ -20,9 +20,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.source.DTOEventSource;
-import org.oxymores.chronix.api.source.DTOEventSourceContainer;
-import org.oxymores.chronix.api.source.DTOState;
-import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
@@ -130,16 +127,7 @@ public class Application implements Serializable
     // Source handling
     ///////////////////////////////////////////////////////////////////////////
 
-    public DTOEventSource getEventSource(UUID id)
-    {
-        if (!this.containsSource(id))
-        {
-            throw new ChronixException("non existing source");
-        }
-        return this.sources.get(id).getSource();
-    }
-
-    public EventSourceWrapper getEventSourceContainer(UUID id)
+    public EventSourceWrapper getEventSource(UUID id)
     {
         if (!this.containsSource(id))
         {
@@ -148,7 +136,7 @@ public class Application implements Serializable
         return this.sources.get(id);
     }
 
-    public Map<UUID, EventSourceWrapper> getEventSourceWrappers()
+    public Map<UUID, EventSourceWrapper> getEventSources()
     {
         return this.sources;
     }
@@ -158,27 +146,27 @@ public class Application implements Serializable
         return this.sources.containsKey(id);
     }
 
-    public List<DTOEventSource> getEventSources(EventSourceProvider pr)
+    public List<EventSourceWrapper> getEventSources(EventSourceProvider pr)
     {
-        List<DTOEventSource> res = new ArrayList<>();
+        List<EventSourceWrapper> res = new ArrayList<>();
         for (EventSourceWrapper s : this.sources.values())
         {
-            if (s.isInstanceOf(pr.getClass()))
+            if (s.isProvidedBy(pr.getClass()))
             {
-                res.add(s.getSource());
+                res.add(s);
             }
         }
         return res;
     }
 
-    public void removeSource(DTOEventSource src)
+    public void removeSource(UUID id)
     {
-        this.sources.remove(src.getId());
+        this.sources.remove(id);
     }
 
-    public void addSource(DTOEventSource src, EventSourceProvider prv)
+    public void addSource(DTOEventSource src, ChronixContextMeta ctx)
     {
-        EventSourceWrapper w = new EventSourceWrapper(src, prv);
+        EventSourceWrapper w = new EventSourceWrapper(src, ctx, this);
         this.sources.put(src.getId(), w);
     }
 
@@ -413,36 +401,17 @@ public class Application implements Serializable
     // STATES
     ///////////////////////////////////////////////////////////////////////////
 
-    private State dto2state(DTOState d, DTOEventSourceContainer parent)
-    {
-        List<DTOTransition> trFromState = new ArrayList<>(), trToState = new ArrayList<>();
-        for (DTOTransition tr : parent.getContainedTransitions())
-        {
-            if (tr.getFrom().equals(d.getId()))
-            {
-                trFromState.add(tr);
-            }
-            if (tr.getTo().equals(d.getId()))
-            {
-                trToState.add(tr);
-            }
-        }
-
-        return new State(this, d, parent, trFromState, trToState);
-    }
-
     public State getState(UUID id)
     {
         for (EventSourceWrapper d : this.sources.values())
         {
             if (d.isContainer())
             {
-                DTOEventSourceContainer c = (DTOEventSourceContainer) d.getSource();
-                for (DTOState s : c.getContainedStates())
+                for (State s : d.getContainedStates())
                 {
                     if (s.getId().equals(id))
                     {
-                        return dto2state(s, c);
+                        return s;
                     }
                 }
             }
@@ -458,12 +427,11 @@ public class Application implements Serializable
         {
             if (d.isContainer())
             {
-                DTOEventSourceContainer c = (DTOEventSourceContainer) d.getSource();
-                for (DTOState s : c.getContainedStates())
+                for (State s : d.getContainedStates())
                 {
-                    if (s.getEventSourceId() == sourceId)
+                    if (s.getRepresentsId().equals(sourceId))
                     {
-                        res.add(dto2state(s, c));
+                        res.add(s);
                     }
                 }
             }
