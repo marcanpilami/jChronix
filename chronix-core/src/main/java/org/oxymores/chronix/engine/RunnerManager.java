@@ -56,6 +56,7 @@ import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.core.transactional.ParameterResolutionRequest;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -82,7 +83,10 @@ public class RunnerManager implements MessageCallback
     private ChronixEngine engine;
 
     // The list of jobs waiting for parameter resolution
-    private Map<UUID, PipelineJob> resolving;
+    private Map<UUID, PipelineJob> resolvingPJ;
+
+    // The list of dynamic parameters waiting for their own parameter resolutions
+    private Map<UUID, ParameterResolutionRequest> resolvingPrm = new HashMap<>();
 
     private MessageProducer jmsProducer;
 
@@ -108,7 +112,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // Internal queue
-        resolving = new HashMap<>();
+        resolvingPJ = new HashMap<>();
     }
 
     @Override
@@ -145,15 +149,11 @@ public class RunnerManager implements MessageCallback
                 else if (o instanceof AsyncParameterResult)
                 {
                     AsyncParameterResult apr = (AsyncParameterResult) o;
-                    String[] prmLaunchId = ((String) msg.getObjectProperty("prmLaunchId")).split("_");
-                    UUID launchId = UUID.fromString(prmLaunchId[0]);
-                    UUID prmId = UUID.fromString(prmLaunchId[1]);
-
-                    recvAPR(launchId, prmId, apr, jmsSession);
+                    recvAPR(apr, jmsSession);
                 }
                 else
                 {
-                    log.warn("An object was received by the Runner that was not of a valid type. It will be ignored.");
+                    log.warn("An object was received by the Runner Manager that was not of a valid type. It will be ignored.");
                     return;
                 }
 
@@ -201,7 +201,7 @@ public class RunnerManager implements MessageCallback
     private void recvAPR(UUID launchId, UUID prmId, AsyncParameterResult res, Session jmsSession) throws JMSException
     {
         // Get the PipelineJob
-        PipelineJob resolvedJob = this.resolving.get(launchId);
+        PipelineJob resolvedJob = this.resolvingPJ.get(launchId);
         if (resolvedJob == null)
         {
             log.error("received a param resolution for a job that is not in queue - ignored");
@@ -257,18 +257,22 @@ public class RunnerManager implements MessageCallback
 
         // Check the job is OK
         EventSourceWrapper toRun;
+        Application a;
         State s;
+        Place p;
         try
         {
+            a = j.getApplication(ctxMeta);
             toRun = j.getActive(ctxMeta);
             s = j.getState(ctxMeta);
+            p = j.getPlace(ctxMeta);
         }
         catch (Exception e)
         {
             log.error("A pipeline job was received but was invalid - thrown out", e);
             return;
         }
-        if (s == null)
+        if (s == null || p == null)
         {
             log.error("A pipeline job was received but had no corresponding state in the current applications - thrown out");
             return;
@@ -281,7 +285,7 @@ public class RunnerManager implements MessageCallback
             j.insertOrUpdate(conn);
             conn.commit();
         }
-        resolving.put(j.getId(), j);
+        resolvingPJ.put(j.getId(), j);
 
         if (!toRun.isEnabled() || !s.isEnabled())
         {
@@ -299,23 +303,18 @@ public class RunnerManager implements MessageCallback
             // Parameter resolution
             if (!toRun.getParameters().isEmpty())
             {
+                // There are parameters to solve. In this case, actual run actually occurs at the end of all parameter resolutions.
                 j.initParamResolution(toRun);
 
-                // In this case, actual run actually occurs at the end of all parameter resolutions
                 for (ParameterHolder h : toRun.getParameters())
                 {
-                    String paramValue = h.getValue(String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()),
-                            j.getId().toString() + "_" + h.getParameterId().toString());
-                    if (paramValue != null)
-                    {
-                        // Sync result => analyse at once.
-                        recvAPR(j, h.getParameterId(), paramValue, jmsSession);
-                    }
+                    this.resolveParameter(h, j.getId(), null, String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), a,
+                            jmsSession);
                 }
             }
             else
             {
-                // In this case, direct run
+                // No parameters. In this case, direct run.
                 launch(j, jmsSession);
             }
         }
@@ -330,14 +329,136 @@ public class RunnerManager implements MessageCallback
         }
     }
 
-    private void launch(PipelineJob pj, Session jmsSession) throws JMSException
+    private void resolveParameter(ParameterHolder ph, UUID parentSourceLaunch, UUID parentParameterLaunch, String targetNodeName,
+            Application a, Session jmsSession)
+    {
+        ParameterResolutionRequest rq = new ParameterResolutionRequest(ph,
+                String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), targetNodeName, parentSourceLaunch, null);
+        this.resolvingPrm.put(rq.getRequestId(), rq);
+
+        if (rq.isReference())
+        {
+            // Simple redirection
+            resolveParameter(a.getSharedParameter(rq.getReference()), null, rq.getRequestId(), targetNodeName, a, jmsSession);
+        }
+        else if (rq.getDirectValue() != null)
+        {
+            // Simple value. Go directly to value analysis.
+            AsyncParameterResult apr = new AsyncParameterResult();
+            apr.requestId = rq.getRequestId();
+            apr.result = rq.getDirectValue();
+            apr.success = true;
+
+            recvAPR(apr, jmsSession);
+        }
+        else if (rq.isDynamic())
+        {
+            if (rq.isReady())
+            {
+                // Parameter needs a resolution but is already ready for resolution (itself has no parameters)
+                String newRes = rq.getParameterHolder().getValue(rq);
+                if (newRes != null)
+                {
+                    // Synchronous result - therefore continue synchronously.
+                    AsyncParameterResult apr = new AsyncParameterResult();
+                    apr.requestId = rq.getRequestId();
+                    apr.result = newRes;
+                    apr.success = true;
+                    recvAPR(apr, jmsSession);
+                }
+            }
+            else
+            {
+                // Parameter needs a resolution but first we need to resolve its own parameters
+                for (ParameterHolder childPh : rq.getParameterHolder().getRawParameter().ddd())
+                {
+                    resolveParameter(childPh, null, rq.getRequestId(), targetNodeName, a, jmsSession);
+                }
+            }
+        }
+
+    }
+
+    private void recvAPR(AsyncParameterResult res, Session jmsSession)
+    {
+        // Get the request corresponding to this result.
+        ParameterResolutionRequest rq = this.resolvingPrm.get(res.requestId);
+        if (rq == null)
+        {
+            log.warn("received an unexpected param resolution - ignored. Can happen on scheduler restart after a dirty shutdown.");
+            return;
+        }
+
+        // Whatever happens, we are not waiting for a result for this request anymore.
+        this.resolvingPrm.remove(res.requestId);
+
+        // Result handling
+        if (rq.getParentParameterRequest() != null)
+        {
+            // We have received the value of a parameter of a dynamic parameter
+            ParameterResolutionRequest parentRequest = this.resolvingPrm.get(rq.getParentParameterRequest());
+            if (parentRequest == null)
+            {
+                log.error("inconsistent parameter resolution requests. Plan may go awry.");
+                return;
+            }
+            parentRequest.setFieldValue(res, rq);
+
+            if (parentRequest.isReady())
+            {
+                String newRes = parentRequest.getParameterHolder().getValue(parentRequest);
+                if (newRes != null)
+                {
+                    // Synchronous result - therefore continue synchronously.
+                    AsyncParameterResult apr = new AsyncParameterResult();
+                    apr.requestId = parentRequest.getRequestId();
+                    apr.result = newRes;
+                    apr.success = true;
+                    recvAPR(apr, jmsSession);
+                }
+            }
+        }
+        else if (rq.getParentSourceRequest() != null)
+        {
+            // We have received the value of a parameter of a pipeline job
+            PipelineJob pj = this.resolvingPJ.get(rq.getParentSourceRequest());
+            if (pj == null)
+            {
+                log.error("inconsistent parameter resolution requests. Plan may go awry.");
+                return;
+            }
+
+            // Update the parameter with its value
+            pj.setParamValue(rq.getParameter().getId(), res.result);
+
+            // Perhaps launch the job
+            if (pj.isReady(ctxMeta))
+            {
+                launch(pj, jmsSession);
+            }
+        }
+        else
+        {
+            log.error("Invalid async parameter resolution result received. This may prevent the normal ongoing of the plan");
+        }
+
+    }
+
+    private void launch(PipelineJob pj, Session jmsSession)
     {
         RunResult res = pj.getActive(ctxMeta).run(new EngineCbRun(this.engine, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
 
         if (res != null)
         {
             // Synchronous execution - go on to result analysis at once in the current thread.
-            recvRR(res, jmsSession);
+            try
+            {
+                recvRR(res, jmsSession);
+            }
+            catch (JMSException e)
+            {
+                throw new ListenerRollbackException("error during run result analysis", e);
+            }
         }
         else
         {
@@ -365,7 +486,7 @@ public class RunnerManager implements MessageCallback
 
         rr.logPath = FilenameUtils.concat(this.logDbPath, rr.logFileName);
 
-        PipelineJob pj = this.resolving.get(rr.id1);
+        PipelineJob pj = this.resolvingPJ.get(rr.id1);
         if (pj == null)
         {
             log.error("A result was received that was not waited for - thrown out");
@@ -384,7 +505,7 @@ public class RunnerManager implements MessageCallback
         if (s == null)
         {
             log.error("A result was received for a pipeline job without state - thrown out");
-            resolving.remove(pj);
+            resolvingPJ.remove(pj);
             return;
         }
 
@@ -427,7 +548,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // End
-        resolving.remove(pj);
+        resolvingPJ.remove(pj);
     }
 
     private void recvESRR(EventSourceRunResult esrr, Session jmsSession, UUID launchId) throws JMSException

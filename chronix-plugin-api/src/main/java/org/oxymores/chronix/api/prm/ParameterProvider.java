@@ -1,12 +1,13 @@
 package org.oxymores.chronix.api.prm;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 
-import org.oxymores.chronix.api.exception.ModelUpdateException;
-import org.oxymores.chronix.api.exception.SerializationException;
+import org.oxymores.chronix.api.source.EventSourceField;
 
+/**
+ * A parameter is a key/value string pair that can be provided to event sources at runtime.<br>
+ * The main class of a parameter plugin must implement this interface, which provides both factory and runtime resolution methods.
+ */
 public interface ParameterProvider
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -21,38 +22,25 @@ public interface ParameterProvider
      */
     public abstract String getDescription();
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Serialisation
     /**
-     * This method is called when the production plan is being serialised to disk. The implementation is required to write one and only one
-     * file at the designated path. If the file already exists, it must be overwritten.<br>
-     * The implementation is free to use any serialisation method. The use of XStream is however recommended as this bundle is always
-     * present for the engine needs.<br>
-     * <br>
-     * 
-     * @param targetFile
+     * The description of what the {@link ParameterProvider} created by this behaviour should/may contain.
      */
-    public void serialise(File targetFile, Collection<? extends Parameter> instances);
+    public List<EventSourceField> getFields();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Run
 
     /**
-     * The reverse method of {@link #serialise(File, Collection)}. <br>
-     * <br>
-     * <strong>This method is supposed to cope with model version upgrades</strong>. That is, if the given <code>File</code> contains
-     * serialised objects related to a previous version of the model, this method will either successfully convert them to the latest
-     * version or throw a {@link ModelUpdateException} <br>
-     * <br>
-     * If any, the deserialised sources should be converted to an object implementing {@link EventSource} and registered through the
-     * {@link EventSourceRegistry}
+     * The main method of a dynamically resolved parameter provider. <strong>It must be idempotent</strong> as there are no guarantees it
+     * will be called only once (also, parameters are resolved even for disabled elements). Said otherwise: dynamic parameters are made to
+     * retrieve values, no to modify states.<br>
+     * It can either immediately return a value, or trigger an asynchronous resolution process and immediately return null. In the latter
+     * case, the result is expected as an {@link AsyncParameterResult} inside a queue which name is given by
+     * {@link ParameterResolutionRequest#getReplyToQueueName()}.
      * 
-     * @throws ModelUpdateException
-     *             if the plugin is unable to update the model to the latest version
-     * @throws SerializationException
-     *             for all other errors
-     * @param sourceFile
-     *            a directory containing the serialised data.
-     * @param reg
-     *            for registering the deserialised items inside the engine.
+     * @param job
      * @return
      */
-    public abstract Set<? extends Parameter> deserialise(File sourceFile);
+    public String getValue(ParameterResolutionRequest job);
+
 }

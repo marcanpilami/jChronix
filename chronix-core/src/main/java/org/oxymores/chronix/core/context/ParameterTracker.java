@@ -1,18 +1,15 @@
 package org.oxymores.chronix.core.context;
 
-import java.io.File;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.io.FilenameUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.core.EventSourceWrapper;
 import org.oxymores.chronix.core.ParameterHolder;
-import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +27,6 @@ class ParameterTracker implements ServiceTrackerCustomizer<ParameterProvider, Pa
     @Override
     public ParameterProvider addingService(ServiceReference<ParameterProvider> ref)
     {
-        // On add, simply init the plugin.
-
         // get the service reference - it will stored alongside the parameter (if any)
         ParameterProvider srv = bd.getBundleContext().getService(ref);
         if (srv == null)
@@ -43,56 +38,31 @@ class ParameterTracker implements ServiceTrackerCustomizer<ParameterProvider, Pa
         log.info(
                 "Parameter plugin registering: " + srv.getClass().getCanonicalName() + " from bundle " + ref.getBundle().getSymbolicName());
 
-        // Each application may have data created by this plugin - load that data
-        for (Application app : this.ctx.getApplications())
+        // Match the wrappers and the corresponding providers.
+        List<Application> apps = new ArrayList<>(this.ctx.getApplications());
+        apps.addAll(this.ctx.getDrafts());
+        int i = 0;
+        for (Application app : apps)
         {
-            File appDir = this.ctx.getRootApplication(app.getId());
-            loadAppParameters(app, appDir, ref, srv);
-        }
-        for (Application app : this.ctx.getDrafts())
-        {
-            File appDir = this.ctx.getRootApplicationDraft(app.getId());
-            loadAppParameters(app, appDir, ref, srv);
-        }
+            // TODO: shared parameters
+            // for (DTOParameter prm : app.getO)
 
-        return srv;
-    }
-
-    private void loadAppParameters(Application app, File appDir, ServiceReference<ParameterProvider> ref, ParameterProvider srv)
-    {
-        if (!appDir.isDirectory())
-        {
-            throw new ChronixInitializationException("Configuration directory " + appDir.getAbsolutePath() + " cannot be opened");
-        }
-
-        File bundleDir = new File(FilenameUtils.concat(appDir.getAbsolutePath(), ref.getBundle().getSymbolicName()));
-        if (!bundleDir.isDirectory() && !bundleDir.mkdir())
-        {
-            throw new ChronixInitializationException(
-                    "Configuration directory " + bundleDir.getAbsolutePath() + " does not exist and could not be created");
-        }
-
-        Set<? extends Parameter> prms = srv.deserialise(bundleDir);
-        log.trace("Asking parameter plugin " + ref.getBundle().getSymbolicName() + "/" + srv.getClass().getSimpleName()
-                + " to read directory " + bundleDir.getAbsolutePath() + " - " + prms.size() + " parameters found.");
-
-        // Inflate the parameters inside event sources
-        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
-        {
-            ph: for (ParameterHolder ph : esw.getParameters())
+            for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
             {
-                for (Parameter prm : prms)
+                for (ParameterHolder prm : esw.getParameters())
                 {
-                    if (prm.getId().equals(ph.getParameterId()))
+                    if (prm.getProviderClassName() != null && prm.getProviderClassName().equals(srv.getClass().getCanonicalName()))
                     {
-                        ph.setDto(prm);
-                        continue ph;
+                        prm.setProvider(srv);
+                        i++;
                     }
                 }
-                // throw new ChronixInitializationException(
-                // "A parameter is defined inside the plan but was not found inside the plugin results. Check plugins are all present");
             }
         }
+        log.debug("Provider " + srv.getClass().getCanonicalName() + " is uesed by " + i
+                + " distinct parameters in all applications including drafts.");
+
+        return srv;
     }
 
     @Override

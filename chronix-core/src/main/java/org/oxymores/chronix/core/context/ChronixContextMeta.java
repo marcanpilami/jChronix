@@ -3,10 +3,8 @@ package org.oxymores.chronix.core.context;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,12 +14,9 @@ import org.joda.time.DateTime;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
-import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
@@ -299,7 +294,7 @@ public class ChronixContextMeta
 
         log.info("Saving application draft to disk " + app.getId() + " inside " + this.getRootApplicationDraft(app.getId()));
 
-        // Save (directly) the shared application structure
+        // Save (directly) the application
         try (FileOutputStream fos = new FileOutputStream(this.getRootApplicationDraft(app.getId()) + "/app.xml"))
         {
             xmlUtility.toXML(app, fos);
@@ -307,38 +302,6 @@ public class ChronixContextMeta
         catch (Exception e)
         {
             throw new ChronixPlanStorageException("Could not save application to file", e);
-        }
-
-        // Save (by a parameter plugin) the parameters of all event sources
-        Map<Class<? extends ParameterProvider>, List<Parameter>> prms = new HashMap<>();
-        for (EventSourceWrapper esw : app.getEventSourceWrappers().values())
-        {
-            for (ParameterHolder ph : esw.getParameters())
-            {
-                Class<? extends ParameterProvider> cl = ph.getProviderClass();
-                List<Parameter> l = prms.get(cl);
-                if (l == null)
-                {
-                    l = new ArrayList<>();
-                    prms.put(cl, l);
-                }
-                l.add(ph.getDto());
-            }
-        }
-        for (Class<? extends ParameterProvider> cl : prms.keySet())
-        {
-            List<Parameter> ps = prms.get(cl);
-            ParameterProvider prv = this.getParameterProviderForClass(cl);
-
-            String f = FrameworkUtil.getBundle(cl).getSymbolicName();
-            File targetBundleDir = new File(FilenameUtils.concat(targetDir.getAbsolutePath(), f));
-            if (!targetBundleDir.exists() && !targetBundleDir.mkdir())
-            {
-                throw new ChronixPlanStorageException(
-                        "plugin directory does not exist and cannot be created: " + targetBundleDir.getAbsolutePath());
-            }
-
-            prv.serialise(targetBundleDir, ps);
         }
 
         // Make the draft available

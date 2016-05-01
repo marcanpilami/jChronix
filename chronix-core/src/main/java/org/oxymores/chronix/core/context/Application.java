@@ -26,6 +26,7 @@ import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Calendar;
 import org.oxymores.chronix.core.EventSourceWrapper;
+import org.oxymores.chronix.core.ParameterHolder;
 import org.oxymores.chronix.core.PlaceGroup;
 import org.oxymores.chronix.core.State;
 import org.oxymores.chronix.core.Token;
@@ -69,6 +70,8 @@ public class Application implements Serializable
     // The sources
     private Map<UUID, EventSourceWrapper> sources = new HashMap<>();
 
+    private Map<UUID, ParameterHolder> sharedParameters = new HashMap<>();
+
     ///////////////////////////////////////////////////////////////////////////
     // Construction
     ///////////////////////////////////////////////////////////////////////////
@@ -95,6 +98,10 @@ public class Application implements Serializable
         if (calendars == null)
         {
             calendars = new HashMap<>();
+        }
+        if (sharedParameters == null)
+        {
+            sharedParameters = new HashMap<>();
         }
         return this;
     }
@@ -234,6 +241,15 @@ public class Application implements Serializable
         {
             tracker.close();
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // PARAMETERS
+    ///////////////////////////////////////////////////////////////////////////
+
+    public ParameterHolder getSharedParameter(UUID key)
+    {
+        return this.sharedParameters.get(key);
     }
 
     ///////////////////////////////////////////////////////////////////////////

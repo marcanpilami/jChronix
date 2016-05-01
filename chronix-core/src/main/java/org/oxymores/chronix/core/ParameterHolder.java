@@ -25,8 +25,9 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.prm.ParameterProvider;
+import org.oxymores.chronix.api.prm.ParameterResolutionRequest;
+import org.oxymores.chronix.api.source.DTOParameter;
 
 /**
  * A wrapper for a {@link Parameter} object.
@@ -36,31 +37,10 @@ public class ParameterHolder implements Serializable
     private static final long serialVersionUID = 8017529181151172909L;
 
     /**
-     * The parameter name as seen by the source plugins. For example, a key for a shell parameter can be "-c" or "--file" or...<br>
-     * An empty or null string is considered as "no key required".
-     */
-    @NotNull
-    @Size(min = 0, max = 50)
-    protected String key;
-
-    /**
-     * A short description that tells a human user what the parameter stands for.
-     */
-    @NotNull
-    @Size(min = 1, max = 255)
-    protected String description;
-
-    /**
      * The holder for the parameter DTO object.
      */
     @NotNull
-    protected transient Parameter prm;
-
-    /**
-     * The ID of the parameter. Unique throughout the application.
-     */
-    @NotNull
-    private UUID dtoId;
+    private DTOParameter prm;
 
     /**
      * A simple indication - only used when a plugin is missing and we need its name to help the user.
@@ -69,35 +49,24 @@ public class ParameterHolder implements Serializable
     @Size(min = 2)
     private String pluginName;
 
+    /**
+     * The plugin associated to the parameter.
+     */
+    private transient ParameterProvider provider;
+
     public String getKey()
     {
-        return key;
+        return prm.getKey();
     }
 
-    public void setKey(String key)
+    public String getValue(ParameterResolutionRequest request)
     {
-        this.key = key;
+        return this.provider.getValue(request);
     }
 
-    public String getValue(String replyQueueName, String prmLaunchId)
-    {
-        return this.prm.getValue(replyQueueName, prmLaunchId);
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    public void setDto(Parameter dto)
+    public void setDto(DTOParameter dto)
     {
         this.prm = dto;
-        this.dtoId = dto.getId();
     }
 
     public String getPluginName()
@@ -112,16 +81,29 @@ public class ParameterHolder implements Serializable
 
     public UUID getParameterId()
     {
-        return this.dtoId;
+        return prm.getId();
     }
 
-    public Class<? extends ParameterProvider> getProviderClass()
-    {
-        return this.prm.getProvider();
-    }
-
-    public Parameter getDto()
+    /**
+     * Should only be used inside the parameter request. TODO: check if can go inside right package to scope it more precisely.
+     */
+    public DTOParameter getRawParameter()
     {
         return this.prm;
+    }
+
+    public ParameterProvider getProvider()
+    {
+        return provider;
+    }
+
+    public void setProvider(ParameterProvider provider)
+    {
+        this.provider = provider;
+    }
+
+    public String getProviderClassName()
+    {
+        return this.prm.getProviderName();
     }
 }

@@ -25,16 +25,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.osgi.framework.FrameworkUtil;
-import org.oxymores.chronix.api.prm.Parameter;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.api.source.EngineCallback;
-import org.oxymores.chronix.api.source.OptionInvisible;
-import org.oxymores.chronix.api.source.OptionOr;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.api.source.JobDescription;
+import org.oxymores.chronix.api.source.OptionInvisible;
+import org.oxymores.chronix.api.source.OptionOr;
 import org.oxymores.chronix.api.source.RunModeDisabled;
 import org.oxymores.chronix.api.source.RunModeExternalyTriggered;
 import org.oxymores.chronix.api.source.RunModeForced;
@@ -178,15 +177,6 @@ public class EventSourceWrapper implements Serializable
         {
             parameters.add(parameter);
         }
-    }
-
-    public void addParameter(String key, String description, Parameter prm)
-    {
-        ParameterHolder p = new ParameterHolder();
-        p.setDescription(description);
-        p.setKey(key);
-        p.setDto(prm);
-        addParameter(p);
     }
 
     // Parameter handling

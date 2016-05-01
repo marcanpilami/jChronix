@@ -19,7 +19,7 @@ import org.oxymores.chronix.api.source.RunModeTriggered;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 @Component
-public class ShellCommandRegistry implements EventSourceProvider, RunModeTriggered, OptionAllowsAdditionalFields
+public class ShellCommandProvider implements EventSourceProvider, RunModeTriggered, OptionAllowsAdditionalFields
 {
     @Override
     public String getName()

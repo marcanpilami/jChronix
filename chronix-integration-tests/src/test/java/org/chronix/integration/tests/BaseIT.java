@@ -63,7 +63,7 @@ public class BaseIT
     @Inject
     protected OrderService order;
 
-    protected EventSourceProvider chainPrv, planPrv;
+    protected EventSourceProvider chainPrv, planPrv, shellPrv;
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
@@ -163,6 +163,7 @@ public class BaseIT
         Assert.assertNotNull(chainPrv);
         planPrv = getProvider("org.oxymores.chronix.source.chain.prv.PlanProvider");
         Assert.assertNotNull(planPrv);
+        shellPrv = getProvider("org.oxymores.chronix.source.command.prv.ShellCommandProvider");
 
         // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
         meta.resetCache();
