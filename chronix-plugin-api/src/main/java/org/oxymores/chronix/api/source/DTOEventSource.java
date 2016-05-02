@@ -48,6 +48,18 @@ public class DTOEventSource implements Serializable
     }
 
     /**
+     * See {@link #DTOEventSource(EventSourceProvider, String, String, UUID)} - with a null ID.
+     * 
+     * @param factory
+     * @param name
+     * @param description
+     */
+    public DTOEventSource(EventSourceProvider factory, String name, String description)
+    {
+        this(factory, name, description, null);
+    }
+
+    /**
      * Change the behaviour responsible for the handling of the event source. Can be used for changing it from one plugin to another (beware
      * of fields mapping in that case). Main use is for the engine to set the behaviour instance when deserialising the event sources from
      * file.
@@ -58,20 +70,48 @@ public class DTOEventSource implements Serializable
         this.behaviour = factory;
     }
 
-    public void addParameter(DTOParameter prm)
+    ///////////////////////////////////////////////////////////////////////////
+    // Parameters and fields
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DTOEventSource addParameter(DTOParameter prm)
     {
         if (!(this.behaviour instanceof OptionAllowsParameters))
         {
             throw new IllegalStateException("cannot add an arbitratry parameter to a type of event source which does not support it");
         }
         this.additionalParameters.add(prm);
+        return this;
+    }
+
+    /**
+     * Shortcut for {@link #addParameter(DTOParameter)} with a simple value parameter.
+     * 
+     * @param key
+     * @param value
+     * @return
+     */
+    public DTOEventSource addParameter(String key, String value)
+    {
+        return this.addParameter(new DTOParameter(key, value));
+    }
+
+    /**
+     * Shortcut for {@link #addParameter(DTOParameter)} with a simple value parameter with a null key.
+     * 
+     * @param value
+     * @return
+     */
+    public DTOEventSource addParameter(String value)
+    {
+        return this.addParameter(new DTOParameter(null, value));
     }
 
     /**
      * Set a field. The field key must be part of the keys allowed by the event source type ({@link EventSourceProvider#getFields()}).
      * Please note that as some parameter values can only be resolved at runtime, value validation does not occur when setting a parameter.
      */
-    public void setField(DTOParameter field)
+    public DTOEventSource setField(DTOParameter field)
     {
         if (!(this.behaviour instanceof OptionAllowsAdditionalFields))
         {
@@ -91,6 +131,18 @@ public class DTOEventSource implements Serializable
             }
         }
         this.fields.put(field.getKey(), field);
+        return this;
+    }
+
+    /**
+     * A shortcut for {@link #setField(DTOParameter)} with a simple direct value parameter.
+     * 
+     * @param key
+     * @param value
+     */
+    public DTOEventSource setField(String key, String value)
+    {
+        return setField(new DTOParameter(key, value));
     }
 
     /**
