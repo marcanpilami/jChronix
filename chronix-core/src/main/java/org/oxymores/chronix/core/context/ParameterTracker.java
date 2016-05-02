@@ -8,8 +8,9 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.oxymores.chronix.api.prm.ParameterProvider;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ParameterHolder;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.ParameterDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +48,9 @@ class ParameterTracker implements ServiceTrackerCustomizer<ParameterProvider, Pa
             // TODO: shared parameters
             // for (DTOParameter prm : app.getO)
 
-            for (EventSourceWrapper esw : app.getEventSources().values())
+            for (EventSourceDef esw : app.getEventSources().values())
             {
-                for (ParameterHolder prm : esw.getSubParametersOfType(srv.getClass().getCanonicalName()))
+                for (ParameterDef prm : esw.getSubParametersOfType(srv.getClass().getCanonicalName()))
                 {
                     prm.setProvider(srv);
                     i++;

@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -33,14 +33,13 @@ import javax.validation.constraints.Size;
 import org.osgi.framework.FrameworkUtil;
 import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.api.source.DTOParameter;
-import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.transactional.ParameterResolutionRequest;
 
 /**
  * A wrapper for a {@link Parameter} object.
  */
-public class ParameterHolder implements Serializable
+public class ParameterDef implements Serializable
 {
     private static final long serialVersionUID = 8017529181151172909L;
 
@@ -74,8 +73,8 @@ public class ParameterHolder implements Serializable
     // Dynamically resolved fields
 
     private String providerClassName;
-    private Map<String, ParameterHolder> fields = null;
-    private List<ParameterHolder> additionalParameters = null;
+    private Map<String, ParameterDef> fields = null;
+    private List<ParameterDef> additionalParameters = null;
 
     /////////////////////////////////
     // Engine helpers
@@ -96,7 +95,7 @@ public class ParameterHolder implements Serializable
     // Construction & Deserialisation
     ///////////////////////////////////////////////////////////////////////////
 
-    public ParameterHolder(DTOParameter dto, Application a, ChronixContextMeta ctx)
+    public ParameterDef(DTOParameter dto, Application a, ChronixContextMeta ctx)
     {
         this.id = dto.getId();
         this.key = dto.getKey();
@@ -108,13 +107,13 @@ public class ParameterHolder implements Serializable
             this.fields = new HashMap<>(dto.getFields().size());
             for (DTOParameter subPrm : dto.getFields().values())
             {
-                this.fields.put(dto.getKey(), new ParameterHolder(subPrm, a, ctx));
+                this.fields.put(dto.getKey(), new ParameterDef(subPrm, a, ctx));
             }
 
             this.additionalParameters = new ArrayList<>(dto.getAdditionalParameters().size());
             for (DTOParameter subPrm : dto.getAdditionalParameters())
             {
-                this.additionalParameters.add(new ParameterHolder(subPrm, a, ctx));
+                this.additionalParameters.add(new ParameterDef(subPrm, a, ctx));
             }
 
             this.provider = ctx.getParameterProvider(this.providerClassName);
@@ -144,11 +143,11 @@ public class ParameterHolder implements Serializable
         else
         {
             DTOParameter res = new DTOParameter(key, provider).setId(id);
-            for (ParameterHolder p : this.additionalParameters)
+            for (ParameterDef p : this.additionalParameters)
             {
                 res.addAdditionalarameter(p.getDTO());
             }
-            for (ParameterHolder p : this.fields.values())
+            for (ParameterDef p : this.fields.values())
             {
                 res.setField(p.key, p.getDTO());
             }
@@ -178,19 +177,19 @@ public class ParameterHolder implements Serializable
     // Parameter access
     ///////////////////////////////////////////////////////////////////////////
 
-    public List<ParameterHolder> getAllParameters()
+    public List<ParameterDef> getAllParameters()
     {
-        List<ParameterHolder> res = new ArrayList<>(this.additionalParameters);
+        List<ParameterDef> res = new ArrayList<>(this.additionalParameters);
         res.addAll(this.fields.values());
         return res;
     }
 
-    public List<ParameterHolder> getAdditionalParameters()
+    public List<ParameterDef> getAdditionalParameters()
     {
         return this.additionalParameters;
     }
 
-    public Collection<ParameterHolder> getFields()
+    public Collection<ParameterDef> getFields()
     {
         return this.fields.values();
     }
@@ -201,9 +200,9 @@ public class ParameterHolder implements Serializable
      * @param key
      * @return
      */
-    public ParameterHolder getField(UUID key)
+    public ParameterDef getField(UUID key)
     {
-        for (ParameterHolder ph : this.fields.values())
+        for (ParameterDef ph : this.fields.values())
         {
             if (ph.getParameterId().equals(key))
             {
@@ -219,9 +218,9 @@ public class ParameterHolder implements Serializable
      * @param key
      * @return
      */
-    public ParameterHolder getAdditionalParameter(UUID key)
+    public ParameterDef getAdditionalParameter(UUID key)
     {
-        for (ParameterHolder ph : this.additionalParameters)
+        for (ParameterDef ph : this.additionalParameters)
         {
             if (ph.getParameterId().equals(key))
             {
@@ -231,9 +230,9 @@ public class ParameterHolder implements Serializable
         return null;
     }
 
-    public List<ParameterHolder> getSubParametersOfType(String serviceClassName)
+    public List<ParameterDef> getSubParametersOfType(String serviceClassName)
     {
-        List<ParameterHolder> res = new ArrayList<>();
+        List<ParameterDef> res = new ArrayList<>();
 
         if (this.providerClassName != null)
         {
@@ -242,7 +241,7 @@ public class ParameterHolder implements Serializable
                 res.add(this);
             }
 
-            for (ParameterHolder ph : this.getAllParameters())
+            for (ParameterDef ph : this.getAllParameters())
             {
                 res.addAll(ph.getSubParametersOfType(serviceClassName));
             }

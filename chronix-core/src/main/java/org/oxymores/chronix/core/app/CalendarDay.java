@@ -18,12 +18,14 @@
  * under the License.
  */
 
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import org.oxymores.chronix.core.ApplicationObject;
 
 public class CalendarDay extends ApplicationObject
 {
@@ -31,9 +33,9 @@ public class CalendarDay extends ApplicationObject
 
     @NotNull
     @Size(min = 1, max = 255)
-    protected String seq;
+    public String seq;
     @NotNull
-    protected Calendar calendar;
+    public Calendar calendar;
 
     public CalendarDay(String day, Calendar calendar)
     {

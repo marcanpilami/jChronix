@@ -17,11 +17,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.NamedApplicationObject;
+import org.oxymores.chronix.core.network.Place;
 
 public class PlaceGroup extends NamedApplicationObject
 {

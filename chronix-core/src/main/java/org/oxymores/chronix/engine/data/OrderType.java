@@ -18,14 +18,8 @@
  * under the License.
  */
 
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.engine.data;
 
-import java.io.Serializable;
-
-public class Order implements Serializable
-{
-	private static final long serialVersionUID = 6731249888476299895L;
-
-	public OrderType type;
-	public Object data, data2;
+public enum OrderType {
+	RESTARTPJ, STARTPJ, FORCEOK, EXTERNAL
 }

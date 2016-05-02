@@ -34,15 +34,15 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.JobDescription;
-import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ParameterHolder;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.RunResult;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.ParameterDef;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.timedata.RunStats;
+import org.oxymores.chronix.engine.data.RunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -69,7 +69,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     // Format is : parameter UUID, parameter key, parameter value. Order is preserved (LinkedHashMap).
     private transient Map<UUID, String> resolvedParameters;
     private transient Map<String, String> resolvedFields;
-    private transient EventSourceWrapper source;
+    private transient EventSourceDef source;
 
     public PipelineJob()
     {
@@ -105,7 +105,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     {
         log.trace("Pipelinejob has received a parameter - prm id is " + rq.getParameterId() + " - key is " + rq.getParameter().getKey()
                 + " - value " + res.result);
-        ParameterHolder targetPrm = this.source.getField(rq.getParameter().getId());
+        ParameterDef targetPrm = this.source.getField(rq.getParameter().getId());
         if (targetPrm != null)
         {
             this.resolvedFields.put(rq.getParameter().getKey(), res.result);
@@ -123,11 +123,11 @@ public class PipelineJob extends TranscientBase implements JobDescription
     }
 
     // Note: taking toRun (and not resolving this.source) because only called from RunnerManager which has already resolved it.
-    public void initParamResolution(EventSourceWrapper toRun)
+    public void initParamResolution(EventSourceDef toRun)
     {
         this.source = toRun;
         resolvedParameters = new LinkedHashMap<>();
-        for (ParameterHolder ph : toRun.getAdditionalParameters())
+        for (ParameterDef ph : toRun.getAdditionalParameters())
         {
             resolvedParameters.put(ph.getParameterId(), (String) null);
         }
@@ -255,7 +255,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     public boolean isReady(ChronixContextMeta ctx)
     {
         // TODO: check if fields are really resolved?
-        EventSourceWrapper a = this.getActive(ctx);
+        EventSourceDef a = this.getActive(ctx);
         return a.getAdditionalParameters().size() == resolvedAdditionalPrm() && a.getFields().size() == this.resolvedFields.size();
     }
 
@@ -308,7 +308,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         RunLog rlog = new RunLog();
         Application a = ctx.getApplication(this.appID);
         Place p = ctx.getEnvironment().getPlace(this.placeID);
-        EventSourceWrapper act = this.getActive(ctx);
+        EventSourceDef act = this.getActive(ctx);
 
         rlog.setActiveNodeId(this.activeID);
         rlog.setActiveNodeName(act.getName());
@@ -426,7 +426,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     {
         List<Map.Entry<String, String>> res = new ArrayList<>();
 
-        Iterator<ParameterHolder> prmDefs = this.source.getAdditionalParameters().iterator();
+        Iterator<ParameterDef> prmDefs = this.source.getAdditionalParameters().iterator();
         for (Map.Entry<UUID, String> e : this.resolvedParameters.entrySet())
         {
             res.add(new AbstractMap.SimpleImmutableEntry<String, String>(prmDefs.next().getKey(), e.getValue()));

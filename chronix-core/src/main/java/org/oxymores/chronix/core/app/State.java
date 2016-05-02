@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,10 @@ import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.ApplicationObject;
+import org.oxymores.chronix.core.EnvironmentParameter;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
 import org.oxymores.chronix.core.transactional.Event;
@@ -58,7 +61,7 @@ public class State extends ApplicationObject
 
     // The container it belongs to
     @NotNull
-    protected EventSourceWrapper container;
+    protected EventSourceDef container;
 
     // Transitions
     @NotNull
@@ -75,7 +78,7 @@ public class State extends ApplicationObject
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application app, DTOState state, EventSourceWrapper container, List<DTOTransition> trFromState,
+    public State(Application app, DTOState state, EventSourceDef container, List<DTOTransition> trFromState,
             List<DTOTransition> trToState)
     {
         super();
@@ -204,7 +207,7 @@ public class State extends ApplicationObject
         return this.trReceivedHere;
     }
 
-    public EventSourceWrapper getEventSourceDefinition()
+    public EventSourceDef getEventSourceDefinition()
     {
         return this.application.getEventSource(this.dto.getEventSourceId());
     }

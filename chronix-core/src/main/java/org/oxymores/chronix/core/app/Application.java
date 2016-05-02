@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core.context;
+package org.oxymores.chronix.core.app;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,12 +21,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.EventSourceProvider;
-import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ParameterHolder;
-import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.Token;
+import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -65,9 +60,9 @@ public class Application implements Serializable
     protected Map<UUID, Calendar> calendars = new HashMap<>();
 
     // The sources
-    private Map<UUID, EventSourceWrapper> sources = new HashMap<>();
+    private Map<UUID, EventSourceDef> sources = new HashMap<>();
 
-    private Map<UUID, ParameterHolder> sharedParameters = new HashMap<>();
+    private Map<UUID, ParameterDef> sharedParameters = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction
@@ -127,7 +122,7 @@ public class Application implements Serializable
     // Source handling
     ///////////////////////////////////////////////////////////////////////////
 
-    public EventSourceWrapper getEventSource(UUID id)
+    public EventSourceDef getEventSource(UUID id)
     {
         if (!this.containsSource(id))
         {
@@ -136,7 +131,7 @@ public class Application implements Serializable
         return this.sources.get(id);
     }
 
-    public Map<UUID, EventSourceWrapper> getEventSources()
+    public Map<UUID, EventSourceDef> getEventSources()
     {
         return this.sources;
     }
@@ -146,10 +141,10 @@ public class Application implements Serializable
         return this.sources.containsKey(id);
     }
 
-    public List<EventSourceWrapper> getEventSources(EventSourceProvider pr)
+    public List<EventSourceDef> getEventSources(EventSourceProvider pr)
     {
-        List<EventSourceWrapper> res = new ArrayList<>();
-        for (EventSourceWrapper s : this.sources.values())
+        List<EventSourceDef> res = new ArrayList<>();
+        for (EventSourceDef s : this.sources.values())
         {
             if (s.isProvidedBy(pr.getClass()))
             {
@@ -166,14 +161,14 @@ public class Application implements Serializable
 
     public void addSource(DTOEventSource src, ChronixContextMeta ctx)
     {
-        EventSourceWrapper w = new EventSourceWrapper(src, ctx, this);
+        EventSourceDef w = new EventSourceDef(src, ctx, this);
         this.sources.put(src.getId(), w);
     }
 
-    void waitForAllPlugins()
+    public void waitForAllPlugins()
     {
         Set<String> plugins = new HashSet<>();
-        for (EventSourceWrapper w : this.sources.values())
+        for (EventSourceDef w : this.sources.values())
         {
             plugins.add(w.getPluginSymbolicName());
         }
@@ -235,7 +230,7 @@ public class Application implements Serializable
     // PARAMETERS
     ///////////////////////////////////////////////////////////////////////////
 
-    public ParameterHolder getSharedParameter(UUID key)
+    public ParameterDef getSharedParameter(UUID key)
     {
         return this.sharedParameters.get(key);
     }
@@ -299,7 +294,7 @@ public class Application implements Serializable
         return latestSave;
     }
 
-    void setLatestSave(DateTime latestSave)
+    public void setLatestSave(DateTime latestSave)
     {
         this.latestSave = latestSave;
     }
@@ -403,7 +398,7 @@ public class Application implements Serializable
 
     public State getState(UUID id)
     {
-        for (EventSourceWrapper d : this.sources.values())
+        for (EventSourceDef d : this.sources.values())
         {
             if (d.isContainer())
             {
@@ -423,7 +418,7 @@ public class Application implements Serializable
     {
         List<State> res = new ArrayList<>();
 
-        for (EventSourceWrapper d : this.sources.values())
+        for (EventSourceDef d : this.sources.values())
         {
             if (d.isContainer())
             {

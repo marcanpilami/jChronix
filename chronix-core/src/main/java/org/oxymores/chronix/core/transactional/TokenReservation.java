@@ -25,11 +25,11 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 
 import org.joda.time.DateTime;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.State;
+import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.sql2o.Connection;

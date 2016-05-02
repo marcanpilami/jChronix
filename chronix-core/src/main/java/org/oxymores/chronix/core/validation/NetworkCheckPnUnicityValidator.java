@@ -5,8 +5,8 @@ import java.util.List;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 
 public class NetworkCheckPnUnicityValidator implements ConstraintValidator<NetworkCheckPnUnicity, Environment>
 {

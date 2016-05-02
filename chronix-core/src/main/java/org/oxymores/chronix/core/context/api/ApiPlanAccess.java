@@ -19,23 +19,21 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.PlaceGroup;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOApplicationShort;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
-import org.oxymores.chronix.engine.helpers.CoreToDto;
-import org.oxymores.chronix.engine.helpers.DtoToCore;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -178,7 +176,7 @@ public class ApiPlanAccess implements PlanAccessService
         res.setName(app.getName());
         res.setVersion(app.getVersion());
 
-        for (EventSourceWrapper esw : app.getEventSources().values())
+        for (EventSourceDef esw : app.getEventSources().values())
         {
             res.addEventSource(esw.getDTO());
         }

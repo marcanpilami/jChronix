@@ -36,12 +36,12 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.agent.MessageListenerService;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -140,7 +140,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
 
         Token tk = a.getToken(request.tokenID);
         Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
-        org.oxymores.chronix.core.State s = a.getState(request.stateID);
+        org.oxymores.chronix.core.app.State s = a.getState(request.stateID);
         ExecutionNode en = ctxMeta.getEnvironment().getNode(request.requestingNodeID);
 
         log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
@@ -292,7 +292,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                 for (TokenReservation tr : q)
                 {
                     Application aa = ctxMeta.getApplication(tr.getApplicationId());
-                    org.oxymores.chronix.core.State ss = aa.getState(tr.getStateId());
+                    org.oxymores.chronix.core.app.State ss = aa.getState(tr.getStateId());
                     Place pp = ctxMeta.getEnvironment().getPlace(tr.getPlaceId());
                     ExecutionNode enn = ctxMeta.getEnvironment().getNode(tr.getRequestedBy());
                     log.warn(String.format(
@@ -332,7 +332,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         Application a = ctxMeta.getApplication(request.applicationID);
         Token tk = a.getToken(request.tokenID);
         Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
-        org.oxymores.chronix.core.State s = a.getState(request.stateID);
+        org.oxymores.chronix.core.app.State s = a.getState(request.stateID);
 
         // Process
         processRequest(conn, a, tk, p, request.requestedAt, s, null, request.pipelineJobID, request.requestingNodeID, jmsSession,
@@ -345,14 +345,14 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         Application a = ctxMeta.getApplication(tr.getApplicationId());
         Token tk = a.getToken(tr.getTokenId());
         Place p = ctxMeta.getEnvironment().getPlace(tr.getPlaceId());
-        org.oxymores.chronix.core.State s = a.getState(tr.getStateId());
+        org.oxymores.chronix.core.app.State s = a.getState(tr.getStateId());
 
         // Process
         processRequest(conn, a, tk, p, new DateTime(tr.getRequestedOn()), s, tr, tr.getPipelineJobId(), tr.getRequestedBy(), jmsSession,
                 jmsProducer);
     }
 
-    private void processRequest(Connection conn, Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.State s,
+    private void processRequest(Connection conn, Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.app.State s,
             TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId, Session jmsSession, MessageProducer jmsProducer)
     {
         // Locate all the currently allocated tokens on this Token/Place

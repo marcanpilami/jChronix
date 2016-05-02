@@ -1,12 +1,12 @@
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.core.context.api;
 
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.PlaceGroup;
+import org.oxymores.chronix.core.app.PlaceGroup;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOExecutionNode;
 import org.oxymores.chronix.dto.DTOPlace;

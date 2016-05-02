@@ -17,7 +17,6 @@ import org.oxymores.chronix.core.engine.api.HistoryService;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.HistoryQuery;
-import org.oxymores.chronix.engine.helpers.CoreToDto;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

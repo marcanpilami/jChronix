@@ -25,10 +25,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
 import org.oxymores.chronix.api.agent.MessageListenerService;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

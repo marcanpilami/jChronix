@@ -35,12 +35,12 @@ import javax.jms.Session;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -120,7 +120,7 @@ class Pipeline implements Runnable, MessageCallback
             if (pj != null && pj.getAppID() != null)
             {
                 Place p = null;
-                org.oxymores.chronix.core.State s = null;
+                org.oxymores.chronix.core.app.State s = null;
                 Application a;
                 try
                 {
@@ -283,7 +283,7 @@ class Pipeline implements Runnable, MessageCallback
 
     private void anToken(PipelineJob pj, Session jmsSession, MessageProducer jmsProducer)
     {
-        org.oxymores.chronix.core.State s = pj.getState(ctxMeta);
+        org.oxymores.chronix.core.app.State s = pj.getState(ctxMeta);
         if (s.getTokens().size() > 0)
         {
             for (Token tk : s.getTokens())

@@ -23,8 +23,8 @@ import java.util.UUID;
 import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.api.source.DTOEvent;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
+import org.oxymores.chronix.core.app.State;
+import org.oxymores.chronix.core.network.Place;
 import org.sql2o.Connection;
 
 public class Event extends TranscientBase implements DTOEvent

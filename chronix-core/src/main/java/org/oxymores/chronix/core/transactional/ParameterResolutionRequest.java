@@ -10,14 +10,18 @@ import java.util.UUID;
 
 import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.DTOParameter;
-import org.oxymores.chronix.core.ParameterHolder;
+import org.oxymores.chronix.core.app.ParameterDef;
 
+/**
+ * Represents an ongoing parameter resolution request. Basically, the equivalent of PipelineJob for parameters. Note that as parameter
+ * resolutions are always idempotent, we do not need to persist this object after a crash, we simply create new requests.
+ */
 public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.ParameterResolutionRequest
 {
     private UUID id = UUID.randomUUID();
     private UUID parentSourceRequest, parentParameterRequest;
 
-    private ParameterHolder prm;
+    private ParameterDef prm;
     private final String[] additionalParameters; // Order is important - same as in parameter definition
     private final Map<String, String> fields = new HashMap<>();
 
@@ -26,7 +30,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
 
     private String referencedValue = null;
 
-    public ParameterResolutionRequest(ParameterHolder prm, String replayToQueueName, String targetNodeName, UUID parentSourceRequest,
+    public ParameterResolutionRequest(ParameterDef prm, String replayToQueueName, String targetNodeName, UUID parentSourceRequest,
             UUID parentParameterRequest)
     {
         this.prm = prm;
@@ -62,7 +66,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         return this.prm.getParameterId();
     }
 
-    public ParameterHolder getParameterHolder()
+    public ParameterDef getParameterHolder()
     {
         return this.prm;
     }
@@ -83,7 +87,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         }
         int i = 0;
         List<Entry<String, String>> res = new ArrayList<>();
-        for (ParameterHolder prm : this.prm.getAdditionalParameters())
+        for (ParameterDef prm : this.prm.getAdditionalParameters())
         {
             res.add(new AbstractMap.SimpleEntry<String, String>(prm.getKey(), this.additionalParameters[i]));
             i++;
@@ -178,7 +182,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
             throw new IllegalStateException("cannot resolve fields for a non dynamic parameter");
         }
 
-        ParameterHolder targetPrm = this.prm.getField(rq.getParameter().getId());
+        ParameterDef targetPrm = this.prm.getField(rq.getParameter().getId());
         if (targetPrm != null)
         {
             this.fields.put(rq.getParameter().getKey(), res.result);

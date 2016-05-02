@@ -31,18 +31,18 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.RunResult;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
+import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
-import org.oxymores.chronix.engine.helpers.Order;
-import org.oxymores.chronix.engine.helpers.OrderType;
+import org.oxymores.chronix.engine.data.Order;
+import org.oxymores.chronix.engine.data.OrderType;
+import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,7 +166,7 @@ class OrderListener implements MessageCallback
         {
             try
             {
-                EventSourceWrapper a = pj.getActive(ctxMeta);
+                EventSourceDef a = pj.getActive(ctxMeta);
                 RunResult rr = a.forceOK(new EngineCbRun(engine, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
                 Event e = pj.createEvent(rr, pj.getVirtualTime());
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);

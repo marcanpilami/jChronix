@@ -24,11 +24,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.core.CalendarDay;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.State;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ class TransitionOnSinglePlaceAnalyser
      */
     Set<Event> consumedEvents = new HashSet<Event>();
 
-    TransitionOnSinglePlaceAnalyser(Application application, DTOTransition tr, EventSourceWrapper src, Set<Event> events, Place p,
+    TransitionOnSinglePlaceAnalyser(Application application, DTOTransition tr, EventSourceDef src, Set<Event> events, Place p,
             Connection conn)
     {
         for (Event e : events)

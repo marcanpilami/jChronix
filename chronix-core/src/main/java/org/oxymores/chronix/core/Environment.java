@@ -9,6 +9,8 @@ import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.validation.NetworkCheckConsole;
 import org.oxymores.chronix.core.validation.NetworkCheckPnUnicity;
 

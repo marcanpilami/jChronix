@@ -31,13 +31,13 @@ import javax.jms.Session;
 
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.engine.analyser.StateAnalyser;
 import org.slf4j.Logger;
@@ -86,7 +86,7 @@ class EventListener implements MessageCallback
         // Check event is OK while getting data from event
         Application a;
         State s;
-        EventSourceWrapper active;
+        EventSourceDef active;
         try
         {
             a = evt.getApplication(ctxMeta);

@@ -22,13 +22,13 @@ package org.oxymores.chronix.core.transactional;
 import java.io.Serializable;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
-import org.oxymores.chronix.core.Calendar;
 
-import org.oxymores.chronix.core.CalendarDay;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.network.Place;
 import org.sql2o.Connection;
 
 public class CalendarPointer implements Serializable

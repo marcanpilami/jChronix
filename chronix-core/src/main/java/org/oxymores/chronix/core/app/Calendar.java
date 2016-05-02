@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -29,6 +29,8 @@ import javax.validation.constraints.Size;
 
 import org.slf4j.Logger;
 import org.hibernate.validator.constraints.Range;
+import org.oxymores.chronix.core.NamedApplicationObject;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;

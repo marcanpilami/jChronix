@@ -28,9 +28,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.State;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

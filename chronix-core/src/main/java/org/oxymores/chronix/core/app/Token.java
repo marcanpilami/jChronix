@@ -17,10 +17,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.oxymores.chronix.core.NamedApplicationObject;
 
 public class Token extends NamedApplicationObject
 {

@@ -2,7 +2,8 @@ package org.oxymores.chronix.core.validation;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.oxymores.chronix.core.ExecutionNode;
+
+import org.oxymores.chronix.core.network.ExecutionNode;
 
 public class ExecutionNodeIsolationValidator implements ConstraintValidator<ExecutionNodeIsolation, ExecutionNode>
 {

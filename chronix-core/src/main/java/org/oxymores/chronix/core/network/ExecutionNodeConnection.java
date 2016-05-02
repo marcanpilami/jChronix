@@ -1,4 +1,6 @@
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.network;
+
+import org.oxymores.chronix.core.ChronixObject;
 
 public class ExecutionNodeConnection extends ChronixObject
 {

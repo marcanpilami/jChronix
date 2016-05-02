@@ -31,7 +31,7 @@ public class EnvironmentObject extends ChronixObject
 
     @NotNull
     @Size(min = 1, max = 50)
-    protected String name;
+    public String name;
 
     public String getName()
     {

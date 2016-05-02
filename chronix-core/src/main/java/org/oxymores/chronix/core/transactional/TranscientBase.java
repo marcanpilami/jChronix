@@ -25,13 +25,12 @@ import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.joda.time.DateTime;
-
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.network.Place;
 import org.sql2o.Connection;
 
 public class TranscientBase implements Serializable
@@ -169,7 +168,7 @@ public class TranscientBase implements Serializable
         this.activeID = activeID;
     }
 
-    public EventSourceWrapper getActive(ChronixContextMeta ctx)
+    public EventSourceDef getActive(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getEventSource(this.activeID);
     }

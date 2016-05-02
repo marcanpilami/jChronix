@@ -1,4 +1,4 @@
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.network;
 
 public class ExecutionNodeConnectionAmq extends ExecutionNodeConnection
 {

@@ -31,10 +31,10 @@ import javax.jms.Session;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.oxymores.chronix.api.agent.MessageListenerService;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ExecutionNode;
+import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.network.ExecutionNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ class SelfTriggerAgent extends Thread
 
     protected Semaphore loop;
     protected boolean run = true;
-    protected List<EventSourceWrapper> nodes;
+    protected List<EventSourceDef> nodes;
     protected ChronixContextMeta ctxMeta;
     protected ChronixContextTransient ctxDb;
     protected ExecutionNode localNode;
@@ -102,7 +102,7 @@ class SelfTriggerAgent extends Thread
          * (n.selfTriggered()) { this.nodes.add(n); } } // TODO: select only clocks with local consequences }
          */
         log.debug(String.format("Agent responsible for clocks will handle %s clock nodes", this.nodes.size()));
-        for (EventSourceWrapper node : this.nodes)
+        for (EventSourceDef node : this.nodes)
         {
             log.debug(String.format("\t\t" + node.getName()));
         }
@@ -169,7 +169,7 @@ class SelfTriggerAgent extends Thread
             try (org.sql2o.Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
                 DateTime tmp;
-                for (EventSourceWrapper n : this.nodes)
+                for (EventSourceDef n : this.nodes)
                 {
                     try
                     {

@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.network;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +25,8 @@ import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
+import org.oxymores.chronix.core.EnvironmentObject;
+import org.oxymores.chronix.core.app.PlaceGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +116,7 @@ public class Place extends EnvironmentObject
         this.memberOfIds = memberOfIds;
     }
 
-    void addGroupMembership(PlaceGroup g)
+    public void addGroupMembership(PlaceGroup g)
     {
         if (!this.memberOfIds.contains(g.getId()))
         {

@@ -41,22 +41,22 @@ import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
-import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.CalendarDay;
-import org.oxymores.chronix.core.EventSourceWrapper;
-import org.oxymores.chronix.core.ParameterHolder;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.RunResult;
-import org.oxymores.chronix.core.State;
-import org.oxymores.chronix.core.Token;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.ParameterDef;
+import org.oxymores.chronix.core.app.State;
+import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.ParameterResolutionRequest;
 import org.oxymores.chronix.core.transactional.PipelineJob;
+import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
@@ -211,7 +211,7 @@ public class RunnerManager implements MessageCallback
         }
 
         // Check the job is OK
-        EventSourceWrapper toRun;
+        EventSourceDef toRun;
         Application a;
         State s;
         Place p;
@@ -261,7 +261,7 @@ public class RunnerManager implements MessageCallback
                 // There are parameters to solve. In this case, actual run actually occurs at the end of all parameter resolutions.
                 j.initParamResolution(toRun);
 
-                for (ParameterHolder h : toRun.getAllParameters())
+                for (ParameterDef h : toRun.getAllParameters())
                 {
                     this.resolveParameter(h, j.getId(), null, String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), a,
                             jmsSession);
@@ -284,7 +284,7 @@ public class RunnerManager implements MessageCallback
         }
     }
 
-    private void resolveParameter(ParameterHolder ph, UUID parentSourceLaunch, UUID parentParameterLaunch, String targetNodeName,
+    private void resolveParameter(ParameterDef ph, UUID parentSourceLaunch, UUID parentParameterLaunch, String targetNodeName,
             Application a, Session jmsSession)
     {
         ParameterResolutionRequest rq = new ParameterResolutionRequest(ph,
@@ -325,7 +325,7 @@ public class RunnerManager implements MessageCallback
             else
             {
                 // Parameter needs a resolution but first we need to resolve its own parameters
-                for (ParameterHolder childPh : rq.getParameterHolder().getAllParameters())
+                for (ParameterDef childPh : rq.getParameterHolder().getAllParameters())
                 {
                     resolveParameter(childPh, null, rq.getRequestId(), targetNodeName, a, jmsSession);
                 }

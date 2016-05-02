@@ -3,8 +3,7 @@ package org.oxymores.chronix.core.timedata;
 import java.util.UUID;
 import javax.validation.constraints.Size;
 import org.joda.time.DateTime;
-
-import org.oxymores.chronix.engine.helpers.OrderType;
+import org.oxymores.chronix.engine.data.OrderType;
 
 /**
  Future use.

@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -43,14 +43,14 @@ import org.oxymores.chronix.api.source.RunModeDisabled;
 import org.oxymores.chronix.api.source.RunModeExternalyTriggered;
 import org.oxymores.chronix.api.source.RunModeForced;
 import org.oxymores.chronix.api.source.RunModeTriggered;
-import org.oxymores.chronix.core.context.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.transactional.Event;
 import org.oxymores.chronix.core.transactional.PipelineJob;
 import org.oxymores.chronix.engine.RunnerManager;
+import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 
-public class EventSourceWrapper implements Serializable
+public class EventSourceDef implements Serializable
 {
     private static final long serialVersionUID = 2317281646089939267L;
 
@@ -64,8 +64,8 @@ public class EventSourceWrapper implements Serializable
     /////////////////////////////
     // Hydrated parameters
 
-    private Map<String, ParameterHolder> fields = new HashMap<>(10);
-    private List<ParameterHolder> additionalParameters = new ArrayList<>();
+    private Map<String, ParameterDef> fields = new HashMap<>(10);
+    private List<ParameterDef> additionalParameters = new ArrayList<>();
 
     /////////////////////////////
     // Sub elements if any
@@ -104,7 +104,7 @@ public class EventSourceWrapper implements Serializable
      */
     private boolean container = false;
 
-    public EventSourceWrapper(DTOEventSource source, ChronixContextMeta ctx, Application a)
+    public EventSourceDef(DTOEventSource source, ChronixContextMeta ctx, Application a)
     {
         super();
 
@@ -128,12 +128,12 @@ public class EventSourceWrapper implements Serializable
 
         for (DTOParameter prm : source.getAdditionalParameters())
         {
-            this.additionalParameters.add(new ParameterHolder(prm, a, ctx));
+            this.additionalParameters.add(new ParameterDef(prm, a, ctx));
         }
 
         for (DTOParameter prm : source.getFields())
         {
-            this.fields.put(prm.getKey(), new ParameterHolder(prm, a, ctx));
+            this.fields.put(prm.getKey(), new ParameterDef(prm, a, ctx));
         }
     }
 
@@ -249,7 +249,7 @@ public class EventSourceWrapper implements Serializable
         return this.transitions;
     }
 
-    private State dto2state(Application a, DTOState d, EventSourceWrapper parent)
+    private State dto2state(Application a, DTOState d, EventSourceDef parent)
     {
         List<DTOTransition> trFromState = new ArrayList<>(), trToState = new ArrayList<>();
         for (DTOTransition tr : parent.getContainedTransitions())
@@ -273,27 +273,27 @@ public class EventSourceWrapper implements Serializable
     ///////////////////////////////////////////////////////////////////////////
     // Parameter handling
 
-    public List<ParameterHolder> getAdditionalParameters()
+    public List<ParameterDef> getAdditionalParameters()
     {
         return this.additionalParameters;
     }
 
-    public Collection<ParameterHolder> getFields()
+    public Collection<ParameterDef> getFields()
     {
         return this.fields.values();
     }
 
-    public List<ParameterHolder> getAllParameters()
+    public List<ParameterDef> getAllParameters()
     {
-        List<ParameterHolder> res = new ArrayList<>(this.additionalParameters);
+        List<ParameterDef> res = new ArrayList<>(this.additionalParameters);
         res.addAll(this.fields.values());
         return res;
     }
 
-    public List<ParameterHolder> getSubParametersOfType(String serviceClassName)
+    public List<ParameterDef> getSubParametersOfType(String serviceClassName)
     {
-        List<ParameterHolder> res = new ArrayList<>();
-        for (ParameterHolder ph : this.getAllParameters())
+        List<ParameterDef> res = new ArrayList<>();
+        for (ParameterDef ph : this.getAllParameters())
         {
             res.addAll(ph.getSubParametersOfType(serviceClassName));
         }
@@ -306,9 +306,9 @@ public class EventSourceWrapper implements Serializable
      * @param key
      * @return
      */
-    public ParameterHolder getField(UUID key)
+    public ParameterDef getField(UUID key)
     {
-        for (ParameterHolder ph : this.fields.values())
+        for (ParameterDef ph : this.fields.values())
         {
             if (ph.getParameterId().equals(key))
             {
@@ -324,9 +324,9 @@ public class EventSourceWrapper implements Serializable
      * @param key
      * @return
      */
-    public ParameterHolder getAdditionalParameter(UUID key)
+    public ParameterDef getAdditionalParameter(UUID key)
     {
-        for (ParameterHolder ph : this.additionalParameters)
+        for (ParameterDef ph : this.additionalParameters)
         {
             if (ph.getParameterId().equals(key))
             {

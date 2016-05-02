@@ -17,12 +17,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.network;
 
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Range;
+import org.oxymores.chronix.core.EnvironmentObject;
 import org.oxymores.chronix.core.validation.ExecutionNodeIsolation;
 
 @ExecutionNodeIsolation

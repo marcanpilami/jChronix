@@ -1,19 +1,19 @@
-package org.oxymores.chronix.engine.helpers;
+package org.oxymores.chronix.core.context.api;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.oxymores.chronix.core.Calendar;
-import org.oxymores.chronix.core.CalendarDay;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.ExecutionNode;
-import org.oxymores.chronix.core.ExecutionNodeConnectionAmq;
-import org.oxymores.chronix.core.Place;
-import org.oxymores.chronix.core.PlaceGroup;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.PlaceGroup;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
+import org.oxymores.chronix.core.network.ExecutionNode;
+import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
+import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.DTOCalendar;
 import org.oxymores.chronix.dto.DTOCalendarDay;

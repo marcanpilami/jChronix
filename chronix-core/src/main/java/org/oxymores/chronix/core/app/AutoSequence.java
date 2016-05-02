@@ -18,9 +18,11 @@
  * under the License.
  */
 
-package org.oxymores.chronix.core;
+package org.oxymores.chronix.core.app;
 
 import java.util.ArrayList;
+
+import org.oxymores.chronix.core.NamedApplicationObject;
 
 public class AutoSequence extends NamedApplicationObject
 {

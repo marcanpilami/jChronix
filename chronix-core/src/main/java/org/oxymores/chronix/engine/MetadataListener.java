@@ -28,7 +28,7 @@ import javax.jms.Session;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
-import org.oxymores.chronix.core.context.Application;
+import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.exceptions.ChronixPlanStorageException;
 import org.slf4j.Logger;
