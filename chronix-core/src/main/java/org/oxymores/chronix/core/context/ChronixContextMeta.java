@@ -3,8 +3,10 @@ package org.oxymores.chronix.core.context;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -160,6 +162,13 @@ public class ChronixContextMeta
 
         // Check all plugins are present
         app.waitForAllPlugins();
+
+        // TODO: Metadata upgrade
+        /*
+         * DTOApplication dto = app.getDto(); for (EventSourceProvider service : this.getAllKnownSourceProviders()) { for (DTOEve) }
+         */
+
+        // TODO: cleanup.
 
         // Done
         log.info("Application " + app.getName() + " has been deserialized from file " + appDir);
@@ -474,7 +483,7 @@ public class ChronixContextMeta
     // MISC GET/SET
     ///////////////////////////////////////////////////////////////////////////
 
-    private Object[] getAllKnownSourceProviders()
+    public List<EventSourceProvider> getAllKnownSourceProviders()
     {
         while (trackerES.getServices() == null)
         {
@@ -488,14 +497,18 @@ public class ChronixContextMeta
                 // Nothing to do
             }
         }
-        return trackerES.getServices();
+        List<EventSourceProvider> srvs = new ArrayList<>();
+        for (Object o : trackerES.getServices())
+        {
+            srvs.add((EventSourceProvider) o);
+        }
+        return srvs;
     }
 
     private EventSourceProvider getSourceProviderForClass(Class<? extends EventSourceProvider> klass)
     {
-        for (Object o : getAllKnownSourceProviders())
+        for (EventSourceProvider pr : getAllKnownSourceProviders())
         {
-            EventSourceProvider pr = (EventSourceProvider) o;
             if (pr.getClass().isAssignableFrom(klass))
             {
                 return pr;
@@ -513,9 +526,8 @@ public class ChronixContextMeta
      */
     public EventSourceProvider getSourceProvider(String className)
     {
-        for (Object o : this.getAllKnownSourceProviders())
+        for (EventSourceProvider res : this.getAllKnownSourceProviders())
         {
-            EventSourceProvider res = (EventSourceProvider) o;
             if (res.getClass().getCanonicalName().equals(className))
             {
                 return res;

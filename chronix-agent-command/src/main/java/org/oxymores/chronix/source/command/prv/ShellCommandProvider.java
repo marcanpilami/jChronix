@@ -17,7 +17,6 @@ import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.api.source.OptionAllowsAdditionalFields;
 import org.oxymores.chronix.api.source.OptionAllowsParameters;
 import org.oxymores.chronix.api.source.RunModeTriggered;
-import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 @Component
 public class ShellCommandProvider implements EventSourceProvider, RunModeTriggered, OptionAllowsAdditionalFields, OptionAllowsParameters
@@ -65,16 +64,8 @@ public class ShellCommandProvider implements EventSourceProvider, RunModeTrigger
     }
 
     @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... parameters)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public boolean isTransitionPossible(DTOEventSource source, DTOTransition tr, DTOEvent event)
     {
         return event.getConditionData1() != null && event.getConditionData1().equals(tr.getGuard1());
     }
-
 }

@@ -2,9 +2,6 @@ package org.oxymores.chronix.source.basic.prv;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.oxymores.chronix.api.source.DTOEvent;
@@ -16,7 +13,6 @@ import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.api.source.RunModeTriggered;
-import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 @Component
 public class ExternalProvider implements EventSourceProvider, RunModeTriggered
@@ -40,14 +36,6 @@ public class ExternalProvider implements EventSourceProvider, RunModeTriggered
         res.add(new EventSourceField("machineRestriction", "hostname allowed to send event", null, false));
         res.add(new EventSourceField("accountRestriction", "user account allowed to send event", null, false));
         res.add(new EventSourceField("regularExpression", "regular expression to parse date from event data", null, false));
-        return res;
-    }
-
-    @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... field)
-    {
-        DTOEventSource res = new DTOEventSource(this, name, description, null);
-        // TODO: parameters.
         return res;
     }
 

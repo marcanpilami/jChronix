@@ -1,8 +1,7 @@
 package org.oxymores.chronix.core.engine.api;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,14 +18,14 @@ public class DTOApplication
     private int version = 0;
     private String latestVersionComment = "";
 
-    private List<DTOEventSource> eventSources = new ArrayList<>();
-    private List<DTOPlaceGroup> groups = new ArrayList<>();
+    private Map<UUID, DTOEventSource> eventSources = new HashMap<>();
+    private Map<UUID, DTOPlaceGroup> groups = new HashMap<>();
 
     private Map<UUID, DTOParameter> sharedParameters = new HashMap<>();
 
     public DTOPlaceGroup getGroup(String name)
     {
-        for (DTOPlaceGroup pg : groups)
+        for (DTOPlaceGroup pg : groups.values())
         {
             if (pg.getName().equals(name))
             {
@@ -34,6 +33,11 @@ public class DTOApplication
             }
         }
         throw new RuntimeException("no group named " + name);
+    }
+
+    public void addGroup(DTOPlaceGroup gr)
+    {
+        this.groups.put(gr.getId(), gr);
     }
 
     public String getName()
@@ -96,28 +100,35 @@ public class DTOApplication
         this.latestVersionComment = latestVersionComment;
     }
 
-    public List<DTOEventSource> getEventSources()
+    public Collection<DTOEventSource> getEventSources()
     {
-        return eventSources;
+        return eventSources.values();
     }
 
-    void setEventSources(List<DTOEventSource> eventSources)
+    void setEventSources(Map<UUID, DTOEventSource> eventSources)
     {
         this.eventSources = eventSources;
     }
 
+    /**
+     * Adds an new event source to the application. Note that there can only be one source with the same ID so any existing source with an
+     * ID equal to the one of the parameter will be replaced.
+     * 
+     * @param source
+     * @return
+     */
     public DTOEventSource addEventSource(DTOEventSource source)
     {
-        this.eventSources.add(source);
+        this.eventSources.put(source.getId(), source);
         return source;
     }
 
-    public List<DTOPlaceGroup> getGroups()
+    public Collection<DTOPlaceGroup> getGroups()
     {
-        return groups;
+        return groups.values();
     }
 
-    public void setGroups(List<DTOPlaceGroup> groups)
+    public void setGroups(Map<UUID, DTOPlaceGroup> groups)
     {
         this.groups = groups;
     }

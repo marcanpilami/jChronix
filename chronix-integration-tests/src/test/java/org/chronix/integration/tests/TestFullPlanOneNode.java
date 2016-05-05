@@ -17,16 +17,15 @@ public class TestFullPlanOneNode extends BaseIT
         DTOPlaceGroup pgLocal = app.getGroup("local");
 
         // Application content
-        DTOEventSource sc = new DTOEventSource(shellPrv, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
+        DTOEventSource sc = new DTOEventSource(shellPrv, app, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                 .setField("COMMAND", "echo").addParameter("aa").addParameter("bb");
         app.addEventSource(sc);
 
-        DTOEventSourceContainer c = (DTOEventSourceContainer) chainPrv.newInstance("first chain", "integration test chain", app, pgLocal);
+        DTOEventSourceContainer c = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)
+                .setAllStates(pgLocal);
         DTOState n1 = c.addState(sc, pgLocal);
         c.connect(getChainStart(c), n1);
         c.connect(n1, getChainEnd(c));
-
-        // DTOState s = plan1.addState(c, app.getGroup("local"));
 
         save();
 

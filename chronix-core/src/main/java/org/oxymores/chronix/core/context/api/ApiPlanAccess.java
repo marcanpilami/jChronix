@@ -18,6 +18,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.oxymores.chronix.api.source.DTOEventSource;
+import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.app.EventSourceDef;
@@ -81,9 +82,16 @@ public class ApiPlanAccess implements PlanAccessService
             pg.setDescription(p.getName());
             pg.setName(p.getName());
 
-            app.getGroups().add(pg);
+            app.addGroup(pg);
         }
 
+        // Call plugin initialisation
+        for (EventSourceProvider service : getMetaDb().getAllKnownSourceProviders())
+        {
+            service.onNewApplication(app);
+        }
+
+        // Done
         return app;
     }
 
@@ -184,7 +192,7 @@ public class ApiPlanAccess implements PlanAccessService
         for (PlaceGroup pg : app.getGroupsList())
         {
             DTOPlaceGroup d = CoreToDto.getPlaceGroup(pg);
-            res.getGroups().add(d);
+            res.addGroup(d);
         }
 
         return res;

@@ -173,12 +173,12 @@ public class EventSourceDef implements Serializable
     {
         if (this.isContainer())
         {
-            DTOEventSourceContainer res = new DTOEventSourceContainer(provider, name, description, id);
+            DTOEventSourceContainer res = new DTOEventSourceContainer(provider, null, name, description, id);
             return res;
         }
         else
         {
-            DTOEventSource res = new DTOEventSource(provider, name, description, id);
+            DTOEventSource res = new DTOEventSource(provider, null, name, description, id);
             return res;
         }
     }

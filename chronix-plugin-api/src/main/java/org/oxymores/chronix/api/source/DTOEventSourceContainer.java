@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
 public class DTOEventSourceContainer extends DTOEventSource
@@ -17,9 +18,10 @@ public class DTOEventSourceContainer extends DTOEventSource
     // Construction
     ///////////////////////////////////////////////////////////////////////////
 
-    public DTOEventSourceContainer(EventSourceProvider factory, String name, String description, UUID id)
+    public DTOEventSourceContainer(EventSourceProvider factory, DTOApplication app, String name, String description, UUID id)
     {
-        super(factory, name, description, id);
+        // Note: we call init and not super... because super must be first be fields init are done after super. Thanks Java.
+        init(factory, app, name, description, id);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -68,6 +70,15 @@ public class DTOEventSourceContainer extends DTOEventSource
     public DTOState addState(DTOEventSource s, DTOPlaceGroup runsOn)
     {
         return addState(s, runsOn.getId());
+    }
+
+    public DTOEventSourceContainer setAllStates(DTOPlaceGroup group)
+    {
+        for (DTOState s : this.states)
+        {
+            s.setRunsOnId(group.getId());
+        }
+        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////

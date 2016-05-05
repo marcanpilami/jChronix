@@ -22,13 +22,6 @@ import org.oxymores.chronix.dto.DTOPlaceGroup;
 public class ChainProvider implements EventSourceProvider, RunModeTriggered
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Needed providers (do not use OSGi here - no need)
-    ///////////////////////////////////////////////////////////////////////////
-
-    private static ChainStartProvider start = new ChainStartProvider();
-    private static ChainEndProvider end = new ChainEndProvider();
-
-    ///////////////////////////////////////////////////////////////////////////
     // Identity
     ///////////////////////////////////////////////////////////////////////////
 
@@ -76,20 +69,24 @@ public class ChainProvider implements EventSourceProvider, RunModeTriggered
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... parameters)
+    public void onNewSource(DTOEventSource source, DTOApplication app)
     {
-        if (parameters == null || parameters.length != 1 || !(parameters[0] instanceof DTOPlaceGroup))
+        DTOEventSourceContainer s = (DTOEventSourceContainer) source;
+        DTOPlaceGroup pg = app.getGroups().iterator().next();
+        s.addState(getSingletonSource(app, ChainStartProvider.class), pg).setX(50).setY(50);
+        s.addState(getSingletonSource(app, ChainEndProvider.class), pg).setX(50).setY(200);
+    }
+
+    private DTOEventSource getSingletonSource(DTOApplication app, Class<? extends EventSourceProvider> cl)
+    {
+        for (DTOEventSource s : app.getEventSources())
         {
-            throw new IllegalArgumentException("newInstance for chains takes a single parameter of type DTOPlaceGroup");
+            if (s.getBehaviourClassName().equals(cl.getCanonicalName()))
+            {
+                return s;
+            }
         }
-        DTOPlaceGroup runsOn = (DTOPlaceGroup) parameters[0];
-        DTOEventSourceContainer res = new DTOEventSourceContainer(this, name, description, null);
-
-        res.addState(start.newInstance("", "", app), runsOn).setX(50).setY(50);
-        res.addState(end.newInstance("", "", app), runsOn).setX(50).setY(200);
-
-        app.addEventSource(res);
-        return res;
+        throw new RuntimeException("no singleton found for type " + cl.getCanonicalName());
     }
 
     ///////////////////////////////////////////////////////////////////////////

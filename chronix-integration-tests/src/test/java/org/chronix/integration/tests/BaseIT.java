@@ -186,14 +186,13 @@ public class BaseIT
         app = meta.createMinimalApplication(); // also creates placegroup "local"
         app.setName("test app");
         app.setDescription("This app was created by integration tests");
-        // app.addEventSource(noop);
-        plan1 = planPrv.newInstance("plan", "integration test plan", app);
+        plan1 = new DTOEventSourceContainer(planPrv, app, "plan", "integration test plan", null);
 
         // base elements
-        noop = getProvider("org.oxymores.chronix.source.basic.prv.NoopProvider").newInstance("", "", app);
-        and = getProvider("org.oxymores.chronix.source.basic.prv.AndProvider").newInstance("", "", app);
-        or = getProvider("org.oxymores.chronix.source.basic.prv.OrProvider").newInstance("", "", app);
-        failure = getProvider("org.oxymores.chronix.source.basic.prv.FailureProvider").newInstance("", "", app);
+        noop = getSingletonSource(app, "org.oxymores.chronix.source.basic.prv.NoopProvider");
+        and = getSingletonSource(app, "org.oxymores.chronix.source.basic.prv.AndProvider");
+        or = getSingletonSource(app, "org.oxymores.chronix.source.basic.prv.OrProvider");
+        failure = getSingletonSource(app, "org.oxymores.chronix.source.basic.prv.FailureProvider");
 
         // Deploy
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
@@ -214,6 +213,18 @@ public class BaseIT
         {
             e.printStackTrace();
         }
+    }
+
+    private DTOEventSource getSingletonSource(DTOApplication app, String providerClassName)
+    {
+        for (DTOEventSource s : app.getEventSources())
+        {
+            if (s.getBehaviourClassName().equals(providerClassName))
+            {
+                return s;
+            }
+        }
+        throw new RuntimeException("no singleton found for type " + providerClassName);
     }
 
     @After

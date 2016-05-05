@@ -19,7 +19,6 @@ import org.oxymores.chronix.core.engine.api.DTOApplication;
 @Component
 public class FailureProvider implements EventSourceProvider, RunModeTriggered
 {
-    private static transient DTOEventSource _instance = null;
     static final UUID FAILURE_ID = UUID.fromString("7852ca09-11bf-47a4-aeba-4adf4f979881");
 
     @Override
@@ -41,15 +40,9 @@ public class FailureProvider implements EventSourceProvider, RunModeTriggered
     }
 
     @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... field)
+    public void onNewApplication(DTOApplication newApp)
     {
-        if (_instance == null)
-        {
-            // Not synchronised - doubles are not a problem.
-            _instance = new DTOEventSource(this, "FAIL", "never works", FAILURE_ID);
-        }
-        app.addEventSource(_instance);
-        return _instance;
+        new DTOEventSource(this, newApp, "FAIL", "never works", FAILURE_ID);
     }
 
     @Override

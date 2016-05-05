@@ -20,7 +20,6 @@ import org.oxymores.chronix.core.engine.api.DTOApplication;
 @Component
 public class ChainEndProvider implements EventSourceProvider, RunModeTriggered, RunModeDisabled
 {
-    private static transient DTOEventSource _instance = null;
     static final UUID END_ID = UUID.fromString("8235272c-b78d-4350-a887-aed0dcdfb215");
 
     @Override
@@ -42,15 +41,9 @@ public class ChainEndProvider implements EventSourceProvider, RunModeTriggered, 
     }
 
     @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... field)
+    public void onNewApplication(DTOApplication newApp)
     {
-        if (_instance == null)
-        {
-            // Not synchronised - doubles are not a problem.
-            _instance = new DTOEventSource(this, "END", "end of chain", END_ID);
-        }
-        app.addEventSource(_instance);
-        return _instance;
+        new DTOEventSource(this, newApp, "END", "end of chain", END_ID);
     }
 
     @Override

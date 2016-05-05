@@ -20,7 +20,6 @@ import org.oxymores.chronix.core.engine.api.DTOApplication;
 @Component
 public class OrProvider implements EventSourceProvider, RunModeTriggered, OptionOr
 {
-    private static transient DTOEventSource _instance = null;
     static final UUID OR_ID = UUID.fromString("152cf589-f0ca-42ab-b25a-ffc1d03fd579");
 
     @Override
@@ -42,15 +41,9 @@ public class OrProvider implements EventSourceProvider, RunModeTriggered, Option
     }
 
     @Override
-    public DTOEventSource newInstance(String name, String description, DTOApplication app, Object... field)
+    public void onNewApplication(DTOApplication newApp)
     {
-        if (_instance == null)
-        {
-            // Not synchronised - doubles are not a problem.
-            _instance = new DTOEventSource(this, "OR", "logical door", OR_ID);
-        }
-        app.addEventSource(_instance);
-        return _instance;
+        new DTOEventSource(this, newApp, "OR", "logical door", OR_ID);
     }
 
     @Override

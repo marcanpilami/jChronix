@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.oxymores.chronix.core.engine.api.DTOApplication;
+
 /**
  * Describes an event source instance. It is a serialisable DTO object, and considered part of the public API.
  */
@@ -14,25 +16,37 @@ public class DTOEventSource implements Serializable
 {
     private static final long serialVersionUID = 7742416960083543767L;
 
-    protected final UUID id;
-    protected final String name;
-    protected final String description;
+    protected UUID id;
+    protected String name;
+    protected String description;
 
     protected Map<String, DTOParameter> fields = new HashMap<>(10);
     protected List<DTOParameter> additionalParameters = new ArrayList<>(10);
 
     protected String behaviourClassName;
+    protected String pluginVersion;
     protected transient EventSourceProvider behaviour;
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction
     ///////////////////////////////////////////////////////////////////////////
 
+    protected DTOEventSource()
+    {
+
+    }
+
     /**
      * The only constructor. It should never be called directly - rather new instances of {@link DTOEventSource} should be obtained through
-     * an OSGI service {@link EventSourceProvider#newInstance()}.
+     * an OSGI service {@link EventSourceProvider#newInstance()}.<br>
+     * If app is null, no initialisation will occur. So always give a non null app when you are creating an new event source.
      */
-    public DTOEventSource(EventSourceProvider factory, String name, String description, UUID id)
+    public DTOEventSource(EventSourceProvider factory, DTOApplication app, String name, String description, UUID id)
+    {
+        init(factory, app, name, description, id);
+    }
+
+    protected void init(EventSourceProvider factory, DTOApplication app, String name, String description, UUID id)
     {
         if (id == null)
         {
@@ -45,6 +59,12 @@ public class DTOEventSource implements Serializable
         this.setBehaviour(factory);
         this.name = name;
         this.description = description;
+
+        if (app != null)
+        {
+            app.addEventSource(this);
+            factory.onNewSource(this, app);
+        }
     }
 
     /**
@@ -54,9 +74,9 @@ public class DTOEventSource implements Serializable
      * @param name
      * @param description
      */
-    public DTOEventSource(EventSourceProvider factory, String name, String description)
+    public DTOEventSource(EventSourceProvider factory, DTOApplication app, String name, String description)
     {
-        this(factory, name, description, null);
+        this(factory, app, name, description, (UUID) null);
     }
 
     /**
