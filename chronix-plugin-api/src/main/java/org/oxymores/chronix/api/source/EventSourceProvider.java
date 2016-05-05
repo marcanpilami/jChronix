@@ -16,14 +16,14 @@ public interface EventSourceProvider
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * The name of the source, as will be displayed in the different UI. Only used for display purposes.
+     * The name of the source, as will be displayed in the different UIs. Only used for display purposes.
      * 
      * @return the name
      */
     public String getName();
 
     /**
-     * A short (< 255 characters) description for "details" panels in the UI. Describes what the event source does.
+     * A short (< 255 characters) description for "details" panels in the UIs. Describes what the event source does.
      * 
      * @return the description
      */
