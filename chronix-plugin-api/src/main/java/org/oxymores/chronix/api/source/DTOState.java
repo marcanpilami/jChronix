@@ -1,10 +1,13 @@
 package org.oxymores.chronix.api.source;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-public class DTOState
+public class DTOState implements Serializable
 {
+    private static final long serialVersionUID = -3105166748835675337L;
+
     protected UUID id = UUID.randomUUID();
 
     // Drawings

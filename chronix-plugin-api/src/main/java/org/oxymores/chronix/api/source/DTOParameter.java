@@ -1,5 +1,6 @@
 package org.oxymores.chronix.api.source;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +36,10 @@ import org.oxymores.chronix.api.prm.ParameterProvider;
  * In case a DTO instance contains values for multiple types, the order of precedence is direct > dynamic > reference.
  * 
  */
-public class DTOParameter
+public class DTOParameter implements Serializable
 {
+    private static final long serialVersionUID = -6464225583623579497L;
+
     // Common
     private UUID id = UUID.randomUUID();
     private String key;

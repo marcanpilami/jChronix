@@ -1,9 +1,12 @@
 package org.oxymores.chronix.api.source;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class DTOTransition
+public class DTOTransition implements Serializable
 {
+    private static final long serialVersionUID = 1992165786923690138L;
+
     private UUID from, to;
     private Integer guard1;
     private String guard2, guard3;
