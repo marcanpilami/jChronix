@@ -69,7 +69,7 @@ public class BaseIT
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
-    protected DTOEventSource plan1;
+    protected DTOEventSourceContainer plan1;
     protected DTOEventSource noop;
     protected DTOEventSource and;
     protected DTOEventSource or;

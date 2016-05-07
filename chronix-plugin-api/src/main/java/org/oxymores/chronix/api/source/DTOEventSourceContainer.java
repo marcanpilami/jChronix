@@ -72,6 +72,12 @@ public class DTOEventSourceContainer extends DTOEventSource
         return addState(s, runsOn.getId());
     }
 
+    public DTOState addState(DTOState s)
+    {
+        this.states.add(s);
+        return s;
+    }
+
     public DTOEventSourceContainer setAllStates(DTOPlaceGroup group)
     {
         for (DTOState s : this.states)
@@ -110,6 +116,11 @@ public class DTOEventSourceContainer extends DTOEventSource
         tr.setFrom(from.getId());
         tr.setTo(to.getId());
         tr.setGuard1(0);
+        this.transitions.add(tr);
+    }
+
+    public void addTransition(DTOTransition tr)
+    {
         this.transitions.add(tr);
     }
 }

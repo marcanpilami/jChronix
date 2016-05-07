@@ -57,7 +57,7 @@ public class State extends ApplicationObject
     // Fields
 
     // The data bag
-    protected DTOState dto;
+    DTOState dto;
 
     // The container it belongs to
     @NotNull
@@ -78,8 +78,7 @@ public class State extends ApplicationObject
 
     ///////////////////////////////////////////////////////////////////////////
     // Construction / destruction
-    public State(Application app, DTOState state, EventSourceDef container, List<DTOTransition> trFromState,
-            List<DTOTransition> trToState)
+    public State(Application app, DTOState state, EventSourceDef container, List<DTOTransition> trFromState, List<DTOTransition> trToState)
     {
         super();
         this.application = app;

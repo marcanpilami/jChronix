@@ -174,6 +174,15 @@ public class EventSourceDef implements Serializable
         if (this.isContainer())
         {
             DTOEventSourceContainer res = new DTOEventSourceContainer(provider, null, name, description, id);
+            for (State s : this.states)
+            {
+                res.addState(s.dto);
+            }
+            for (DTOTransition t : this.transitions)
+            {
+                res.addTransition(t);
+            }
+
             return res;
         }
         else
