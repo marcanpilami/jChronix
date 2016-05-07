@@ -32,6 +32,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOState;
@@ -64,6 +65,7 @@ public class BaseIT
     protected OrderService order;
 
     protected EventSourceProvider chainPrv, planPrv, shellPrv;
+    protected ParameterProvider strPrv;
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
@@ -150,6 +152,29 @@ public class BaseIT
         }
     }
 
+    private ParameterProvider getParameterProvider(String implementationClassName)
+    {
+        ServiceTracker<ParameterProvider, ParameterProvider> st = null;
+        try
+        {
+            st = new ServiceTracker<>(bc, bc.createFilter("(component.name=" + implementationClassName + ")"), null);
+            st.open();
+            st.waitForService(2000);
+            return st.getService();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            if (st != null)
+            {
+                st.close();
+            }
+        }
+    }
+
     @Before
     public void before() throws Exception
     {
@@ -164,6 +189,8 @@ public class BaseIT
         planPrv = getProvider("org.oxymores.chronix.source.chain.prv.PlanProvider");
         Assert.assertNotNull(planPrv);
         shellPrv = getProvider("org.oxymores.chronix.source.command.prv.ShellCommandProvider");
+
+        strPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
 
         // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
         meta.resetCache();

@@ -164,7 +164,7 @@ public class DTOParameter
      * note that as some parameter values can only be resolved at runtime, no validation occurs when setting a field.<br>
      * Fields can be set in any order. Key cannot be null.
      */
-    public void setField(String key, DTOParameter field)
+    public DTOParameter setField(String key, DTOParameter field)
     {
         if (this.fields == null)
         {
@@ -175,6 +175,19 @@ public class DTOParameter
             throw new IllegalArgumentException("the key of a field cannot be null");
         }
         this.fields.put(key, field);
+        return this;
+    }
+
+    /**
+     * Shortcut for {@link #setField(String, DTOParameter)} with a simple value parameter.
+     * 
+     * @param key
+     * @param value
+     * @return
+     */
+    public DTOParameter setField(String key, String value)
+    {
+        return this.setField(key, new DTOParameter(key, value));
     }
 
     /**

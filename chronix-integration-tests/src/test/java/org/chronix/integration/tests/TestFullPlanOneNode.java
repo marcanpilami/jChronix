@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
@@ -18,7 +19,8 @@ public class TestFullPlanOneNode extends BaseIT
 
         // Application content
         DTOEventSource sc = new DTOEventSource(shellPrv, app, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
-                .setField("COMMAND", "echo").addParameter("aa").addParameter("bb");
+                .setField("COMMAND", "echo").addParameter("aa").addParameter("bb")
+                .addParameter(new DTOParameter(null, strPrv).setField("value", "cc"));
         app.addEventSource(sc);
 
         DTOEventSourceContainer c = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)

@@ -288,7 +288,8 @@ public class RunnerManager implements MessageCallback
             Application a, Session jmsSession)
     {
         ParameterResolutionRequest rq = new ParameterResolutionRequest(ph,
-                String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), targetNodeName, parentSourceLaunch, null);
+                String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), targetNodeName, parentSourceLaunch,
+                parentParameterLaunch);
         this.resolvingPrm.put(rq.getRequestId(), rq);
 
         if (rq.isReference())
@@ -394,7 +395,7 @@ public class RunnerManager implements MessageCallback
         }
         else
         {
-            log.error("Invalid async parameter resolution result received. This may prevent the normal ongoing of the plan");
+            log.error("Invalid async parameter resolution result received (no parent). This may prevent the normal progress of the plan");
         }
 
     }

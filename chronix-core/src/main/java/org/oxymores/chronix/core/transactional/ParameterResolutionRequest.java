@@ -45,7 +45,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         }
         else
         {
-            this.additionalParameters = null;
+            this.additionalParameters = new String[0];
         }
     }
 
