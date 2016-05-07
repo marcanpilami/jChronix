@@ -149,7 +149,7 @@ public class ParameterDef implements Serializable
             }
             for (ParameterDef p : this.fields.values())
             {
-                res.setField(p.key, p.getDTO());
+                res.setField(p.getDTO());
             }
             return res;
         }

@@ -164,17 +164,17 @@ public class DTOParameter
      * note that as some parameter values can only be resolved at runtime, no validation occurs when setting a field.<br>
      * Fields can be set in any order. Key cannot be null.
      */
-    public DTOParameter setField(String key, DTOParameter field)
+    public DTOParameter setField(DTOParameter field)
     {
         if (this.fields == null)
         {
             throw new IllegalStateException("parameter is not a dynamically resolved parameter");
         }
-        if (key == null)
+        if (field.getKey() == null)
         {
             throw new IllegalArgumentException("the key of a field cannot be null");
         }
-        this.fields.put(key, field);
+        this.fields.put(field.getKey(), field);
         return this;
     }
 
@@ -187,7 +187,7 @@ public class DTOParameter
      */
     public DTOParameter setField(String key, String value)
     {
-        return this.setField(key, new DTOParameter(key, value));
+        return this.setField(new DTOParameter(key, value));
     }
 
     /**
@@ -218,7 +218,7 @@ public class DTOParameter
         return this;
     }
 
-    public DTOParameter addAdditionalarameter(String stringValue)
+    public DTOParameter addAdditionalParameter(String stringValue)
     {
         if (this.additionalParameters == null)
         {

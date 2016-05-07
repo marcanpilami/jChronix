@@ -22,6 +22,7 @@ public class DTORunLog
     String osAccount;
     String whatWasRun;
     String chainLaunchId;
+    String shortLog;
     int resultCode;
 
     @XmlElement(nillable = true)
@@ -248,5 +249,15 @@ public class DTORunLog
     public void setChainLaunchId(String a)
     {
         this.chainLaunchId = a;
+    }
+
+    public void setShortLog(String log)
+    {
+        this.shortLog = log;
+    }
+
+    public String getShortLog()
+    {
+        return this.shortLog;
     }
 }

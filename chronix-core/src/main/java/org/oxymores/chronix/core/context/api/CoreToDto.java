@@ -301,6 +301,7 @@ public class CoreToDto
         res.setStoppedRunningAt(rl.getStoppedRunningAt() == null ? null : rl.getStoppedRunningAt().toDate());
         res.setWhatWasRun(rl.getWhatWasRun());
         res.setChainLaunchId(rl.getChainLaunchId().toString());
+        res.setShortLog(rl.getShortLog());
 
         return res;
     }

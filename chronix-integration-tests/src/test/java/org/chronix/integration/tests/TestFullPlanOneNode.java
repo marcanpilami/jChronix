@@ -1,5 +1,7 @@
 package org.chronix.integration.tests;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
@@ -9,6 +11,8 @@ import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.dto.DTORunLog;
+import org.oxymores.chronix.dto.HistoryQuery;
 
 public class TestFullPlanOneNode extends BaseIT
 {
@@ -17,12 +21,21 @@ public class TestFullPlanOneNode extends BaseIT
     {
         DTOPlaceGroup pgLocal = app.getGroup("local");
 
-        // Application content
+        // This tests dynamic parameter resolution with shell commands.
+        // * aa: simple static parameter
+        // * bb: same
+        // * cc: a dynamic string parameter (its own parameter is static)
+        // * dd: a dynamic shell parameter (its own parameters are static)
+        // * ee: a dynamic shell parameter with a dynamic shell parameter defining its command (itself with static parameters)!
         DTOEventSource sc = new DTOEventSource(shellPrv, app, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                 .setField("COMMAND", "echo").addParameter("aa").addParameter("bb")
                 .addParameter(new DTOParameter(null, strPrmPrv).setField("value", "cc"))
                 .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
-                        .setField("COMMAND", "echo").addAdditionalarameter("dd"));
+                        .setField("COMMAND", "echo").addAdditionalParameter("dd"))
+                .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
+                        .setField(new DTOParameter("COMMAND", shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
+                                .setField("COMMAND", "echo").addAdditionalParameter("echo"))
+                        .addAdditionalParameter("ee"));
         app.addEventSource(sc);
 
         DTOEventSourceContainer c = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)
@@ -49,5 +62,20 @@ public class TestFullPlanOneNode extends BaseIT
 
         waitForOk(3, 10);
         checkHistory(3, 0);
+
+        HistoryQuery q = new HistoryQuery();
+        q.setResultCode(0);
+        List<DTORunLog> res = history.query(q).getRes();
+        boolean found = false;
+        for (DTORunLog l : res)
+        {
+            if (l.getActiveNodeName().equals("c1"))
+            {
+                found = true;
+                Assert.assertEquals("aa bb cc dd ee", l.getShortLog());
+                break;
+            }
+        }
+        Assert.assertTrue(found);
     }
 }
