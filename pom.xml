@@ -146,5 +146,6 @@
 		<module>chronix-agent-command</module>
 		<module>chronix-agent-command-shell</module>
 		<module>chronix-source-basic</module>
+		<module>chronix-source-test</module>
 	</modules>
 </project>

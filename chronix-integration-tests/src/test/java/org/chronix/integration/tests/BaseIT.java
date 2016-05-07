@@ -115,6 +115,7 @@ public class BaseIT
                 mavenBundle("ch.qos.logback", "logback-classic", "1.1.3"), mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-source-basic", "0.9.2-SNAPSHOT"),
+                mavenBundle("org.oxymores.chronix", "chronix-source-test", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command-shell", "0.9.2-SNAPSHOT"),
                 mavenBundle("org.oxymores.chronix", "chronix-core", "0.9.2-SNAPSHOT"),
