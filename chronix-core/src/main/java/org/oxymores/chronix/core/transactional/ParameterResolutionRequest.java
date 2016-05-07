@@ -25,16 +25,16 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
     private final String[] additionalParameters; // Order is important - same as in parameter definition
     private final Map<String, String> fields = new HashMap<>();
 
-    private String replayToQueueName;
+    private String replyToQueueName;
     private String targetNodeName;
 
     private String referencedValue = null;
 
-    public ParameterResolutionRequest(ParameterDef prm, String replayToQueueName, String targetNodeName, UUID parentSourceRequest,
+    public ParameterResolutionRequest(ParameterDef prm, String replyToQueueName, String targetNodeName, UUID parentSourceRequest,
             UUID parentParameterRequest)
     {
         this.prm = prm;
-        this.replayToQueueName = replayToQueueName;
+        this.replyToQueueName = replyToQueueName;
         this.targetNodeName = targetNodeName;
         this.parentParameterRequest = parentParameterRequest;
         this.parentSourceRequest = parentSourceRequest;
@@ -66,7 +66,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         return this.prm.getParameterId();
     }
 
-    public ParameterDef getParameterHolder()
+    public ParameterDef getParameterDef()
     {
         return this.prm;
     }
@@ -104,7 +104,7 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
     @Override
     public String getReplyToQueueName()
     {
-        return this.replayToQueueName;
+        return this.replyToQueueName;
     }
 
     @Override
@@ -192,7 +192,16 @@ public class ParameterResolutionRequest implements org.oxymores.chronix.api.prm.
         targetPrm = this.prm.getAdditionalParameter(rq.getParameter().getId());
         if (targetPrm != null)
         {
-            this.fields.put(rq.getParameter().getKey(), res.result);
+            int i = 0;
+            for (ParameterDef prm : this.prm.getAdditionalParameters())
+            {
+                if (prm.getParameterId().equals(rq.getParameter().getId()))
+                {
+                    break;
+                }
+                i++;
+            }
+            this.additionalParameters[i] = res.result;
             return;
         }
 

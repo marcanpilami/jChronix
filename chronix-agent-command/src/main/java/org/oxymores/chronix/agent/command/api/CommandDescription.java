@@ -27,6 +27,7 @@ public class CommandDescription implements Serializable
     // Log stuff
     private String logFilePath;
     private boolean storeLogFile = true;
+    private boolean isParameter = false;
 
     public void addParameter(String name, String value)
     {
@@ -96,5 +97,15 @@ public class CommandDescription implements Serializable
     public void setLaunchId(UUID launchId)
     {
         this.launchId = launchId;
+    }
+
+    public boolean isParameter()
+    {
+        return isParameter;
+    }
+
+    public void setParameter(boolean isParameter)
+    {
+        this.isParameter = isParameter;
     }
 }

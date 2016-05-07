@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import org.oxymores.chronix.agent.command.api.CommandRunner;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.agent.MessageListenerService;
+import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,21 +207,34 @@ public class CommandAgent implements MessageCallback
         try
         {
             // Create a result
-            EventSourceRunResult er = new EventSourceRunResult();
-            er.end = res.end;
-            er.fullerLog = res.fullerLog;
-            er.logPath = res.logPath;
-            er.logSizeBytes = res.logSizeBytes;
-            er.logStart = res.logStart;
-            er.newEnvVars = res.newEnvVars;
-            er.returnCode = res.returnCode;
+            Serializable resMsg = null;
+            if (!cd.isParameter())
+            {
+                EventSourceRunResult er = new EventSourceRunResult();
+                er.end = res.end;
+                er.fullerLog = res.fullerLog;
+                er.logPath = res.logPath;
+                er.logSizeBytes = res.logSizeBytes;
+                er.logStart = res.logStart;
+                er.newEnvVars = res.newEnvVars;
+                er.returnCode = res.returnCode;
+                resMsg = er;
+            }
+            else
+            {
+                AsyncParameterResult apr = new AsyncParameterResult();
+                apr.requestId = cd.getLaunchId();
+                apr.result = res.logStart;
+                apr.success = res.returnCode == 0;
+                resMsg = apr;
+            }
 
             // Send it
-            response = jmsSession.createObjectMessage(er);
+            response = jmsSession.createObjectMessage(resMsg);
             response.setObjectProperty("launchId", cd.getLaunchId().toString());
             jmsProducer.send(msg.getJMSReplyTo(), response);
 
-            if (Files.exists(Paths.get(res.logPath)))
+            if (res.logPath != null && Files.exists(Paths.get(res.logPath)))
             {
                 if (res.logSizeBytes <= 500000)
                 {

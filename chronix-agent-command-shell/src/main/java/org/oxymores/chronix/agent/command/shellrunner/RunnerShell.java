@@ -126,7 +126,7 @@ public final class RunnerShell implements CommandRunner
                 if (i < RunnerConstants.MAX_RETURNED_SMALL_LOG_LINES
                         && res.logStart.length() < RunnerConstants.MAX_RETURNED_SMALL_LOG_CHARACTERS)
                 {
-                    res.logStart += nl + line;
+                    res.logStart += (res.logStart.equals("") ? "" : nl) + line;
                 }
 
                 // Scheduler internal log (stored in database) gets first line only
@@ -262,6 +262,10 @@ public final class RunnerShell implements CommandRunner
 
         // Then add the command itself
         argsStrings.add(rd.getPluginParameters().get("COMMAND"));
+        if (rd.getPluginParameters().get("COMMAND") == null)
+        {
+            throw new IllegalArgumentException("trying to run a shell command without a command defined! (field with key 'COMMAND')");
+        }
 
         // Finally add parameters (if any - there may be none or they may be contained inside the command itself)
         for (Map.Entry<String, String> prm : rd.getParameters())

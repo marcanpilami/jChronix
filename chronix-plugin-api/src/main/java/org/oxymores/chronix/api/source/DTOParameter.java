@@ -208,13 +208,34 @@ public class DTOParameter
      * @param prm
      *            the parameter to add to the list of optional parameters.
      */
-    public void addAdditionalarameter(DTOParameter prm)
+    public DTOParameter addAdditionalarameter(DTOParameter prm)
     {
         if (this.additionalParameters == null)
         {
             throw new IllegalStateException("parameter is not a dynamically resolved parameter");
         }
         this.additionalParameters.add(prm);
+        return this;
+    }
+
+    public DTOParameter addAdditionalarameter(String stringValue)
+    {
+        if (this.additionalParameters == null)
+        {
+            throw new IllegalStateException("parameter is not a dynamically resolved parameter");
+        }
+        this.additionalParameters.add(new DTOParameter(null, stringValue));
+        return this;
+    }
+
+    public DTOParameter addAdditionalarameter(String key, String stringValue)
+    {
+        if (this.additionalParameters == null)
+        {
+            throw new IllegalStateException("parameter is not a dynamically resolved parameter");
+        }
+        this.additionalParameters.add(new DTOParameter(key, stringValue));
+        return this;
     }
 
     /**

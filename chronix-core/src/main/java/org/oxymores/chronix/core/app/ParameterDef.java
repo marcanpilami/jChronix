@@ -107,7 +107,7 @@ public class ParameterDef implements Serializable
             this.fields = new HashMap<>(dto.getFields().size());
             for (DTOParameter subPrm : dto.getFields().values())
             {
-                this.fields.put(dto.getKey(), new ParameterDef(subPrm, a, ctx));
+                this.fields.put(subPrm.getKey(), new ParameterDef(subPrm, a, ctx));
             }
 
             this.additionalParameters = new ArrayList<>(dto.getAdditionalParameters().size());

@@ -263,8 +263,7 @@ public class RunnerManager implements MessageCallback
 
                 for (ParameterDef h : toRun.getAllParameters())
                 {
-                    this.resolveParameter(h, j.getId(), null, String.format(Constants.Q_RUNNERMGR, engine.getLocalNode().getName()), a,
-                            jmsSession);
+                    this.resolveParameter(h, j.getId(), null, engine.getLocalNode().getName(), a, jmsSession);
                 }
             }
             else
@@ -312,7 +311,7 @@ public class RunnerManager implements MessageCallback
             if (rq.isReady())
             {
                 // Parameter needs a resolution but is already ready for resolution (itself has no parameters)
-                String newRes = rq.getParameterHolder().getValue(rq);
+                String newRes = rq.getParameterDef().getValue(rq);
                 if (newRes != null)
                 {
                     // Synchronous result - therefore continue synchronously.
@@ -326,7 +325,7 @@ public class RunnerManager implements MessageCallback
             else
             {
                 // Parameter needs a resolution but first we need to resolve its own parameters
-                for (ParameterDef childPh : rq.getParameterHolder().getAllParameters())
+                for (ParameterDef childPh : rq.getParameterDef().getAllParameters())
                 {
                     resolveParameter(childPh, null, rq.getRequestId(), targetNodeName, a, jmsSession);
                 }
@@ -362,7 +361,7 @@ public class RunnerManager implements MessageCallback
 
             if (parentRequest.isReady())
             {
-                String newRes = parentRequest.getParameterHolder().getValue(parentRequest);
+                String newRes = parentRequest.getParameterDef().getValue(parentRequest);
                 if (newRes != null)
                 {
                     // Synchronous result - therefore continue synchronously.

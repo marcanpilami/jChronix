@@ -20,7 +20,9 @@ public class TestFullPlanOneNode extends BaseIT
         // Application content
         DTOEventSource sc = new DTOEventSource(shellPrv, app, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                 .setField("COMMAND", "echo").addParameter("aa").addParameter("bb")
-                .addParameter(new DTOParameter(null, strPrv).setField("value", "cc"));
+                .addParameter(new DTOParameter(null, strPrmPrv).setField("value", "cc"))
+                .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
+                        .setField("COMMAND", "echo").addAdditionalarameter("dd"));
         app.addEventSource(sc);
 
         DTOEventSourceContainer c = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)

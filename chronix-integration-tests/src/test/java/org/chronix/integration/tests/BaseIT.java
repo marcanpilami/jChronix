@@ -65,7 +65,7 @@ public class BaseIT
     protected OrderService order;
 
     protected EventSourceProvider chainPrv, planPrv, shellPrv;
-    protected ParameterProvider strPrv;
+    protected ParameterProvider strPrmPrv, shellPrmPrv;
 
     protected DTOEnvironment envt;
     protected DTOApplication app;
@@ -183,6 +183,21 @@ public class BaseIT
         Assert.assertNotNull(order);
         Assert.assertNotNull(conf);
 
+        // Allow the broker to start (and clear remaining messages if any)
+        try
+        {
+            org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
+            Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
+            props.put("org.oxymores.chronix.network.dbpath", tmpAmqPath);
+            props.put("org.oxymores.chronix.network.clear", "true");
+            props.put("org.oxymores.chronix.network.nodeid", "3654654");
+            cfg.update(props);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
         // Factories
         chainPrv = getProvider("org.oxymores.chronix.source.chain.prv.ChainProvider");
         Assert.assertNotNull(chainPrv);
@@ -190,7 +205,8 @@ public class BaseIT
         Assert.assertNotNull(planPrv);
         shellPrv = getProvider("org.oxymores.chronix.source.command.prv.ShellCommandProvider");
 
-        strPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
+        strPrmPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
+        shellPrmPrv = getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");
 
         // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
         meta.resetCache();
@@ -225,21 +241,6 @@ public class BaseIT
         envt.getPlace("local").addMemberOfGroup(app.getGroup("local").getId());
 
         // App is not saved here - it will be by the test
-
-        // Allow the broker to start (and clear remaining messages if any)
-        try
-        {
-            org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
-            Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
-            props.put("org.oxymores.chronix.network.dbpath", tmpAmqPath);
-            props.put("org.oxymores.chronix.network.clear", "true");
-            props.put("org.oxymores.chronix.network.nodeid", "3654654");
-            cfg.update(props);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     private DTOEventSource getSingletonSource(DTOApplication app, String providerClassName)
