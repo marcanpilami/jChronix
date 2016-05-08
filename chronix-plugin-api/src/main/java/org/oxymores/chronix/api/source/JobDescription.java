@@ -57,4 +57,9 @@ public interface JobDescription
      * This is a <code>Map</code> as field keys are unique and order is not important (fields should always be accessed by key).
      */
     public Map<String, String> getFields();
+
+    /**
+     * The environment variables set by the engine. (NOT the ones set in the Java environment).
+     */
+    public Map<String, String> getEnvironment();
 }

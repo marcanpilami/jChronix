@@ -104,7 +104,7 @@ public class DTOEventSourceContainer extends DTOEventSource
     /**
      * Create a transition between two states. The states must already exist and be members of the container.
      */
-    public void connect(DTOState from, DTOState to)
+    public DTOTransition connect(DTOState from, DTOState to)
     {
         if (!this.states.contains(from) || !this.states.contains(to))
         {
@@ -117,6 +117,7 @@ public class DTOEventSourceContainer extends DTOEventSource
         tr.setTo(to.getId());
         tr.setGuard1(0);
         this.transitions.add(tr);
+        return tr;
     }
 
     public void addTransition(DTOTransition tr)

@@ -64,7 +64,7 @@ public class BaseIT
     @Inject
     protected OrderService order;
 
-    protected EventSourceProvider chainPrv, planPrv, shellPrv;
+    protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv;
     protected ParameterProvider strPrmPrv, shellPrmPrv;
 
     protected DTOEnvironment envt;
@@ -82,6 +82,8 @@ public class BaseIT
     protected static String nodesPath = Paths.get("./target/nodes").toAbsolutePath().normalize().toString();
 
     protected static String localNodeMetaPath = Paths.get("./target/nodes/local").toAbsolutePath().normalize().toString();
+
+    protected static String nl = System.getProperty("line.separator");
 
     @BeforeClass
     public static void init()
@@ -205,6 +207,8 @@ public class BaseIT
         planPrv = getProvider("org.oxymores.chronix.source.chain.prv.PlanProvider");
         Assert.assertNotNull(planPrv);
         shellPrv = getProvider("org.oxymores.chronix.source.command.prv.ShellCommandProvider");
+        setPrv = getProvider("org.oxymores.chronix.source.basic.prv.SetVarProvider");
+        getPrv = getProvider("org.oxymores.chronix.source.basic.prv.GetVarProvider");
 
         strPrmPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
         shellPrmPrv = getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");

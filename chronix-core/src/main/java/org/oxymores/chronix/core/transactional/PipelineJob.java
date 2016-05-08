@@ -433,4 +433,16 @@ public class PipelineJob extends TranscientBase implements JobDescription
         }
         return res;
     }
+
+    @Override
+    public Map<String, String> getEnvironment()
+    {
+        // Note: only the content of the cache. No query inside database done here.
+        Map<String, String> res = new HashMap<>();
+        for (EnvironmentValue v : this.envValues)
+        {
+            res.put(v.getKey(), v.getValue());
+        }
+        return res;
+    }
 }

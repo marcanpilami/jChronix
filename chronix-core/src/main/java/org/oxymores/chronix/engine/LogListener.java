@@ -68,8 +68,9 @@ class LogListener implements MessageCallback
                 Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction();)
         {
 
-            log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s", rlog.getId(),
-                    rlog.getActiveNodeName(), rlog.getPlaceName(), rlog.getStateId()));
+            log.info(String.format("An internal log was received. Id: %s - Target: %s - Place: %s - State: %s. RC is: %s. First line: %s",
+                    rlog.getId(), rlog.getActiveNodeName(), rlog.getPlaceName(), rlog.getStateId(), rlog.getResultCode(),
+                    rlog.getShortLog()));
             log.debug("\n" + RunLog.getTitle() + "\n" + rlog.getLine());
             rlog.setLastLocallyModified(DateTime.now());
             rlog.insertOrUpdate(connHistory);
