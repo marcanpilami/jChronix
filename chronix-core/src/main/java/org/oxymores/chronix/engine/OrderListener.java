@@ -184,7 +184,7 @@ class OrderListener implements MessageCallback
                     {
                         rl.setLastKnownStatus(Constants.JI_STATUS_OVERRIDEN);
                         rl.setLastLocallyModified(DateTime.now());
-                        rl.insertOrUpdate(connHist);
+                        SenderHelpers.sendHistory(rl, ctxMeta, jmsProducer, jmsSession, true, localNodeName);
                     }
                 }
             }

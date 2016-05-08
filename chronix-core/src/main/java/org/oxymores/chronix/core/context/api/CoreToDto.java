@@ -269,7 +269,7 @@ public class CoreToDto
     public static DTORunLog getDTORunLog(RunLog rl)
     {
         DTORunLog res = new DTORunLog();
-        res.setId(rl.getId().toString());
+        res.setId(rl.getId());
         res.setActiveNodeName(rl.getActiveNodeName());
         res.setApplicationName(rl.getApplicationName());
         res.setBeganRunningAt(rl.getBeganRunningAt().toDate());

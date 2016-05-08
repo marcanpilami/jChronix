@@ -6,6 +6,8 @@ import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.dto.DTORunLog;
+import org.oxymores.chronix.dto.HistoryQuery;
 
 /**
  * Single node, multiple places per group.
@@ -52,5 +54,23 @@ public class TestParallelismSingleNode extends BaseIT
         // Tests: NOOP should have run on only one place, and the END should not have run at all.
         waitForEnded(4, 10, 200);
         checkHistory(3, 1);
+
+        HistoryQuery q = new HistoryQuery();
+        q.setResultCode(1);
+        history.query(q);
+        DTORunLog failedLog = null;
+        for (DTORunLog l : q.getRes())
+        {
+            if (l.getPlaceName().equals("p1"))
+            {
+                failedLog = l;
+                break;
+            }
+        }
+
+        // Now force OK, the chain should end.
+        order.orderForceOK(failedLog.getId());
+        waitForEnded(6, 10, 200);
+        checkHistory(5, 1);
     }
 }

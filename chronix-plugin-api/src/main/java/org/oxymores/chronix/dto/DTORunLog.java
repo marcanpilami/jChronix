@@ -1,6 +1,8 @@
 package org.oxymores.chronix.dto;
 
 import java.util.Date;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -8,7 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "DTORunLog")
 public class DTORunLog
 {
-    String id;
+    UUID id;
     String lastKnownStatus;
     @XmlElement(nillable = true)
     String calendarName, calendarOccurrence;
@@ -31,12 +33,12 @@ public class DTORunLog
     long dataIn, dataOut;
     long sequence;
 
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }
