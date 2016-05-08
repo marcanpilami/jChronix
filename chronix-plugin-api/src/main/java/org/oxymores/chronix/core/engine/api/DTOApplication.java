@@ -35,9 +35,10 @@ public class DTOApplication
         throw new RuntimeException("no group named " + name);
     }
 
-    public void addGroup(DTOPlaceGroup gr)
+    public DTOApplication addGroup(DTOPlaceGroup gr)
     {
         this.groups.put(gr.getId(), gr);
+        return this;
     }
 
     public String getName()

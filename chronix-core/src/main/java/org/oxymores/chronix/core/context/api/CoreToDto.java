@@ -117,7 +117,7 @@ public class CoreToDto
     public static DTOExecutionNode getExecutionNode(ExecutionNode en)
     {
         DTOExecutionNode res = new DTOExecutionNode();
-        res.setId(en.getId().toString());
+        res.setId(en.getId());
         res.setConsole(en.getEnvironment().getConsole() == en);
         res.setJmxServerPort(en.getJmxServerPort());
         res.setJmxRegistryPort(en.getJmxRegistryPort());
@@ -166,14 +166,8 @@ public class CoreToDto
 
     public static DTOPlace getPlace(Place p)
     {
-        DTOPlace res = new DTOPlace();
-        res.setId(p.getId());
-        res.setName(p.getName());
-        res.setNodeid(p.getNode().getId().toString());
-        res.setProp1(p.getProperty1());
-        res.setProp2(p.getProperty2());
-        res.setProp3(p.getProperty3());
-        res.setProp4(p.getProperty4());
+        DTOPlace res = new DTOPlace(p.getName(), p.getNode().getId(), p.getProperty1(), p.getProperty2(), p.getProperty3(),
+                p.getProperty4(), p.getId());
 
         for (UUID pg : p.getMemberOfIds())
         {
@@ -184,11 +178,7 @@ public class CoreToDto
 
     public static DTOPlaceGroup getPlaceGroup(PlaceGroup g)
     {
-        DTOPlaceGroup res = new DTOPlaceGroup();
-        res.setDescription(g.getDescription());
-        res.setId(g.getId());
-        res.setName(g.getName());
-
+        DTOPlaceGroup res = new DTOPlaceGroup(g.getName(), g.getDescription(), g.getId());
         return res;
     }
 

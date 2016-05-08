@@ -77,11 +77,7 @@ public class ApiPlanAccess implements PlanAccessService
         // Create one group per place inside the environment
         for (DTOPlace p : this.getEnvironment().getPlaces())
         {
-            DTOPlaceGroup pg = new DTOPlaceGroup();
-            pg.setId(UUID.randomUUID());
-            pg.setDescription(p.getName());
-            pg.setName(p.getName());
-
+            DTOPlaceGroup pg = new DTOPlaceGroup(p.getName(), p.getName());
             app.addGroup(pg);
         }
 

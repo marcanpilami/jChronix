@@ -20,6 +20,7 @@
 package org.oxymores.chronix.engine.analyser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,7 +61,7 @@ public class StateAnalyser
 
     private Map<UUID, TransitionAnalyser> analysis = new HashMap<>();
 
-    public List<Event> consumedEvents = new ArrayList<>();
+    public Set<Event> consumedEvents = new HashSet<>();
 
     /**
      * 
@@ -201,7 +202,7 @@ public class StateAnalyser
         return res;
     }
 
-    private void consumeEvents(State s, List<Event> events, List<Place> places, Connection conn)
+    private void consumeEvents(State s, Collection<Event> events, List<Place> places, Connection conn)
     {
         for (Event e : events)
         {

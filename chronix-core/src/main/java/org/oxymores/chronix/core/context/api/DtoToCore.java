@@ -215,7 +215,7 @@ public class DtoToCore
         conn.setDns(d.getDns());
         conn.setqPort(d.getqPort());
         r.addConnectionMethod(conn);
-        r.setId(UUID.fromString(d.getId()));
+        r.setId(d.getId());
         r.setJmxRegistryPort(d.getJmxRegistryPort());
         r.setJmxServerPort(d.getJmxServerPort());
 
@@ -236,7 +236,7 @@ public class DtoToCore
      */
     public static void setExecutionNodeNetwork(DTOExecutionNode d, Environment e)
     {
-        ExecutionNode from = e.getNode(UUID.fromString(d.getId()));
+        ExecutionNode from = e.getNode(d.getId());
 
         if (d.isConsole())
         {
@@ -261,14 +261,14 @@ public class DtoToCore
         Place r = new Place();
         r.setId(d.getId());
         r.setName(d.getName());
-        r.setNode(n.getNode(UUID.fromString(d.getNodeid())));
+        r.setNode(n.getNode(d.getNodeid()));
         r.setProperty1(d.getProp1());
         r.setProperty2(d.getProp2());
         r.setProperty3(d.getProp3());
         r.setProperty4(d.getProp4());
-        for (String s : d.getMemberOf())
+        for (UUID s : d.getMemberOf())
         {
-            r.addGroupMembership(UUID.fromString(s));
+            r.addGroupMembership(s);
         }
         return r;
     }

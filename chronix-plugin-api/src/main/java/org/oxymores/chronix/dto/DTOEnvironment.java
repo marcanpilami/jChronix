@@ -1,5 +1,6 @@
 package org.oxymores.chronix.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DTOEnvironment
@@ -7,13 +8,25 @@ public class DTOEnvironment
     private List<DTOPlace> places;
     private List<DTOExecutionNode> nodes;
 
+    /**
+     * All the places known. (copy of the actual list)
+     */
     public List<DTOPlace> getPlaces()
     {
-        return places;
+        return new ArrayList<>(places);
     }
 
     /**
-     * Helper method. Please note that the name is not a unique key - if there are multiple places with the same name, thr first is
+     * Add a new place to the environment. Note that places should be unique (by ID).
+     */
+    public DTOEnvironment addPlace(DTOPlace place)
+    {
+        this.places.add(place);
+        return this;
+    }
+
+    /**
+     * Helper method. Please note that the name is not a unique key - if there are multiple places with the same name, the first is
      * returned.
      */
     public DTOPlace getPlace(String name)
@@ -41,5 +54,20 @@ public class DTOEnvironment
     public void setNodes(List<DTOExecutionNode> nodes)
     {
         this.nodes = nodes;
+    }
+
+    /**
+     * Helper method. Please note that the name is not a unique key - if there are multiple nodes with the same name, the first is returned.
+     */
+    public DTOExecutionNode getExecutionNode(String name)
+    {
+        for (DTOExecutionNode p : nodes)
+        {
+            if (p.getName().equals(name))
+            {
+                return p;
+            }
+        }
+        throw new RuntimeException("no node named " + name);
     }
 }

@@ -94,7 +94,7 @@ class ListenerHolder implements MessageListener
         }
         catch (Exception e)
         {
-            log.warn("An error has occured in a JMS message listener. If any, messages involved will be committed and lost.", e);
+            log.warn("An error has occured in a JMS message listener. If any, messages involved will be committed and lost. ", e);
         }
         finally
         {

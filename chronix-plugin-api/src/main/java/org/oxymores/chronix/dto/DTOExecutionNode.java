@@ -6,7 +6,8 @@ import java.util.UUID;
 
 public class DTOExecutionNode
 {
-    private String id, dns, osusername, ospassword, certFilePath, name;
+    private UUID id;
+    private String dns, osusername, ospassword, certFilePath, name;
     private boolean isConsole, isSimpleRunner;
     private int qPort, wsPort, remoteExecPort, jmxServerPort, jmxRegistryPort, x, y;
     private List<String> toTCP = new ArrayList<>(), toRCTRL = new ArrayList<>();
@@ -29,12 +30,12 @@ public class DTOExecutionNode
     }
 
     // Stupid GET/SET
-    public String getId()
+    public UUID getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(UUID id)
     {
         this.id = id;
     }

@@ -59,9 +59,10 @@ public class DTOState implements Serializable
         return parallel;
     }
 
-    public void setParallel(Boolean parallel)
+    public DTOState setParallel(Boolean parallel)
     {
         this.parallel = parallel;
+        return this;
     }
 
     public Integer getWarnAfterMn()
@@ -79,9 +80,10 @@ public class DTOState implements Serializable
         return killAfterMn;
     }
 
-    public void setKillAfterMn(Integer killAfterMn)
+    public DTOState setKillAfterMn(Integer killAfterMn)
     {
         this.killAfterMn = killAfterMn;
+        return this;
     }
 
     public Integer getMaxPipeWaitTime()
@@ -89,9 +91,10 @@ public class DTOState implements Serializable
         return maxPipeWaitTime;
     }
 
-    public void setMaxPipeWaitTime(Integer maxPipeWaitTime)
+    public DTOState setMaxPipeWaitTime(Integer maxPipeWaitTime)
     {
         this.maxPipeWaitTime = maxPipeWaitTime;
+        return this;
     }
 
     public Integer getEventValidityMn()
@@ -99,9 +102,10 @@ public class DTOState implements Serializable
         return eventValidityMn;
     }
 
-    public void setEventValidityMn(Integer eventValidityMn)
+    public DTOState setEventValidityMn(Integer eventValidityMn)
     {
         this.eventValidityMn = eventValidityMn;
+        return this;
     }
 
     public UUID getEventSourceId()
@@ -109,9 +113,10 @@ public class DTOState implements Serializable
         return eventSourceId;
     }
 
-    public void setEventSourceId(UUID eventSourceId)
+    protected DTOState setEventSourceId(UUID eventSourceId)
     {
         this.eventSourceId = eventSourceId;
+        return this;
     }
 
     public List<UUID> getExclusiveStatesId()
