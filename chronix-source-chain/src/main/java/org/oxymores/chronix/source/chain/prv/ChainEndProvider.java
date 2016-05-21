@@ -52,11 +52,14 @@ public class ChainEndProvider implements EventSourceProvider, RunModeTriggered, 
         // This method creates to results: one for itself (we are good!) and one for the parent chain., inside the parent chain scope.
 
         // Parent result
-        EventSourceRunResult rr = new EventSourceRunResult();
-        rr.returnCode = 0;
-        rr.overloadedScopeId = jd.getParentScopeLaunchId(); // Scope is: parent chain launch ID.
-        rr.end = jd.getVirtualTimeStart();
-        cb.sendRunResult(rr);
+        if (jd.getParentScopeLaunchId() != null)
+        {
+            EventSourceRunResult rr = new EventSourceRunResult();
+            rr.returnCode = 0;
+            rr.overloadedScopeId = jd.getParentScopeLaunchId(); // Scope is: parent chain launch ID.
+            rr.end = jd.getVirtualTimeStart();
+            cb.sendRunResult(rr);
+        }
 
         // Self result
         EventSourceRunResult res = new EventSourceRunResult();
