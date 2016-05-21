@@ -39,7 +39,7 @@ import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
-import org.oxymores.chronix.engine.analyser.StateAnalyser;
+import org.oxymores.chronix.engine.analyser.EventAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -98,8 +98,8 @@ class EventListener implements MessageCallback
             log.error("An event was received that was not related to a local application. Discarded.");
             return;
         }
-        log.debug(String.format("Event %s (from application %s / active node %s) was received and will be analysed", evt.getId(),
-                a.getName(), active.getName()));
+        log.debug(String.format("Event %s (from application %s / source %s) was received and will be analysed", evt.getId(), a.getName(),
+                active.getName()));
 
         //
         // Analyse event!
@@ -131,8 +131,8 @@ class EventListener implements MessageCallback
             // Analyse on every local consumer
             for (State st : localConsumers)
             {
-                StateAnalyser ana = new StateAnalyser(a, st, evt, conn, jmsProducer, jmsSession, localNode);
-                toCheck.addAll(ana.consumedEvents);
+                EventAnalyser ana = new EventAnalyser(a, st, evt, conn, jmsProducer, jmsSession, localNode);
+                toCheck.addAll(ana.getUsedEvents());
             }
 
             // Ack
@@ -141,7 +141,6 @@ class EventListener implements MessageCallback
             evt.insertOrUpdate(conn);
             conn.commit();
             // jmsCommit done in handler
-            log.debug(String.format("Event id %s was received, analysed and acked all right", evt.getId()));
         }
 
         // Purge

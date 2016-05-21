@@ -20,6 +20,7 @@
 
 package org.oxymores.chronix.engine.analyser;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
+import org.oxymores.chronix.core.transactional.EventConsumption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -40,14 +42,16 @@ class TransitionAnalyser
 {
     private static final Logger log = LoggerFactory.getLogger(TransitionAnalyser.class);
 
-    // PlaceID, result.
-    private Map<UUID, TransitionOnSinglePlaceAnalyser> placeAnalysises = new HashMap<UUID, TransitionOnSinglePlaceAnalyser>();
+    // PlaceID, result. (one entry per target place)
+    private Map<UUID, TransitionScopedAnalyser> placeAnalysises = new HashMap<>();
 
+    // Target places
     private List<Place> analysisPlaces;
 
     private boolean parallelAnalysis;
 
-    TransitionAnalyser(Application app, DTOTransition tr, List<Event> events, Connection conn)
+    TransitionAnalyser(Application app, DTOTransition tr, Collection<Event> events, Collection<EventConsumption> consumedEvents,
+            Connection conn)
     {
         parallelAnalysis = isTransitionParallelEnabled(app, tr);
 
@@ -58,30 +62,13 @@ class TransitionAnalyser
                 from.getEventSourceDefinition().getName(), to.getId(), to.getEventSourceDefinition().getName(), to.getContainerName(),
                 events.size()));
 
-        this.analysisPlaces = from.getRunsOnPlaces();
+        this.analysisPlaces = to.getRunsOnPlaces();
+
         for (Place p : analysisPlaces)
         {
-            // All events that are not consumed on this specific Place
-            Set<Event> virginEvents = new HashSet<>();
-            for (Event e : events)
-            {
-                if (!e.wasConsumedOnPlace(p, to, conn))
-                {
-                    virginEvents.add(e);
-                }
-            }
-
             // Analyse
-            TransitionOnSinglePlaceAnalyser analysis = new TransitionOnSinglePlaceAnalyser(app, tr, from.getEventSourceDefinition(),
-                    virginEvents, p, conn);
-
-            if (!parallelAnalysis && !analysis.allowed)
-            {
-                // We already know the transition is KO, so no need to continue. Say the transition should block on all Places.
-                log.debug("Transition is not possible due (at least) to analysis on place " + p.getName());
-                placeAnalysises.clear();
-                return;
-            }
+            TransitionScopedAnalyser analysis = new TransitionScopedAnalyser(tr, to, from, p, events, consumedEvents, parallelAnalysis,
+                    conn);
 
             this.placeAnalysises.put(p.getId(), analysis);
         }
@@ -105,71 +92,29 @@ class TransitionAnalyser
         return true;
     }
 
-    Set<Event> getConsumedEvents()
-    {
-        Set<Event> res = new HashSet<Event>();
-        for (TransitionOnSinglePlaceAnalyser par : this.placeAnalysises.values())
-        {
-            if (!par.allowed)
-            {
-                continue;
-            }
-            res.addAll(par.consumedEvents);
-        }
-        return res;
-    }
-
-    private boolean allowedOnAllPlaces()
-    {
-        if (placeAnalysises.isEmpty())
-        {
-            return false;
-        }
-
-        boolean res = true;
-        for (TransitionOnSinglePlaceAnalyser par : this.placeAnalysises.values())
-        {
-            res = res && par.allowed;
-        }
-        return res;
-    }
-
-    /**
-     * Returns true if the transition is impossible on all places
-     */
-    boolean blockedOnAllPlaces()
-    {
-        for (TransitionOnSinglePlaceAnalyser par : this.placeAnalysises.values())
-        {
-            if (par.allowed)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     boolean allowedOnPlace(Place p)
     {
-        if ((!this.parallelAnalysis && this.allowedOnAllPlaces())
-                || (this.parallelAnalysis && this.placeAnalysises.get(p.getId()) != null && this.placeAnalysises.get(p.getId()).allowed))
-        {
-            return true;
-        }
-        return false;
+        return this.placeAnalysises.get(p.getId()) != null ? this.placeAnalysises.get(p.getId()).allowed : false;
     }
 
-    Set<Event> eventsConsumedOnPlace(Place p)
+    void consumeEvents(Connection conn, Collection<Place> restrictedToTargetPlaces)
     {
-        if (!this.parallelAnalysis && this.allowedOnAllPlaces())
+        for (TransitionScopedAnalyser an : this.placeAnalysises.values())
         {
-            return this.getConsumedEvents();
+            if (restrictedToTargetPlaces.contains(an.targetPlace))
+            {
+                an.consumeEvents(conn);
+            }
         }
-        if (this.parallelAnalysis && this.placeAnalysises.get(p.getId()).allowed)
-        {
-            return this.placeAnalysises.get(p.getId()).consumedEvents;
-        }
+    }
 
-        return new HashSet<Event>();
+    Set<Event> getUsedEvents()
+    {
+        Set<Event> res = new HashSet<>();
+        for (TransitionScopedAnalyser an : this.placeAnalysises.values())
+        {
+            res.addAll(an.getUsedEvents());
+        }
+        return res;
     }
 }

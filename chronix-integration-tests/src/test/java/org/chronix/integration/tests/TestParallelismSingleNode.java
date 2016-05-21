@@ -73,4 +73,68 @@ public class TestParallelismSingleNode extends BaseIT
         waitForEnded(6, 10, 200);
         checkHistory(5, 1);
     }
+
+    @Test
+    public void testP2()
+    {
+        // P2. Two places P1 & P2 on single node. We check we are in a mixed // case.
+        // START (P1) -> S1: FAIL ON P1 (all places //) -> S3: AND (all places //) -> S4: NOOP (P2) -> END (P1)
+        // ..........|-> S2: NOOP ............. (P2 //) |
+
+        // Network & deployment
+        DTOPlaceGroup pg1 = new DTOPlaceGroup("pg1", "pg1");
+        DTOPlaceGroup pg2 = new DTOPlaceGroup("pg2", "pg2");
+        DTOPlaceGroup pgAll = new DTOPlaceGroup("pgAll", "pgAll");
+        app.addGroup(pg1).addGroup(pg2).addGroup(pgAll);
+
+        DTOPlace p1 = new DTOPlace("p1", envt.getExecutionNode("local")).addMemberOfGroup(pg1, pgAll);
+        DTOPlace p2 = new DTOPlace("p2", envt.getExecutionNode("local")).addMemberOfGroup(pg2, pgAll);
+        envt.addPlace(p1).addPlace(p2);
+
+        // Payload
+        DTOEventSourceContainer chain1 = new DTOEventSourceContainer(chainPrv, app, "chain1", "integration test chain", null)
+                .setAllStates(pg1);
+        DTOEventSource failOnP1 = new DTOEventSource(failOnPlacePrv, app, "failOnP1", "fail1").setField("PLACENAME", "p1");
+
+        DTOState s1 = chain1.addState(failOnP1, pgAll).setParallel(true);
+        DTOState s2 = chain1.addState(noop, pg2).setParallel(true);
+        DTOState s3 = chain1.addState(and, pgAll).setParallel(true);
+        DTOState s4 = chain1.addState(noop, pg2).setParallel(true);
+
+        chain1.connect(getChainStart(chain1), s1);
+        chain1.connect(getChainStart(chain1), s2);
+        chain1.connect(s2, s3);
+        chain1.connect(s1, s3);
+        chain1.connect(s3, s4);
+        chain1.connect(s4, getChainEnd(chain1));
+
+        // Done
+        save();
+
+        // GO
+        addAndStartEngine("local");
+        order.orderLaunch(app.getId(), getChainStart(chain1).getId(), p1.getId(), true);
+
+        // Tests: AND should have run only on P2. (START OK on P1, S1 OK on P2, S1 failed on P1, NOOP OK on P2, AND OK on P2)
+        waitForEnded(5, 10, 200);
+        checkHistory(4, 1);
+
+        HistoryQuery q = new HistoryQuery();
+        q.setResultCode(1);
+        history.query(q);
+        DTORunLog failedLog = null;
+        for (DTORunLog l : q.getRes())
+        {
+            if (l.getPlaceName().equals("p1"))
+            {
+                failedLog = l;
+                break;
+            }
+        }
+
+        // Now force OK, the chain should end.
+        order.orderForceOK(failedLog.getId());
+        waitForEnded(8, 10, 200);
+        checkHistory(7, 1);
+    }
 }

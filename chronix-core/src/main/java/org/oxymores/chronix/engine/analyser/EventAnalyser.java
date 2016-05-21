@@ -43,30 +43,37 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
 /**
- * The heart of the event engine. One is created for each state/event couple. TODO: transform it to EventAnalyser
+ * The heart of the event engine. One is created for each state/event couple. It will take into account all events that are in the same
+ * scope as the event given to analyse.<br>
+ * It actually delegates the analysis to subdivisions of the scope: this is the main class, then one analyser per transition, then reduced
+ * scope, then per place.
  */
-public class StateAnalyser
+public class EventAnalyser
 {
-    private static final Logger log = LoggerFactory.getLogger(StateAnalyser.class);
+    private static final Logger log = LoggerFactory.getLogger(EventAnalyser.class);
 
     /**
      * The State on which the analysis occurs (the target)
      */
-    private State state;
+    private State toState;
 
     /**
      * The application scoping the analysis
      */
     private Application application;
 
+    /**
+     * Each transition is analysed separately.This stores the sub-analysers.
+     */
     private Map<UUID, TransitionAnalyser> analysis = new HashMap<>();
 
-    public Set<Event> consumedEvents = new HashSet<>();
+    private List<Place> places;
 
     /**
+     * Create a new analysis for the given event on the given state. Analysis proceeds immediately.
      * 
      * @param s
-     *            the state to analyse
+     *            the state to analyse (must be a potential client of the given event)
      * @param conn
      *            an open SQL2O connection
      * @param evt
@@ -74,60 +81,43 @@ public class StateAnalyser
      * @param application
      *            The application scoping the analysis
      */
-    public StateAnalyser(Application application, State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
+    public EventAnalyser(Application application, State s, Event evt, Connection conn, MessageProducer pjProducer, Session session,
             ExecutionNode localNode)
     {
-        this.state = s;
+        this.toState = s;
         this.application = application;
 
         // Get scope events
-        List<Event> tmpEvents = conn.createQuery("SELECT e.* FROM Event e WHERE e.level0Id = :level0Id AND e.level1Id = :level1Id")
+        List<Event> scopeEvents = conn.createQuery("SELECT e.* FROM Event e WHERE e.level0Id = :level0Id AND e.level1Id = :level1Id")
                 .addParameter("level0Id", evt.getLevel0Id()) // $The unique ID associated to a chain run instance$
                 .addParameter("level1Id", evt.getLevel1Id()) // $The chain ID$
                 .executeAndFetch(Event.class);
 
-        // Remove consumed events (first filter: those which are completely consumed)
-        List<Event> scopeEvents = new ArrayList<>();
-        for (Event e : tmpEvents)
-        {
-            for (Place p : s.getRunsOnPlaces())
-            {
-                if (!scopeEvents.contains(e) && !e.wasConsumedOnPlace(p, s, conn))
-                {
-                    scopeEvents.add(e);
-                }
-            }
-        }
+        Collection<EventConsumption> consumption = conn
+                .createQuery(
+                        "SELECT c.* FROM EVENTCONSUMPTION c LEFT JOIN EVENT e ON c.eventID = e.id WHERE e.level0Id = :level0Id AND e.level1Id = :level1Id")
+                .addParameter("level0Id", evt.getLevel0Id()).addParameter("level1Id", evt.getLevel1Id())
+                .executeAndFetch(EventConsumption.class);
 
         // The current event may not yet be DB persisted
-        if (!scopeEvents.contains(evt))
-        {
-            scopeEvents.add(evt);
-        }
+        scopeEvents.add(evt);
 
-        log.debug("There are " + scopeEvents.size() + " events not consumed to be considered for analysis");
+        log.debug("There are " + scopeEvents.size() + " events (potentially already consumed) to be considered for analysis");
 
         // Check every incoming transition: are they allowed?
         for (DTOTransition tr : s.getTransitionsReceivedHere())
         {
-            TransitionAnalyser tar = new TransitionAnalyser(application, tr, scopeEvents, conn);
-
-            if (tar.blockedOnAllPlaces() && s.getEventSourceDefinition().isAnd())
-            {
-                // No need to go further - at least one transition will block everything for all places
-                log.debug(String.format("State %s (%s - chain %s) is NOT allowed to run due to transition from %s", s.getId(),
-                        s.getEventSourceDefinition().getName(), s.getContainerName(),
-                        this.application.getState(tr.getFrom()).getEventSourceDefinition().getName()));
-                this.analysis.clear();
-                return;
-            }
-
+            TransitionAnalyser tar = new TransitionAnalyser(this.application, tr, scopeEvents, consumption, conn);
             this.analysis.put(tr.getId(), tar);
         }
 
-        List<Place> places = this.getPossiblePlaces();
+        this.places = this.getPossiblePlaces();
         log.debug(String.format("According to transitions, the state [%s] in chain [%s] could run on %s places",
                 s.getEventSourceDefinition().getName(), s.getContainerName(), places.size()));
+        if (this.places.isEmpty())
+        {
+            return;
+        }
 
         // Check calendar
         for (Place p : places.toArray(new Place[0]))
@@ -143,11 +133,10 @@ public class StateAnalyser
         // Go
         if (!places.isEmpty())
         {
-            log.debug(String.format(
-                    "State (%s - chain %s) is triggered by the event on %s of its places. Analysis has consumed %s events on these places.",
-                    s.getEventSourceDefinition().getName(), s.getContainerName(), places.size(), this.consumedEvents.size()));
+            log.debug(String.format("State (%s - chain %s) is triggered by the event on %s of its places.",
+                    s.getEventSourceDefinition().getName(), s.getContainerName(), places.size()));
 
-            this.consumeEvents(s, this.consumedEvents, places, conn);
+            this.consumeEvents(conn);
             for (Place p : places)
             {
                 if (p.getNode().getComputingNode() == localNode)
@@ -165,58 +154,55 @@ public class StateAnalyser
     private List<Place> getPossiblePlaces()
     {
         ArrayList<Place> res = new ArrayList<>();
-        places: for (Place p : state.getRunsOn().getPlaces())
+        places: for (Place p : toState.getRunsOn().getPlaces())
         {
-            Set<Event> ce = new HashSet<>();
-
-            if (state.getEventSourceDefinition().isAnd())
+            if (toState.getEventSourceDefinition().isAnd())
             {
                 for (TransitionAnalyser tra : this.analysis.values())
                 {
                     if (!tra.allowedOnPlace(p))
                     {
-                        ce.clear();
                         continue places;
                     }
-                    ce.addAll(tra.eventsConsumedOnPlace(p));
                 }
                 res.add(p);
             }
 
-            if (state.getEventSourceDefinition().isOr())
+            if (toState.getEventSourceDefinition().isOr())
             {
                 for (TransitionAnalyser tra : this.analysis.values())
                 {
                     if (tra.allowedOnPlace(p))
                     {
-                        ce.addAll(tra.eventsConsumedOnPlace(p));
                         res.add(p);
                         break;
                     }
                 }
             }
-
-            this.consumedEvents.addAll(ce);
         }
 
         return res;
     }
 
-    private void consumeEvents(State s, Collection<Event> events, List<Place> places, Connection conn)
+    private void consumeEvents(Connection conn)
     {
-        for (Event e : events)
+        for (TransitionAnalyser an : this.analysis.values())
         {
-            for (Place p : places)
-            {
-                log.debug(String.format("Event %s marked as consumed on place %s", e.getId(), p.getName()));
-                EventConsumption ec = new EventConsumption();
-                ec.setEventID(e.getId());
-                ec.setPlaceID(p.getId());
-                ec.setStateID(s.getId());
-                ec.setAppID(e.getAppID());
-
-                ec.insert(conn);
-            }
+            an.consumeEvents(conn, this.places);
         }
+    }
+
+    /**
+     * All the events that were needed to create all the launch orders created by this analysis. May be empty if analysed event has no
+     * consequences.
+     */
+    public Set<Event> getUsedEvents()
+    {
+        Set<Event> res = new HashSet<>();
+        for (TransitionAnalyser an : this.analysis.values())
+        {
+            res.addAll(an.getUsedEvents());
+        }
+        return res;
     }
 }
