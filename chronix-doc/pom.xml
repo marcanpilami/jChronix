@@ -1,65 +1,66 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.oxymores.chronix</groupId>
-        <artifactId>chronix-parent</artifactId>
-        <version>0.9.2-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<groupId>org.oxymores.chronix</groupId>
+		<artifactId>chronix-parent</artifactId>
+		<version>0.9.2-SNAPSHOT</version>
+	</parent>
 
-    <artifactId>chronix-doc</artifactId>
-    <packaging>pom</packaging>
+	<artifactId>chronix-doc</artifactId>
+	<packaging>pom</packaging>
 
-    <properties>
-    </properties>
+	<properties>
+		<sonar.skip>true</sonar.skip>
+	</properties>
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
 
-                        <groupId>org.tomdz.maven</groupId>
-                        <artifactId>sphinx-maven-plugin</artifactId>
-                        <version>1.0.3</version>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/docs</outputDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>generate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
+						<groupId>org.tomdz.maven</groupId>
+						<artifactId>sphinx-maven-plugin</artifactId>
+						<version>1.0.3</version>
+						<configuration>
+							<outputDirectory>${project.build.directory}/docs</outputDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
 
-                <resources>
-                    <resource>
-                        <directory>src/site/sphinx</directory>
-                        <filtering>true</filtering>
-                        <includes>
-                            <include>**/*.rst</include>
-                            <include>**/*.py</include>
-                        </includes>
-                    </resource>
-                </resources>
+				<resources>
+					<resource>
+						<directory>src/site/sphinx</directory>
+						<filtering>true</filtering>
+						<includes>
+							<include>**/*.rst</include>
+							<include>**/*.py</include>
+						</includes>
+					</resource>
+				</resources>
 
-            </build>
-        </profile>
-    </profiles>
+			</build>
+		</profile>
+	</profiles>
 
-    <dependencies>
-    </dependencies>
+	<dependencies>
+	</dependencies>
 
 </project>

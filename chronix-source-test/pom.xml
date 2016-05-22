@@ -12,6 +12,10 @@
 	<name>chronix-source-test</name>
 	<url>http://maven.apache.org</url>
 
+	<properties>
+		<sonar.skip>true</sonar.skip>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
