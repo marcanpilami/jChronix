@@ -10,7 +10,8 @@ import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.HistoryQuery;
 
 /**
- * Single node, multiple places per group.
+ * Single node, multiple places per group.<br>
+ * The name of the tests relates to the terminology used inside the plan development documentation.
  */
 public class TestParallelismSingleNode extends BaseIT
 {
@@ -136,5 +137,64 @@ public class TestParallelismSingleNode extends BaseIT
         order.orderForceOK(failedLog.getId());
         waitForEnded(8, 10, 200);
         checkHistory(7, 1);
+    }
+
+    @Test
+    public void testP5()
+    {
+        // P5 tests that // is triggered only when same group used on both ends of a transition.
+        // START (P1) -> S1: FAIL ON P1 (P1 P2 //) -> S2: NOOP (P2 P3 //) -> END (P1)
+
+        // Network & deployment
+        DTOPlaceGroup pgP1 = new DTOPlaceGroup("pgP1", "pgP1");
+        DTOPlaceGroup pgP1P2 = new DTOPlaceGroup("pgP1P2", "pgP1P2");
+        DTOPlaceGroup pgP2P3 = new DTOPlaceGroup("pgP2P3", "pgP2P3");
+        app.addGroup(pgP1).addGroup(pgP1P2).addGroup(pgP2P3);
+
+        DTOPlace p1 = new DTOPlace("p1", envt.getExecutionNode("local")).addMemberOfGroup(pgP1, pgP1P2);
+        DTOPlace p2 = new DTOPlace("p2", envt.getExecutionNode("local")).addMemberOfGroup(pgP1P2, pgP2P3);
+        DTOPlace p3 = new DTOPlace("p3", envt.getExecutionNode("local")).addMemberOfGroup(pgP2P3);
+        envt.addPlace(p1).addPlace(p2).addPlace(p3);
+
+        // Payload
+        DTOEventSourceContainer chain1 = new DTOEventSourceContainer(chainPrv, app, "chain1", "integration test chain", null)
+                .setAllStates(pgP1);
+        DTOEventSource failOnP1 = new DTOEventSource(failOnPlacePrv, app, "failOnP1", "fail1").setField("PLACENAME", "p1");
+
+        DTOState s1 = chain1.addState(failOnP1, pgP1P2).setParallel(true);
+        DTOState s2 = chain1.addState(noop, pgP2P3).setParallel(true);
+
+        chain1.connect(getChainStart(chain1), s1);
+        chain1.connect(s1, s2);
+        chain1.connect(s2, getChainEnd(chain1));
+
+        // Done
+        save();
+
+        // GO
+        addAndStartEngine("local");
+        order.orderLaunch(app.getId(), getChainStart(chain1).getId(), p1.getId(), true);
+
+        // Tests: S2 should not have run anywhere.
+        waitForEnded(3, 10, 500);
+        checkHistory(2, 1);
+
+        HistoryQuery q = new HistoryQuery();
+        q.setResultCode(1);
+        history.query(q);
+        DTORunLog failedLog = null;
+        for (DTORunLog l : q.getRes())
+        {
+            if (l.getPlaceName().equals("p1"))
+            {
+                failedLog = l;
+                break;
+            }
+        }
+
+        // Now force OK, the chain should end.
+        order.orderForceOK(failedLog.getId());
+        waitForEnded(6, 10, 200);
+        checkHistory(5, 1);
     }
 }
