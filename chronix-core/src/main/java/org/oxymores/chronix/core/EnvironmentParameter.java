@@ -19,6 +19,7 @@
  */
 package org.oxymores.chronix.core;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.EnvironmentValue;
 
-public class EnvironmentParameter
+public class EnvironmentParameter implements Serializable
 {
     private static final long serialVersionUID = -3573665084125546426L;
 

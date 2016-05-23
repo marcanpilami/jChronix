@@ -42,8 +42,8 @@ import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.EventSourceRunResult;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
-import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.app.ParameterDef;
 import org.oxymores.chronix.core.app.State;
@@ -493,7 +493,18 @@ public class RunnerManager implements MessageCallback
         // Calendar progress
         if (!rr.outOfPlan && s.usesCalendar() && !pj.getIgnoreCalendarUpdating())
         {
+            // Pointer on state
             updateCalendar(pj, a, s, p);
+
+            // Pointer on calendar itself
+            if (s.isCalendarUpdater() && rr.success)
+            {
+                try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
+                {
+                    FunctionalSequence c = a.getCalendar(pj.getCalendarID());
+                    c.advanceByOne(this.ctxMeta.getEnvironment(), jmsSession, conn, jmsProducer);
+                }
+            }
         }
 
         // Free tokens
@@ -519,9 +530,9 @@ public class RunnerManager implements MessageCallback
 
     private void updateCalendar(PipelineJob pj, Application a, State s, Place p)
     {
-        Calendar c = a.getCalendar(pj.getCalendarID());
-        CalendarDay justDone = c.getDay(pj.getCalendarOccurrenceID());
-        CalendarDay next = c.getOccurrenceAfter(justDone);
+        FunctionalSequence c = a.getCalendar(pj.getCalendarID());
+        FunctionalOccurrence justDone = c.getOccurrence(pj.getCalendarOccurrenceID());
+        FunctionalOccurrence next = c.getOccurrenceAfter(justDone);
 
         try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
@@ -537,9 +548,9 @@ public class RunnerManager implements MessageCallback
             cp.insertOrUpdate(conn);
             log.debug(String.format(
                     "At the end of the run, calendar status for state [%s] (chain [%s]) is Last: %s - LastOK: %s - LastStarted: %s - Next: %s - Latest failed: %s - Running: %s",
-                    s.getEventSourceDefinition().getName(), s.getContainerName(), cp.getLastEndedOccurrenceCd(ctxMeta).getValue(),
-                    cp.getLastEndedOkOccurrenceCd(ctxMeta).getValue(), cp.getLastStartedOccurrenceCd(ctxMeta).getValue(),
-                    cp.getNextRunOccurrenceCd(ctxMeta).getValue(), cp.getLatestFailed(), cp.getRunning()));
+                    s.getEventSourceDefinition().getName(), s.getContainerName(), cp.getLastEndedOccurrenceCd(ctxMeta).getLabel(),
+                    cp.getLastEndedOkOccurrenceCd(ctxMeta).getLabel(), cp.getLastStartedOccurrenceCd(ctxMeta).getLabel(),
+                    cp.getNextRunOccurrenceCd(ctxMeta).getLabel(), cp.getLatestFailed(), cp.getRunning()));
             conn.commit();
         }
     }
@@ -563,7 +574,7 @@ public class RunnerManager implements MessageCallback
         }
     }
 
-    public void sendCalendarPointer(CalendarPointer cp, Calendar ca, Session jmsSession) throws JMSException
+    public void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Session jmsSession) throws JMSException
     {
         SenderHelpers.sendCalendarPointer(cp, ca, jmsSession, this.jmsProducer, true, this.ctxMeta.getEnvironment());
     }

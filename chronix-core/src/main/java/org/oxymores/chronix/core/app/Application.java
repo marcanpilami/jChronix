@@ -57,7 +57,7 @@ public class Application implements Serializable
     private Map<UUID, Token> tokens = new HashMap<>();
 
     @Valid
-    protected Map<UUID, Calendar> calendars = new HashMap<>();
+    protected Map<UUID, FunctionalSequence> calendars = new HashMap<>();
 
     // The sources
     private Map<UUID, EventSourceDef> sources = new HashMap<>();
@@ -376,20 +376,26 @@ public class Application implements Serializable
     // CALENDARS
     ///////////////////////////////////////////////////////////////////////////
 
-    public Calendar getCalendar(UUID id)
+    public FunctionalSequence getCalendar(UUID id)
     {
         return this.calendars.get(id);
     }
 
-    public List<Calendar> getCalendars()
+    public List<FunctionalSequence> getCalendars()
     {
         return new ArrayList<>(this.calendars.values());
     }
 
-    public void removeACalendar(Calendar c)
+    public void removeACalendar(FunctionalSequence c)
     {
         this.calendars.remove(c.id);
         c.setApplication(null);
+    }
+
+    public void addCalendar(FunctionalSequence seq)
+    {
+        this.calendars.put(seq.getId(), seq);
+        seq.setApplication(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -431,6 +437,22 @@ public class Application implements Serializable
                 }
             }
         }
+        return res;
+    }
+
+    public List<State> getStates()
+    {
+        List<State> res = new ArrayList<>();
+        for (EventSourceDef esd : this.sources.values())
+        {
+            if (!esd.isContainer())
+            {
+                continue;
+            }
+
+            res.addAll(esd.getContainedStates());
+        }
+
         return res;
     }
 

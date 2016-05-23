@@ -7,16 +7,16 @@ import java.util.UUID;
 
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
-import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.PlaceGroup;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.dto.DTOCalendar;
-import org.oxymores.chronix.dto.DTOCalendarDay;
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
+import org.oxymores.chronix.dto.DTOSequenceOccurrence;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOExecutionNode;
@@ -296,20 +296,16 @@ public class CoreToDto
         return res;
     }
 
-    public static DTOCalendar getCalendar(Calendar c)
+    public static DTOFunctionalSequence getFunctionalSequence(FunctionalSequence c)
     {
-        DTOCalendar res = new DTOCalendar();
+        DTOFunctionalSequence res = new DTOFunctionalSequence(c.getName(), c.getDescription());
         res.setAlertThreshold(c.getAlertThreshold());
-        res.setDescription(c.getDescription());
-        res.setId(c.getId().toString());
-        res.setName(c.getName());
-        res.setDays(new ArrayList<DTOCalendarDay>());
+        res.setId(c.getId());
 
-        for (CalendarDay day : c.getDays())
+        for (FunctionalOccurrence day : c.getOccurrences())
         {
-            DTOCalendarDay cd = new DTOCalendarDay();
-            cd.setId(day.getId().toString());
-            cd.setSeq(day.getValue());
+            DTOSequenceOccurrence cd = new DTOSequenceOccurrence(day.getLabel());
+            cd.setId(day.getId());
             res.getDays().add(cd);
         }
 

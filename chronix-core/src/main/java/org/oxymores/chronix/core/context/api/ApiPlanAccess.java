@@ -32,6 +32,7 @@ import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.dto.DTOEnvironment;
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
@@ -244,6 +245,11 @@ public class ApiPlanAccess implements PlanAccessService
         {
             PlaceGroup gr = DtoToCore.getPlaceGroup(pg, getMetaDb().getEnvironment());
             a.addGroup(gr);
+        }
+
+        for (DTOFunctionalSequence seq : app.getSequences().values())
+        {
+            a.addCalendar(DtoToCore.getFunctionalSequence(seq));
         }
 
         this.getMetaDb().saveApplicationDraft(a);

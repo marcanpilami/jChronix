@@ -34,8 +34,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
-import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
@@ -376,7 +376,7 @@ public class SenderHelpers
 
     ///////////////////////////////////////////////////////////////////////////
     // State calendar pointers
-    public static void sendCalendarPointer(CalendarPointer cp, Calendar ca, Session jmsSession, MessageProducer jmsProducer, boolean commit,
+    public static void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Session jmsSession, MessageProducer jmsProducer, boolean commit,
             Environment envt) throws JMSException
     {
         // Send the updated CP to other execution nodes that may need it.
@@ -424,7 +424,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendCalendarPointer(CalendarPointer cp, Calendar ca, Environment envt) throws JMSException
+    public static void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Environment envt) throws JMSException
     {
         try (JmsSendData d = new JmsSendData())
         {
@@ -436,8 +436,8 @@ public class SenderHelpers
             ChronixContextMeta ctx) throws JMSException
     {
         CalendarPointer cp = s.getCurrentCalendarPointer(conn, p);
-        CalendarDay next = s.getCalendar().getOccurrenceShiftedBy(cp.getNextRunOccurrenceCd(ctx), shiftNext);
-        CalendarDay current = s.getCalendar().getOccurrenceShiftedBy(cp.getLastEndedOccurrenceCd(ctx), shiftCurrent);
+        FunctionalOccurrence next = s.getCalendar().getOccurrenceShiftedBy(cp.getNextRunOccurrenceCd(ctx), shiftNext);
+        FunctionalOccurrence current = s.getCalendar().getOccurrenceShiftedBy(cp.getLastEndedOccurrenceCd(ctx), shiftCurrent);
         cp.setNextRunOccurrenceCd(next);
         cp.setLastEndedOccurrenceCd(current);
 
@@ -465,7 +465,7 @@ public class SenderHelpers
         }
     }
 
-    public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, ChronixContextMeta ctx,
+    public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, ChronixContextMeta ctx,
             ChronixContextTransient ctxDb) throws JMSException
     {
         try (JmsSendData d = new JmsSendData(); org.sql2o.Connection conn = ctxDb.getTransacDataSource().open())
@@ -474,16 +474,16 @@ public class SenderHelpers
         }
     }
 
-    public static void sendCalendarPointerShift(Integer shift, Calendar updatedCalendar, org.sql2o.Connection conn, ChronixContextMeta ctx,
+    public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, org.sql2o.Connection conn, ChronixContextMeta ctx,
             Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
         CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(conn);
 
-        CalendarDay oldCd = updatedCalendar.getCurrentOccurrence(conn);
-        CalendarDay refCd = updatedCalendar.getOccurrenceShiftedBy(oldCd, shift - 1);
+        FunctionalOccurrence oldCd = updatedCalendar.getCurrentOccurrence(conn);
+        FunctionalOccurrence refCd = updatedCalendar.getOccurrenceShiftedBy(oldCd, shift - 1);
 
-        CalendarDay newCd = updatedCalendar.getOccurrenceAfter(refCd);
-        CalendarDay nextCd = updatedCalendar.getOccurrenceAfter(newCd);
+        FunctionalOccurrence newCd = updatedCalendar.getOccurrenceAfter(refCd);
+        FunctionalOccurrence nextCd = updatedCalendar.getOccurrenceAfter(newCd);
 
         cp.setLastEndedOccurrenceCd(newCd);
         cp.setLastEndedOkOccurrenceCd(newCd);

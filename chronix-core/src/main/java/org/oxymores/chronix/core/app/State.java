@@ -114,7 +114,7 @@ public class State extends ApplicationObject
         return "first level launch";
     }
 
-    public Calendar getCalendar()
+    public FunctionalSequence getCalendar()
     {
         return this.application.getCalendar(this.dto.getCalendarId());
     }
@@ -173,6 +173,11 @@ public class State extends ApplicationObject
     public boolean isParallel()
     {
         return this.dto.getParallel();
+    }
+
+    public boolean isCalendarUpdater()
+    {
+        return this.dto.isMoveCalendarForwardOnSuccess();
     }
 
     // Stupid GET/SET
@@ -418,7 +423,7 @@ public class State extends ApplicationObject
         // Calendar update
         if (this.usesCalendar())
         {
-            Calendar c = this.application.getCalendar(this.dto.getCalendarId());
+            FunctionalSequence c = this.application.getCalendar(this.dto.getCalendarId());
             pj.setCalendarOccurrenceID(calendarOccurrenceID);
             pj.setCalendar(c);
 
@@ -468,7 +473,7 @@ public class State extends ApplicationObject
         {
             return;
         }
-        Calendar cal = this.getCalendar();
+        FunctionalSequence cal = this.getCalendar();
 
         // Get existing pointers
         List<CalendarPointer> ptrs = conn.createQuery("SELECT * FROM CalendarPointer p WHERE p.stateID = :stateID")
@@ -493,9 +498,9 @@ public class State extends ApplicationObject
             if (existing == null)
             {
                 // A pointer should be created on this place!
-                CalendarDay cd = cal.getCurrentOccurrence(conn);
-                CalendarDay cdLast = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift() - 1);
-                CalendarDay cdNext = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift());
+                FunctionalOccurrence cd = cal.getCurrentOccurrence(conn);
+                FunctionalOccurrence cdLast = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift() - 1);
+                FunctionalOccurrence cdNext = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift());
                 CalendarPointer tmp = new CalendarPointer();
                 tmp.setApplication(this.application);
                 tmp.setCalendar(cal);
@@ -528,7 +533,7 @@ public class State extends ApplicationObject
             log.debug("Does not use a calendar - crontab mode");
             return true;
         }
-        Calendar cal = this.getCalendar();
+        FunctionalSequence cal = this.getCalendar();
 
         log.debug(String.format("State %s (%s - chain %s) uses a calendar. Calendar analysis begins.", this.id,
                 this.getEventSourceDefinition().getName(), this.getContainerName()));
@@ -547,7 +552,7 @@ public class State extends ApplicationObject
             return false;
         }
 
-        CalendarDay nextRunOccurrence = cal.getDay(cp.getNextRunOccurrenceId());
+        FunctionalOccurrence nextRunOccurrence = cal.getOccurrence(cp.getNextRunOccurrenceId());
         if (nextRunOccurrence == null)
         {
             log.error(String.format("There is no next occurrence for calendar %s. Please add some.", cal.getName()));
@@ -571,19 +576,19 @@ public class State extends ApplicationObject
         // Sequence must be respected
         // But actually, nothing has to be done to enforce it as it comes from either the scheduler itself or the user.
         // No further than the calendar itself
-        CalendarDay baseLimit = cal.getCurrentOccurrence(conn);
+        FunctionalOccurrence baseLimit = cal.getCurrentOccurrence(conn);
 
-        log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s", baseLimit.seq,
-                this.dto.getCalendarShift(), nextRunOccurrence.seq));
-        CalendarDay shiftedLimit = cal.getOccurrenceShiftedBy(baseLimit, this.dto.getCalendarShift());
+        log.debug(String.format("Calendar limit is currently: %s. Shift is %s, next occurrence to run for this state is %s",
+                baseLimit.label, this.dto.getCalendarShift(), nextRunOccurrence.label));
+        FunctionalOccurrence shiftedLimit = cal.getOccurrenceShiftedBy(baseLimit, this.dto.getCalendarShift());
 
-        // Shift: -1 means that the State will run at D-1 when the reference is
-        // D. Therefore it should stop one occurrence before the others.
+        // Shift: -1 means that the State will run at D-1 when the reference is D. Therefore it should stop one occurrence before the
+        // others.
         if (!cal.isBeforeOrSame(nextRunOccurrence, shiftedLimit))
         {
             log.debug(String.format(
                     "This is too soon to launch the job: calendar is at %s (with shift , this limit becomes %s), while this state wants to already run %s",
-                    baseLimit.seq, shiftedLimit.seq, nextRunOccurrence.seq));
+                    baseLimit.label, shiftedLimit.label, nextRunOccurrence.label));
             return false;
         }
 
@@ -596,9 +601,9 @@ public class State extends ApplicationObject
     public boolean isLate(Connection conn, Place p)
     {
         // LATE MEANS: State Latest OK < Calendar current + State shift
-        Calendar cal = this.getCalendar();
-        CalendarDay cd = this.getCurrentCalendarOccurrence(conn, p);
-        CalendarDay limit = cal.getOccurrenceShiftedBy(cal.getCurrentOccurrence(conn), this.dto.getCalendarShift());
+        FunctionalSequence cal = this.getCalendar();
+        FunctionalOccurrence cd = this.getCurrentCalendarOccurrence(conn, p);
+        FunctionalOccurrence limit = cal.getOccurrenceShiftedBy(cal.getCurrentOccurrence(conn), this.dto.getCalendarShift());
 
         return cal.isBefore(cd, limit);
     }
@@ -608,9 +613,9 @@ public class State extends ApplicationObject
         return this.dto.getCalendarId() != null;
     }
 
-    public CalendarDay getCurrentCalendarOccurrence(Connection conn, Place p)
+    public FunctionalOccurrence getCurrentCalendarOccurrence(Connection conn, Place p)
     {
-        return this.getCalendar().getDay(this.getCurrentCalendarPointer(conn, p).getLastEndedOkOccurrenceUuid());
+        return this.getCalendar().getOccurrence(this.getCurrentCalendarPointer(conn, p).getLastEndedOkOccurrenceUuid());
     }
 
     public CalendarPointer getCurrentCalendarPointer(Connection conn, Place p)

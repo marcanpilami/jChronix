@@ -41,6 +41,13 @@ public class EventSourceRunResult implements Serializable
     public Integer returnCode = null;
 
     /**
+     * A high level interpretation of the result of the run: can this result be considered as a success or not? This is important most
+     * notably for logs (red or not!) and for calendar advancement (only touch the calendar if OK)<br>
+     * If left to <code>null</code>, the engine will test {@link #returnCode} == 0 instead. Default value is <code>null</code>.
+     */
+    public Boolean success = null;
+
+    /**
      * These items will be added to the environment and made available to downstream states. Default is none.
      */
     public Map<String, String> newEnvVars = new HashMap<>();

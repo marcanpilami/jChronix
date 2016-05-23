@@ -35,7 +35,7 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.api.prm.AsyncParameterResult;
 import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.app.ParameterDef;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -339,9 +339,9 @@ public class PipelineJob extends TranscientBase implements JobDescription
         // Calendar
         if (this.calendarID != null)
         {
-            Calendar c = a.getCalendar(this.calendarID);
+            FunctionalSequence c = a.getCalendar(this.calendarID);
             rlog.setCalendarName(c.getName());
-            rlog.setCalendarOccurrence(c.getDay(this.calendarOccurrenceID).getValue());
+            rlog.setCalendarOccurrence(c.getOccurrence(this.calendarOccurrenceID).getLabel());
         }
 
         return rlog;

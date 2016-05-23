@@ -3,14 +3,18 @@ package org.oxymores.chronix.core.context.api;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Environment;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.PlaceGroup;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOExecutionNode;
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
+import org.oxymores.chronix.dto.DTOSequenceOccurrence;
 
 public class DtoToCore
 {
@@ -284,6 +288,30 @@ public class DtoToCore
         // (they are part of the environment - a deployment property - not of the application definition)
         return r;
     }
+
+    public static FunctionalSequence getFunctionalSequence(DTOFunctionalSequence d)
+    {
+        FunctionalSequence r = new FunctionalSequence();
+        r.setAlertThreshold(d.getAlertThreshold());
+        r.setDescription(d.getDescription());
+        r.setId(d.getId());
+        r.setName(d.getName());
+
+        for (DTOSequenceOccurrence oc : d.getDays())
+        {
+            FunctionalOccurrence funcOc = new FunctionalOccurrence(oc.getLabel());
+            r.addDay(funcOc);
+        }
+        return r;
+    }
+
+    /*
+     * public static NextOccurrence getNextOccurrence(DTONextOccurrence d, Application a) { NextOccurrence r = new NextOccurrence();
+     * r.setDescription(d.getDescription()); r.setId(UUID.fromString(d.getId())); r.setName(d.getName());
+     * r.setUpdatedCalendar(a.getCalendar(UUID.fromString(d.getCalendarId())));
+     * 
+     * return r; }
+     */
 
     // Places <-> Group links are defined inside Places, not Groups. return r; }
 }

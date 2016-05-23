@@ -24,8 +24,8 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
-import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.network.Place;
@@ -109,12 +109,12 @@ public class CalendarPointer implements Serializable
         this.lastEndedOkOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastEndedOkOccurrenceCd(ChronixContextMeta ctx)
+    public FunctionalOccurrence getLastEndedOkOccurrenceCd(ChronixContextMeta ctx)
     {
-        return this.getCalendar(ctx).getDay(this.lastEndedOkOccurrenceId);
+        return this.getCalendar(ctx).getOccurrence(this.lastEndedOkOccurrenceId);
     }
 
-    public void setLastEndedOkOccurrenceCd(CalendarDay day)
+    public void setLastEndedOkOccurrenceCd(FunctionalOccurrence day)
     {
         this.lastEndedOkOccurrenceId = day.getId();
     }
@@ -133,12 +133,12 @@ public class CalendarPointer implements Serializable
         this.lastStartedOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastStartedOccurrenceCd(ChronixContextMeta ctx)
+    public FunctionalOccurrence getLastStartedOccurrenceCd(ChronixContextMeta ctx)
     {
-        return this.getCalendar(ctx).getDay(this.lastStartedOccurrenceId);
+        return this.getCalendar(ctx).getOccurrence(this.lastStartedOccurrenceId);
     }
 
-    public void setLastStartedOccurrenceCd(CalendarDay day)
+    public void setLastStartedOccurrenceCd(FunctionalOccurrence day)
     {
         this.lastStartedOccurrenceId = day.getId();
     }
@@ -162,12 +162,12 @@ public class CalendarPointer implements Serializable
         this.lastEndedOccurrenceId = dayId;
     }
 
-    public CalendarDay getLastEndedOccurrenceCd(ChronixContextMeta ctx)
+    public FunctionalOccurrence getLastEndedOccurrenceCd(ChronixContextMeta ctx)
     {
-        return this.getCalendar(ctx).getDay(this.lastEndedOccurrenceId);
+        return this.getCalendar(ctx).getOccurrence(this.lastEndedOccurrenceId);
     }
 
-    public void setLastEndedOccurrenceCd(CalendarDay day)
+    public void setLastEndedOccurrenceCd(FunctionalOccurrence day)
     {
         this.lastEndedOccurrenceId = day.getId();
     }
@@ -186,17 +186,17 @@ public class CalendarPointer implements Serializable
         this.nextRunOccurrenceId = dayId;
     }
 
-    public CalendarDay getNextRunOccurrenceCd(ChronixContextMeta ctx)
+    public FunctionalOccurrence getNextRunOccurrenceCd(ChronixContextMeta ctx)
     {
-        return this.getCalendar(ctx).getDay(this.nextRunOccurrenceId);
+        return this.getCalendar(ctx).getOccurrence(this.nextRunOccurrenceId);
     }
 
-    public void setNextRunOccurrenceCd(CalendarDay day)
+    public void setNextRunOccurrenceCd(FunctionalOccurrence day)
     {
         this.nextRunOccurrenceId = day.getId();
     }
 
-    public Calendar getCalendar(ChronixContextMeta ctx)
+    public FunctionalSequence getCalendar(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getCalendar(this.calendarID);
     }
@@ -216,7 +216,7 @@ public class CalendarPointer implements Serializable
         this.appID = a == null ? null : a.getId();
     }
 
-    public void setCalendar(Calendar a)
+    public void setCalendar(FunctionalSequence a)
     {
         this.calendarID = a == null ? null : a.getId();
     }

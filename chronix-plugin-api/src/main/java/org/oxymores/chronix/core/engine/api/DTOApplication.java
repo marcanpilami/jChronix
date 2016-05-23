@@ -1,5 +1,6 @@
 package org.oxymores.chronix.core.engine.api;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,17 +8,21 @@ import java.util.UUID;
 
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOParameter;
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
-public class DTOApplication
+public class DTOApplication implements Serializable
 {
+    private static final long serialVersionUID = -1067179415202128345L;
+
+    private UUID id;
     private String name;
     private String description;
-    private UUID id;
     private boolean active = true;
     private int version = 0;
     private String latestVersionComment = "";
 
+    private Map<UUID, DTOFunctionalSequence> sequences = new HashMap<>();
     private Map<UUID, DTOEventSource> eventSources = new HashMap<>();
     private Map<UUID, DTOPlaceGroup> groups = new HashMap<>();
 
@@ -33,6 +38,12 @@ public class DTOApplication
             }
         }
         throw new RuntimeException("no group named " + name);
+    }
+
+    public DTOApplication addSequence(DTOFunctionalSequence seq)
+    {
+        this.sequences.put(seq.getId(), seq);
+        return this;
     }
 
     public DTOApplication addGroup(DTOPlaceGroup gr)
@@ -129,7 +140,7 @@ public class DTOApplication
         return groups.values();
     }
 
-    public void setGroups(Map<UUID, DTOPlaceGroup> groups)
+    void setGroups(Map<UUID, DTOPlaceGroup> groups)
     {
         this.groups = groups;
     }
@@ -138,6 +149,14 @@ public class DTOApplication
     {
         return this.sharedParameters.get(id);
     }
-    // private List<DTOParameter> parameters;
 
+    public Map<UUID, DTOFunctionalSequence> getSequences()
+    {
+        return sequences;
+    }
+
+    void setSequences(Map<UUID, DTOFunctionalSequence> sequences)
+    {
+        this.sequences = sequences;
+    }
 }

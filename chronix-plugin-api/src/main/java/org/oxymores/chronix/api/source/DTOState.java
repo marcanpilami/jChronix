@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
+
 public class DTOState implements Serializable
 {
     private static final long serialVersionUID = -3105166748835675337L;
@@ -26,8 +28,8 @@ public class DTOState implements Serializable
     // Calendar stuff
     private UUID calendarId;
     private int calendarShift = 0;
+    private boolean moveCalendarForwardOnSuccess = false;
     private Boolean loopMissedOccurrences = false;
-    private Boolean endOfOccurrence = false;
     private Boolean blockIfPreviousFailed = false;
 
     // private List<DTOToken> tokens; sequences
@@ -70,9 +72,10 @@ public class DTOState implements Serializable
         return warnAfterMn;
     }
 
-    public void setWarnAfterMn(Integer warnAfterMn)
+    public DTOState setWarnAfterMn(Integer warnAfterMn)
     {
         this.warnAfterMn = warnAfterMn;
+        return this;
     }
 
     public Integer getKillAfterMn()
@@ -124,7 +127,7 @@ public class DTOState implements Serializable
         return exclusiveStatesId;
     }
 
-    public void setExclusiveStatesId(List<UUID> exclusiveStatesId)
+    void setExclusiveStatesId(List<UUID> exclusiveStatesId)
     {
         this.exclusiveStatesId = exclusiveStatesId;
     }
@@ -144,9 +147,10 @@ public class DTOState implements Serializable
         return runsOnId;
     }
 
-    public void setRunsOnId(UUID runsOnId)
+    public DTOState setRunsOnId(UUID runsOnId)
     {
         this.runsOnId = runsOnId;
+        return this;
     }
 
     public UUID getCalendarId()
@@ -154,19 +158,36 @@ public class DTOState implements Serializable
         return calendarId;
     }
 
-    public void setCalendarId(UUID calendarId)
+    public DTOState setCalendarId(UUID calendarId)
     {
         this.calendarId = calendarId;
+        return this;
     }
 
+    /**
+     * Shortcut for {@link #setCalendarId(UUID)}.
+     */
+    public DTOState setCalendar(DTOFunctionalSequence seq)
+    {
+        this.setCalendarId(seq.getId());
+        return this;
+    }
+
+    /**
+     * Shift: -1 means that the State will run at D-1 when the reference is at D. Therefore it should stop one occurrence before the others.
+     */
     public int getCalendarShift()
     {
         return calendarShift;
     }
 
-    public void setCalendarShift(int calendarShift)
+    /**
+     * See {@link #getCalendarShift()}
+     */
+    public DTOState setCalendarShift(int calendarShift)
     {
         this.calendarShift = calendarShift;
+        return this;
     }
 
     public Boolean getLoopMissedOccurrences()
@@ -174,19 +195,10 @@ public class DTOState implements Serializable
         return loopMissedOccurrences;
     }
 
-    public void setLoopMissedOccurrences(Boolean loopMissedOccurrences)
+    public DTOState setLoopMissedOccurrences(Boolean loopMissedOccurrences)
     {
         this.loopMissedOccurrences = loopMissedOccurrences;
-    }
-
-    public Boolean getEndOfOccurrence()
-    {
-        return endOfOccurrence;
-    }
-
-    public void setEndOfOccurrence(Boolean endOfOccurrence)
-    {
-        this.endOfOccurrence = endOfOccurrence;
+        return this;
     }
 
     public Boolean getBlockIfPreviousFailed()
@@ -194,9 +206,20 @@ public class DTOState implements Serializable
         return blockIfPreviousFailed;
     }
 
-    public void setBlockIfPreviousFailed(Boolean blockIfPreviousFailed)
+    public DTOState setBlockIfPreviousFailed(Boolean blockIfPreviousFailed)
     {
         this.blockIfPreviousFailed = blockIfPreviousFailed;
+        return this;
     }
 
+    public boolean isMoveCalendarForwardOnSuccess()
+    {
+        return moveCalendarForwardOnSuccess;
+    }
+
+    public DTOState setMoveCalendarForwardOnSuccess(boolean moveCalendarForwardOnSuccess)
+    {
+        this.moveCalendarForwardOnSuccess = moveCalendarForwardOnSuccess;
+        return this;
+    }
 }

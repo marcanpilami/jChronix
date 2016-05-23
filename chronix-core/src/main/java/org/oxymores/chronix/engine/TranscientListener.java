@@ -31,7 +31,7 @@ import javax.jms.Session;
 import org.apache.commons.lang.StringUtils;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
-import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
@@ -79,7 +79,7 @@ class TranscientListener implements MessageCallback
         {
             log.debug("A calendar pointer was received");
             CalendarPointer cp = (CalendarPointer) o;
-            Calendar ca;
+            FunctionalSequence ca;
             State ss = null;
 
             ca = cp.getCalendar(ctxMeta);
@@ -91,11 +91,11 @@ class TranscientListener implements MessageCallback
             if (cp.getPlaceID() != null)
             {
                 ss = cp.getState(ctxMeta);
-            }
-            if (ss == null)
-            {
-                log.warn("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
-                return;
+                if (ss == null)
+                {
+                    log.warn("A calendar pointer was received that was unrelated to the locally known plan - it was ignored");
+                    return;
+                }
             }
 
             // Save it/update it. Beware, id are not the same throughout the network, so query the logical key
@@ -137,8 +137,8 @@ class TranscientListener implements MessageCallback
                 }
                 log.debug(String.format(
                         "The calendar pointer is now [Next run %s] [Previous OK run %s] [Previous run %s] [Latest started %s] on [%s]",
-                        cp.getNextRunOccurrenceCd(ctxMeta).getValue(), cp.getLastEndedOkOccurrenceCd(ctxMeta).getValue(),
-                        cp.getLastEndedOccurrenceCd(ctxMeta).getValue(), cp.getLastStartedOccurrenceCd(ctxMeta).getValue(), represents));
+                        cp.getNextRunOccurrenceCd(ctxMeta).getLabel(), cp.getLastEndedOkOccurrenceCd(ctxMeta).getLabel(),
+                        cp.getLastEndedOccurrenceCd(ctxMeta).getLabel(), cp.getLastStartedOccurrenceCd(ctxMeta).getLabel(), represents));
 
                 // Re analyse events that may benefit from this calendar change
                 // All events still there are supposed to be waiting for a new analysis.

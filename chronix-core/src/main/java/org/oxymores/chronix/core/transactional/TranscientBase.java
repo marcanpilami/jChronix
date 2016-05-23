@@ -26,7 +26,7 @@ import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Calendar;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -101,12 +101,12 @@ public class TranscientBase implements Serializable
         this.calendarID = id;
     }
 
-    public Calendar getCalendar(ChronixContextMeta ctx)
+    public FunctionalSequence getCalendar(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getCalendar(this.calendarID);
     }
 
-    public void setCalendar(Calendar c)
+    public void setCalendar(FunctionalSequence c)
     {
         this.calendarID = c.getId();
     }

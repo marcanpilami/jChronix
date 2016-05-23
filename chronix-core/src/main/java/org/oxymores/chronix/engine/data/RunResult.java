@@ -60,6 +60,14 @@ public class RunResult implements Serializable
             {
                 this.id1 = r.overloadedScopeId;
             }
+            if (r.success != null)
+            {
+                this.success = r.success;
+            }
+            else
+            {
+                this.success = r.returnCode == 0;
+            }
         }
     }
 
@@ -71,8 +79,8 @@ public class RunResult implements Serializable
     public int returnCode = -1;
     public String conditionData2 = null;
     public String conditionData3 = null;
-    // conditionData4 is actually an UUID
     public UUID conditionData4 = null;
+    public boolean success;
     public Map<String, String> newEnvVars = new HashMap<>();
     public DateTime start = DateTime.now(), end = DateTime.now();
     public String envtUser, envtServer, envtOther;

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.oxymores.chronix.api.source.DTOTransition;
-import org.oxymores.chronix.core.app.CalendarDay;
+import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.Event;
@@ -141,11 +141,11 @@ class TransitionScopedAnalyser
                         if (!e.getCalendarOccurrenceID()
                                 .equals(targetState.getCurrentCalendarPointer(conn, sourcePlace).getNextRunOccurrenceId()))
                         {
-                            CalendarDay cd1 = targetState.getCalendar().getDay(e.getCalendarOccurrenceID());
-                            CalendarDay cd2 = targetState.getCalendar()
-                                    .getDay(targetState.getCurrentCalendarPointer(conn, sourcePlace).getNextRunOccurrenceId());
+                            FunctionalOccurrence cd1 = targetState.getCalendar().getOccurrence(e.getCalendarOccurrenceID());
+                            FunctionalOccurrence cd2 = targetState.getCalendar()
+                                    .getOccurrence(targetState.getCurrentCalendarPointer(conn, sourcePlace).getNextRunOccurrenceId());
                             log.debug(String.format("Rejected an event for date mismatch: got %s (in event) expected %s (in target state)",
-                                    cd1.getValue(), cd2.getValue()));
+                                    cd1.getLabel(), cd2.getLabel()));
                             continue;
                         }
                     }

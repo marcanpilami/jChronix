@@ -25,6 +25,8 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FilenameUtils;
 import org.oxymores.chronix.api.agent.MessageListenerService;
+import org.oxymores.chronix.core.app.Application;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.network.ExecutionNode;
@@ -32,6 +34,8 @@ import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.sql2o.Connection;
+import org.sql2o.Sql2o;
 
 /**
  * A Chronix Node. Can be either engine + runner or simply runner.
@@ -89,6 +93,18 @@ public class ChronixEngine extends Thread
         this.ctxDb.getTransacDataSource();
 
         this.ctxMeta = new ChronixContextMeta(dbPath);
+
+        // Init transient elements
+        for (Application app : this.ctxMeta.getApplications())
+        {
+            try (Connection conn = this.ctxDb.getTransacDataSource().open())
+            {
+                for (FunctionalSequence seq : app.getCalendars())
+                {
+                    seq.initCalendar(conn);
+                }
+            }
+        }
 
         // postContextLoad();
 

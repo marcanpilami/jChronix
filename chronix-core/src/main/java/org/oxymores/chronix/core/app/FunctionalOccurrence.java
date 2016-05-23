@@ -20,42 +20,39 @@
 
 package org.oxymores.chronix.core.app;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.oxymores.chronix.core.ApplicationObject;
-
-public class CalendarDay extends ApplicationObject
+/**
+ * An occurrence inside a {@link FunctionalSequence}. All in all, a simple text value that is made available inside the launch environment.
+ */
+public class FunctionalOccurrence implements Serializable
 {
     private static final long serialVersionUID = -8296932253108182976L;
 
     @NotNull
     @Size(min = 1, max = 255)
-    public String seq;
+    public String label;
+
     @NotNull
-    public Calendar calendar;
+    private UUID id;
 
-    public CalendarDay(String day, Calendar calendar)
+    public FunctionalOccurrence(String label)
     {
-        super();
-        id = UUID.randomUUID();
-        this.calendar = calendar;
-        calendar.addDay(this);
-        this.seq = day;
+        this.label = label;
+        this.id = UUID.randomUUID();
     }
 
-    public void setCalendar(Calendar c)
+    public String getLabel()
     {
-        if (this.calendar == null || !this.calendar.getId().equals(c.getId()))
-            c.addDay(this);
-        this.calendar = c;
-        this.application = c.application;
+        return label;
     }
 
-    public String getValue()
+    public UUID getId()
     {
-        return seq;
+        return this.id;
     }
 }
