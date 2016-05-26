@@ -25,7 +25,7 @@ public class ContextHandler
             {
                 return allMeta.get(key);
             }
-            allMeta.put(key, new ChronixContextMeta(key));
+            allMeta.put(key, new ChronixContextMeta(key, true));
             return allMeta.get(key);
         }
     }

@@ -58,7 +58,7 @@ public class ChronixContextMeta
     // CONSTRUCTION & INIT
     ///////////////////////////////////////////////////////////////////////////
 
-    public ChronixContextMeta(String metaRoot)
+    public ChronixContextMeta(String metaRoot, boolean withDrafts)
     {
         if (metaRoot == null)
         {
@@ -72,7 +72,7 @@ public class ChronixContextMeta
         }
 
         loadEnvironment();
-        loadApplications();
+        loadApplications(withDrafts);
         registerTracker();
     }
 
@@ -96,7 +96,7 @@ public class ChronixContextMeta
     // LOADING APPS & DRAFTS
     ///////////////////////////////////////////////////////////////////////////
 
-    private void loadApplications()
+    private void loadApplications(boolean withDrafts)
     {
         XStream xmlUtility = new XStream(new StaxDriver());
         xmlUtility.setClassLoader(ChronixContextMeta.class.getClassLoader());
@@ -119,10 +119,13 @@ public class ChronixContextMeta
             Application app = deserializeApp(new File(FilenameUtils.concat(appDir.getAbsolutePath(), "current")), xmlUtility);
             this.applications.put(app.getId(), app);
         }
-        for (File appDir : draftDir.listFiles())
+        if (withDrafts)
         {
-            Application app = deserializeApp(appDir, xmlUtility);
-            this.drafts.put(app.getId(), app);
+            for (File appDir : draftDir.listFiles())
+            {
+                Application app = deserializeApp(appDir, xmlUtility);
+                this.drafts.put(app.getId(), app);
+            }
         }
     }
 

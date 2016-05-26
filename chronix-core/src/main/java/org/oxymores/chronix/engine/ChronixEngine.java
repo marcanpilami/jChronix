@@ -92,7 +92,7 @@ public class ChronixEngine extends Thread
         this.ctxDb.getHistoryDataSource();
         this.ctxDb.getTransacDataSource();
 
-        this.ctxMeta = new ChronixContextMeta(dbPath);
+        this.ctxMeta = new ChronixContextMeta(dbPath, false);
 
         // Init transient elements
         for (Application app : this.ctxMeta.getApplications())
