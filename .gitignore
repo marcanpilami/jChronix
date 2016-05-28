@@ -42,6 +42,7 @@ target
 transac.db*
 history.db*
 metabase
+dependency-reduced-pom.xml
 
 # Eclipse files      #
 ######################
