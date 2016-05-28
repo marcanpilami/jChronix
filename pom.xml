@@ -127,7 +127,6 @@
 	<modules>
 		<module>chronix-doc</module>
 		<module>chronix-core</module>
-		<!-- <module>chronix-launcher</module> -->
 		<module>chronix-cli</module>
 		<module>chronix-plugin-api</module>
 		<module>chronix-source-chain</module>
