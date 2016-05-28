@@ -36,12 +36,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-			<version>${xstream.version}</version>
-		</dependency>
-
-		<dependency>
 			<artifactId>chronix-plugin-api</artifactId>
 			<groupId>org.oxymores.chronix</groupId>
 			<version>${project.version}</version>

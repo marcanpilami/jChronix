@@ -20,6 +20,7 @@
 				<include>NOTICE*</include>
 			</includes>
 		</fileSet>
+
 		<!-- <fileSet> <directory>${project.basedir}/src/main/scripts/procrun</directory> 
 			<outputDirectory>bin/procrun</outputDirectory> </fileSet> <fileSet> <directory>${project.parent.basedir}/chronix-doc/target/docs</directory> 
 			<outputDirectory>docs</outputDirectory> </fileSet> -->
@@ -59,44 +60,31 @@
 	<dependencySets>
 		<dependencySet>
 			<outputDirectory>plugins/bootstrap</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-			<unpack>false</unpack>
-			<scope>provided</scope>
-			<includes>
-				<include>org.apache.felix:org.apache.felix.fileinstall</include>
-			</includes>
-		</dependencySet>
-		<dependencySet>
-			<outputDirectory>plugins/bootstrap</outputDirectory>
 			<useProjectArtifact>true</useProjectArtifact>
 			<unpack>false</unpack>
-			<scope>runtime</scope>
 			<includes>
 				<include>org.apache.felix:org.apache.felix.framework</include>
+				<include>org.apache.felix:org.apache.felix.fileinstall</include>
 				<include>${project.groupId}:chronix-package</include>
 			</includes>
 		</dependencySet>
 
 		<dependencySet>
 			<outputDirectory>plugins/core</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
+			<useProjectArtifact>true</useProjectArtifact>
 			<useTransitiveFiltering>true</useTransitiveFiltering>
 			<unpack>false</unpack>
-			<scope>provided</scope>
+			<scope>runtime</scope>
 			<excludes>
+				<exclude>org.apache.felix:org.apache.felix.framework</exclude>
 				<exclude>org.apache.felix:org.apache.felix.fileinstall</exclude>
-				<exclude>org.apache.activemq</exclude>
+				<exclude>org.apache.activemq:*</exclude>
 			</excludes>
 		</dependencySet>
-		<dependencySet>
-			<outputDirectory>plugins/core</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-			<useTransitiveFiltering>false</useTransitiveFiltering>
-			<unpack>false</unpack>
-			<scope>provided</scope>
-			<includes>
-				<include>org.apache.activemq:activemq-osgi</include>
-			</includes>
-		</dependencySet>
+
+		<!-- <dependencySet> <outputDirectory>plugins/core</outputDirectory> <useProjectArtifact>false</useProjectArtifact> 
+			<useTransitiveFiltering>false</useTransitiveFiltering> <unpack>false</unpack> 
+			<includes> <include>org.apache.activemq:activemq-osgi</include> </includes> 
+			</dependencySet> -->
 	</dependencySets>
 </assembly>
