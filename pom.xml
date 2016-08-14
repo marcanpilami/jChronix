@@ -20,7 +20,7 @@
 		<commonio.version>2.4</commonio.version>
 		<bnd.version>3.2.0</bnd.version>
 		<activemq.version>5.13.0</activemq.version>
-		<hsqldb.version>2.3.3</hsqldb.version>
+		<hsqldb.version>2.3.4</hsqldb.version>
 		<validator.version>5.2.2.Final</validator.version>
 		<xstream.version>1.4.8</xstream.version>
 		<felix.version>5.4.0</felix.version>

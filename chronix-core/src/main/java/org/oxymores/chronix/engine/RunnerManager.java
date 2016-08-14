@@ -431,17 +431,17 @@ public class RunnerManager implements MessageCallback
         {
             log.info("An out of plan job run has just finished - it won't throw events");
         }
-        if (rr.id1 == null)
+        if (rr.launchId == null)
         {
             // Means its a debug job - without PipelineJob (impossible in normal operations)
             log.warn("Test RR received");
             return;
         }
-        log.info(String.format(String.format("Job %s has ended", rr.id1)));
+        log.info(String.format(String.format("Job %s has ended", rr.launchId)));
 
         rr.logPath = FilenameUtils.concat(this.logDbPath, rr.logFileName);
 
-        PipelineJob pj = this.resolvingPJ.get(rr.id1);
+        PipelineJob pj = this.resolvingPJ.get(rr.launchId);
         if (pj == null)
         {
             log.error("A result was received that was not waited for - thrown out");
@@ -470,7 +470,7 @@ public class RunnerManager implements MessageCallback
             if (!rr.outOfPlan)
             {
                 pj.getEnvValues(conn);
-                Event e = pj.createEvent(rr, rr.end);
+                Event e = pj.createEvent(rr, rr.end, this.ctxMeta);
                 SenderHelpers.sendEvent(e, this.jmsProducer, jmsSession, ctxMeta, true);
             }
 

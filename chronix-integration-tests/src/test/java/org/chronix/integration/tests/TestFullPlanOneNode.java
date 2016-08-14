@@ -2,6 +2,7 @@ package org.chronix.integration.tests;
 
 import java.util.List;
 
+import org.chronix.integration.helpers.BaseIT;
 import org.junit.Assert;
 import org.junit.Test;
 import org.oxymores.chronix.agent.command.api.RunnerConstants;
@@ -9,7 +10,6 @@ import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.api.source.DTOState;
-import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTORunLog;
 import org.oxymores.chronix.dto.HistoryQuery;
@@ -21,55 +21,70 @@ public class TestFullPlanOneNode extends BaseIT
     {
         DTOPlaceGroup pgLocal = app.getGroup("local");
 
-        // This tests dynamic parameter resolution with shell commands.
+        // Full plan testing
+        // Plan: External1 -> Chain1 -> Noop1
+        // Chain1: Start -> shell1 -> End (this also tests dynamic parameters)
+
+        ///////////
+        // Chain1
+
+        // Shell1: this tests dynamic parameter resolution with shell commands.
         // * aa: simple static parameter
         // * bb: same
         // * cc: a dynamic string parameter (its own parameter is static)
         // * dd: a dynamic shell parameter (its own parameters are static)
         // * ee: a dynamic shell parameter with a dynamic shell parameter defining its command (itself with static parameters)!
-        DTOEventSource sc = new DTOEventSource(shellPrv, app, "c1", "c1").setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
-                .setField("COMMAND", "echo").addParameter("aa").addParameter("bb")
-                .addParameter(new DTOParameter(null, strPrmPrv).setField("value", "cc"))
+        DTOEventSource shell1 = new DTOEventSource(shellPrv, app, "shell1", "shell1")
+                .setField("runnerCapability", RunnerConstants.SHELL_WINCMD).setField("COMMAND", "echo").addParameter("aa")
+                .addParameter("bb").addParameter(new DTOParameter(null, strPrmPrv).setField("value", "cc"))
                 .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                         .setField("COMMAND", "echo").addAdditionalParameter("dd"))
                 .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                         .setField(new DTOParameter("COMMAND", shellPrmPrv).setField("runnerCapability", RunnerConstants.SHELL_WINCMD)
                                 .setField("COMMAND", "echo").addAdditionalParameter("echo"))
                         .addAdditionalParameter("ee"));
-        app.addEventSource(sc);
+        app.addEventSource(shell1);
 
-        DTOEventSourceContainer c = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)
+        DTOEventSourceContainer chain1 = new DTOEventSourceContainer(chainPrv, app, "first chain", "integration test chain", null)
                 .setAllStates(pgLocal);
-        DTOState n1 = c.addState(sc, pgLocal);
-        c.connect(getChainStart(c), n1);
-        c.connect(n1, getChainEnd(c));
+        app.addEventSource(chain1);
 
+        DTOState n1 = chain1.addState(shell1, pgLocal);
+        chain1.connect(getChainStart(chain1), n1);
+        chain1.connect(n1, getChainEnd(chain1));
+
+        ///////////
+        // Plan main content
+
+        DTOEventSource external1 = new DTOEventSource(extPrv, app, "external1", "external1");
+        app.addEventSource(external1);
+
+        DTOState external1_state = plan1.addState(external1, pgLocal);
+        DTOState chain1_state = plan1.addState(chain1, pgLocal);
+        DTOState noop1_state = plan1.addState(noop, pgLocal);
+
+        plan1.connect(external1_state, chain1_state);
+        plan1.connect(chain1_state, noop1_state);
+
+        // Meta is done.
         save();
 
-        // Tests
-        meta.resetCache();
-        DTOApplication a2 = meta.getApplication(app.getId());
-        Assert.assertEquals("test app", a2.getName());
-
-        // Assert.assertEquals(9, a2.getEventSources().size());
-        /*
-         * boolean found = false; for (DTOEventSource d : a2.getEventSources()) { if (d.getSource() instanceof Chain && "first chain"
-         * .equals(((Chain) d.getSource()).getName())) { found = true; break; } } Assert.assertTrue(found);
-         */
-
+        // Launch (from external event)
         addAndStartEngine("local");
-        order.orderLaunch(a2.getId(), getChainStart(c).getId(), envt.getPlace("local").getId(), true);
+        order.orderExternal(external1.getName(), null);
 
-        waitForOk(3, 10);
-        checkHistory(3, 0);
+        // Global test
+        waitForOk(6, 10);
+        checkHistory(6, 0);
 
+        // Prm value tests
         HistoryQuery q = new HistoryQuery();
         q.setResultCode(0);
         List<DTORunLog> res = history.query(q).getRes();
         boolean found = false;
         for (DTORunLog l : res)
         {
-            if (l.getActiveNodeName().equals("c1"))
+            if (l.getActiveNodeName().equals("shell1"))
             {
                 found = true;
                 Assert.assertEquals("aa bb cc dd ee", l.getShortLog());

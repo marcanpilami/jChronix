@@ -125,6 +125,7 @@ public class ChronixEngine extends Thread
     protected void startEngine(boolean blocking) throws Exception
     {
         log.info(String.format("Engine %s starting on database %s", this.localNodeName, this.dbPath));
+        this.stopped.drainPermits();
 
         // Remote nodes must fetch the environment on startup if not already present
         /*
@@ -252,6 +253,7 @@ public class ChronixEngine extends Thread
         {
             log.info("Interruption while waiting for engine to stop");
         }
+        this.stopped.release();
         this.stop.release();
     }
 

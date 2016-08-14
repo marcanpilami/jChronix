@@ -300,7 +300,7 @@ public class ChronixContextMeta
         app.setLatestSave(DateTime.now());
 
         File targetDir = this.getRootApplicationDraft(app.getId());
-        if (!targetDir.isDirectory() && !targetDir.mkdir())
+        if (!targetDir.isDirectory() && !targetDir.mkdirs())
         {
             throw new ChronixPlanStorageException("directory does not exist and cannot be created: " + targetDir.getAbsolutePath());
         }

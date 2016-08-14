@@ -67,6 +67,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     Integer resultCode = -1;
 
     // Format is : parameter UUID, parameter key, parameter value. Order is preserved (LinkedHashMap).
+    private Map<String, String> fieldOverload = new HashMap<>();
     private transient Map<UUID, String> resolvedParameters;
     private transient Map<String, String> resolvedFields;
     private transient EventSourceDef source;
@@ -74,6 +75,15 @@ public class PipelineJob extends TranscientBase implements JobDescription
     public PipelineJob()
     {
         super();
+    }
+
+    public PipelineJob(Map<String, String> fieldOverload)
+    {
+        super();
+        if (fieldOverload != null)
+        {
+            this.fieldOverload.putAll(fieldOverload);
+        }
     }
 
     /////////////////////////////////////////////////////////////////
@@ -137,7 +147,9 @@ public class PipelineJob extends TranscientBase implements JobDescription
     @Override
     public Map<String, String> getFields()
     {
-        return new HashMap<>(this.resolvedFields);
+        Map<String, String> res = this.resolvedFields != null ? new HashMap<>(this.resolvedFields) : new HashMap<>();
+        res.putAll(fieldOverload);
+        return res;
     }
 
     private int resolvedAdditionalPrm()
@@ -262,7 +274,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     //
     ////////////////////////////////////////////////////////////////////////
 
-    public Event createEvent(RunResult rr, DateTime virtualTime)
+    public Event createEvent(RunResult rr, DateTime virtualTime, ChronixContextMeta ctx)
     {
         Event e = new Event();
         e.setLocalOnly(false);
@@ -272,7 +284,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         e.setConditionData3(rr.conditionData3);
         e.setConditionData4(rr.conditionData4);
         e.setLevel0Id(this.level0Id);
-        e.setLevel1Id(this.level1Id);
+        e.setLevel1Id(rr.overloadedScopeId != null ? rr.overloadedScopeId : this.level1Id);
         e.setLevel2Id(this.level2Id);
         e.setLevel3Id(this.level3Id);
         e.setPlaceID(this.placeID);
@@ -281,6 +293,13 @@ public class PipelineJob extends TranscientBase implements JobDescription
         e.setActiveID(this.activeID);
         e.setCreatedAt(DateTime.now());
         e.setVirtualTime(virtualTime);
+
+        if (calendarID != null)
+        {
+            e.setCalendarID(calendarID);
+            e.setCalendarOccurrenceID(
+                    rr.calendarOverload == null ? calendarOccurrenceID : this.getCalendar(ctx).getOccurrence(rr.calendarOverload).getId());
+        }
 
         // Report environment
         if (this.envValues != null)
@@ -296,11 +315,6 @@ public class PipelineJob extends TranscientBase implements JobDescription
         }
 
         return e;
-    }
-
-    public RunLog getEventLog(ChronixContextMeta ctx)
-    {
-        return this.getEventLog(ctx, new RunResult());
     }
 
     public RunLog getEventLog(ChronixContextMeta ctx, RunResult rr)
@@ -351,7 +365,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
     {
         RunResult res = new RunResult();
         res.returnCode = 0;
-        res.id1 = this.id;
+        res.launchId = this.id;
         res.outOfPlan = this.outOfPlan;
         res.logStart = "simulated run";
 
@@ -404,7 +418,13 @@ public class PipelineJob extends TranscientBase implements JobDescription
     }
 
     @Override
-    public UUID getParentScopeLaunchId()
+    public UUID getScopeId()
+    {
+        return this.level1Id;
+    }
+
+    @Override
+    public UUID getParentContainerLaunchId()
     {
         return this.level2Id;
     }

@@ -55,4 +55,9 @@ public interface MessageListenerService
      * engine does not make use of this method. It is however provided for plugins which may want to be proactive.
      */
     public Session getNewSession();
+
+    /**
+     * A helper method mostly for tests. It blocks until the server behind the service has stopped.
+     */
+    public void waitUntilServerIsStopped();
 }

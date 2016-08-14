@@ -1,6 +1,8 @@
 package org.chronix.integration.tests;
 
+import org.chronix.integration.helpers.BaseIT;
 import org.junit.Test;
+import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.dto.DTOFunctionalSequence;
@@ -49,4 +51,41 @@ public class TestCalendarSingleNode extends BaseIT
         checkHistory(11, 0);
     }
 
+    @Test
+    public void testCalendarConstrainedTransition()
+    {
+        DTOPlaceGroup pgLocal = app.getGroup("local");
+
+        DTOFunctionalSequence seq = new DTOFunctionalSequence("simple sequence", "for tests").addOccurrence("01").addOccurrence("02")
+                .addOccurrence("03").addOccurrence("04").addOccurrence("05").addOccurrence("06").addOccurrence("07").addOccurrence("09")
+                .addOccurrence("09").addOccurrence("10");
+        app.addSequence(seq);
+
+        // Plan1 : External ---cal1---> Noop1 (cal1)
+        // External is triggered with data corresponding to the first calendar occurrence.
+
+        DTOEventSource external1 = new DTOEventSource(extPrv, app, "external1", "external1").setField("regularExpression", "^(.*)$");
+        app.addEventSource(external1);
+
+        DTOState external1_state1 = plan1.addState(external1, pgLocal).setCalendar(seq);
+        DTOState noop_state1 = plan1.addState(noop, pgLocal).setCalendar(seq);
+
+        plan1.connect(external1_state1, noop_state1).setCalendarAware(true);
+
+        // Start
+        save();
+        addAndStartEngine("local");
+
+        // First launch - external with 01 as data - respects transition condition so should go to the end.
+        order.orderExternal(external1.getName(), "01");
+
+        waitForOk(2, 10);
+        checkHistory(2, 0);
+
+        // Send the same external event a second time - the second node should not fire.
+        order.orderExternal(external1.getName(), "01");
+
+        waitForOk(3, 10, 500);
+        checkHistory(3, 0);
+    }
 }

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+import org.sql2o.Sql2oException;
 
 public class ChronixContextTransient
 {
@@ -55,6 +56,7 @@ public class ChronixContextTransient
 
     public void close()
     {
+        log.debug("Context " + this.toString() + " is closing");
         if (this.historyDS != null)
         {
             try (Connection conn = this.historyDS.open())
@@ -64,7 +66,11 @@ public class ChronixContextTransient
             }
             catch (Exception e)
             {
-                log.warn("Could not close history database on context destruction", e);
+                if (!(e instanceof Sql2oException && e.getMessage().contains("connection exception: closed")))
+                // double closing may happen during tests when shutting everything down at once.
+                {
+                    log.warn("Could not close history database on context destruction", e);
+                }
             }
             try
             {
@@ -85,7 +91,10 @@ public class ChronixContextTransient
             }
             catch (Exception e)
             {
-                log.warn("Could not close transac database on context destruction", e);
+                if (!(e instanceof Sql2oException && e.getMessage().contains("connection exception: closed")))
+                {
+                    log.warn("Could not close transac database on context destruction", e);
+                }
             }
             try
             {
@@ -97,5 +106,6 @@ public class ChronixContextTransient
                 log.warn("Could not clean JDBC object related to the transac database, even if the database itself was shut down", ex);
             }
         }
+        log.debug("Context " + this.toString() + " has closed");
     }
 }

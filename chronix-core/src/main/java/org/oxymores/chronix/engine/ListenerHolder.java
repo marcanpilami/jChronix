@@ -102,8 +102,12 @@ class ListenerHolder implements MessageListener
         }
     }
 
-    void stopListening()
+    synchronized void stopListening()
     {
+        if (this.callback == null)
+        {
+            return; // May happen when stopping everythong at the same time.
+        }
         log.trace("Stop request received for thread " + this.callback.getClass());
         try
         {

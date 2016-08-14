@@ -37,8 +37,7 @@ public class RunResult implements Serializable
 
     public RunResult(JobDescription jd)
     {
-        this.id1 = jd.getLaunchId();
-        this.id2 = jd.getParentScopeLaunchId();
+        this.launchId = jd.getLaunchId();
         this.start = jd.getVirtualTimeStart();
         this.end = null;
     }
@@ -56,10 +55,17 @@ public class RunResult implements Serializable
             this.logStart = r.logStart;
             this.newEnvVars = r.newEnvVars;
             this.returnCode = r.returnCode;
-            if (r.overloadedScopeId != null)
+
+            if (r.overloadedLaunchId != null)
             {
-                this.id1 = r.overloadedScopeId;
+                this.launchId = r.overloadedLaunchId;
             }
+            this.overloadedScopeId = r.overloadedScopeId;
+            if (r.overloadedSequenceOccurrence != null)
+            {
+                this.calendarOverload = r.overloadedSequenceOccurrence;
+            }
+
             if (r.success != null)
             {
                 this.success = r.success;
@@ -68,6 +74,7 @@ public class RunResult implements Serializable
             {
                 this.success = r.returnCode == 0;
             }
+
         }
     }
 
@@ -84,10 +91,11 @@ public class RunResult implements Serializable
     public Map<String, String> newEnvVars = new HashMap<>();
     public DateTime start = DateTime.now(), end = DateTime.now();
     public String envtUser, envtServer, envtOther;
+    public String calendarOverload = null;
 
     // Data below is from and for the engine - not created by the run
-    public UUID id1 = null;
-    public UUID id2 = null;
+    public UUID launchId = null;
+    public UUID overloadedScopeId = null;
     public Boolean outOfPlan = false;
 
     public DateTime nextRun = null;

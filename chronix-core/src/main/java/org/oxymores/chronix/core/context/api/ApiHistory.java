@@ -40,6 +40,7 @@ public class ApiHistory implements HistoryService
             throw new ChronixInitializationException(
                     "cannot create api service - directory " + ctxMetaPath + " does not exist. Check service configuration.");
         }
+        ctxMetaPath = (new File(ctxMetaPath)).getAbsolutePath();
         ctxDbHistoryPath = FilenameUtils.concat(ctxMetaPath, "db_history/db");
     }
 

@@ -25,7 +25,13 @@ public interface JobDescription
     /**
      * The ID associated to the launch of the current scope. (e.g.: if the scope is defined by a chain, this is the launch ID of that chain)
      */
-    public UUID getParentScopeLaunchId();
+    public UUID getScopeId();
+
+    /**
+     * The ID associated to the launch of the parent container (the launch ID of the container containing the container containing the
+     * current event source). Null if the currently run event source is inside a top level container or a top-level container itself.
+     */
+    public UUID getParentContainerLaunchId();
 
     /**
      * The scheduler does not use "real time" (as in "system time") internally, but a "virtual time" that can be fully disconnected from

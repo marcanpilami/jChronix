@@ -280,7 +280,8 @@ public class State extends ApplicationObject
      */
     public void runAlone(Place p, MessageProducer pjProducer, Session session)
     {
-        run(p, pjProducer, session, null, false, true, true, this.container.getId(), UUID.randomUUID(), null, null, null, DateTime.now());
+        run(p, pjProducer, session, null, false, true, true, this.container.getId(), UUID.randomUUID(), null, null, null, DateTime.now(),
+                null);
     }
 
     /**
@@ -304,7 +305,8 @@ public class State extends ApplicationObject
      */
     public void runInsidePlanWithoutUpdatingCalendar(Place p, MessageProducer pjProducer, Session session, DateTime virtualTime)
     {
-        run(p, pjProducer, session, null, false, false, false, this.container.getId(), UUID.randomUUID(), null, null, null, virtualTime);
+        run(p, pjProducer, session, null, false, false, false, this.container.getId(), UUID.randomUUID(), null, null, null, virtualTime,
+                null);
     }
 
     /**
@@ -319,21 +321,22 @@ public class State extends ApplicationObject
      * @param virtualTime
      */
     public void runInsidePlan(Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level2Id, UUID level3Id,
-            DateTime virtualTime)
+            DateTime virtualTime, Map<String, String> fieldOverload)
     {
         for (Place p : this.getRunsOnPlaces())
         {
-            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id, virtualTime);
+            runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), level2Id, level3Id, virtualTime, fieldOverload);
         }
     }
 
-    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, DateTime virtualTime)
+    public void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, DateTime virtualTime,
+            Map<String, String> fieldOverload)
     {
-        runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null, virtualTime);
+        runInsidePlan(p, conn, pjProducer, jmsSession, UUID.randomUUID(), null, null, virtualTime, fieldOverload);
     }
 
     private void runInsidePlan(Place p, Connection conn, MessageProducer pjProducer, Session jmsSession, UUID level1Id, UUID level2Id,
-            UUID level3Id, DateTime virtualTime)
+            UUID level3Id, DateTime virtualTime, Map<String, String> fieldOverload)
     {
         // Calendar update
         UUID calendarOccurrenceID = null;
@@ -346,7 +349,7 @@ public class State extends ApplicationObject
         }
 
         run(p, pjProducer, jmsSession, calendarOccurrenceID, true, false, false, this.container.getId(), level1Id, level2Id, level3Id,
-                cpToUpdate, virtualTime);
+                cpToUpdate, virtualTime, fieldOverload);
     }
 
     public void runFromEngine(Place p, Connection conn, MessageProducer pjProducer, Session session, Event e)
@@ -362,16 +365,44 @@ public class State extends ApplicationObject
         }
 
         run(p, pjProducer, session, calendarOccurrenceID, true, false, e.getOutsideChain(), e.getLevel0Id(), e.getLevel1Id(),
-                e.getLevel2Id(), e.getLevel3Id(), cpToUpdate, e.getVirtualTime(), e.getEnvValues(conn).toArray(new EnvironmentValue[0]));
+                e.getLevel2Id(), e.getLevel3Id(), cpToUpdate, e.getVirtualTime(), null,
+                e.getEnvValues(conn).toArray(new EnvironmentValue[0]));
     }
 
+    /**
+     * The one and only way of creating a PipelineJob inside the engine.
+     * 
+     * @param p
+     *            the place on which the run should occur. It must be one of the places linked to this state.
+     * @param pjProducer
+     *            JMS
+     * @param session
+     *            JMS
+     * @param calendarOccurrenceID
+     * @param updateCalendarPointer
+     *            used only if {@link #usesCalendar()}. Will advance the pointer associated to state/place if run ends OK.
+     * @param outOfPlan
+     *            will be created inside an isolated context. No consequences on calendar or other launches
+     * @param outOfChainLaunch
+     *            TODO: doc this.
+     * @param level0Id
+     * @param level1Id
+     * @param level2Id
+     * @param level3Id
+     * @param cpToUpdate
+     * @param virtualTime
+     * @param fieldOverloads
+     *            key/values that will overload the parameters of the source definition. These must be actual values - there is no dynamic
+     *            resolution done with these.
+     * @param params
+     */
     private void run(Place p, MessageProducer pjProducer, Session session, UUID calendarOccurrenceID, boolean updateCalendarPointer,
             boolean outOfPlan, boolean outOfChainLaunch, UUID level0Id, UUID level1Id, UUID level2Id, UUID level3Id,
-            CalendarPointer cpToUpdate, DateTime virtualTime, EnvironmentValue... params)
+            CalendarPointer cpToUpdate, DateTime virtualTime, Map<String, String> fieldOverloads, EnvironmentValue... params)
     {
         DateTime now = DateTime.now();
 
-        PipelineJob pj = new PipelineJob();
+        PipelineJob pj = new PipelineJob(fieldOverloads);
 
         // Common fields
         pj.setLevel0Id(level0Id);
@@ -498,15 +529,18 @@ public class State extends ApplicationObject
             if (existing == null)
             {
                 // A pointer should be created on this place!
+                // We set current = next. That way we do not loose the first occurrence in the sequence, and avoid null values (this is the
+                // only case where they would be meaningful - and its an edge case, so we prefer forbidding nulls and get errors if anyone
+                // plays with null values elsewhere)
                 FunctionalOccurrence cd = cal.getCurrentOccurrence(conn);
-                FunctionalOccurrence cdLast = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift() - 1);
+                // FunctionalOccurrence cdLast = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift());
                 FunctionalOccurrence cdNext = cal.getOccurrenceShiftedBy(cd, this.dto.getCalendarShift());
                 CalendarPointer tmp = new CalendarPointer();
                 tmp.setApplication(this.application);
                 tmp.setCalendar(cal);
-                tmp.setLastEndedOkOccurrenceCd(cdLast);
-                tmp.setLastEndedOccurrenceCd(cdLast);
-                tmp.setLastStartedOccurrenceCd(cdLast);
+                tmp.setLastEndedOkOccurrenceCd(cdNext);
+                tmp.setLastEndedOccurrenceCd(cdNext);
+                tmp.setLastStartedOccurrenceCd(cdNext);
                 tmp.setNextRunOccurrenceCd(cdNext);
                 tmp.setPlace(p);
                 tmp.setApplication(this.application);

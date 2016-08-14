@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.framework.FrameworkUtil;
+import org.oxymores.chronix.api.exception.ChronixPluginException;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
 import org.oxymores.chronix.api.source.DTOParameter;
@@ -40,7 +41,7 @@ import org.oxymores.chronix.api.source.JobDescription;
 import org.oxymores.chronix.api.source.OptionInvisible;
 import org.oxymores.chronix.api.source.OptionOr;
 import org.oxymores.chronix.api.source.RunModeDisabled;
-import org.oxymores.chronix.api.source.RunModeExternalyTriggered;
+import org.oxymores.chronix.api.source.RunModeExternallyTriggered;
 import org.oxymores.chronix.api.source.RunModeForced;
 import org.oxymores.chronix.api.source.RunModeTriggered;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -375,9 +376,22 @@ public class EventSourceDef implements Serializable
 
     public RunResult run(EngineCallback cb, JobDescription jd)
     {
-        EventSourceRunResult esrr = this.checkEngineTriggered().run(this.getDTO(), cb, jd);
-        if (esrr != null)
+        if (this.isEngineTriggered())
         {
+            EventSourceRunResult esrr = ((RunModeTriggered) this.provider).run(this.getDTO(), cb, jd);
+            if (esrr != null)
+            {
+                return new RunResult(jd, esrr);
+            }
+        }
+        if (this.isExternallyTriggered())
+        {
+            EventSourceRunResult esrr = ((RunModeExternallyTriggered) this.provider).run(this.getDTO(), jd);
+            if (esrr == null)
+            {
+                throw new ChronixPluginException("an external plugin has returned a null result. This is forbidden");
+            }
+            esrr.overloadedScopeId = new UUID(0, 1); // External source states are ALWAYS on the global scope.
             return new RunResult(jd, esrr);
         }
         return null;
@@ -426,7 +440,7 @@ public class EventSourceDef implements Serializable
 
     public boolean isSelfTriggered()
     {
-        return this.provider instanceof RunModeExternalyTriggered;
+        return this.provider instanceof RunModeExternallyTriggered;
     }
 
     public boolean hasSpecificDisabledMethod()
@@ -447,6 +461,11 @@ public class EventSourceDef implements Serializable
     public boolean isEngineTriggered()
     {
         return this.provider instanceof RunModeTriggered;
+    }
+
+    public boolean isExternallyTriggered()
+    {
+        return this.provider instanceof RunModeExternallyTriggered;
     }
 
     public boolean isAnd()

@@ -19,6 +19,8 @@
  */
 package org.oxymores.chronix.engine;
 
+import java.util.Map;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -33,6 +35,7 @@ import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.app.EventSourceDef;
+import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
@@ -44,6 +47,7 @@ import org.oxymores.chronix.engine.data.Order;
 import org.oxymores.chronix.engine.data.OrderType;
 import org.oxymores.chronix.engine.data.RunResult;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.exceptions.ChronixException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
@@ -117,7 +121,7 @@ class OrderListener implements MessageCallback
 
         else if (order.type == OrderType.EXTERNAL)
         {
-            // orderExternal(order);
+            orderExternal(order);
         }
     }
 
@@ -168,7 +172,7 @@ class OrderListener implements MessageCallback
             {
                 EventSourceDef a = pj.getActive(ctxMeta);
                 RunResult rr = a.forceOK(new EngineCbRun(engine, this.ctxMeta, pj.getApplication(ctxMeta), pj), pj);
-                Event e = pj.createEvent(rr, pj.getVirtualTime());
+                Event e = pj.createEvent(rr, pj.getVirtualTime(), this.ctxMeta);
                 SenderHelpers.sendEvent(e, jmsProducer, jmsSession, ctxMeta, false);
 
                 // Update history & PJ
@@ -199,27 +203,51 @@ class OrderListener implements MessageCallback
         }
     }
 
-    /*
-     * private void orderExternal(Order order) { External e = null; Application a = null; for (Application2 app : ctxMeta.getApplications())
-     * { for (External anb : app.getActiveElements(External.class)) { if (anb.getName().equals((String) order.data)) { e = anb; a = app; } }
-     * }
-     * 
-     * if (e == null) { // destroy message - it's corrupt log.error(String.format(
-     * "An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).",
-     * order.data, order.data2)); jmsCommit(); return; }
-     * 
-     * String d = null; if (order.data2 != null) { d = e.getCalendarString((String) order.data2); } log.debug(String.format(
-     * "Pattern  is %s - String is %s - Result is %s", e.getRegularExpression(), order.data2, d));
-     * 
-     * // Create an event for each State using this external event for (State s : a.getStates()) { if (!s.getRepresents().equals(e)) {
-     * continue; } Event evt = new Event(); evt.setApplication(a); if (d != null && s.getCalendar() != null) {
-     * evt.setCalendar(s.getCalendar()); evt.setCalendarOccurrenceID(s.getCalendar().getOccurrence(d).getId()); } evt.setConditionData1(0);
-     * evt.setLevel1Id(new UUID(0, 1)); evt.setLevel0Id(s.getChain().getId()); evt.setState(s); evt.setVirtualTime(DateTime.now());
-     * 
-     * for (Place p : s.getRunsOn().getPlaces()) { evt.setPlace(p); try { log.debug("Sending event for external source");
-     * SenderHelpers.sendEvent(evt, this.jmsProducer, this.jmsSession, this.ctxMeta, false); } catch (JMSException e1) { log.error(
-     * "Could not create the events triggered by an external event. It will be ignored.", e1); } } } }
-     */
+    private void orderExternal(Order order)
+    {
+        EventSourceDef e = null;
+        Application a = null;
+        for (Application app : ctxMeta.getApplications())
+        {
+            try
+            {
+                e = app.getEventSourceByName((String) order.data);
+                a = app;
+                break;
+            }
+            catch (ChronixException ex)
+            {
+                continue;
+            }
+        }
+
+        if (e == null)
+        {
+            // destroy message - it's corrupt
+            log.error(String.format(
+                    "An order of type EXTERNAL was received but it was not refering to an existing external source (name was [%s], data was [%s]).",
+                    order.data, order.data2));
+            return;
+        }
+
+        Map<String, String> args = new java.util.HashMap<>();
+        args.put("externalData", (String) order.data2);
+
+        // Just launch the source on all its states. It does not matter if it is local or not - externals are supposed to be
+        // node-agnostic.
+        try (Connection connTransac = this.ctxDb.getTransacDataSource().beginTransaction())
+        {
+            for (State s : a.getStatesClientOfSource(e.getId()))
+            {
+                SenderHelpers.runStateInsidePlan(s, connTransac, args);
+            }
+        }
+        catch (JMSException e1)
+        {
+            // weird. We may want to retry later.
+            throw new ListenerRollbackException("could not relay external order", e1);
+        }
+    }
 
     private void orderSendMeta(String nodeName, Destination replyTo, String corelId, Session jmsSession, MessageProducer jmsProducer)
     {

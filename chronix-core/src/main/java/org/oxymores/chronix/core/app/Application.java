@@ -131,6 +131,18 @@ public class Application implements Serializable
         return this.sources.get(id);
     }
 
+    public EventSourceDef getEventSourceByName(String name)
+    {
+        for (EventSourceDef esd : this.sources.values())
+        {
+            if (esd.getName().equals(name))
+            {
+                return esd;
+            }
+        }
+        throw new ChronixException("non existing source");
+    }
+
     public Map<UUID, EventSourceDef> getEventSources()
     {
         return this.sources;
@@ -420,6 +432,12 @@ public class Application implements Serializable
         throw new ChronixException("state not found");
     }
 
+    /**
+     * A list of states using the given source.
+     * 
+     * @param sourceId
+     * @return
+     */
     public List<State> getStatesClientOfSource(UUID sourceId)
     {
         List<State> res = new ArrayList<>();

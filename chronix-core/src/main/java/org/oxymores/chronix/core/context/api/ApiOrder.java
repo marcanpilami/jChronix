@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.jms.JMSException;
+
 import org.apache.commons.io.FilenameUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -86,7 +88,7 @@ public class ApiOrder implements OrderService
             {
                 try (Connection o = this.getCtxDb().getTransacDataSource().beginTransaction())
                 {
-                    SenderHelpers.runStateInsidePlan(s, p, o);
+                    SenderHelpers.runStateInsidePlan(s, p, o, null);
                 }
             }
             else
@@ -117,5 +119,21 @@ public class ApiOrder implements OrderService
     public void resetCache()
     {
         ContextHandler.resetCtx();
+    }
+
+    @Override
+    public ResOrder orderExternal(String externalSourceName, String externalData)
+    {
+        try
+        {
+            SenderHelpers.sendOrderExternalEvent(externalSourceName, externalData,
+                    this.getMetaDb().getEnvironment().getNodesList().get(0).getName());
+            return new ResOrder("OrderExternal", true, "Success");
+        }
+        catch (JMSException e)
+        {
+            log.error("could not send external order", e);
+            return new ResOrder("OrderExternal", false, e.getMessage());
+        }
     }
 }

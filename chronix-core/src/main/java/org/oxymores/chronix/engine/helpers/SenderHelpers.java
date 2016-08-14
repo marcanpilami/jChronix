@@ -21,6 +21,7 @@ package org.oxymores.chronix.engine.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -230,8 +231,8 @@ public class SenderHelpers
         }
     }
 
-    public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession,
-            boolean commit, boolean dontRestart) throws JMSException
+    public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit,
+            boolean dontRestart) throws JMSException
     {
         String qName = String.format(Constants.Q_META, target.getName());
         log.info(String.format("An app will be sent over the wire on queue %s", qName));
@@ -355,19 +356,20 @@ public class SenderHelpers
         }
     }
 
-    public static void runStateInsidePlan(State s, org.sql2o.Connection conn) throws JMSException
+    public static void runStateInsidePlan(State s, org.sql2o.Connection conn, Map<String, String> fieldOverload) throws JMSException
     {
         try (JmsSendData d = new JmsSendData())
         {
-            s.runInsidePlan(conn, d.jmsProducer, d.jmsSession, null, null, DateTime.now());
+            s.runInsidePlan(conn, d.jmsProducer, d.jmsSession, null, null, DateTime.now(), fieldOverload);
         }
     }
 
-    public static void runStateInsidePlan(State s, Place p, org.sql2o.Connection conn) throws JMSException
+    public static void runStateInsidePlan(State s, Place p, org.sql2o.Connection conn, Map<String, String> fieldOverload)
+            throws JMSException
     {
         try (JmsSendData d = new JmsSendData())
         {
-            s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession, DateTime.now());
+            s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession, DateTime.now(), fieldOverload);
         }
     }
 
@@ -376,8 +378,8 @@ public class SenderHelpers
 
     ///////////////////////////////////////////////////////////////////////////
     // State calendar pointers
-    public static void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Session jmsSession, MessageProducer jmsProducer, boolean commit,
-            Environment envt) throws JMSException
+    public static void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Session jmsSession, MessageProducer jmsProducer,
+            boolean commit, Environment envt) throws JMSException
     {
         // Send the updated CP to other execution nodes that may need it.
         List<State> statesUsingCalendar = ca.getUsedInStates();
@@ -474,8 +476,8 @@ public class SenderHelpers
         }
     }
 
-    public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, org.sql2o.Connection conn, ChronixContextMeta ctx,
-            Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
+    public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, org.sql2o.Connection conn,
+            ChronixContextMeta ctx, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
         CalendarPointer cp = updatedCalendar.getCurrentOccurrencePointer(conn);
 

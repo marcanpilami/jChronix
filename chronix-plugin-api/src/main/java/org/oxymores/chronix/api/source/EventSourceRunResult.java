@@ -59,8 +59,22 @@ public class EventSourceRunResult implements Serializable
     public DateTime end = DateTime.now();
 
     /**
+     * An {@link EventSourceRunResult} is a result for a given launch, designated by its launch ID. By default, the launch is of course the
+     * current one, and this field is not used. But in some cases a source may want to return a result for another launch. In these cases,
+     * the launch ID of the target launch must be given in this field. <br>
+     * Default (which should be OK for most plugins) is to use null. This means the result is for the current launch.
+     */
+    public UUID overloadedLaunchId = null;
+
+    /**
      * Used to overload the scope in which the events created by the result of the run will be created.<br>
      * Default (which should be OK for most plugins) is to use null. This means the scope is not changed.
      */
     public UUID overloadedScopeId = null;
+
+    /**
+     * Used to overload the calendar/sequence corresponding to this launch. Events created will correspond to this occurrence.<br>
+     * Note it only changes the occurrence in the events - it has no impact on the sequence advancement for the currently run event source.
+     */
+    public String overloadedSequenceOccurrence = null;
 }

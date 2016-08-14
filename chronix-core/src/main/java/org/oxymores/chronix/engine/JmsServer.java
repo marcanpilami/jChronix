@@ -372,4 +372,17 @@ public class JmsServer implements MessageListenerService
             throw new ChronixException("Could not create session", e);
         }
     }
+
+    @Override
+    public void waitUntilServerIsStopped()
+    {
+        try
+        {
+            this.broker.waitUntilStopped();
+        }
+        catch (NullPointerException e)
+        {
+            // Happens if server is already stopped or has not been stared at all.
+        }
+    }
 }

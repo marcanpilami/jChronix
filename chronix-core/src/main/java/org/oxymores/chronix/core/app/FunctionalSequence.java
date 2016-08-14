@@ -102,6 +102,18 @@ public class FunctionalSequence extends NamedApplicationObject
         return null;
     }
 
+    public FunctionalOccurrence getOccurrence(String label)
+    {
+        for (FunctionalOccurrence cd : this.occurrences)
+        {
+            if (cd.getLabel().equals(label))
+            {
+                return cd;
+            }
+        }
+        return null;
+    }
+
     //
     ///////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +284,7 @@ public class FunctionalSequence extends NamedApplicationObject
             return;
         }
 
-        int minShift = 0;
+        int minShift = Integer.MAX_VALUE;
         for (State s : usedInStates)
         {
             if (s.getCalendarShift() < minShift)
@@ -280,7 +292,7 @@ public class FunctionalSequence extends NamedApplicationObject
                 minShift = s.getCalendarShift();
             }
         }
-        minShift--;
+        //minShift--;
 
         FunctionalOccurrence cd = this.getOccurrenceShiftedBy(this.getFirstOccurrence(), -minShift);
         log.info(String.format(

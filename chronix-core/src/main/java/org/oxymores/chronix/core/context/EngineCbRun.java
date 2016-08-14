@@ -77,7 +77,7 @@ public class EngineCbRun implements EngineCallback
     {
         try (Connection o = this.e.getContextTransient().getTransacDataSource().beginTransaction(); JmsSendData d = new JmsSendData())
         {
-            a.getState(s.getId()).runInsidePlan(o, d.jmsProducer, d.jmsSession, pj.getId(), null, pj.getVirtualTime());
+            a.getState(s.getId()).runInsidePlan(o, d.jmsProducer, d.jmsSession, pj.getId(), null, pj.getVirtualTime(), null);
             d.jmsSession.commit();
         }
         catch (Exception e1)

@@ -118,7 +118,7 @@ class TransitionScopedAnalyser
             // Check calendar if the transition is calendar-aware
             if (tr.isCalendarAware())
             {
-                log.trace("Checking wether an event respects a calendar transition guard");
+                log.debug("Checking wether an event respects a calendar transition guard");
                 if (!targetState.usesCalendar())
                 {
                     // No calendar used on the target - yet the transition must make sure a calendar is enforced...

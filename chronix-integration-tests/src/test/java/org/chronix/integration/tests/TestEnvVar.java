@@ -1,5 +1,6 @@
 package org.chronix.integration.tests;
 
+import org.chronix.integration.helpers.BaseIT;
 import org.junit.Test;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;

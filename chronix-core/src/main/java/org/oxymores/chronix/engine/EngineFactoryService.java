@@ -97,21 +97,23 @@ public class EngineFactoryService implements ChronixEngine
     @Override
     public synchronized void stop()
     {
+        log.info("Chronix engine manager service has received a stop order");
         if (e != null && e.shouldRun())
         {
             e.stopEngine();
             e.waitForStopEnd();
         }
+        log.info("Stop order has been executed");
     }
 
     @Override
-    public synchronized void waitOperational()
+    public void waitOperational()
     {
         e.waitForInitEnd();
     }
 
     @Override
-    public synchronized void waitShutdown()
+    public void waitShutdown()
     {
         e.waitForStopEnd();
     }

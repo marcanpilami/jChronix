@@ -1,4 +1,4 @@
-package org.chronix.integration.tests;
+package org.chronix.integration.helpers;
 
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -9,9 +9,11 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,9 +22,12 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
@@ -32,6 +37,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOEventSourceContainer;
@@ -49,6 +55,9 @@ import org.oxymores.chronix.dto.HistoryQuery;
 @ExamReactorStrategy(PerClass.class)
 public class BaseIT
 {
+    @Rule
+    public TestName testName = new TestName();
+
     @Inject
     protected BundleContext bc;
 
@@ -64,7 +73,7 @@ public class BaseIT
     @Inject
     protected OrderService order;
 
-    protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv, failOnPlacePrv;
+    protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv, failOnPlacePrv, extPrv;
     protected ParameterProvider strPrmPrv, shellPrmPrv;
 
     protected DTOEnvironment envt;
@@ -103,6 +112,15 @@ public class BaseIT
         catch (Exception e)
         {
         }
+    }
+
+    @AfterClass
+    public static void end() throws InterruptedException
+    {
+        // We have a few async service that need to die before jumping to the next class.
+        // No need for subtlety - this is a test.
+        // After class and not after test because: OSGI environment is loaded once per class.
+        Thread.sleep(2000);
     }
 
     @Configuration
@@ -187,6 +205,9 @@ public class BaseIT
     @Before
     public void before() throws Exception
     {
+        System.out.println("**********************************************************");
+        System.out.println("Starting test " + testName.getMethodName());
+
         // Sanity check
         Assert.assertNotNull(meta);
         Assert.assertNotNull(order);
@@ -216,18 +237,20 @@ public class BaseIT
         setPrv = getProvider("org.oxymores.chronix.source.basic.prv.SetVarProvider");
         getPrv = getProvider("org.oxymores.chronix.source.basic.prv.GetVarProvider");
         failOnPlacePrv = getProvider("org.oxymores.chronix.source.basic.prv.FailOnPlaceProvider");
+        extPrv = getProvider("org.oxymores.chronix.source.basic.prv.ExternalProvider");
 
         strPrmPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
         shellPrmPrv = getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");
 
         // Clean caches & first node metabase (we actually work inside this metabase for creating the test plan)
-        meta.resetCache();
+        meta.resetCache(); // no need - reset is called during engine shutdown
         try
         {
             FileUtils.cleanDirectory(new File(localNodeMetaPath));
         }
         catch (Exception e)
         {
+            e.printStackTrace();
         }
 
         // Maps
@@ -270,26 +293,61 @@ public class BaseIT
     @After
     public void after() throws Exception
     {
+        System.out.println("**** CLEANUP");
+
+        // List all engines - so that we can wait for their death later
+        ServiceTracker<ChronixEngine, ChronixEngine> tracker = new ServiceTracker<>(bc,
+                bc.createFilter("(objectClass=" + ChronixEngine.class.getCanonicalName() + ")"), null);
+        tracker.open();
+        List<ChronixEngine> engines = new ArrayList<>();
+        for (ChronixEngine e : tracker.getServices(new ChronixEngine[1]))
+        {
+            engines.add(e);
+        }
+        tracker.close();
+
+        /*
+         * ServiceTracker<ChronixEngine, ChronixEngine> tracker3 = new ServiceTracker<>(bc, bc.createFilter("(objectClass=*)"), null);
+         * tracker3.open(); for (ServiceReference o : tracker3.getServiceReferences()) { System.out.println(Arrays.toString((String[])
+         * o.getProperty("objectClass"))); } tracker3.close();
+         */
+
+        ServiceTracker<MessageListenerService, MessageListenerService> tracker2 = new ServiceTracker<>(bc,
+                bc.createFilter("(objectClass=" + MessageListenerService.class.getCanonicalName() + ")"), null);
+        tracker2.open();
+        MessageListenerService server = tracker2.waitForService(100000);
+        tracker2.close();
+
         // Stop all services after each test (including the host)
         for (org.osgi.service.cm.Configuration cfg : conf.listConfigurations(null))
         {
-            if (cfg.getFactoryPid() != null && cfg.getFactoryPid().contains("agent"))
+            try
             {
-                // These elements self-destruct. No need to remove them.
+                if (cfg.getFactoryPid() != null && cfg.getFactoryPid().contains("agent"))
+                {
+                    // These elements self-destruct. No need to remove them.
+                    continue;
+                }
+            }
+            catch (IllegalStateException e)
+            {
+                // Already dead, nothing to do!
                 continue;
             }
             cfg.delete();
         }
 
         // Wait for end of all engines
-        ServiceTracker<ChronixEngine, ChronixEngine> tracker = new ServiceTracker<>(bc,
-                bc.createFilter("(objectClass=" + ChronixEngine.class.getCanonicalName() + ")"), null);
-        tracker.open();
-        while (tracker.getServices() != null && tracker.getServices().length > 0)
+        System.out.println(Thread.currentThread().getName());
+        for (ChronixEngine e : engines)
         {
-            Thread.sleep(100);
+            e.waitShutdown();
         }
-        tracker.close();
+        engines.clear();
+        server.waitUntilServerIsStopped();
+
+        System.out.println("End of test " + testName.getMethodName());
+        System.out.println("**********************************************************");
     }
 
     protected void save()

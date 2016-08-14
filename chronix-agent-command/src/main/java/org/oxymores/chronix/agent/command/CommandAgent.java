@@ -88,6 +88,7 @@ public class CommandAgent implements MessageCallback
     @Deactivate
     public void deactivate()
     {
+        log.debug("Command agent has received stop request");
         if (listenerHandle != null)
         {
             this.broker.removeMessageCallback(listenerHandle);
@@ -97,6 +98,7 @@ public class CommandAgent implements MessageCallback
         {
             tr.close();
         }
+        log.info("Command agent has deactivated");
     }
 
     private void startListening()

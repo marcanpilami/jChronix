@@ -22,6 +22,8 @@ public interface OrderService
      * @param stateId
      * @param placeId
      * @param insidePlan
+     * @param fieldOverload
+     *            can be null
      * @return
      */
     public ResOrder orderLaunch(UUID appId, UUID stateId, UUID placeId, Boolean insidePlan);
@@ -35,4 +37,6 @@ public interface OrderService
     public ResOrder duplicateEndedLaunchOutOfPlan(UUID launchId);
 
     public void resetCache();
+    
+    public ResOrder orderExternal(String externalSourceName, String externalData);
 }
