@@ -21,7 +21,6 @@ package org.oxymores.chronix.engine.data;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -53,7 +52,7 @@ public class RunResult implements Serializable
             this.logPath = r.logPath;
             this.logSizeBytes = r.logSizeBytes;
             this.logStart = r.logStart;
-            this.newEnvVars = r.newEnvVars;
+            this.newEnvVars = new HashMap<>(r.newEnvVars);
             this.returnCode = r.returnCode;
 
             if (r.overloadedLaunchId != null)
@@ -88,7 +87,7 @@ public class RunResult implements Serializable
     public String conditionData3 = null;
     public UUID conditionData4 = null;
     public boolean success;
-    public Map<String, String> newEnvVars = new HashMap<>();
+    public HashMap<String, String> newEnvVars = new HashMap<>();
     public DateTime start = DateTime.now(), end = DateTime.now();
     public String envtUser, envtServer, envtOther;
     public String calendarOverload = null;

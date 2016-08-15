@@ -131,7 +131,7 @@ class TranscientListener implements MessageCallback
 
                 // Log
                 String represents = "a calendar";
-                if (cp.getPlaceID() != null)
+                if (ss != null)
                 {
                     represents = ss.getEventSourceDefinition().getName();
                 }

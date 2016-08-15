@@ -508,18 +508,6 @@ public class ChronixContextMeta
         return srvs;
     }
 
-    private EventSourceProvider getSourceProviderForClass(Class<? extends EventSourceProvider> klass)
-    {
-        for (EventSourceProvider pr : getAllKnownSourceProviders())
-        {
-            if (pr.getClass().isAssignableFrom(klass))
-            {
-                return pr;
-            }
-        }
-        throw new ChronixException("no such provider");
-    }
-
     /**
      * Throws an exception if nothing found. Does not wait for a provider.
      * 
@@ -554,19 +542,6 @@ public class ChronixContextMeta
             }
         }
         return trackerPRM.getServices();
-    }
-
-    private ParameterProvider getParameterProviderForClass(Class<? extends ParameterProvider> klass)
-    {
-        for (Object o : getAllKnownParameterProviders())
-        {
-            ParameterProvider pr = (ParameterProvider) o;
-            if (pr.getClass().isAssignableFrom(klass))
-            {
-                return pr;
-            }
-        }
-        throw new ChronixException("no such provider");
     }
 
     public ParameterProvider getParameterProvider(String className)

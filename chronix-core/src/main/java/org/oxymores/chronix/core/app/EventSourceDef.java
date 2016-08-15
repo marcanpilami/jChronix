@@ -71,8 +71,8 @@ public class EventSourceDef implements Serializable
     /////////////////////////////
     // Sub elements if any
 
-    protected List<State> states = null;
-    protected List<DTOTransition> transitions = null;
+    private List<State> states = null;
+    private List<DTOTransition> transitions = null;
 
     /////////////////////////////
     // Plugin identification
@@ -80,7 +80,7 @@ public class EventSourceDef implements Serializable
     /**
      * The unique key identifying the service responsible for this source
      */
-    protected String behaviourClassName;
+    private String behaviourClassName;
 
     /**
      * A simple indication - only used when a plugin is missing and we need its name to help the user.

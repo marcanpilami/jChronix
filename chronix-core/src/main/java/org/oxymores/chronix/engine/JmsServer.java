@@ -58,7 +58,7 @@ public class JmsServer implements MessageListenerService
     private File dbPath;
     private boolean clear = false;
     private Set<String> channels = new HashSet<>();
-    private int maxMemMb, maxStoreMb, maxTempMb;
+    private long maxMemMb, maxStoreMb, maxTempMb;
 
     //////////////////////////////////////
     // AMQ elements
@@ -254,7 +254,7 @@ public class JmsServer implements MessageListenerService
         syncLinks();
 
         // Start
-        log.info(String.format("The message broker will now start"));
+        log.info("The message broker will now start");
         try
         {
             broker.start();

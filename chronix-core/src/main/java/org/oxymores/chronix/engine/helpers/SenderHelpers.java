@@ -192,8 +192,6 @@ public class SenderHelpers
             String localNodeName) throws JMSException
     {
         // Always send both to local node and to the supervisor
-        Application a = ctx.getApplication(rl.getApplicationId());
-
         String qName = String.format(Constants.Q_LOG, localNodeName);
         log.info(String.format("A scheduler log will be sent to the responsible engine on queue %s (%s)", qName, rl.getActiveNodeName()));
         Destination destination = jmsSession.createQueue(qName);
@@ -613,7 +611,6 @@ public class SenderHelpers
             boolean commit, String brokerName) throws JMSException
     {
         String qName;
-        Application a = ctx.getApplication(tr.applicationID);
         Place p = ctx.getEnvironment().getPlace(tr.placeID);
         if (tr.local)
         {

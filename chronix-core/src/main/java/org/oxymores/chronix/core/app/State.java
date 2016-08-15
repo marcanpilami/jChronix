@@ -61,17 +61,17 @@ public class State extends ApplicationObject
 
     // The container it belongs to
     @NotNull
-    protected EventSourceDef container;
+    private EventSourceDef container;
 
     // Transitions
     @NotNull
     @Size(min = 0)
     @Valid
-    protected List<DTOTransition> trFromHere, trReceivedHere;
+    private List<DTOTransition> trFromHere, trReceivedHere;
 
     // TODO: Sequences (should be put inside DTO if possible)
-    protected List<AutoSequence> sequences;
-    protected List<Token> tokens;
+    private List<AutoSequence> sequences;
+    private List<Token> tokens;
 
     // Fields
     ///////////////////////////////////////////////////////////////////////////

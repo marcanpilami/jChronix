@@ -27,9 +27,9 @@ public class Environment extends ChronixObject
     private int modelVersion = currentModelVersion;
 
     @Valid
-    protected Map<UUID, ExecutionNode> nodes = new HashMap<>();
+    private Map<UUID, ExecutionNode> nodes = new HashMap<>();
     @Valid
-    protected Map<UUID, Place> places = new HashMap<>();
+    private Map<UUID, Place> places = new HashMap<>();
     private ExecutionNode console = null;
 
     ///////////////////////////

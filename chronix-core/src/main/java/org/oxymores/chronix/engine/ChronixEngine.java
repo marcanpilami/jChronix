@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.sql2o.Connection;
-import org.sql2o.Sql2o;
 
 /**
  * A Chronix Node. Can be either engine + runner or simply runner.

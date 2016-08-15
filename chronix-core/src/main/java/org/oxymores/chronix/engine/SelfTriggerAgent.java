@@ -83,7 +83,7 @@ class SelfTriggerAgent extends Thread
 
     private void startAgent(ChronixEngine engine, DateTime startTime, MessageListenerService broker) throws JMSException
     {
-        log.debug(String.format("Agent responsible for clocks and other active sources will start"));
+        log.debug("Agent responsible for clocks and other active sources will start");
 
         // Save pointers
         this.loop = new Semaphore(0);
@@ -104,7 +104,7 @@ class SelfTriggerAgent extends Thread
         log.debug(String.format("Agent responsible for clocks will handle %s clock nodes", this.nodes.size()));
         for (EventSourceDef node : this.nodes)
         {
-            log.debug(String.format("\t\t" + node.getName()));
+            log.debug(String.format("\t\t%s", node.getName()));
         }
 
         // Start thread

@@ -57,7 +57,7 @@ public class Application implements Serializable
     private Map<UUID, Token> tokens = new HashMap<>();
 
     @Valid
-    protected Map<UUID, FunctionalSequence> calendars = new HashMap<>();
+    private Map<UUID, FunctionalSequence> calendars = new HashMap<>();
 
     // The sources
     private Map<UUID, EventSourceDef> sources = new HashMap<>();
@@ -191,7 +191,7 @@ public class Application implements Serializable
                 FrameworkUtil.getBundle(Application.class).getBundleContext(), EventSourceProvider.class, null);
         int maxWaitSec = 60;
         int waitedSec = 0;
-        int waitStepSec = 1;
+        long waitStepSec = 1L;
 
         try
         {

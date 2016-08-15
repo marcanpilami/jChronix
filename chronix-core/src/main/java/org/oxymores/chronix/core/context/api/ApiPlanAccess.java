@@ -38,8 +38,6 @@ import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Plan Metadata API implementation as an OSGI Declarative Service.<br>
@@ -48,8 +46,6 @@ import org.slf4j.LoggerFactory;
 @Component
 public class ApiPlanAccess implements PlanAccessService
 {
-    private static final Logger log = LoggerFactory.getLogger(PlanAccessService.class);
-
     private String ctxMetaPath;
 
     @Activate

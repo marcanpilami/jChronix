@@ -73,8 +73,8 @@ public class ParameterDef implements Serializable
     // Dynamically resolved fields
 
     private String providerClassName;
-    private Map<String, ParameterDef> fields = null;
-    private List<ParameterDef> additionalParameters = null;
+    private Map<String, ParameterDef> fields = new HashMap<>();
+    private List<ParameterDef> additionalParameters = new ArrayList<>();
 
     /////////////////////////////////
     // Engine helpers
@@ -104,13 +104,11 @@ public class ParameterDef implements Serializable
         this.providerClassName = dto.getProviderName();
         if (this.providerClassName != null)
         {
-            this.fields = new HashMap<>(dto.getFields().size());
             for (DTOParameter subPrm : dto.getFields().values())
             {
                 this.fields.put(subPrm.getKey(), new ParameterDef(subPrm, a, ctx));
             }
 
-            this.additionalParameters = new ArrayList<>(dto.getAdditionalParameters().size());
             for (DTOParameter subPrm : dto.getAdditionalParameters())
             {
                 this.additionalParameters.add(new ParameterDef(subPrm, a, ctx));
