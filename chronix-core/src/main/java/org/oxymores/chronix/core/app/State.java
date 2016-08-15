@@ -36,6 +36,7 @@ import org.oxymores.chronix.api.source.DTOState;
 import org.oxymores.chronix.api.source.DTOTransition;
 import org.oxymores.chronix.core.ApplicationObject;
 import org.oxymores.chronix.core.EnvironmentParameter;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
@@ -71,7 +72,6 @@ public class State extends ApplicationObject
 
     // TODO: Sequences (should be put inside DTO if possible)
     private List<AutoSequence> sequences;
-    private List<Token> tokens;
 
     // Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,6 @@ public class State extends ApplicationObject
         this.trReceivedHere = new ArrayList<>(trToState);
 
         this.sequences = new ArrayList<>();
-        this.tokens = new ArrayList<>();
 
         this.id = state.getId();
     }
@@ -142,32 +141,14 @@ public class State extends ApplicationObject
         }
     }
 
-    public void addToken(Token t)
+    public List<DTOToken> getTokens()
     {
-        t.s_addStateUsing(this);
-        this.tokens.add(t);
-    }
-
-    public void removeToken(Token t)
-    {
-        try
+        List<DTOToken> res = new ArrayList<>();
+        for (UUID id : dto.getTokens())
         {
-            this.tokens.remove(t);
+            res.add(application.getToken(id));
         }
-        finally
-        {
-            t.s_removeStateUsing(this);
-        }
-    }
-
-    public List<Token> getTokens()
-    {
-        return tokens;
-    }
-
-    public void setTokens(List<Token> tokens)
-    {
-        this.tokens = tokens;
+        return res;
     }
 
     public boolean isParallel()

@@ -47,10 +47,10 @@ import org.oxymores.chronix.core.app.FunctionalOccurrence;
 import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.app.ParameterDef;
 import org.oxymores.chronix.core.app.State;
-import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.context.EngineCbRun;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.CalendarPointer;
 import org.oxymores.chronix.core.transactional.Event;
@@ -204,11 +204,6 @@ public class RunnerManager implements MessageCallback
     private void recvPJ(PipelineJob job, Session jmsSession) throws JMSException
     {
         PipelineJob j = job;
-        try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
-        {
-            j.insertOrUpdate(conn);
-            j.getEnvValues(conn); // To load them, even if empty
-        }
 
         // Check the job is OK
         EventSourceDef toRun;
@@ -236,9 +231,10 @@ public class RunnerManager implements MessageCallback
         try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
         {
             j.setRunThis(toRun.getName());
-            j.setBeganRunningAt(DateTime.now());
+            j.setBeganRunningAt(j.isSimulation() ? j.getVirtualTime() : DateTime.now());
             j.insertOrUpdate(conn);
             conn.commit();
+            j.getEnvValues(conn); // To load them, even if empty
         }
         resolvingPJ.put(j.getId(), j);
 
@@ -476,16 +472,13 @@ public class RunnerManager implements MessageCallback
 
             // Update the PJ (it will stay in the DB for a while)
             pj.setStatus("DONE");
-            if (rr.start != null)
-            {
-                pj.setBeganRunningAt(rr.start);
-            }
             pj.setStoppedRunningAt(rr.end);
             pj.setResultCode(rr.returnCode);
             pj.insertOrUpdate(conn);
             conn.commit();
         }
 
+        // TODO: update the PJ so that we do NOT need to pass the RunResult as a parameter to getEventLog and createEvent.
         // Send history
         SenderHelpers.sendHistory(pj.getEventLog(ctxMeta, rr), ctxMeta, this.jmsProducer, jmsSession, true,
                 this.engine.getLocalNode().getName());
@@ -557,7 +550,7 @@ public class RunnerManager implements MessageCallback
 
     private void releaseTokens(State s, PipelineJob pj, Session jmsSession) throws JMSException
     {
-        for (Token tk : s.getTokens())
+        for (DTOToken tk : s.getTokens())
         {
             TokenRequest tr = new TokenRequest();
             tr.applicationID = pj.getAppID();
@@ -570,7 +563,7 @@ public class RunnerManager implements MessageCallback
             tr.type = TokenRequestType.RELEASE;
             tr.pipelineJobID = pj.getId();
 
-            SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, this.jmsProducer, true, this.engine.getLocalNode().getBrokerName());
+            SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, this.jmsProducer, true, this.engine.getLocalNode().getName());
         }
     }
 

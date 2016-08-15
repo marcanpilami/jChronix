@@ -30,9 +30,22 @@ public class TokenRequest implements Serializable
     private static final long serialVersionUID = -7250533108215592799L;
 
     public enum TokenRequestType {
-        REQUEST, RELEASE, RENEW, AGREE
+        /** We ask for a token. We are ready to wait until it is available. */
+        REQUEST,
+        /** We are done with a token and signal it is available again for others who may request it. **/
+        RELEASE,
+        /**
+         * We are still using the token and regularly send this message to signal we are not dead and the token should not be forcefully
+         * freed.
+         **/
+        RENEW,
+        /** Token request is accepted. The token is yours. **/
+        AGREE
     }
 
+    /**
+     * Type of the token message. See enumeration for details.
+     */
     public TokenRequestType type;
     public UUID applicationID;
     public UUID tokenID;

@@ -618,7 +618,7 @@ public class SenderHelpers
         }
         else
         {
-            qName = String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getBrokerName());
+            qName = String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getName());
         }
 
         // Return queue

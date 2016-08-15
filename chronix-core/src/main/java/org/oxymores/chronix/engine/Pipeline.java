@@ -22,9 +22,6 @@ package org.oxymores.chronix.engine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -36,9 +33,10 @@ import org.joda.time.DateTime;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Token;
+import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.PipelineJob;
@@ -49,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
-class Pipeline implements Runnable, MessageCallback
+class Pipeline implements MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(Pipeline.class);
 
@@ -60,9 +58,6 @@ class Pipeline implements Runnable, MessageCallback
     private List<PipelineJob> waitingExclusion;
     private List<PipelineJob> waitingRun;
 
-    private Boolean run = true;
-    private Semaphore analyze;
-
     private ChronixContextMeta ctxMeta;
     private ChronixContextTransient ctxDb;
     private ExecutionNode localNode;
@@ -72,8 +67,6 @@ class Pipeline implements Runnable, MessageCallback
         this.ctxDb = ctxDb;
         this.ctxMeta = ctxMeta;
         this.localNode = localNode;
-
-        this.analyze = new Semaphore(1);
 
         // Create analysis queues
         entering = new LinkedBlockingQueue<>();
@@ -91,9 +84,6 @@ class Pipeline implements Runnable, MessageCallback
                     .executeAndFetch(PipelineJob.class);
         }
         entering.addAll(old);
-
-        // Start thread
-        // (new Thread(this)).start();
     }
 
     /*
@@ -102,92 +92,36 @@ class Pipeline implements Runnable, MessageCallback
      * "An error occurred while closing the Pipeline. Not a real issue, but please report it", e); } this.analyze.release(); }
      */
 
-    @Override
-    public void run()
+    private void analysePipelineJob(Session jmsSession, MessageProducer jmsProducer)
     {
-        while (this.run)
+        ArrayList<PipelineJob> toAnalyse = new ArrayList<>();
+
+        toAnalyse.clear();
+        toAnalyse.addAll(waitingSequence);
+        for (PipelineJob j : toAnalyse)
         {
-            // Poll for a job
-            PipelineJob pj = null;
-            try
-            {
-                pj = entering.poll(1, TimeUnit.MINUTES);
-            }
-            catch (InterruptedException e2)
-            {
-                // Normal
-            }
-            if (pj != null && pj.getAppID() != null)
-            {
-                Place p = null;
-                org.oxymores.chronix.core.app.State s = null;
-                Application a;
-                try
-                {
-                    a = pj.getApplication(ctxMeta);
-                    p = pj.getPlace(ctxMeta);
-                    s = pj.getState(ctxMeta);
-                }
-                catch (Exception e)
-                {
-                    a = null;
-                }
-                if (s == null || p == null || a == null)
-                {
-                    log.error("A job was received in the pipeline without any corresponding local application data - ignored");
-                }
-                else
-                {
-                    waitingSequence.add(pj);
-                    log.debug(String.format("A job was registered in the pipeline: %s", pj.getId()));
-                }
-            }
+            anSequence(j);
+        }
 
-            // Synchro - helps to stop properly
-            try
-            {
-                this.analyze.acquire();
-            }
-            catch (InterruptedException e1)
-            {
-                // Do nothing
-            }
-            if (!this.run)
-            {
-                break;
-            }
+        toAnalyse.clear();
+        toAnalyse.addAll(waitingToken);
+        for (PipelineJob j : toAnalyse)
+        {
+            anToken(j, jmsSession, jmsProducer);
+        }
 
-            // On to analysis
-            ArrayList<PipelineJob> toAnalyse = new ArrayList<>();
+        toAnalyse.clear();
+        toAnalyse.addAll(waitingExclusion);
+        for (PipelineJob j : toAnalyse)
+        {
+            anExclusion(j);
+        }
 
-            toAnalyse.clear();
-            toAnalyse.addAll(waitingSequence);
-            for (PipelineJob j : toAnalyse)
-            {
-                anSequence(j);
-            }
-
-            toAnalyse.clear();
-            toAnalyse.addAll(waitingToken);
-            for (PipelineJob j : toAnalyse)
-            {
-                // anToken(j);
-            }
-
-            toAnalyse.clear();
-            toAnalyse.addAll(waitingExclusion);
-            for (PipelineJob j : toAnalyse)
-            {
-                anExclusion(j);
-            }
-
-            toAnalyse.clear();
-            toAnalyse.addAll(waitingRun);
-            for (PipelineJob j : toAnalyse)
-            {
-                // runPJ(j);
-            }
-            this.analyze.release();
+        toAnalyse.clear();
+        toAnalyse.addAll(waitingRun);
+        for (PipelineJob j : toAnalyse)
+        {
+            runPJ(j, jmsSession, jmsProducer);
         }
     }
 
@@ -223,6 +157,25 @@ class Pipeline implements Runnable, MessageCallback
 
         if (pj != null)
         {
+            Place p = null;
+            State s = null;
+            Application a;
+            try
+            {
+                a = pj.getApplication(ctxMeta);
+                p = pj.getPlace(ctxMeta);
+                s = pj.getState(ctxMeta);
+            }
+            catch (Exception e)
+            {
+                a = null;
+            }
+            if (s == null || p == null || a == null)
+            {
+                log.error("A job was received in the pipeline without any corresponding local application data - ignored");
+                return;
+            }
+
             try (Connection conn = ctxDb.getTransacDataSource().beginTransaction())
             {
                 // So that we find it again after a crash/stop
@@ -231,24 +184,15 @@ class Pipeline implements Runnable, MessageCallback
                 pj.insertOrUpdate(conn);
                 conn.commit();
             }
+
             log.debug(String.format("A job has entered the pipeline: %s", pj.getId()));
-            // TODO: reactivate the pipeline with a correct structure
-            // entering.add(pj);
-            runPJ(pj, jmsSession, jmsProducer);
+            waitingSequence.add(pj);
+            analysePipelineJob(jmsSession, jmsProducer);
         }
 
         if (rq != null)
         {
             log.debug("Token message received");
-            try
-            {
-                this.analyze.acquire();
-            }
-            catch (InterruptedException e1)
-            {
-                // Not an issue
-            }
-
             pj = null;
             for (PipelineJob jj : waitingTokenAnswer)
             {
@@ -260,16 +204,13 @@ class Pipeline implements Runnable, MessageCallback
             if (pj == null)
             {
                 log.warn("A token was given to an unexisting PJ. Ignored");
-                this.analyze.release();
                 return;
             }
 
             waitingTokenAnswer.remove(pj);
             waitingExclusion.add(pj);
             log.debug(String.format("Job %s has finished token analysis - on to exclusion analysis", pj.getId()));
-
-            this.analyze.release();
-            entering.add(new PipelineJob()); // TODO: why?
+            analysePipelineJob(jmsSession, jmsProducer);
         }
     }
 
@@ -286,7 +227,7 @@ class Pipeline implements Runnable, MessageCallback
         org.oxymores.chronix.core.app.State s = pj.getState(ctxMeta);
         if (s.getTokens().size() > 0)
         {
-            for (Token tk : s.getTokens())
+            for (DTOToken tk : s.getTokens())
             {
                 TokenRequest tr = new TokenRequest();
                 tr.applicationID = pj.getAppID();
@@ -301,7 +242,7 @@ class Pipeline implements Runnable, MessageCallback
 
                 try
                 {
-                    SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, jmsProducer, true, this.localNode.getBrokerName());
+                    SenderHelpers.sendTokenRequest(tr, ctxMeta, jmsSession, jmsProducer, true, this.localNode.getName());
                 }
                 catch (JMSException e)
                 {

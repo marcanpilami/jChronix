@@ -37,8 +37,6 @@ public class RunResult implements Serializable
     public RunResult(JobDescription jd)
     {
         this.launchId = jd.getLaunchId();
-        this.start = jd.getVirtualTimeStart();
-        this.end = null;
     }
 
     public RunResult(JobDescription jd, EventSourceRunResult r)
@@ -47,7 +45,7 @@ public class RunResult implements Serializable
 
         if (r != null)
         {
-            this.end = r.end;
+            this.end = r.end == null ? DateTime.now() : r.end;
             this.fullerLog = r.fullerLog;
             this.logPath = r.logPath;
             this.logSizeBytes = r.logSizeBytes;
@@ -88,7 +86,7 @@ public class RunResult implements Serializable
     public UUID conditionData4 = null;
     public boolean success;
     public HashMap<String, String> newEnvVars = new HashMap<>();
-    public DateTime start = DateTime.now(), end = DateTime.now();
+    public DateTime end = DateTime.now();
     public String envtUser, envtServer, envtOther;
     public String calendarOverload = null;
 

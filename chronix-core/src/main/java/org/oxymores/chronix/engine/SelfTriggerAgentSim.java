@@ -59,8 +59,8 @@ public class SelfTriggerAgentSim extends SelfTriggerAgent
         Enumeration enu;
         try
         {
-            String eventQueueName = String.format(Constants.Q_EVENT, this.localNode.getBrokerName());
-            String pjQueueName = String.format(Constants.Q_PJ, this.localNode.getBrokerName());
+            String eventQueueName = String.format(Constants.Q_EVENT, this.localNode.getName());
+            String pjQueueName = String.format(Constants.Q_PJ, this.localNode.getName());
             devents = this.jmsSession.createQueue(eventQueueName);
             dpjs = this.jmsSession.createQueue(pjQueueName);
             events = this.jmsSession.createBrowser(devents);

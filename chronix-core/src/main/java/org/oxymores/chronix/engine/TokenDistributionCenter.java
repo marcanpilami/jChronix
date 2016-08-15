@@ -37,20 +37,25 @@ import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ChronixContextTransient;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.transactional.TokenReservation;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers.JmsSendData;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 
+/**
+ * Thread responsible for granting or refusing tokens. All token operations are centralised here. <br>
+ * Never more than one instance is allowed - otherwise race conditions could occur and more tokens than allowed issued.
+ */
 class TokenDistributionCenter implements Runnable, MessageCallback
 {
     private static final Logger log = LoggerFactory.getLogger(TokenDistributionCenter.class);
@@ -58,9 +63,6 @@ class TokenDistributionCenter implements Runnable, MessageCallback
     private boolean running = true;
     private Semaphore mainLoop, localResource;
     private List<TokenReservation> shouldRenew;
-
-    private Session threadSession;
-    private MessageProducer threadProducer;
 
     private ChronixContextMeta ctxMeta;
     private ChronixContextTransient ctxDb;
@@ -79,16 +81,6 @@ class TokenDistributionCenter implements Runnable, MessageCallback
 
         // Start thread
         new Thread(this).start();
-
-        threadSession = broker.getNewSession();
-        try
-        {
-            threadProducer = threadSession.createProducer(null);
-        }
-        catch (JMSException e)
-        {
-            throw new ChronixInitializationException("Could not init TDC", e);
-        }
     }
 
     void stopListening()
@@ -138,14 +130,13 @@ class TokenDistributionCenter implements Runnable, MessageCallback
             return;
         }
 
-        Token tk = a.getToken(request.tokenID);
+        DTOToken tk = a.getToken(request.tokenID);
         Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.app.State s = a.getState(request.stateID);
         ExecutionNode en = ctxMeta.getEnvironment().getNode(request.requestingNodeID);
 
         log.debug(String.format("Received a %s token request type %s on %s for state %s (application %s) for node %s. Local: %s",
-                request.type, tk.getName(), p.getName(), s.getEventSourceDefinition().getName(), a.getName(), en.getBrokerName(),
-                request.local));
+                request.type, tk.getName(), p.getName(), s.getEventSourceDefinition().getName(), a.getName(), en.getName(), request.local));
 
         // Case 1: TDC proxy: local request.
         if (request.local && request.type == TokenRequestType.REQUEST)
@@ -174,7 +165,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getBrokerName());
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getName());
             }
             catch (JMSException e)
             {
@@ -204,7 +195,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
             request.local = false;
             try
             {
-                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getBrokerName());
+                SenderHelpers.sendTokenRequest(request, ctxMeta, jmsSession, jmsProducer, false, localNode.getName());
             }
             catch (JMSException e)
             {
@@ -229,7 +220,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         {
             // Log
             log.info(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is released", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getEventSourceDefinition().getName()));
+                    p.getName(), a.getName(), en.getName(), s.getEventSourceDefinition().getName()));
 
             // Find the element
             try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
@@ -245,7 +236,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         {
             // Log
             log.debug(String.format("A token %s that was granted on %s (application %s) to node %s on state %s is renewed", tk.getName(),
-                    p.getName(), a.getName(), en.getBrokerName(), s.getEventSourceDefinition().getName()));
+                    p.getName(), a.getName(), en.getName(), s.getEventSourceDefinition().getName()));
 
             try (Connection conn = this.ctxDb.getTransacDataSource().beginTransaction())
             {
@@ -253,6 +244,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                 TokenReservation tr = getTR(request, conn);
 
                 // Renew it
+                // TODO: true UPDATE query
                 tr.setRenewedOn(DateTime.now());
                 conn.commit();
             }
@@ -266,7 +258,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
             try
             {
                 response = jmsSession.createObjectMessage(request);
-                String qNameDest = String.format(Constants.Q_PJ, this.localNode.getComputingNode().getBrokerName());
+                String qNameDest = String.format(Constants.Q_PJ, this.localNode.getComputingNode().getName());
                 Destination d = jmsSession.createQueue(qNameDest);
                 log.debug(String.format("A message will be sent to queue %s", qNameDest));
                 jmsProducer.send(d, response);
@@ -297,7 +289,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                     ExecutionNode enn = ctxMeta.getEnvironment().getNode(tr.getRequestedBy());
                     log.warn(String.format(
                             "A token that was granted on %s (application %s) to node %s on state %s will be revoked as the request was not renewed in the last 10 minutes",
-                            pp.getName(), aa.getName(), enn.getBrokerName(), ss.getEventSourceDefinition().getName()));
+                            pp.getName(), aa.getName(), enn.getName(), ss.getEventSourceDefinition().getName()));
 
                     // Remove from database
                     tr.delete(conn);
@@ -330,7 +322,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
     {
         // Get data
         Application a = ctxMeta.getApplication(request.applicationID);
-        Token tk = a.getToken(request.tokenID);
+        DTOToken tk = a.getToken(request.tokenID);
         Place p = ctxMeta.getEnvironment().getPlace(request.placeID);
         org.oxymores.chronix.core.app.State s = a.getState(request.stateID);
 
@@ -343,7 +335,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
     {
         // Get data
         Application a = ctxMeta.getApplication(tr.getApplicationId());
-        Token tk = a.getToken(tr.getTokenId());
+        DTOToken tk = a.getToken(tr.getTokenId());
         Place p = ctxMeta.getEnvironment().getPlace(tr.getPlaceId());
         org.oxymores.chronix.core.app.State s = a.getState(tr.getStateId());
 
@@ -352,8 +344,9 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                 jmsProducer);
     }
 
-    private void processRequest(Connection conn, Application a, Token tk, Place p, DateTime requestedOn, org.oxymores.chronix.core.app.State s,
-            TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId, Session jmsSession, MessageProducer jmsProducer)
+    private void processRequest(Connection conn, Application a, DTOToken tk, Place p, DateTime requestedOn,
+            org.oxymores.chronix.core.app.State s, TokenReservation existing, UUID pipelineJobId, UUID requestingNodeId, Session jmsSession,
+            MessageProducer jmsProducer)
     {
         // Locate all the currently allocated tokens on this Token/Place
         int i;
@@ -444,7 +437,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
             try
             {
                 response = jmsSession.createObjectMessage(answer);
-                Destination d = jmsSession.createQueue(String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getBrokerName()));
+                Destination d = jmsSession.createQueue(String.format(Constants.Q_TOKEN, p.getNode().getComputingNode().getName()));
                 jmsProducer.send(d, response);
             }
             catch (JMSException e)
@@ -457,6 +450,16 @@ class TokenDistributionCenter implements Runnable, MessageCallback
     @Override
     public void run()
     {
+        JmsSendData jms;
+        try
+        {
+            jms = new JmsSendData();
+        }
+        catch (JMSException e2)
+        {
+            throw new ChronixInitializationException("could not create JMS session for TDC", e2);
+        }
+
         do
         {
             DateTime now = DateTime.now();
@@ -480,8 +483,8 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                     try
                     {
                         log.debug("Sending a renewal request for token state");
-                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctxMeta, threadSession, threadProducer, false,
-                                localNode.getBrokerName());
+                        SenderHelpers.sendTokenRequest(tr.getRenewalRequest(), ctxMeta, jms.jmsSession, jms.jmsProducer, false,
+                                localNode.getName());
                     }
                     catch (JMSException e)
                     {
@@ -492,11 +495,11 @@ class TokenDistributionCenter implements Runnable, MessageCallback
 
             try
             {
-                threadSession.commit();
+                jms.jmsSession.commit();
             }
             catch (JMSException e1)
             {
-                log.error("could not validate token renewal JKMS session", e1);
+                log.error("could not validate token renewal JMS session", e1);
             }
 
             // Sync
@@ -516,5 +519,6 @@ class TokenDistributionCenter implements Runnable, MessageCallback
                 log.debug("interrupted");
             }
         } while (running);
+        jms.close();
     }
 }

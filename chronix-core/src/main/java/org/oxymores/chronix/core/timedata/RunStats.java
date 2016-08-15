@@ -33,7 +33,6 @@ public class RunStats implements Serializable
 {
     private static final long serialVersionUID = -3318147581838188039L;
     private static final Logger log = LoggerFactory.getLogger(RunStats.class);
-    private static final int UUID_LENGTH = 36;
 
     @NotNull
     private Long id;
@@ -52,8 +51,8 @@ public class RunStats implements Serializable
     private static RunStats getRS(Connection conn, UUID stateId, UUID placeId)
     {
         // null if does not exist
-        return conn.createQuery("SELECT * FROM RunStats rr where rr.placeId = :placeId AND rr.stateId = :stateId").
-                addParameter("placeId", placeId).addParameter("stateId", stateId).executeAndFetchFirst(RunStats.class);
+        return conn.createQuery("SELECT * FROM RunStats rr where rr.placeId = :placeId AND rr.stateId = :stateId")
+                .addParameter("placeId", placeId).addParameter("stateId", stateId).executeAndFetchFirst(RunStats.class);
     }
 
     public static float getMean(Connection conn, UUID stateId, UUID placeId)
@@ -105,10 +104,10 @@ public class RunStats implements Serializable
         }
 
         // Update calculations
-        RunStats tmp = conn.createQuery("SELECT AVG(rm.duration) AS meanDuration, MAX(rm.duration) AS maxDuration, "
-                + "MIN(rm.duration) AS minDuration FROM RunMetrics rm "
-                + "WHERE rm.placeId = :placeId AND rm.stateId = :stateId").addParameter("placeId", rs.placeId)
-                .addParameter("stateId", rs.stateId).executeAndFetchFirst(RunStats.class);
+        RunStats tmp = conn
+                .createQuery("SELECT AVG(rm.duration) AS meanDuration, MAX(rm.duration) AS maxDuration, "
+                        + "MIN(rm.duration) AS minDuration FROM RunMetrics rm " + "WHERE rm.placeId = :placeId AND rm.stateId = :stateId")
+                .addParameter("placeId", rs.placeId).addParameter("stateId", rs.stateId).executeAndFetchFirst(RunStats.class);
 
         rs.meanDuration = tmp.meanDuration;
         rs.maxDuration = tmp.maxDuration;
@@ -118,9 +117,8 @@ public class RunStats implements Serializable
 
         // Purge all old entries
         conn.createQuery("DELETE FROM RunMetrics rm1 WHERE rm1.id NOT IN (SELECT rm2.id FROM RunMetrics rm2"
-                + " WHERE rm2.stateId=:stateId AND rm2.placeId=:placeId AND ROWNUM() < 10 "
-                + "ORDER BY rm2.startTime desc)").
-                addParameter("stateId", rs.stateId).addParameter("placeId", rs.placeId).executeUpdate();
+                + " WHERE rm2.stateId=:stateId AND rm2.placeId=:placeId AND ROWNUM() < 10 " + "ORDER BY rm2.startTime desc)")
+                .addParameter("stateId", rs.stateId).addParameter("placeId", rs.placeId).executeUpdate();
     }
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,8 +181,9 @@ public class RunStats implements Serializable
 
     public void insertOrUpdate(Connection conn)
     {
-        int i = conn.createQuery("UPDATE RunStats SET maxDuration=:maxDuration, meanDuration=:meanDuration "
-                + "WHERE stateId=:stateId AND placeId=:placeId").bind(this).executeUpdate().getResult();
+        int i = conn.createQuery(
+                "UPDATE RunStats SET maxDuration=:maxDuration, meanDuration=:meanDuration " + "WHERE stateId=:stateId AND placeId=:placeId")
+                .bind(this).executeUpdate().getResult();
         if (i == 0)
         {
             conn.createQuery("INSERT INTO RunStats(maxDuration, meanDuration, placeId, stateId) "

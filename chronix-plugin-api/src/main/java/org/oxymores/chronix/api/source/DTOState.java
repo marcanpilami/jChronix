@@ -1,9 +1,11 @@
 package org.oxymores.chronix.api.source;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.dto.DTOFunctionalSequence;
 
 public class DTOState implements Serializable
@@ -15,15 +17,13 @@ public class DTOState implements Serializable
     // Drawings
     private Integer x, y;
 
-    private Boolean parallel = false;
-
+    // Ignored date time stuff
     private Integer warnAfterMn, killAfterMn, maxPipeWaitTime, eventValidityMn;
 
+    // Identity
     private UUID eventSourceId;
-
-    private List<UUID> exclusiveStatesId;
-
     private UUID runsOnId;
+    private Boolean parallel = false;
 
     // Calendar stuff
     private UUID calendarId;
@@ -32,7 +32,10 @@ public class DTOState implements Serializable
     private Boolean loopMissedOccurrences = false;
     private Boolean blockIfPreviousFailed = false;
 
-    // private List<DTOToken> tokens; sequences
+    // Pipeline stuff
+    private List<UUID> exclusiveStatesId;
+    private List<UUID> tokens = new ArrayList<>();
+    // TODO: Sequences
 
     public Integer getX()
     {
@@ -220,6 +223,22 @@ public class DTOState implements Serializable
     public DTOState setMoveCalendarForwardOnSuccess(boolean moveCalendarForwardOnSuccess)
     {
         this.moveCalendarForwardOnSuccess = moveCalendarForwardOnSuccess;
+        return this;
+    }
+
+    public List<UUID> getTokens()
+    {
+        return tokens;
+    }
+
+    void setTokens(List<UUID> tokens)
+    {
+        this.tokens = tokens;
+    }
+
+    public DTOState addToken(DTOToken t)
+    {
+        this.tokens.add(t.getId());
         return this;
     }
 }

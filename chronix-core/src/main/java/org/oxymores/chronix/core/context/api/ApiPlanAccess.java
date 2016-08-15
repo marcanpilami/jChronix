@@ -27,6 +27,7 @@ import org.oxymores.chronix.core.context.ChronixContextMeta;
 import org.oxymores.chronix.core.context.ContextHandler;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.core.engine.api.DTOApplicationShort;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
@@ -188,6 +189,11 @@ public class ApiPlanAccess implements PlanAccessService
             res.addGroup(d);
         }
 
+        for (DTOToken t : app.getTokens().values())
+        {
+            res.addToken(t);
+        }
+
         return res;
     }
 
@@ -246,6 +252,11 @@ public class ApiPlanAccess implements PlanAccessService
         for (DTOFunctionalSequence seq : app.getSequences().values())
         {
             a.addCalendar(DtoToCore.getFunctionalSequence(seq));
+        }
+
+        for (DTOToken t : app.getTokens())
+        {
+            a.addToken(t);
         }
 
         this.getMetaDb().saveApplicationDraft(a);

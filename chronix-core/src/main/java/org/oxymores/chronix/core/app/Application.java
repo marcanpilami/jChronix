@@ -22,6 +22,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class Application implements Serializable
     private Map<UUID, PlaceGroup> groups = new HashMap<>();
 
     @Valid
-    private Map<UUID, Token> tokens = new HashMap<>();
+    private Map<UUID, DTOToken> tokens = new HashMap<>();
 
     @Valid
     private Map<UUID, FunctionalSequence> calendars = new HashMap<>();
@@ -315,24 +316,27 @@ public class Application implements Serializable
     // TOKENS
     ///////////////////////////////////////////////////////////////////////////
 
-    public Token getToken(UUID id)
+    public DTOToken getToken(UUID id)
     {
         return this.tokens.get(id);
     }
 
-    public void addToken(Token t)
+    public void addToken(DTOToken t)
     {
         if (!this.tokens.containsValue(t))
         {
-            this.tokens.put(t.id, t);
-            t.setApplication(this);
+            this.tokens.put(t.getId(), t);
         }
     }
 
-    public void removeToken(Token t)
+    public void removeToken(DTOToken t)
     {
-        this.tokens.remove(t.id);
-        t.setApplication(null);
+        this.tokens.remove(t.getId());
+    }
+
+    public Map<UUID, DTOToken> getTokens()
+    {
+        return new HashMap<>(this.tokens);
     }
 
     ///////////////////////////////////////////////////////////////////////////

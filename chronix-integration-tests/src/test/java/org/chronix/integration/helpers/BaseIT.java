@@ -77,7 +77,7 @@ public class BaseIT
     @Inject
     protected OrderService order;
 
-    protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv, failOnPlacePrv, extPrv;
+    protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv, failOnPlacePrv, extPrv, sleepPrv;
     protected ParameterProvider strPrmPrv, shellPrmPrv;
 
     protected DTOEnvironment envt;
@@ -234,6 +234,7 @@ public class BaseIT
         getPrv = getProvider("org.oxymores.chronix.source.basic.prv.GetVarProvider");
         failOnPlacePrv = getProvider("org.oxymores.chronix.source.basic.prv.FailOnPlaceProvider");
         extPrv = getProvider("org.oxymores.chronix.source.basic.prv.ExternalProvider");
+        sleepPrv= getProvider("org.oxymores.chronix.source.basic.prv.SleepProvider");
 
         strPrmPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
         shellPrmPrv = getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");

@@ -27,8 +27,8 @@ import javax.validation.constraints.NotNull;
 import org.joda.time.DateTime;
 import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.app.State;
-import org.oxymores.chronix.core.app.Token;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.engine.data.TokenRequest;
 import org.oxymores.chronix.engine.data.TokenRequest.TokenRequestType;
@@ -37,7 +37,6 @@ import org.sql2o.Connection;
 public class TokenReservation implements Serializable
 {
     private static final long serialVersionUID = 4126830397920944723L;
-    protected static final int UUID_LENGTH = 36;
 
     private Long id;
 
@@ -235,7 +234,7 @@ public class TokenReservation implements Serializable
         return this.getApplication(ctx).getState(this.stateId);
     }
 
-    public Token getToken(ChronixContextMeta ctx)
+    public DTOToken getToken(ChronixContextMeta ctx)
     {
         return this.getApplication(ctx).getToken(this.stateId);
     }

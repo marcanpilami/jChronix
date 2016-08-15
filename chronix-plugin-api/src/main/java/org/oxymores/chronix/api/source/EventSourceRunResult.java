@@ -54,6 +54,7 @@ public class EventSourceRunResult implements Serializable
 
     /**
      * The time when the job has actually ended. Default is system clock.<br>
+     * Default should be fine for most sources (except those which have asynchronous sub executions)<br>
      * Note that the start time is set by the engine itself and is not available in this object.<br>
      */
     public DateTime end = DateTime.now();

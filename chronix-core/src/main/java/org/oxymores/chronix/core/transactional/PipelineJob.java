@@ -261,7 +261,10 @@ public class PipelineJob extends TranscientBase implements JobDescription
 
     public void setStoppedRunningAt(DateTime stoppedRunningAt)
     {
-        this.stoppedRunningAt = stoppedRunningAt;
+        if (stoppedRunningAt != null && beganRunningAt != null)
+        {
+            this.stoppedRunningAt = stoppedRunningAt.isAfter(this.beganRunningAt) ? stoppedRunningAt : this.beganRunningAt;
+        }
     }
 
     public boolean isReady(ChronixContextMeta ctx)
@@ -369,8 +372,7 @@ public class PipelineJob extends TranscientBase implements JobDescription
         res.outOfPlan = this.outOfPlan;
         res.logStart = "simulated run";
 
-        res.start = this.getVirtualTime();
-        res.end = new DateTime(res.start).plusSeconds((int) RunStats.getMean(connTransac, this.stateID, this.placeID));
+        res.end = new DateTime(this.getVirtualTime()).plusSeconds((int) RunStats.getMean(connTransac, this.stateID, this.placeID));
 
         return res;
     }
@@ -464,5 +466,10 @@ public class PipelineJob extends TranscientBase implements JobDescription
             res.put(v.getKey(), v.getValue());
         }
         return res;
+    }
+
+    public boolean isSimulation()
+    {
+        return this.simulationID != null;
     }
 }

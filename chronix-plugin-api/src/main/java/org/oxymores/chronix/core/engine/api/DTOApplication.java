@@ -25,8 +25,33 @@ public class DTOApplication implements Serializable
     private Map<UUID, DTOFunctionalSequence> sequences = new HashMap<>();
     private Map<UUID, DTOEventSource> eventSources = new HashMap<>();
     private Map<UUID, DTOPlaceGroup> groups = new HashMap<>();
+    private Map<UUID, DTOToken> tokens = new HashMap<>();
 
     private Map<UUID, DTOParameter> sharedParameters = new HashMap<>();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Tokens
+    ///////////////////////////////////////////////////////////////////////////
+
+    public Collection<DTOToken> getTokens()
+    {
+        return this.tokens.values();
+    }
+
+    public DTOApplication addToken(DTOToken t)
+    {
+        this.tokens.put(t.getId(), t);
+        return this;
+    }
+
+    public DTOToken getToken(UUID id)
+    {
+        return this.tokens.get(id);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Groups
+    ///////////////////////////////////////////////////////////////////////////
 
     public DTOPlaceGroup getGroup(String name)
     {
@@ -40,17 +65,81 @@ public class DTOApplication implements Serializable
         throw new RuntimeException("no group named " + name);
     }
 
+    public DTOApplication addGroup(DTOPlaceGroup gr)
+    {
+        this.groups.put(gr.getId(), gr);
+        return this;
+    }
+
+    void setGroups(Map<UUID, DTOPlaceGroup> groups)
+    {
+        this.groups = groups;
+    }
+
+    public Collection<DTOPlaceGroup> getGroups()
+    {
+        return groups.values();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Sequences
+    ///////////////////////////////////////////////////////////////////////////
+
     public DTOApplication addSequence(DTOFunctionalSequence seq)
     {
         this.sequences.put(seq.getId(), seq);
         return this;
     }
 
-    public DTOApplication addGroup(DTOPlaceGroup gr)
+    void setSequences(Map<UUID, DTOFunctionalSequence> sequences)
     {
-        this.groups.put(gr.getId(), gr);
-        return this;
+        this.sequences = sequences;
     }
+
+    public Map<UUID, DTOFunctionalSequence> getSequences()
+    {
+        return sequences;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Event sources
+    ///////////////////////////////////////////////////////////////////////////
+
+    public Collection<DTOEventSource> getEventSources()
+    {
+        return eventSources.values();
+    }
+
+    void setEventSources(Map<UUID, DTOEventSource> eventSources)
+    {
+        this.eventSources = eventSources;
+    }
+
+    /**
+     * Adds an new event source to the application. Note that there can only be one source with the same ID so any existing source with an
+     * ID equal to the one of the parameter will be replaced.
+     * 
+     * @param source
+     * @return
+     */
+    public DTOEventSource addEventSource(DTOEventSource source)
+    {
+        this.eventSources.put(source.getId(), source);
+        return source;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Mutualised parameter
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DTOParameter getSharedParameter(UUID id)
+    {
+        return this.sharedParameters.get(id);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Misc accessors
+    ///////////////////////////////////////////////////////////////////////////
 
     public String getName()
     {
@@ -110,53 +199,5 @@ public class DTOApplication implements Serializable
     public void setLatestVersionComment(String latestVersionComment)
     {
         this.latestVersionComment = latestVersionComment;
-    }
-
-    public Collection<DTOEventSource> getEventSources()
-    {
-        return eventSources.values();
-    }
-
-    void setEventSources(Map<UUID, DTOEventSource> eventSources)
-    {
-        this.eventSources = eventSources;
-    }
-
-    /**
-     * Adds an new event source to the application. Note that there can only be one source with the same ID so any existing source with an
-     * ID equal to the one of the parameter will be replaced.
-     * 
-     * @param source
-     * @return
-     */
-    public DTOEventSource addEventSource(DTOEventSource source)
-    {
-        this.eventSources.put(source.getId(), source);
-        return source;
-    }
-
-    public Collection<DTOPlaceGroup> getGroups()
-    {
-        return groups.values();
-    }
-
-    void setGroups(Map<UUID, DTOPlaceGroup> groups)
-    {
-        this.groups = groups;
-    }
-
-    public DTOParameter getSharedParameter(UUID id)
-    {
-        return this.sharedParameters.get(id);
-    }
-
-    public Map<UUID, DTOFunctionalSequence> getSequences()
-    {
-        return sequences;
-    }
-
-    void setSequences(Map<UUID, DTOFunctionalSequence> sequences)
-    {
-        this.sequences = sequences;
     }
 }

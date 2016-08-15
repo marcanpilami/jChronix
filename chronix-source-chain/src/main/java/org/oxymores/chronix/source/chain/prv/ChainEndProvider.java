@@ -57,13 +57,11 @@ public class ChainEndProvider implements EventSourceProvider, RunModeTriggered, 
             EventSourceRunResult rr = new EventSourceRunResult();
             rr.returnCode = 0;
             rr.overloadedLaunchId = jd.getParentContainerLaunchId(); // Scope is: parent chain launch ID.
-            rr.end = jd.getVirtualTimeStart();
             cb.sendRunResult(rr);
         }
 
         // Self result
         EventSourceRunResult res = new EventSourceRunResult();
-        res.end = jd.getVirtualTimeStart(); // Does not take any time.
         res.returnCode = 0;
         return res;
     }
