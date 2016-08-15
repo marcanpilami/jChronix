@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -65,6 +66,8 @@ public class JmsServer implements MessageListenerService
     private ActiveMQConnectionFactory factory;
     private Connection connection;
 
+    private Semaphore stopped = new Semaphore(0);
+
     //////////////////////////////////////
     // OSGI magic fields
     ConfigurationAdmin confSrv;
@@ -114,6 +117,7 @@ public class JmsServer implements MessageListenerService
             }
 
             log.debug("Broker has ended its stop sequence");
+            stopped.release();
         }
         catch (Exception e)
         {
@@ -185,6 +189,7 @@ public class JmsServer implements MessageListenerService
     private void startup()
     {
         log.info("Starting configuration of a message broker with unique ID " + this.brokerId);
+        stopped.drainPermits();
 
         // Class white listing (see http://activemq.apache.org/objectmessage.html)
         System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "*");
@@ -378,11 +383,13 @@ public class JmsServer implements MessageListenerService
     {
         try
         {
-            this.broker.waitUntilStopped();
+            this.stopped.acquire();
+            this.stopped.release();
         }
-        catch (NullPointerException e)
+        catch (Exception e)
         {
-            // Happens if server is already stopped or has not been stared at all.
+            // Not important.
         }
+
     }
 }

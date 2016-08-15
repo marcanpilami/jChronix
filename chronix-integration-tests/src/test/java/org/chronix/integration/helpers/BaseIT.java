@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -22,7 +23,6 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,11 +30,15 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.oxymores.chronix.api.agent.MessageListenerService;
@@ -88,6 +92,7 @@ public class BaseIT
     protected static String configPath = Paths.get("./target/felix-config").toAbsolutePath().normalize().toString();
     protected static String tmpPath = Paths.get("./target/felix-tmp").toAbsolutePath().normalize().toString();
     protected static String tmpAmqPath = Paths.get("./target/amq-tmp").toAbsolutePath().normalize().toString();
+    protected static String tmpPaxPath = Paths.get("./target/pax-tmp").toAbsolutePath().normalize().toString();
     protected static String nodesPath = Paths.get("./target/nodes").toAbsolutePath().normalize().toString();
 
     protected static String localNodeMetaPath = Paths.get("./target/nodes/local").toAbsolutePath().normalize().toString();
@@ -114,19 +119,10 @@ public class BaseIT
         }
     }
 
-    @AfterClass
-    public static void end() throws InterruptedException
-    {
-        // We have a few async service that need to die before jumping to the next class.
-        // No need for subtlety - this is a test.
-        // After class and not after test because: OSGI environment is loaded once per class.
-        Thread.sleep(2000);
-    }
-
     @Configuration
     public Option[] config() throws IOException
     {
-        return options(junitBundles(), systemPackage("sun.misc"),
+        return options(junitBundles(), systemPackage("sun.misc"), CoreOptions.cleanCaches(), CoreOptions.workingDirectory(tmpPaxPath),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
                 systemProperty("felix.cm.dir").value(configPath), systemProperty("org.osgi.framework.storage").value(tmpPath),
@@ -346,8 +342,53 @@ public class BaseIT
         engines.clear();
         server.waitUntilServerIsStopped();
 
+        // displayOsgiBundleInfo();
+
         System.out.println("End of test " + testName.getMethodName());
         System.out.println("**********************************************************");
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected void displayOsgiBundleInfo() throws InvalidSyntaxException
+    {
+        ServiceTracker<ChronixEngine, ChronixEngine> tracker3 = new ServiceTracker<>(bc, bc.createFilter("(objectClass=*)"), null);
+        tracker3.open();
+        for (ServiceReference o : tracker3.getServiceReferences())
+        {
+            System.out.println(Arrays.toString((String[]) o.getProperty("objectClass")) + " - " + o.getBundle().getSymbolicName() + " - "
+                    + intToState(o.getBundle().getState()));
+        }
+        System.out.println("**** Bundles");
+        for (Bundle b : bc.getBundles())
+        {
+            System.out.println(b.getSymbolicName() + " - " + intToState(b.getState()) + " uses:");
+            for (ServiceReference sr : b.getServicesInUse() != null ? b.getServicesInUse() : new ServiceReference[0])
+            {
+                System.out.println("     * " + sr);
+            }
+        }
+        tracker3.close();
+    }
+
+    private String intToState(int state)
+    {
+        switch (state)
+        {
+        case Bundle.ACTIVE:
+            return "ACTIVE";
+        case Bundle.INSTALLED:
+            return "INSTALLED";
+        case Bundle.RESOLVED:
+            return "RESOLVED";
+        case Bundle.STARTING:
+            return "STARTING";
+        case Bundle.STOPPING:
+            return "STOPPING3";
+        case Bundle.UNINSTALLED:
+            return "UNINSTALLED";
+        default:
+            return "" + state;
+        }
     }
 
     protected void save()
