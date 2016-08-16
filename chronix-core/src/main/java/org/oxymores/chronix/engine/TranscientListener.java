@@ -28,7 +28,6 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.apache.commons.lang.StringUtils;
 import org.oxymores.chronix.api.agent.ListenerRollbackException;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.core.app.FunctionalSequence;
@@ -153,7 +152,7 @@ class TranscientListener implements MessageCallback
                     }
                 }
                 // TODO: remove this horrible join and find a way to use bound parameters...
-                List<Event> events = conn.createQuery("SELECT * from Event e WHERE e.stateID IN (" + StringUtils.join(ids, ",") + ")")
+                List<Event> events = conn.createQuery("SELECT * from Event e WHERE e.stateID IN (" + String.join(",", ids) + ")")
                         .executeAndFetch(Event.class);
 
                 // Send these events for analysis (local only - every execution node has also received this pointer)

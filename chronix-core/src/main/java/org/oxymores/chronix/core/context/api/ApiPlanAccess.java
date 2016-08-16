@@ -13,7 +13,6 @@ import java.util.UUID;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path.Node;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -92,7 +91,7 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public DTOApplication createTestApplication()
     {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("not implemented");
         /*
          * Application a = DemoApplication.getNewDemoApplication(); a.setname("test application");
          * a.createStarterGroups(this.ctx.getEnvironment()); PlaceGroup pgLocal = a.getGroupsList().get(0); Chain c =
@@ -331,7 +330,7 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public List<DTOValidationError> validateApplication(DTOApplication app)
     {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("not implemented");
         /*
          * List<DTOValidationError> res = new ArrayList<>(); DTOValidationError tmp;
          * 
