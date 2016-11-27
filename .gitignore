@@ -50,6 +50,11 @@ dependency-reduced-pom.xml
 .project
 .classpath
 
+# Other IDE files    #
+######################
+.idea
+*.iml
+
 # Library archive    #
 ######################
 libref
