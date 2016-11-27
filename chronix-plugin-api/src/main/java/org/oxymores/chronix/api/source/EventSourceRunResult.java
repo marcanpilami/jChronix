@@ -12,25 +12,25 @@ public class EventSourceRunResult implements Serializable
     private static final long serialVersionUID = -8309267933217251096L;
 
     /**
-     * A maximum of 255 characters giving a summary (or the beginning) of the log file. Null if no log file.
+     * A maximum of 255 characters giving a summary of what happened, or the beginning of the log file. Null if no log.
      */
     public String logStart = null;
 
     /**
      * A maximum of 4000 characters containing the full log file, or 1000 character from the beginning + 3000 from the end if too long.<br>
-     * null if no log file. If null & logStart isn't, logStart is copied here.
+     * Null if no log file. If null & {@link #logStart} isn't, logStart is used instead.
      */
     public String fullerLog = null;
 
     /**
      * The path to the complete log file (where the log was created). Relative to the base log directory.<br>
      * null if no log file.<br>
-     * If this is specified, logSizeBytes must be strictly greater than zero.
+     * If this is specified, {@link #logSizeBytes} must be strictly greater than zero.
      */
     public String logPath = null;
 
     /**
-     * The exact size of logPath in bytes.
+     * The exact size of the file at {@link #logPath} in bytes.
      */
     public Long logSizeBytes = null;
 
@@ -43,12 +43,13 @@ public class EventSourceRunResult implements Serializable
     /**
      * A high level interpretation of the result of the run: can this result be considered as a success or not? This is important most
      * notably for logs (red or not!) and for calendar advancement (only touch the calendar if OK)<br>
-     * If left to <code>null</code>, the engine will test {@link #returnCode} == 0 instead. Default value is <code>null</code>.
+     * If left to <code>null</code>, the engine will use <code>{@link #returnCode} == 0</code> instead. Default value is <code>null</code>.
      */
     public Boolean success = null;
 
     /**
-     * These items will be added to the environment and made available to downstream states. Default is none.
+     * These items will be added to the environment and made available to downstream states. Default is an empty map. Both adding to the
+     * default map of replacing it entirely are possible.
      */
     public Map<String, String> newEnvVars = new HashMap<>();
 
