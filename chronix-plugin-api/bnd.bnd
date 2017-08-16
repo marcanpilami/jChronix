@@ -1,4 +1,5 @@
 -exportcontents: \
+	org.oxymores.chronix.exceptions, \
 	org.oxymores.chronix.engine.modularity.web, \
 	org.oxymores.chronix.core.engine.api, \
 	org.oxymores.chronix.api.source, \

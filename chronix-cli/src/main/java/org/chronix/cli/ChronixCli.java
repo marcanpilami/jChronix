@@ -65,14 +65,15 @@ public class ChronixCli
             return;
         }
 
-        try
-        {
+        // TODO: OSGi CLI
+        /*try
+        { 
             SenderHelpers.sendOrderExternalEvent(source, filepath, server.toUpperCase());
         }
         catch (JMSException e)
         {
             log.error("An error occurred during message sending: " + e.getMessage());
             System.exit(1);
-        }
+        }*/
     }
 }

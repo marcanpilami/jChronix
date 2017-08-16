@@ -122,14 +122,6 @@
 					<groupId>org.slf4j</groupId>
 				</exclusion>
 				<exclusion>
-					<groupId>org.apache.activemq</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>backport-util-concurrent</groupId>
-					<artifactId>backport-util-concurrent</artifactId>
-				</exclusion>
-				<exclusion>
 					<groupId>org.sql2o</groupId>
 					<artifactId>sql2o</artifactId>
 				</exclusion>
@@ -179,6 +171,27 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>chronix-agent-command-shell</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-messaging-amq</artifactId>
+			<version>${project.version}</version>
+			<exclusions>
+				<!-- Remove dependencies that are repackaged as OSGI bundles -->
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.activemq</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>backport-util-concurrent</groupId>
+					<artifactId>backport-util-concurrent</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>

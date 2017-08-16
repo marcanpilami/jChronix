@@ -1,4 +1,4 @@
 -dsannotations: *
 -sources: true
 -metatype: *
-Import-Package: org.joda.time.chrono, org.apache.activemq.wireformat, *
+Import-Package: org.joda.time.chrono,*

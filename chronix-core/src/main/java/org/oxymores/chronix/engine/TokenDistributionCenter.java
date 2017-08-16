@@ -67,6 +67,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
     private ChronixContextMeta ctxMeta;
     private ChronixContextTransient ctxDb;
     private ExecutionNode localNode;
+    private MessageListenerService broker;
 
     TokenDistributionCenter(MessageListenerService broker, ChronixContextMeta ctxMeta, ChronixContextTransient ctxDb,
             ExecutionNode localNode)
@@ -74,6 +75,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         this.ctxDb = ctxDb;
         this.ctxMeta = ctxMeta;
         this.localNode = localNode;
+        this.broker = broker;
 
         mainLoop = new Semaphore(0);
         localResource = new Semaphore(1);
@@ -453,7 +455,7 @@ class TokenDistributionCenter implements Runnable, MessageCallback
         JmsSendData jms;
         try
         {
-            jms = new JmsSendData();
+            jms = new JmsSendData(broker);
         }
         catch (JMSException e2)
         {

@@ -24,22 +24,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.joda.time.DateTime;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.FunctionalOccurrence;
+import org.oxymores.chronix.core.app.FunctionalSequence;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
-import org.oxymores.chronix.core.context.ChronixContextTransient;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
@@ -62,7 +60,6 @@ import org.slf4j.LoggerFactory;
 public class SenderHelpers
 {
     private static Logger log = LoggerFactory.getLogger(SenderHelpers.class);
-    public static String defaultBrokerName;
 
     private SenderHelpers()
     {
@@ -73,24 +70,10 @@ public class SenderHelpers
     {
         public MessageProducer jmsProducer;
         public Session jmsSession;
-        Connection connection;
 
-        public JmsSendData() throws JMSException
+        public JmsSendData(MessageListenerService broker) throws JMSException
         {
-            this("vm://" + defaultBrokerName + "?create=false");
-        }
-
-        private JmsSendData(String brokerUrl) throws JMSException
-        {
-            // Factory
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-
-            // Connect to it...
-            this.connection = factory.createConnection();
-            this.connection.start();
-
-            // Create session and producer
-            this.jmsSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+            this.jmsSession = broker.getNewSession();
             this.jmsProducer = jmsSession.createProducer(null);
         }
 
@@ -114,7 +97,6 @@ public class SenderHelpers
             {
                 this.jmsProducer.close();
                 this.jmsSession.close();
-                this.connection.close();
             }
             catch (JMSException e)
             {
@@ -174,15 +156,6 @@ public class SenderHelpers
         }
     }
 
-    // Should only be used by tests (poor performances)
-    public static void sendEvent(Event evt, ChronixContextMeta ctx) throws JMSException
-    {
-        try (JmsSendData d = new JmsSendData())
-        {
-            SenderHelpers.sendEvent(evt, d.jmsProducer, d.jmsSession, ctx, true);
-        }
-    }
-
     // Event
     ///////////////////////////////////////////////////////////////////////////
 
@@ -219,15 +192,6 @@ public class SenderHelpers
 
     ///////////////////////////////////////////////////////////////////////////
     // Application
-    // Should only be used by tests (poor performances)
-    public static void sendApplication(Application a, ExecutionNode target) throws JMSException
-    {
-        // Connect to a broker
-        try (JmsSendData d = new JmsSendData())
-        {
-            SenderHelpers.sendApplication(a, target, d.jmsProducer, d.jmsSession, true, false);
-        }
-    }
 
     public static void sendApplication(Application a, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit,
             boolean dontRestart) throws JMSException
@@ -246,9 +210,9 @@ public class SenderHelpers
         }
     }
 
-    public static void sendApplicationToAllClients(Application a, ChronixContextMeta ctx) throws JMSException
+    public static void sendApplicationToAllClients(Application a, ChronixContextMeta ctx, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             // In case of misconfiguration, we may have double nodes.
             ArrayList<String> sent = new ArrayList<>();
@@ -288,9 +252,9 @@ public class SenderHelpers
         }
     }
 
-    public static void sendEnvironmentToAllNodes(Environment n) throws JMSException
+    public static void sendEnvironmentToAllNodes(Environment n, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             // In case of misconfiguration, we may have double nodes.
             ArrayList<String> sent = new ArrayList<>();
@@ -314,14 +278,6 @@ public class SenderHelpers
 
     // /////////////////////////////////////////////////////////////////////////
     // PipelineJob
-    // Should only be used by tests (poor performances)
-    public static void sendToPipeline(PipelineJob pj, ExecutionNode target) throws JMSException
-    {
-        try (JmsSendData d = new JmsSendData())
-        {
-            SenderHelpers.sendToPipeline(pj, target, d.jmsProducer, d.jmsSession, true);
-        }
-    }
 
     public static void sendToPipeline(PipelineJob pj, ExecutionNode target, MessageProducer jmsProducer, Session jmsSession, boolean commit)
             throws JMSException
@@ -338,36 +294,28 @@ public class SenderHelpers
         }
     }
 
-    public static void runStateAlone(State s, Place p) throws JMSException
+    public static void runStateAlone(State s, Place p, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             s.runAlone(p, d.jmsProducer, d.jmsSession);
         }
     }
 
-    public static void runStateInsidePlanWithoutCalendarUpdating(State s, Place p) throws JMSException
+    public static void runStateInsidePlanWithoutCalendarUpdating(State s, Place p, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             s.runInsidePlanWithoutUpdatingCalendar(p, d.jmsProducer, d.jmsSession, DateTime.now());
         }
     }
 
-    public static void runStateInsidePlan(State s, org.sql2o.Connection conn, Map<String, String> fieldOverload) throws JMSException
+    public static void runStateInsidePlan(State s, org.sql2o.Connection conn, Map<String, String> fieldOverload,
+            MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             s.runInsidePlan(conn, d.jmsProducer, d.jmsSession, null, null, DateTime.now(), fieldOverload);
-        }
-    }
-
-    public static void runStateInsidePlan(State s, Place p, org.sql2o.Connection conn, Map<String, String> fieldOverload)
-            throws JMSException
-    {
-        try (JmsSendData d = new JmsSendData())
-        {
-            s.runInsidePlan(p, conn, d.jmsProducer, d.jmsSession, DateTime.now(), fieldOverload);
         }
     }
 
@@ -424,56 +372,6 @@ public class SenderHelpers
         }
     }
 
-    public static void sendCalendarPointer(CalendarPointer cp, FunctionalSequence ca, Environment envt) throws JMSException
-    {
-        try (JmsSendData d = new JmsSendData())
-        {
-            sendCalendarPointer(cp, ca, d.jmsSession, d.jmsProducer, true, envt);
-        }
-    }
-
-    public static void sendCalendarPointerShift(org.sql2o.Connection conn, Integer shiftNext, Integer shiftCurrent, State s, Place p,
-            ChronixContextMeta ctx) throws JMSException
-    {
-        CalendarPointer cp = s.getCurrentCalendarPointer(conn, p);
-        FunctionalOccurrence next = s.getCalendar().getOccurrenceShiftedBy(cp.getNextRunOccurrenceCd(ctx), shiftNext);
-        FunctionalOccurrence current = s.getCalendar().getOccurrenceShiftedBy(cp.getLastEndedOccurrenceCd(ctx), shiftCurrent);
-        cp.setNextRunOccurrenceCd(next);
-        cp.setLastEndedOccurrenceCd(current);
-
-        try (JmsSendData d = new JmsSendData())
-        {
-            sendCalendarPointer(cp, s.getCalendar(), d.jmsSession, d.jmsProducer, true, ctx.getEnvironment());
-        }
-    }
-
-    public static void sendCalendarPointerShift(Integer shiftNext, State s, ChronixContextMeta ctx, ChronixContextTransient ctx2)
-            throws JMSException
-    {
-        sendCalendarPointerShift(shiftNext, 0, s, ctx, ctx2);
-    }
-
-    public static void sendCalendarPointerShift(Integer shiftNext, Integer shiftCurrent, State s, ChronixContextMeta ctx,
-            ChronixContextTransient ctx2) throws JMSException
-    {
-        try (org.sql2o.Connection conn = ctx2.getTransacDataSource().open())
-        {
-            for (Place p : s.getRunsOn().getPlaces())
-            {
-                sendCalendarPointerShift(conn, shiftNext, shiftCurrent, s, p, ctx);
-            }
-        }
-    }
-
-    public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, ChronixContextMeta ctx,
-            ChronixContextTransient ctxDb) throws JMSException
-    {
-        try (JmsSendData d = new JmsSendData(); org.sql2o.Connection conn = ctxDb.getTransacDataSource().open())
-        {
-            SenderHelpers.sendCalendarPointerShift(shift, updatedCalendar, conn, ctx, d.jmsSession, d.jmsProducer, true);
-        }
-    }
-
     public static void sendCalendarPointerShift(Integer shift, FunctionalSequence updatedCalendar, org.sql2o.Connection conn,
             ChronixContextMeta ctx, Session jmsSession, MessageProducer jmsProducer, boolean commit) throws JMSException
     {
@@ -518,9 +416,9 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderRestartAfterFailure(UUID pipelineJobId, ExecutionNode en) throws JMSException
+    public static void sendOrderRestartAfterFailure(UUID pipelineJobId, ExecutionNode en, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             sendOrderRestartAfterFailure(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
         }
@@ -549,12 +447,13 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderForceOk(UUID appId, UUID pipelineJobId, UUID execNodeId, Environment envt) throws ChronixException
+    public static void sendOrderForceOk(UUID appId, UUID pipelineJobId, UUID execNodeId, Environment envt, MessageListenerService broker)
+            throws ChronixException
     {
         try
         {
             ExecutionNode en = envt.getNode(execNodeId);
-            sendOrderForceOk(pipelineJobId, en);
+            sendOrderForceOk(pipelineJobId, en, broker);
         }
         catch (Exception e)
         {
@@ -562,9 +461,9 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderForceOk(UUID pipelineJobId, ExecutionNode en) throws JMSException
+    public static void sendOrderForceOk(UUID pipelineJobId, ExecutionNode en, MessageListenerService broker) throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             sendOrderForceOk(pipelineJobId, en, d.jmsSession, d.jmsProducer, true);
         }
@@ -594,9 +493,10 @@ public class SenderHelpers
         }
     }
 
-    public static void sendOrderExternalEvent(String sourceName, String data, String nodeName) throws JMSException
+    public static void sendOrderExternalEvent(String sourceName, String data, String nodeName, MessageListenerService broker)
+            throws JMSException
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(broker))
         {
             sendOrderExternalEvent(sourceName, data, nodeName, d.jmsSession, d.jmsProducer, false);
         }
@@ -645,9 +545,9 @@ public class SenderHelpers
     ///////////////////////////////////////////////////////////////////////////
 
     // Only works with local node. Always commit.
-    public static void sendRunResult(RunResult rr, String nodeName) throws JMSException
+    public static void sendRunResult(RunResult rr, String nodeName, MessageListenerService broker) throws JMSException
     {
-        JmsSendData d = new JmsSendData();
+        JmsSendData d = new JmsSendData(broker);
         String qName = String.format(Constants.Q_RUNNERMGR, nodeName);
 
         ObjectMessage m = d.jmsSession.createObjectMessage(rr);

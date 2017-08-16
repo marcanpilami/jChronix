@@ -38,7 +38,7 @@ public class EngineCbRun implements EngineCallback
     @Override
     public void sendMessage(Serializable msg, String destinationQueue, String replyQueue)
     {
-        try (JmsSendData d = new JmsSendData())
+        try (JmsSendData d = new JmsSendData(e.getBroker()))
         {
             ObjectMessage omsg = d.jmsSession.createObjectMessage(msg);
             omsg.setJMSReplyTo(d.jmsSession.createQueue(replyQueue));
@@ -58,7 +58,7 @@ public class EngineCbRun implements EngineCallback
 
         try
         {
-            SenderHelpers.sendRunResult(rr, this.e.getLocalNode().getName());
+            SenderHelpers.sendRunResult(rr, this.e.getLocalNode().getName(), e.getBroker());
         }
         catch (JMSException e)
         {
@@ -75,7 +75,8 @@ public class EngineCbRun implements EngineCallback
     @Override
     public void launchState(DTOState s)
     {
-        try (Connection o = this.e.getContextTransient().getTransacDataSource().beginTransaction(); JmsSendData d = new JmsSendData())
+        try (Connection o = this.e.getContextTransient().getTransacDataSource().beginTransaction();
+                JmsSendData d = new JmsSendData(e.getBroker()))
         {
             a.getState(s.getId()).runInsidePlan(o, d.jmsProducer, d.jmsSession, pj.getId(), null, pj.getVirtualTime(), null);
             d.jmsSession.commit();

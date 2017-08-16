@@ -1,0 +1,4 @@
+-dsannotations: *
+-sources: true
+-metatype: *
+Import-Package: org.apache.activemq.wireformat, *

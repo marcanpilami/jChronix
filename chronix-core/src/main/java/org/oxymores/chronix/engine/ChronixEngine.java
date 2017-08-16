@@ -357,4 +357,9 @@ public class ChronixEngine extends Thread
     {
         return false;
     }
+
+    public MessageListenerService getBroker()
+    {
+        return this.broker;
+    }
 }

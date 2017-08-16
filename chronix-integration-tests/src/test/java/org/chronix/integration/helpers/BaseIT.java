@@ -1,5 +1,6 @@
 package org.chronix.integration.helpers;
 
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -74,7 +75,6 @@ public class BaseIT
     @Inject
     protected HistoryService history;
 
-    @Inject
     protected OrderService order;
 
     protected EventSourceProvider chainPrv, planPrv, shellPrv, setPrv, getPrv, failOnPlacePrv, extPrv, sleepPrv;
@@ -125,12 +125,14 @@ public class BaseIT
         return options(junitBundles(), systemPackage("sun.misc"), CoreOptions.cleanCaches(), CoreOptions.workingDirectory(tmpPaxPath),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
-                systemProperty("felix.cm.dir").value(configPath), systemProperty("org.osgi.framework.storage").value(tmpPath),
+                systemProperty("felix.cm.dir").value(configPath), systemProperty("felix.cm.loglevel").value("3"),
+                frameworkProperty("felix.log.level").value("3"), systemProperty("org.osgi.framework.storage").value(tmpPath),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
                 mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(), mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"),
                 mavenBundle("ch.qos.logback", "logback-core").versionAsInProject(),
                 mavenBundle("ch.qos.logback", "logback-classic").versionAsInProject(),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
+                mavenBundle("org.oxymores.chronix", "chronix-messaging-amq").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-source-basic").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-source-test").versionAsInProject(),
@@ -204,25 +206,39 @@ public class BaseIT
         System.out.println("**********************************************************");
         System.out.println("Starting test " + testName.getMethodName());
 
+        // Create and start the messaging system. It needs a configuration, so cannot simply be injected in fields above.
+        org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
+        Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
+        props.put("org.oxymores.chronix.network.dbpath", tmpAmqPath.replace('\\', '/'));
+        props.put("org.oxymores.chronix.network.clear", "true");
+        props.put("org.oxymores.chronix.network.nodeid", "3654654");
+        cfg.update(props);
+
+        ServiceTracker<OrderService, OrderService> st = null;
+        try
+        {
+            st = new ServiceTracker<>(bc, OrderService.class, null);
+            st.open();
+            st.waitForService(60000);
+            order = st.getService();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            if (st != null)
+            {
+                st.close();
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
         // Sanity check
         Assert.assertNotNull(meta);
         Assert.assertNotNull(order);
         Assert.assertNotNull(conf);
-
-        // Allow the broker to start (and clear remaining messages if any)
-        try
-        {
-            org.osgi.service.cm.Configuration cfg = conf.getConfiguration("ServiceHost", null);
-            Dictionary<String, Object> props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
-            props.put("org.oxymores.chronix.network.dbpath", tmpAmqPath);
-            props.put("org.oxymores.chronix.network.clear", "true");
-            props.put("org.oxymores.chronix.network.nodeid", "3654654");
-            cfg.update(props);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
 
         // Factories
         chainPrv = getProvider("org.oxymores.chronix.source.chain.prv.ChainProvider");
@@ -234,7 +250,7 @@ public class BaseIT
         getPrv = getProvider("org.oxymores.chronix.source.basic.prv.GetVarProvider");
         failOnPlacePrv = getProvider("org.oxymores.chronix.source.basic.prv.FailOnPlaceProvider");
         extPrv = getProvider("org.oxymores.chronix.source.basic.prv.ExternalProvider");
-        sleepPrv= getProvider("org.oxymores.chronix.source.basic.prv.SleepProvider");
+        sleepPrv = getProvider("org.oxymores.chronix.source.basic.prv.SleepProvider");
 
         strPrmPrv = getParameterProvider("org.oxymores.chronix.prm.basic.prv.StringParameterProvider");
         shellPrmPrv = getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");

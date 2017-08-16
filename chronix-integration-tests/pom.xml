@@ -13,7 +13,7 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
-		<exam.version>4.9.1</exam.version>
+		<exam.version>4.11.0</exam.version>
 	</properties>
 
 	<build>

@@ -1,4 +1,4 @@
-package org.oxymores.chronix.engine;
+package org.oxymores.chronix.network;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.oxymores.chronix.api.agent.MessageCallback;
 import org.oxymores.chronix.api.agent.MessageListenerService;
-import org.oxymores.chronix.engine.helpers.SenderHelpers;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -88,13 +87,7 @@ public class JmsServer implements MessageListenerService
     @Deactivate
     public void deactivate()
     {
-        log.debug("Server has received an OSGI deactivate request");
-        stopBroker();
-    }
-
-    synchronized void stopBroker()
-    {
-        log.info("Stopping message broker with ID " + this.brokerId);
+        log.info("OSGI order - Stopping message broker with ID " + this.brokerId);
         try
         {
             this.channels.clear();
@@ -172,7 +165,6 @@ public class JmsServer implements MessageListenerService
                 throw new ChronixInitializationException("Cannot set node unique ID in configuration", e);
             }
         }
-        SenderHelpers.defaultBrokerName = brokerId;
 
         // Clear?
         clear = Boolean.parseBoolean(config.getOrDefault("org.oxymores.chronix.network.clear", "false"));

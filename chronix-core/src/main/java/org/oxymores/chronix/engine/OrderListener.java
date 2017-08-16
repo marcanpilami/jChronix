@@ -121,7 +121,7 @@ class OrderListener implements MessageCallback
 
         else if (order.type == OrderType.EXTERNAL)
         {
-            orderExternal(order);
+            orderExternal(order, jmsSession, jmsProducer);
         }
     }
 
@@ -203,7 +203,7 @@ class OrderListener implements MessageCallback
         }
     }
 
-    private void orderExternal(Order order)
+    private void orderExternal(Order order, Session jmsSession, MessageProducer jmsProducer)
     {
         EventSourceDef e = null;
         Application a = null;
@@ -239,10 +239,10 @@ class OrderListener implements MessageCallback
         {
             for (State s : a.getStatesClientOfSource(e.getId()))
             {
-                SenderHelpers.runStateInsidePlan(s, connTransac, args);
+                s.runInsidePlan(connTransac, jmsProducer, jmsSession, null, null, DateTime.now(), args);
             }
         }
-        catch (JMSException e1)
+        catch (Exception e1)
         {
             // weird. We may want to retry later.
             throw new ListenerRollbackException("could not relay external order", e1);

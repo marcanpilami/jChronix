@@ -7,9 +7,12 @@ import java.util.UUID;
 import javax.jms.JMSException;
 
 import org.apache.commons.io.FilenameUtils;
+import org.joda.time.DateTime;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.oxymores.chronix.api.agent.MessageListenerService;
 import org.oxymores.chronix.core.app.Application;
 import org.oxymores.chronix.core.app.State;
 import org.oxymores.chronix.core.context.ChronixContextMeta;
@@ -20,6 +23,7 @@ import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
 import org.oxymores.chronix.dto.ResOrder;
 import org.oxymores.chronix.engine.helpers.SenderHelpers;
+import org.oxymores.chronix.engine.helpers.SenderHelpers.JmsSendData;
 import org.oxymores.chronix.exceptions.ChronixException;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
 import org.slf4j.Logger;
@@ -34,6 +38,24 @@ public class ApiOrder implements OrderService
     // The service works under an independent context.
     private String ctxMetaPath, ctxDbHistoryPath, ctxDbTransacPath;
 
+    ///////////////////////////////////////////////////////////
+    // Construction & Magic OSGI fields
+    private MessageListenerService broker;
+
+    @Reference
+    private void setBroker(MessageListenerService b)
+    {
+        log.debug("Setting broker inside engine factory");
+        this.broker = b;
+    }
+
+    @SuppressWarnings("unused")
+    private void unsetBroker()
+    {
+        log.debug("Removing broker from engine factory");
+        this.broker = null;
+    }
+
     @Activate
     @Modified
     private void activate(Map<String, String> configuration)
@@ -47,6 +69,8 @@ public class ApiOrder implements OrderService
         ctxDbHistoryPath = FilenameUtils.concat(ctxMetaPath, "db_history/db");
         ctxDbTransacPath = FilenameUtils.concat(ctxMetaPath, "db_transac/db");
     }
+    //
+    ///////////////////////////////////////////////////////////
 
     private ChronixContextTransient getCtxDb()
     {
@@ -65,7 +89,8 @@ public class ApiOrder implements OrderService
         {
             RunLog rl = conn.createQuery("SELECT * FROM RunLog WHERE id=:id").addParameter("id", launchId)
                     .executeAndFetchFirst(RunLog.class);
-            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.getMetaDb().getEnvironment());
+            SenderHelpers.sendOrderForceOk(rl.getApplicationId(), rl.getId(), rl.getExecutionNodeId(), this.getMetaDb().getEnvironment(),
+                    broker);
         }
         catch (ChronixException e)
         {
@@ -86,14 +111,14 @@ public class ApiOrder implements OrderService
             State s = a.getState(stateId);
             if (insidePlan)
             {
-                try (Connection o = this.getCtxDb().getTransacDataSource().beginTransaction())
+                try (Connection o = this.getCtxDb().getTransacDataSource().beginTransaction(); JmsSendData jms = new JmsSendData(broker);)
                 {
-                    SenderHelpers.runStateInsidePlan(s, p, o, null);
+                    s.runInsidePlan(p, o, jms.jmsProducer, jms.jmsSession, DateTime.now(), null);
                 }
             }
             else
             {
-                SenderHelpers.runStateAlone(s, p);
+                SenderHelpers.runStateAlone(s, p, broker);
             }
         }
         catch (Exception e)
@@ -127,7 +152,7 @@ public class ApiOrder implements OrderService
         try
         {
             SenderHelpers.sendOrderExternalEvent(externalSourceName, externalData,
-                    this.getMetaDb().getEnvironment().getNodesList().get(0).getName());
+                    this.getMetaDb().getEnvironment().getNodesList().get(0).getName(), broker);
             return new ResOrder("OrderExternal", true, "Success");
         }
         catch (JMSException e)
