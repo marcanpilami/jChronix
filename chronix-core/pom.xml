@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <activemq.version>5.11.1</activemq.version>
+        <activemq.version>5.15.10</activemq.version>
         <hsqldb.version>2.3.3</hsqldb.version>
         <validator.version>5.2.1.Final</validator.version>
     </properties>
