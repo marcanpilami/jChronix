@@ -14,7 +14,7 @@
     <properties>
         <activemq.version>5.11.1</activemq.version>
         <hsqldb.version>2.3.3</hsqldb.version>
-        <validator.version>5.2.1.Final</validator.version>
+        <validator.version>5.3.5.Final</validator.version>
     </properties>
 
     <dependencies>
