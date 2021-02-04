@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>org.sql2o</groupId>
 			<artifactId>sql2o</artifactId>
-			<version>1.5.4</version>
+			<version>${sql2o.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hsqldb</groupId>

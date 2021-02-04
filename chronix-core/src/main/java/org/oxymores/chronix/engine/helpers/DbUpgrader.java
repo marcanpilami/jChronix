@@ -8,11 +8,13 @@ package org.oxymores.chronix.engine.helpers;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 import java.sql.SQLException;
-import org.slf4j.Logger;
+
 import org.hsqldb.cmdline.SqlFile;
 import org.hsqldb.cmdline.SqlToolError;
 import org.oxymores.chronix.exceptions.ChronixInitializationException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -58,7 +60,7 @@ public class DbUpgrader
         try
         {
             Reader r = new InputStreamReader(DbUpgrader.class.getClassLoader().getResourceAsStream(scriptPath));
-            f = new SqlFile(r, "", null, "UTF8", false, null);
+            f = new SqlFile(r, "", null, "UTF8", false, (URL)null);
         }
         catch (IOException ex)
         {

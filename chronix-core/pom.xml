@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>org.sql2o</groupId>
 			<artifactId>sql2o</artifactId>
-			<version>1.5.4</version>
+			<version>${sql2o.version}</version>
 		</dependency>
 
 
@@ -90,7 +90,7 @@
 		<dependency>
 			<artifactId>jboss-logging</artifactId>
 			<groupId>org.jboss.logging</groupId>
-			<version>3.3.0.Final</version>
+			<version>${jboss.logging.version}</version>
 		</dependency>
 
 		<dependency>

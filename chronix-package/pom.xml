@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.scr</artifactId>
-			<version>2.0.2</version>
+			<version>${felix.scr.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.codehaus.mojo</groupId>
@@ -77,24 +77,24 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.fileinstall</artifactId>
-			<version>3.5.2</version>
+			<version>${felix.fileinstall.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.configadmin</artifactId>
-			<version>1.8.8</version>
+			<version>${felix.configadmin.version}</version>
 		</dependency>
 
 		<!-- DEBUG - a CLI -->
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.gogo.shell</artifactId>
-			<version>0.12.0</version>
+			<version>${felix.gogoshell.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.gogo.command</artifactId>
-			<version>0.16.0</version>
+			<version>${felix.gogocommand.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>*</artifactId>
@@ -107,7 +107,7 @@
 		<dependency>
 			<groupId>org.ops4j.pax.logging</groupId>
 			<artifactId>pax-logging-service</artifactId>
-			<version>1.8.5</version>
+			<version>${pax.logging.version}</version>
 		</dependency>
 
 		<!-- Base Chronix bundles -->
