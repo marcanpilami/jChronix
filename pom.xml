@@ -27,7 +27,7 @@
 		<jboss.logging.version>3.4.1.Final</jboss.logging.version>
 		<args4j.version>2.33</args4j.version>
 
-		<bnd.version>3.2.0</bnd.version>
+		<bnd.version>5.2.0</bnd.version>
 		<felix.version>7.0.0</felix.version>
 		<felix.scr.version>2.1.24</felix.scr.version>
 		<felix.fileinstall.version>3.6.8</felix.fileinstall.version>

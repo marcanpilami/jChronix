@@ -1,0 +1,14 @@
+{
+    "editor.formatOnSave": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.format.settings.url": "./chronix-doc/src/site/sphinx/code/java.xml",
+    "java.import.exclusions": [
+        "**/.*",
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/archetype-resources/**",
+        "**/META-INF/maven/**",
+        "**/target/",
+        "**/webapp/dist/"
+    ],
+}

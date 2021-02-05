@@ -1,6 +1,7 @@
 package org.oxymores.chronix.engine.helpers;
 
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -30,6 +31,10 @@ public class Sql2oJodaConverter implements Converter<DateTime>
         }
         try
         {
+            if (val instanceof OffsetDateTime)
+            {
+                val = ((OffsetDateTime)val).toEpochSecond();
+            }
             // Joda has it's own pluggable converters infrastructure
             // it will throw IllegalArgumentException if can't convert
             // look @ org.joda.time.convert.ConverterManager

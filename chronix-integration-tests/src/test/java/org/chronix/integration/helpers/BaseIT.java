@@ -122,16 +122,44 @@ public class BaseIT
     @Configuration
     public Option[] config() throws IOException
     {
-        return options(junitBundles(), systemPackage("sun.misc"), CoreOptions.cleanCaches(), CoreOptions.workingDirectory(tmpPaxPath),
+        return options(
+                // Junit itself
+                junitBundles(), systemPackage("sun.misc"),
                 systemProperty("logback.configurationFile")
                         .value("file:" + Paths.get("./target/test-classes/logback.xml").toAbsolutePath().normalize().toString()),
+
+                // PAX EXAM options
+                CoreOptions.cleanCaches(), // Always clean
+                CoreOptions.workingDirectory(tmpPaxPath),
+                systemProperty("org.ops4j.pax.url.mvn.repositories").value("https://repo1.maven.org/maven2@id=central"),
+
+                // Felix options
                 systemProperty("felix.cm.dir").value(configPath), systemProperty("felix.cm.loglevel").value("3"),
                 frameworkProperty("felix.log.level").value("3"), systemProperty("org.osgi.framework.storage").value(tmpPath),
+
+                mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
+                mavenBundle("org.osgi", "org.osgi.util.promise", "1.1.1"), mavenBundle("org.osgi", "org.osgi.util.function", "1.1.0"),
+
                 mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(), mavenBundle("org.slf4j", "log4j-over-slf4j", "1.7.14"),
                 mavenBundle("ch.qos.logback", "logback-core").versionAsInProject(),
                 mavenBundle("ch.qos.logback", "logback-classic").versionAsInProject(),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
+                mavenBundle("org.jboss.logging", "jboss-logging").versionAsInProject(),
+                mavenBundle("commons-logging", "commons-logging").versionAsInProject(),
+                mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
+                mavenBundle("commons-io", "commons-io").versionAsInProject(),
+                mavenBundle("commons-lang", "commons-lang").versionAsInProject(), mavenBundle("org.hsqldb", "hsqldb").versionAsInProject(),
+                mavenBundle("com.thoughtworks.xstream", "xstream").versionAsInProject(),
+                mavenBundle("joda-time", "joda-time").versionAsInProject(), mavenBundle("com.fasterxml", "classmate").versionAsInProject(),
+                mavenBundle("org.hibernate", "hibernate-validator").versionAsInProject(),
+                mavenBundle("org.mnode.ical4j", "ical4j").versionAsInProject(),
+                mavenBundle("javax.validation", "validation-api").versionAsInProject(),
+                mavenBundle("jakarta.xml.bind", "jakarta.xml.bind-api").versionAsInProject(),
+                mavenBundle("jakarta.xml.ws", "jakarta.xml.ws-api").versionAsInProject(),
+                mavenBundle("jakarta.activation", "jakarta.activation-api").versionAsInProject(),
+                mavenBundle("jakarta.xml.soap", "jakarta.xml.soap-api", "1.4.2"),
+
+                // Chronix itself
                 mavenBundle("org.oxymores.chronix", "chronix-messaging-amq").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-source-chain").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-source-basic").versionAsInProject(),
@@ -140,18 +168,7 @@ public class BaseIT
                 mavenBundle("org.oxymores.chronix", "chronix-agent-command-shell").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-core").versionAsInProject(),
                 mavenBundle("org.oxymores.chronix", "chronix-nonosgilibs").versionAsInProject(),
-                mavenBundle("org.oxymores.chronix", "chronix-plugin-api").versionAsInProject(),
-                mavenBundle("org.hsqldb", "hsqldb").versionAsInProject(),
-                mavenBundle("com.thoughtworks.xstream", "xstream").versionAsInProject(),
-                mavenBundle("joda-time", "joda-time").versionAsInProject(), mavenBundle("com.fasterxml", "classmate").versionAsInProject(),
-                mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
-                mavenBundle("commons-io", "commons-io").versionAsInProject(),
-                mavenBundle("commons-lang", "commons-lang").versionAsInProject(),
-                mavenBundle("commons-logging", "commons-logging").versionAsInProject(),
-                mavenBundle("org.hibernate", "hibernate-validator").versionAsInProject(),
-                mavenBundle("org.mnode.ical4j", "ical4j").versionAsInProject(),
-                mavenBundle("org.jboss.logging", "jboss-logging").versionAsInProject(),
-                mavenBundle("javax.validation", "validation-api").versionAsInProject());
+                mavenBundle("org.oxymores.chronix", "chronix-plugin-api").versionAsInProject());
     }
 
     private EventSourceProvider getProvider(String implementationClassName)
