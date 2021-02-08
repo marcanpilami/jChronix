@@ -1,33 +1,33 @@
 Intrinsic period
 ################
 
-Intrinsic periods are scheduling contraints that are not relative to other
-objects (like a contraint "do not run X while Y is running") but to the
-previous runs of the object itself. They allow to modelize some complex
-functionnal conditions:
+Intrinsic periods are scheduling constraints that are not relative to other
+objects (like a constraint "do not run X while Y is running") but to the
+previous runs of the object itself. They allow to model some complex
+functional conditions:
 
 * Do not run if a previous execution is still ongoing
 
 * Only run on certain dates (following a business calendar)
 
 
-* Make exterlnal events (such as the arrival of a file) correspond to a
+* Make external events (such as the arrival of a file) correspond to a
   particular launch (i.e. if a chain C is waiting for two files F1 and F2, only
   launch C on date D if both F1 and F2 of date D have arrived and not F1 and F2
   from two different dates)
 
-* Force sequential execution following a functionnal calendar (only launch
+* Force sequential execution following a functional calendar (only launch
   date D+1 if D has finished)
 
 
-Basically, this is the use of functionnal calendars and sequences.
+Basically, this is the use of functional calendars and sequences.
 
 Should I use this?
 ******************
 
 If you consider your scheduler as a crontab++, no. If your plan is strongly
 dependent upon a (or many) period that directly comes from a business
-contraint, this is the way to implement it.
+constraint, this is the way to implement it.
 
 .. note::
 
@@ -47,13 +47,13 @@ days.
 .. warning::
    Calendars are totally distinct from clocks. Clocks are technical: they trigger 
    something at a given time.
-   Calendars are functionnal constraints: they trace the business date/time. 
-   The two notions - trigger time and business time - are actually independant.
+   Calendars are functional constraints: they trace the business date/time. 
+   The two notions - trigger time and business time - are actually independent.
    In the retailer example, one could have chosen to have all the daily jobs on 
-   saturday (a technical decision, for exemple because saturadys are the only 
-   days when there is enough compuattion power available), one after another. 
-   In that case, there are five triggers on saturdays,
-   but each resulting excution will correspond to one different business day. 
+   Saturday (a technical decision, for example because Saturdays are the only 
+   days when there is enough computation power available), one after another. 
+   In that case, there are five triggers on Saturdays,
+   but each resulting execution will correspond to one different business day. 
 
 
 There are many example of business calendars in scheduling plans: financial
@@ -66,22 +66,22 @@ this paragraph)
 
    We are talking of days, however calendars can only use hours and below. But 
    beware: a job scheduler is not supposed to do real time processing and 
-   an hour peridicity should in most cases be considered an absolute minimum.
+   an hour periodicity should in most cases be considered an absolute minimum.
    
-A calendar also bears the notion of "current day". This is optionnal. The
+A calendar also bears the notion of "current day". This is optional. The
 current day designate the day that is currently being used or that will be used
 on next launch if all is already done. Basically, it is a mark on the calendar
-designating the next day to run. It is usefull both for operators who get a
+designating the next day to run. It is useful both for operators who get a
 clearer view of future exploitation, and also to prevent running chains too
 soon: it is forbidden to run on a date greater than the current date.
 
 
 Creation
 ========
-A calendar is defined by a number of ordered occurrences. There is no reccurence
+A calendar is defined by a number of ordered occurrences. There is no recurrence
 to define calendars are there are for clocks, as one would often be hard
-pressed to find a set of simple reccurrences and exceptions that would describe
-a business calendar (for exemple, the reader is invited to try with the
+pressed to find a set of simple recurrences and exceptions that would describe
+a business calendar (for example, the reader is invited to try with the
 religious calendar of his choice). Occurrences are therefore defined manually.
 
 
@@ -101,7 +101,7 @@ it contains will not.
 
 The element can specify a calendar shift that will allow it to run on the same
 calendar as everyone, but shifted by the given number of occurrences. (for
-exemple, one partner of our retailer sends many files that should be processed
+example, one partner of our retailer sends many files that should be processed
 every night. All of these files relate to activity of the previous day (D),
 except for one that related to day before that (D-1). The same
 
@@ -139,7 +139,7 @@ Calendars have no consequences on transitions :
     won't prevent transitions from the failed job to others that may be
     triggered on its failure.
 #. In an A->B transition, calendar status of A is not taken into account for
-   launching B (A may be for exemple 10 occurences late from B, and still B
+   launching B (A may be for example 10 occurrences late from B, and still B
    will launch after A.) It allows to mix jobs on different occurrences in a
    chain.
 
@@ -165,9 +165,9 @@ to rerun missed opportunities. If this is not wanted, the "next date" for the
 State will have to be set manually.
 
 
-In case multiple occurrences have been missed (for exemple, the job has been
+In case multiple occurrences have been missed (for example, the job has been
 disabled for some time), the scheduler can rerun the job in a loop if the
-correct opetion is checked. By default, this is of course disabled as it can
+correct option is checked. By default, this is of course disabled as it can
 have unforeseen consequences. In case this is enabled, a chain A -> B - > C
 where B is three days late on its calendar will see this execution sequence: A
 -> B (D-2) -> B (D-1) -> B (D) -> C. Of course, that only works if the
@@ -178,7 +178,7 @@ know where to stop).
 Behind the scenes...
 ====================
 
-Every State associated to a calendar keeps what is caled a Calendar Pointer, an
+Every State associated to a calendar keeps what is called a Calendar Pointer, an
 element that keeps track (for each Place the State runs on) of the latest
 occurrence used on a calendar. After each successful run, the pointer is
 updated to the next occurrence in the calendar.

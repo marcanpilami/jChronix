@@ -6,10 +6,10 @@ General description
 
 Chronix is a distributed system offering many different ways to deploy.
 
-A *compute node* is a chronix process that will be able to process the plan (i.e. react to events in order to trigger launches)
+A *compute node* is a Chronix process that will be able to process the plan (i.e. react to events in order to trigger launches)
 and also to run processes, actually running jobs.
 
-A *runner node* is a chronix process that only has the "run process" part - it cannot decide to launch anything. For all
+A *runner node* is a Chronix process that only has the "run process" part - it cannot decide to launch anything. For all
 purposes, it is a remote control agent for another *compute node*.
 
 All compute nodes are independent - the failure of a node has no impact whatsoever on the other nodes themselves. (This does not mean it has no impact at all:
@@ -23,11 +23,11 @@ and Chronix will take care of the rest. In that regard, the following data may b
 * All links are duplex - making it far easier to cross firewalls
 * Routed means there is no need for direct links between nodes - as long as there is a route through other nodes, it will work
 * Every node has a local database that guarantees no message will be ever lost even if a node is shutdown/crashes.
-  (some may be withhold until the node is restarted or network is reestablished)
+  (some may be withheld until the node is restarted or network is reestablished)
 * LAN and WAN compatible (based on a JMS implementation named ActiveMQ). However, for better performances, WAN links should be avoided.
 
 A distributed system is not easy to administrate. That's why a specific node is designated as the *console node*. This node is a
-compute node that boasts a web server holding the administration console and the dev environment. Every log is always sent to this node.
+compute node that boasts a web server holding the administration console and the production plan dev environment. Every log is always sent to this node.
 (compute nodes hold all the logs of jobs that have run locally as well as the logs of the runner nodes they control. Runner nodes do
 not keep logs).
 
@@ -85,19 +85,19 @@ Pros:
 Cons:
 
 * more monitoring
-* more complex, therefore more prone to errements
+* more complex, therefore more prone to erring
 
 Application centric
 -------------------
 
 Most often, the fully distributed model is overkill: its main advantage is reliability, but it's hard to consider that the production plan
-is safe just because most compute nodes survive. Indeed, a plan will very often spread over muliple servers, and have jobs that can be
+is safe just because most compute nodes survive. Indeed, a plan will very often spread over multiple servers, and have jobs that can be
 launched on a node only after other have finished on other servers. So loosing a server will block jobs on others.
 
 This, however, is only true inside the same application. Applications are supposed to be independent of each other (the only point of
 contact between applications should always be data flows - file reception, interface table filling, ... This is modelized as an "external event" inside
 Chronix so as not to create a spaghetti monster of mingled plans). Therefore, applications do have separate levels of service. In this regard,
-CHronix should b deployed with one compute node per application, the rest being runner nodes. And should performance scaling become an issue,
+Chronix should be deployed with one compute node per application, the rest being runner nodes. And should performance scaling become an issue,
 later converting a runner into a compute node is a painless operation, so this should not stop you from choosing this solution.
 
 **This is the preferred deployment model in most cases**.
@@ -124,8 +124,8 @@ Monitoring
 
 Through JMX one day. Currently: a log file that should be mined. Log level can be changed.
 
-Peformances
-***********
+Performances
+************
 
 Chronix is not exactly fast - and it has no reason to be, as it is for batch rather than real time processes. Should performances become an issue,
 the natural reaction is to do horizontal scaling, by distributing your jobs on more nodes.
@@ -154,7 +154,7 @@ The engine only contains binaries. No data is ever created there.
 The repository contains everything a node needs (by the way, this enables to run multiple nodes with different repositories with the
 same engine).
 
-* chronix internal log
+* Chronix internal log
 * job logs
 * persistence data for reliability
 

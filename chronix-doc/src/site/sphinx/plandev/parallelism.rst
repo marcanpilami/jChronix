@@ -9,7 +9,7 @@ every Place before becoming possible ? This question is at the heart of
 *transition parallelism*.
 
 
-The first case, waiting for the result on every Place before deciding wether the
+The first case, waiting for the result on every Place before deciding whether the
 transition is possible or not, is the *normal transition*. It is very simple to
 grasp: a State must be completely done before the Plan is allowed to go on.
 This is the default. Some usual patterns are detailed in the first part of this
@@ -46,7 +46,7 @@ every of its Places! However, this is often what is desired.
 N2. AND logical door
 ====================
 
-A AND logical door is a particuliar job that runs only if all the incoming
+A AND logical door is a particular job that runs only if all the incoming
 transitions are verified.
 
 A (Group 1) ---(OK)---> AND (Group Y) ---> Z (Group Z)
@@ -77,7 +77,7 @@ from running. One may use transitions with softer conditions than "OK", such as
 "any result" to prevent this, or have different paths for "OK" and "NOT OK".
 
 
-With parallélism
+With parallelism
 ****************
 
 P1. Simple parallel transition
@@ -102,7 +102,7 @@ The result is:
 Calendar note
 -------------
 
-If a parallelised State uses a Calendar, the calendar advance of the State is
+If a parallelized State uses a Calendar, the calendar advance of the State is
 followed Place by Place. So the State may have different *current dates* on its
 different Places. As this is often the sign of something gone wrong, it will
 trigger a visual alert in the console.
@@ -125,7 +125,7 @@ parallelism as it can in that case:
   is parallel enabled) and as soon as B is done on all the Places of Group 2
   (normal case for a non-parallel enabled transition).
 
-Basically, this is the "naturaly expected" conclusion.
+Basically, this is the "naturally expected" conclusion.
 
 
 P3. Enabling parallelism with different Groups
@@ -149,7 +149,7 @@ B //(Group 2) --- (OK) --|
 
 This is the same case as P2, but for B which is parallel-enabled. However, as B
 and AND are not on the same Group, the B -> AND transition is still a normal
-one and not a parralel-enabled one.
+one and not a parallel-enabled one.
 
 So the result is the same as P2. What's important here is that it is possible to
 mix parallelism and normal executions at will, and that the engine will sort it

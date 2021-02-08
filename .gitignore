@@ -38,6 +38,7 @@ generated.js
 core/target/*
 activemq-data
 doc/html
+**/sphinx/_build
 target
 transac.db*
 history.db*

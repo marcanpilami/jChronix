@@ -11,4 +11,14 @@
         "**/target/",
         "**/webapp/dist/"
     ],
+    "restructuredtext.confPath": "${workspaceFolder}\\chronix-doc\\src\\site\\sphinx",
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext",
+        "restructuredtext"
+    ],
 }
