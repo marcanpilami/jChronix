@@ -1,5 +1,0 @@
--sources: true
--dsannotations: *
-#-wab: src/main/webapp
-Web-ContextPath: /
-Bundle-Activator: ${classes;IMPLEMENTS;org.osgi.framework.BundleActivator}

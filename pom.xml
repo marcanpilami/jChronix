@@ -29,15 +29,16 @@
 
 		<bnd.version>5.2.0</bnd.version>
 		<felix.version>7.0.0</felix.version>
-		<felix.scr.version>2.1.24</felix.scr.version>
-		<felix.fileinstall.version>3.6.8</felix.fileinstall.version>
-		<felix.configadmin.version>1.9.20</felix.configadmin.version>
+		<felix.scr.version>2.1.26</felix.scr.version>
+		<felix.fileinstall.version>3.7.0</felix.fileinstall.version>
+		<felix.configadmin.version>1.9.22</felix.configadmin.version>
 		<felix.gogoshell.version>1.1.4</felix.gogoshell.version>
 		<felix.gogocommand.version>1.1.2</felix.gogocommand.version>
+		<felix.rswhiteboard.version>2.0.0</felix.rswhiteboard.version>
 
 		<junit.version>4.13.1</junit.version>
 		<surefire.version>2.19.1</surefire.version>
-		<pax.logging.version>1.11.2</pax.logging.version>
+		<pax.logging.version>1.11.9</pax.logging.version>
 		<pax.exam.version>4.13.1</pax.exam.version>
 		<pax.url.version>2.6.1</pax.url.version>
 
@@ -154,6 +155,7 @@
 		<module>chronix-source-basic</module>
 		<module>chronix-source-test</module>
 		<module>chronix-web-new</module>
+		<module>chronix-web-react</module>
 		<module>chronix-messaging-amq</module>
 	</modules>
 </project>

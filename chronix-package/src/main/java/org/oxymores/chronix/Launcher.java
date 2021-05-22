@@ -25,13 +25,15 @@ public class Launcher
         System.setProperty("felix.fileinstall.poll", "1000");
         System.setProperty("felix.fileinstall.log.level", "3");
 
+        System.setProperty("org.apache.felix.http.enable", "true");
+        System.setProperty("org.apache.felix.https.enable", "false");
+
         File curDir = new File(".");
 
         FrameworkFactory frameworkFactory = ServiceLoader.load(FrameworkFactory.class).iterator().next();
         Map<String, String> config = new HashMap<String, String>();
         config.put("org.osgi.framework.storage", curDir.getAbsolutePath() + "/cache/felix");
         config.put("felix.log.level", "2");
-        config.put(org.osgi.framework.Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "sun.misc,sun.reflect,javax.annotation");
         config.put("felix.cm.loglevel", "3");
         config.put("felix.cm.dir", curDir.getAbsolutePath() + "/cache/config");
         Framework framework = frameworkFactory.newFramework(config);

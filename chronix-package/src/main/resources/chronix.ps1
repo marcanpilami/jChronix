@@ -1,20 +1,17 @@
 ## Get Java
 $java = Get-Command java -ErrorAction SilentlyContinue
-if (-not $java)
-{
+if (-not $java) {
     $java = $env:JAVA_HOME
-    if (-not $env:JAVA_HOME)
-    {
+    if (-not $env:JAVA_HOME) {
         throw "Cannot find Java. Check it is in the PATH or set JAVA_HOME"
     }
+    $java = "${java}/bin/java"
 }
-else
-{
+else {
     $java = $java.Path
 }
 
-if (! (Test-Path env:/JAVA_OPTS))
-{
+if (! (Test-Path env:/JAVA_OPTS)) {
     $env:JAVA_OPTS = "-Xms32m -Xmx128m -XX:MaxPermSize=32m"
 }
 

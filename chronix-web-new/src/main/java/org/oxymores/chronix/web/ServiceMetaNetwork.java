@@ -6,9 +6,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.jaxrs.whiteboard.propertytypes.JaxrsResource;
 
 @Path("/meta")
-@Component
+@Component(service = ServiceMetaNetwork.class)
+@JaxrsResource
 public class ServiceMetaNetwork
 {
     @GET
