@@ -35,6 +35,18 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>chronix-plugin-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
 		<!-- OSGI APIs -->
 		<dependency>
 			<groupId>org.osgi</groupId>

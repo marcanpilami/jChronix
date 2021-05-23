@@ -7,11 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 
 /**
  * Describes an event source instance. It is a serialisable DTO object, and considered part of the public API.
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DTOEventSource implements Serializable
 {
     private static final long serialVersionUID = 7742416960083543767L;
@@ -33,7 +37,7 @@ public class DTOEventSource implements Serializable
 
     protected DTOEventSource()
     {
-
+        // JB convention
     }
 
     /**

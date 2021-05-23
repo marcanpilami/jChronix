@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import org.oxymores.chronix.api.prm.ParameterProvider;
 
 /**
@@ -36,6 +39,7 @@ import org.oxymores.chronix.api.prm.ParameterProvider;
  * In case a DTO instance contains values for multiple types, the order of precedence is direct > dynamic > reference.
  * 
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DTOParameter implements Serializable
 {
     private static final long serialVersionUID = -6464225583623579497L;
@@ -58,6 +62,11 @@ public class DTOParameter implements Serializable
     ///////////////////////////////////////////////////////////////////////////
     // Construction
     ///////////////////////////////////////////////////////////////////////////
+
+    protected DTOParameter()
+    {
+        // JB convention
+    }
 
     /**
      * Creates a direct value parameter - that is a parameter directly containing a string value, with no need for dynamic resolution.
@@ -198,11 +207,7 @@ public class DTOParameter implements Serializable
      */
     public Map<String, DTOParameter> getFields()
     {
-        if (this.fields == null)
-        {
-            throw new IllegalStateException("parameter is not a dynamically resolved parameter");
-        }
-        return new HashMap<>(this.fields);
+        return this.fields == null ? null : new HashMap<>(this.fields);
     }
 
     /**
@@ -246,10 +251,6 @@ public class DTOParameter implements Serializable
      */
     public List<DTOParameter> getAdditionalParameters()
     {
-        if (this.additionalParameters == null)
-        {
-            throw new IllegalStateException("parameter is not a dynamically resolved parameter");
-        }
-        return new ArrayList<>(this.additionalParameters);
+        return this.additionalParameters == null ? null : new ArrayList<>(this.additionalParameters);
     }
 }

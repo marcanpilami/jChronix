@@ -16,7 +16,10 @@ import javax.validation.Path.Node;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.oxymores.chronix.api.prm.ParameterProvider;
 import org.oxymores.chronix.api.source.DTOEventSource;
+import org.oxymores.chronix.api.source.DTOEventSourceContainer;
+import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.api.source.EventSourceProvider;
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
@@ -43,7 +46,7 @@ import org.oxymores.chronix.exceptions.ChronixInitializationException;
  * The Plan Metadata API implementation as an OSGI Declarative Service.<br>
  * See {@link PlanAccessService} for API details.
  */
-@Component
+@Component(configurationPid = "ApiPlanAccess")
 public class ApiPlanAccess implements PlanAccessService
 {
     private String ctxMetaPath;
@@ -52,8 +55,8 @@ public class ApiPlanAccess implements PlanAccessService
     @Modified
     private void activate(Map<String, String> configuration)
     {
-        ctxMetaPath = configuration.getOrDefault("chronix.repository.path", "./target/nodes/local");
-        if (!(new File(ctxMetaPath).exists()))
+        ctxMetaPath = configuration.getOrDefault("chronix.repository.path", null);
+        if (ctxMetaPath != null && !(new File(ctxMetaPath).exists()))
         {
             throw new ChronixInitializationException(
                     "cannot create api service - directory " + ctxMetaPath + " does not exist. Check service configuration.");
@@ -91,34 +94,38 @@ public class ApiPlanAccess implements PlanAccessService
     @Override
     public DTOApplication createTestApplication()
     {
-        throw new UnsupportedOperationException("not implemented");
-        /*
-         * Application a = DemoApplication.getNewDemoApplication(); a.setname("test application");
-         * a.createStarterGroups(this.ctx.getEnvironment()); PlaceGroup pgLocal = a.getGroupsList().get(0); Chain c =
-         * PlanBuilder.buildChain(a, "chain1", "chain1", pgLocal);
-         * 
-         * ClockRRule rr1 = PlanBuilder.buildRRuleSeconds(a, 200); External ex = PlanBuilder.buildExternal(a, "External"); Clock ck1 =
-         * PlanBuilder.buildClock(a, "every 10 second", "every 10 second", rr1); ck1.setDURATION(0); RunnerCommand sc1 =
-         * PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'"); RunnerCommand sc2 =
-         * PlanBuilder.buildPowerShellCommand(a, "echooooooo bb", "bb", "should display 'bb'"); RunnerCommand sc3 =
-         * PlanBuilder.buildPowerShellCommand(a, "echo fin", "FIN", "should display 'fin'");
-         * 
-         * PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'"); PlanBuilder.buildPowerShellCommand(a, "echo aa",
-         * "aa", "should display 'aa'"); PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
-         * PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'"); PlanBuilder.buildPowerShellCommand(a, "echo aa",
-         * "aa", "should display 'aa'"); PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'");
-         * PlanBuilder.buildPowerShellCommand(a, "echo aa", "aa", "should display 'aa'"); PlanBuilder.buildPowerShellCommand(a, "echo aa",
-         * "aa", "should display 'aa'");
-         * 
-         * PlanBuilder.buildExternal(a, "file 1", "/tmp/meuh.txt"); PlanBuilder.buildRRuleMinutes(a, 10); PlanBuilder.buildRRuleMinutes(a,
-         * 20); PlanBuilder.buildRRuleMinutes(a, 30);
-         * 
-         * State s1 = PlanBuilder.buildState(c, pgLocal, ex); State s2 = PlanBuilder.buildState(c, pgLocal, sc1); State s3 =
-         * PlanBuilder.buildState(c, pgLocal, sc2); State s4 = PlanBuilder.buildStateAND(c, pgLocal); State s5 = PlanBuilder.buildState(c,
-         * pgLocal, sc3); s1.connectTo(s2); s1.connectTo(s3); s2.connectTo(s4); s3.connectTo(s4, 0); s4.connectTo(s5);
-         * 
-         * return CoreToDto.getApplication(a);
-         */
+        EventSourceProvider chainPrv = this.getMetaDb().getSourceProvider("org.oxymores.chronix.source.chain.prv.ChainProvider");
+        EventSourceProvider planPrv = this.getMetaDb().getSourceProvider("org.oxymores.chronix.source.chain.prv.PlanProvider");
+        EventSourceProvider shellPrv = this.getMetaDb().getSourceProvider("org.oxymores.chronix.source.command.prv.ShellCommandProvider");
+        ParameterProvider shellPrmPrv = this.getMetaDb().getParameterProvider("org.oxymores.chronix.prm.command.prv.ShellCommandProvider");
+        DTOEnvironment envt = this.getEnvironment();
+
+        DTOApplication a = createMinimalApplication();
+        a.setName("test application");
+        a.setDescription("This app was created for test purposes");
+
+        DTOEventSourceContainer plan1 = new DTOEventSourceContainer(planPrv, a, "plan", "integration test plan", null);
+
+        // Deploy
+        envt.getPlace("local").addMemberOfGroup(a.getGroup("local").getId());
+
+        // Some content
+        DTOEventSource shell1 = new DTOEventSource(shellPrv, a, "shell1", "shell1").setField("runnerCapability", "shell.wincmd") //
+                .setField("COMMAND", "echo") //
+                .addParameter("aa").addParameter("bb").addParameter("cc")
+                .addParameter(new DTOParameter(null, shellPrmPrv).setField("runnerCapability", "shell.wincmd").setField("COMMAND", "echo")
+                        .addAdditionalParameter("dd"))
+                .addParameter(new DTOParameter(null, shellPrmPrv)
+                        .setField("runnerCapability", "shell.wincmd").setField(new DTOParameter("COMMAND", shellPrmPrv)
+                                .setField("runnerCapability", "shell.wincmd").setField("COMMAND", "echo").addAdditionalParameter("echo"))
+                        .addAdditionalParameter("ee"));
+        a.addEventSource(shell1);
+
+        DTOEventSourceContainer chain1 = new DTOEventSourceContainer(chainPrv, a, "first chain", "integration test chain", null)
+                .setAllStates(a.getGroup("local"));
+        a.addEventSource(chain1);
+
+        return a;
     }
 
     private DTOApplicationShort appToDtoShort(Application a)

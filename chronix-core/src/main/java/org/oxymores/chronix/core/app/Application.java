@@ -248,6 +248,11 @@ public class Application implements Serializable
         return this.sharedParameters.get(key);
     }
 
+    public Map<UUID, ParameterDef> getSharedParameters()
+    {
+        return this.sharedParameters;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // VERSIONS
     ///////////////////////////////////////////////////////////////////////////

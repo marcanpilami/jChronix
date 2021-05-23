@@ -17,6 +17,7 @@
 package org.oxymores.chronix.web.api;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -28,12 +29,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.jaxrs.whiteboard.propertytypes.JaxrsResource;
+import org.oxymores.chronix.core.engine.api.DTOApplication;
+import org.oxymores.chronix.core.engine.api.DTOApplicationShort;
 import org.oxymores.chronix.core.engine.api.PlanAccessService;
-import org.oxymores.chronix.dto.DTOApplication;
-import org.oxymores.chronix.dto.DTOApplicationShort;
 import org.oxymores.chronix.dto.DTOEnvironment;
-import org.oxymores.chronix.dto.DTORRule;
-import org.oxymores.chronix.dto.DTOResultClock;
 import org.oxymores.chronix.dto.DTOValidationError;
 import org.oxymores.chronix.engine.modularity.web.RestServiceApi;
 import org.slf4j.Logger;
@@ -42,7 +42,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Handles all the metadata related services. JSON only.
  */
-@Component
+@Component(service = ServiceMeta.class)
+@JaxrsResource
 @Path("/meta")
 public class ServiceMeta implements RestServiceApi
 {
@@ -92,15 +93,31 @@ public class ServiceMeta implements RestServiceApi
     @POST
     @Path("environment")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveEnvironment(DTOEnvironment e)
+    public void saveEnvironmentDraft(DTOEnvironment e)
     {
-        api.saveEnvironment(e);
+        api.saveEnvironmentDraft(e);
+    }
+
+    @POST
+    @Path("liveenvironment")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void promoteEnvironmentDraft()
+    {
+        api.promoteEnvironmentDraft("commit web");
+    }
+
+    @POST
+    @Path("environment/newdemo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DTOEnvironment createTestEnvironment()
+    {
+        return api.createMinimalEnvironment();
     }
 
     @GET
     @Path("app/{appid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public DTOApplication getApplication(@PathParam("appid") String id)
+    public DTOApplication getApplication(@PathParam("appid") UUID id)
     {
         log.info("getApplication was called");
         try
@@ -127,7 +144,7 @@ public class ServiceMeta implements RestServiceApi
     @Consumes(MediaType.APPLICATION_JSON)
     public void promoteApplicationDraft(DTOApplication app)
     {
-        api.promoteApplicationDraft(app.getId());
+        api.promoteApplicationDraft(app.getId(), "commit message");
     }
 
     @POST
@@ -138,14 +155,17 @@ public class ServiceMeta implements RestServiceApi
         api.resetApplicationDraft(app);
     }
 
-    @POST
-    @Path("rrule/test")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public DTOResultClock getNextRRuleOccurrences(DTORRule rule)
-    {
-        return api.testRecurrenceRule(rule);
-    }
+    // TODO: save this.
+    /*
+     * @POST
+     * 
+     * @Path("rrule/test")
+     * 
+     * @Produces(MediaType.APPLICATION_JSON)
+     * 
+     * @Consumes(MediaType.APPLICATION_JSON) public DTOResultClock getNextRRuleOccurrences(DTORRule rule) { return
+     * api.testRecurrenceRule(rule); }
+     */
 
     @GET
     @Path("app")

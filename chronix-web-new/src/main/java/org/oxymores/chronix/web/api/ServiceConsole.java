@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.jaxrs.whiteboard.propertytypes.JaxrsResource;
 import org.oxymores.chronix.core.engine.api.HistoryService;
 import org.oxymores.chronix.core.engine.api.OrderService;
 import org.oxymores.chronix.dto.HistoryQuery;
@@ -23,8 +24,9 @@ import org.oxymores.chronix.engine.modularity.web.RestServiceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Component(service = ServiceConsole.class)
+@JaxrsResource
 @Path("/live")
-@Component
 public class ServiceConsole implements RestServiceApi
 {
     private static final Logger log = LoggerFactory.getLogger(ServiceConsole.class);

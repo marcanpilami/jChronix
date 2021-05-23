@@ -154,6 +154,11 @@
 			<artifactId>jaxb-osgi</artifactId>
 			<version>2.3.4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.jax.rs</groupId>
+			<artifactId>org.apache.aries.jax.rs.jackson</artifactId>
+			<version>1.0.2</version>
+		</dependency>
 
 
 		<!-- DEBUG - a CLI -->

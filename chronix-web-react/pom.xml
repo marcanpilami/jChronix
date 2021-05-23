@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>chronix-web-react</artifactId>
-	<name>chronix-web-core</name>
+	<name>chronix-web-react</name>
 	<url>http://maven.apache.org</url>
 
 	<build>

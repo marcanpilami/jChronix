@@ -2,117 +2,88 @@ package org.oxymores.chronix.core.context.api;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.oxymores.chronix.core.Environment;
 import org.oxymores.chronix.core.app.Application;
-import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.EventSourceDef;
 import org.oxymores.chronix.core.app.FunctionalOccurrence;
+import org.oxymores.chronix.core.app.FunctionalSequence;
+import org.oxymores.chronix.core.app.ParameterDef;
 import org.oxymores.chronix.core.app.PlaceGroup;
 import org.oxymores.chronix.core.engine.api.DTOApplication;
+import org.oxymores.chronix.core.engine.api.DTOToken;
 import org.oxymores.chronix.core.network.ExecutionNode;
 import org.oxymores.chronix.core.network.ExecutionNodeConnectionAmq;
 import org.oxymores.chronix.core.network.Place;
 import org.oxymores.chronix.core.timedata.RunLog;
-import org.oxymores.chronix.dto.DTOFunctionalSequence;
-import org.oxymores.chronix.dto.DTOSequenceOccurrence;
 import org.oxymores.chronix.dto.DTOClock;
 import org.oxymores.chronix.dto.DTOEnvironment;
 import org.oxymores.chronix.dto.DTOExecutionNode;
+import org.oxymores.chronix.dto.DTOFunctionalSequence;
 import org.oxymores.chronix.dto.DTOPlace;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 import org.oxymores.chronix.dto.DTORunLog;
+import org.oxymores.chronix.dto.DTOSequenceOccurrence;
 
 public class CoreToDto
 {
-
     public static DTOApplication getApplication(Application a)
     {
         DTOApplication res = new DTOApplication();
 
-        /*
-         * res.setId(a.getId().toString()); res.setName(a.getName()); res.setDescription(a.getDescription());
-         * 
-         * res.setChains(new ArrayList<DTOChain>()); res.setPlans(new ArrayList<DTOChain>()); res.setShells(new
-         * ArrayList<DTOShellCommand>()); res.setGroups(new ArrayList<DTOPlaceGroup>()); res.setParameters(new ArrayList<DTOParameter>());
-         * res.setRrules(new ArrayList<DTORRule>()); res.setClocks(new ArrayList<DTOClock>()); res.setExternals(new
-         * ArrayList<DTOExternal>()); res.setCalendars(new ArrayList<DTOCalendar>()); res.setCalnexts(new ArrayList<DTONextOccurrence>());
-         * res.setVersion(a.getVersion()); res.setLatestVersionComment(a.getCommitComment());
-         * 
-         * // Unique elements for (EventSourceContainer nb : a.getActiveElements().values()) { if (nb instanceof ChainStart) {
-         * res.setStartId(nb.getId().toString()); break; } } for (EventSourceContainer nb : a.getActiveElements().values()) { if (nb
-         * instanceof ChainEnd) { res.setEndId(nb.getId().toString()); break; } } for (EventSourceContainer nb :
-         * a.getActiveElements().values()) { if (nb instanceof Or) { res.setOrId(nb.getId().toString()); break; } } for
-         * (EventSourceContainer nb : a.getActiveElements().values()) { if (nb instanceof And) { res.setAndId(nb.getId().toString()); break;
-         * } }
-         * 
-         * Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>() {
-         * 
-         * @Override public int compare(PlaceGroup c1, PlaceGroup c2) { return c1.getName().compareToIgnoreCase(c2.getName()); } };
-         * List<PlaceGroup> pgs = a.getGroupsList(); Collections.sort(pgs, comparator_pg); for (PlaceGroup pg : pgs) {
-         * res.getGroups().add(getPlaceGroup(pg)); }
-         * 
-         * // Calendars for (Calendar c : a.getCalendars()) { res.getCalendars().add(getCalendar(c)); }
-         * 
-         * // Clocks /* for (ClockRRule r : a.getRRulesList()) { res.getRrules().add(getRRule(r)); }
-         * 
-         * Comparator<EventSourceContainer> comparator_act = new Comparator<EventSourceContainer>() { public int
-         * compare(EventSourceContainer c1, EventSourceContainer c2) { return c1.getName().compareToIgnoreCase(c2.getName()); } };
-         * 
-         * // All the active elements! List<EventSourceContainer> active = new ArrayList<>(a.getActiveElements().values());
-         * Collections.sort(active, comparator_act); for (EventSourceContainer o : active) { if (o instanceof Chain) { Chain c = (Chain) o;
-         * if (c.isPlan()) { res.getPlans().add(getChain(c)); } else { res.getChains().add(getChain(c)); } }
-         * 
-         * if (o instanceof Clock) { Clock c = (Clock) o; res.getClocks().add(getClock(c)); }
-         * 
-         * if (o instanceof RunnerCommand) { RunnerCommand s = (RunnerCommand) o; DTOShellCommand d = new DTOShellCommand();
-         * d.setId(s.getId().toString()); d.setName(s.getName()); d.setDescription(s.getDescription());
-         * 
-         * for (Map.Entry<String, String> ep : s.getPluginParameters().entrySet()) { d.getPluginParameters().put(ep.getKey(),
-         * ep.getValue()); }
-         * 
-         * res.getShells().add(d); }
-         * 
-         * if (o instanceof External) { External e = (External) o; DTOExternal d = new DTOExternal(); d.setId(e.getId().toString());
-         * d.setAccountRestriction(e.getAccountRestriction()); d.setMachineRestriction(e.getMachineRestriction());
-         * d.setRegularExpression(e.getRegularExpression()); d.setName(e.getName()); d.setDescription(e.getDescription());
-         * res.getExternals().add(d); }
-         * 
-         * if (o instanceof NextOccurrence) { NextOccurrence e = (NextOccurrence) o; DTONextOccurrence d = new DTONextOccurrence();
-         * d.setId(e.getId().toString()); d.setName(e.getName()); d.setDescription(e.getDescription());
-         * d.setCalendarId(e.getUpdatedCalendar().getId().toString()); res.getCalnexts().add(d); } }
-         */
+        res.setId(a.getId());
+        res.setName(a.getName());
+        res.setDescription(a.getDescription());
+
+        res.setVersion(a.getVersion());
+        res.setLatestVersionComment(a.getCommitComment());
+
+        // Event sources of all kinds
+        for (EventSourceDef nb : a.getEventSources().values())
+        {
+            res.addEventSource(nb.getDTO());
+        }
+
+        Comparator<PlaceGroup> comparator_pg = new Comparator<PlaceGroup>()
+        {
+            @Override
+            public int compare(PlaceGroup c1, PlaceGroup c2)
+            {
+                return c1.getName().compareToIgnoreCase(c2.getName());
+            }
+        };
+        List<PlaceGroup> pgs = a.getGroupsList();
+        Collections.sort(pgs, comparator_pg);
+        for (PlaceGroup pg : pgs)
+        {
+            res.getGroups().add(getPlaceGroup(pg));
+        }
+
+        // Calendars
+        for (FunctionalSequence c : a.getCalendars())
+        {
+            res.addSequence(getFunctionalSequence(c));
+        }
+
+        // Tokens
+        for (Map.Entry<UUID, DTOToken> e : a.getTokens().entrySet())
+        {
+            res.addToken(e.getValue());
+        }
+
+        // Parameters
+        for (Map.Entry<UUID, ParameterDef> e : a.getSharedParameters().entrySet())
+        {
+            res.addSharedParameter(e.getKey(), e.getValue().getDTO());
+        }
+
         return res;
     }
-
-    // public static DTOChain getChain(Chain c)
-    // {
-    // DTOChain res = new DTOChain();
-    /*
-     * res.setId(c.getId().toString()); res.setName(c.getName()); res.setDescription(c.getDescription());
-     * 
-     * for (State s : c.getStates()) { DTOState t = new DTOState(); t.setParallel(s.getParallel()); t.setId(s.getId().toString());
-     * t.setX(s.getX()); t.setY(s.getY()); t.setLabel(s.getRepresents().getName()); t.setRepresentsId(s.getRepresents().getId().toString());
-     * if (s.getCalendar() != null) { t.setCalendarId(s.getCalendar().getId().toString()); t.setCalendarShift(s.getCalendarShift()); } try {
-     * t.setRunsOnName(s.getRunsOn().getName()); t.setRunsOnId(s.getRunsOn().getId().toString()); } catch (Exception e) { } if
-     * (s.getRepresents() instanceof ChainStart) { t.setCanReceiveLink(false); t.setStart(true); } if (s.getRepresents() instanceof
-     * ChainEnd) { t.setCanEmitLinks(false); t.setEnd(true); } if (s.getRepresents() instanceof ChainEnd || s.getRepresents() instanceof
-     * ChainStart) { t.setCanBeRemoved(false); } if (s.getRepresents() instanceof And || s.getRepresents() instanceof Or) {
-     * t.setCanReceiveMultipleLinks(true); } if (s.getRepresents() instanceof And) { t.setAnd(true); } if (s.getRepresents() instanceof Or)
-     * { t.setOr(true); }
-     * 
-     * res.addState(t); }
-     * 
-     * for (Transition o : c.getTransitions()) { DTOTransition d = new DTOTransition(); d.setId(o.getId().toString());
-     * d.setFrom(o.getStateFrom().getId().toString()); d.setTo(o.getStateTo().getId().toString()); d.setGuard1(o.getGuard1());
-     * d.setGuard2(o.getGuard2()); d.setGuard3(o.getGuard3()); d.setGuard4((o.getGuard4() == null ? "" : o.getGuard4().toString()));
-     * d.setCalendarAware(o.isCalendarAware()); d.setCalendarShift(o.getCalendarShift());
-     * 
-     * res.addTransition(d); }
-     */
-    // return res;
-    // }
 
     public static DTOExecutionNode getExecutionNode(ExecutionNode en)
     {

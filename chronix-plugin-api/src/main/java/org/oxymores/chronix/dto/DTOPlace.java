@@ -18,6 +18,11 @@ public class DTOPlace implements Serializable
     // Construction
     ///////////////////////////////////////////////////////////////////////////
 
+    public DTOPlace()
+    {
+        // JB convention
+    }
+
     public DTOPlace(String name, UUID onExecutionNodeId, UUID id)
     {
         if (id == null)

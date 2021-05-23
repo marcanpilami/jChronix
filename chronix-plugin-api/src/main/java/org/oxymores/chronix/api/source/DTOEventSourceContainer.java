@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import org.oxymores.chronix.core.engine.api.DTOApplication;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DTOEventSourceContainer extends DTOEventSource
 {
     private static final long serialVersionUID = -8557075941985914540L;
@@ -17,6 +21,11 @@ public class DTOEventSourceContainer extends DTOEventSource
     ///////////////////////////////////////////////////////////////////////////
     // Construction
     ///////////////////////////////////////////////////////////////////////////
+
+    protected DTOEventSourceContainer()
+    {
+        // JB convention
+    }
 
     public DTOEventSourceContainer(EventSourceProvider factory, DTOApplication app, String name, String description, UUID id)
     {

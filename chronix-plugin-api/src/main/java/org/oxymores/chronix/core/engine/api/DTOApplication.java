@@ -6,11 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import org.oxymores.chronix.api.source.DTOEventSource;
 import org.oxymores.chronix.api.source.DTOParameter;
 import org.oxymores.chronix.dto.DTOFunctionalSequence;
 import org.oxymores.chronix.dto.DTOPlaceGroup;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DTOApplication implements Serializable
 {
     private static final long serialVersionUID = -1067179415202128345L;
@@ -135,6 +139,11 @@ public class DTOApplication implements Serializable
     public DTOParameter getSharedParameter(UUID id)
     {
         return this.sharedParameters.get(id);
+    }
+
+    public void addSharedParameter(UUID id, DTOParameter dto)
+    {
+        this.sharedParameters.put(id, dto);
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -231,6 +231,11 @@ public class BaseIT
         props.put("org.oxymores.chronix.network.nodeid", "3654654");
         cfg.update(props);
 
+        cfg = conf.getConfiguration("ApiPlanAccess", null);
+        props = (cfg.getProperties() == null ? new Hashtable<String, Object>() : cfg.getProperties());
+        props.put("chronix.repository.path", localNodeMetaPath);
+        cfg.update(props);
+
         ServiceTracker<OrderService, OrderService> st = null;
         try
         {
