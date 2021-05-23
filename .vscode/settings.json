@@ -21,4 +21,7 @@
         "plaintext",
         "restructuredtext"
     ],
+    "files.associations": {
+        "**/react/**/*.js": "javascriptreact"
+    },
 }
